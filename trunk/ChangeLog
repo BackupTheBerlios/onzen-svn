@@ -1,0 +1,8 @@
+2006-07-27
+  * added balloon help
+
+2006-07-24
+  * improved operations on local files (create, delete)
+
+2006-06-16
+  * implemented first version of Subversion support
