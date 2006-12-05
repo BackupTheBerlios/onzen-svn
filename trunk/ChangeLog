@@ -1,3 +1,10 @@
+2006-12-05
+  * added patch button to diff dialog
+  * added checkout-revsion->local revision to diff dialog revision selector
+
+2006-11-01
+  * added "added" button to change filelist dialog
+
 2006-10-19
   * fixed UDP broadcast of commit messages: network and subnet can
     now be configured in prefernces dialog/misc.
