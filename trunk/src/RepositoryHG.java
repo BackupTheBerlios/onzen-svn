@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryHG.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -54,6 +54,13 @@ class RepositoryHG extends Repository
     super(rootPath);
   }
 
+  /** create repository
+   */
+  RepositoryHG()
+  {
+    this(null);
+  }
+
   /** 
    * @param 
    * @return 
@@ -69,6 +76,57 @@ class RepositoryHG extends Repository
   public void update(HashSet<FileData> fileDataHashSet)
     throws RepositoryException
   {
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public String getLastRevision()
+    throws RepositoryException
+  {
+    return "tip";
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public String[] getRevisions(FileData fileData)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public RevisionData[] getRevisionTree(FileData fileData)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public String[] getFile(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get file data (byte array)
+   * @param fileData file data
+   * @param revision revision to get
+   * @return file data (array of lines)
+   */
+  public byte[] getFileData(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return null;
   }
 
   /** 
@@ -102,7 +160,16 @@ class RepositoryHG extends Repository
    * @param 
    * @return 
    */
-  public void revert(HashSet<FileData> fileDataHashSet)
+  public void revert(HashSet<FileData> fileDataHashSet, String revision)
+    throws RepositoryException
+  {
+  }
+
+  /** rename file
+   * @param fileData file data to rename
+   * @param newName new name
+   */
+  public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException
   {
   }
@@ -111,9 +178,10 @@ class RepositoryHG extends Repository
    * @param 
    * @return 
    */
-  public void diff(FileData fileData)
+  public DiffData[] diff(FileData fileData, String revision1, String revision2)
     throws RepositoryException
   {
+    return null;
   }
 
   /** 

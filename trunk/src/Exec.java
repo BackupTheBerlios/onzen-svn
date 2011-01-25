@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Exec.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: execute external command
 * Systems: all
@@ -82,6 +82,21 @@ class Command
   public String[] getCommandArray()
   {
     return commandLine.toArray(new String[commandLine.size()]);
+  }
+
+  /** convert data to string
+   * @return string
+   */
+  public String toString()
+  {
+    StringBuilder buffer = new StringBuilder();
+    for (String string : commandLine)
+    {
+      if (buffer.length() > 0) buffer.append(' ');
+      buffer.append(string);
+    }
+
+    return buffer.toString();
   }
 }
 
