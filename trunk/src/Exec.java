@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Exec.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: execute external command
 * Systems: all
@@ -12,6 +12,7 @@
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -19,9 +20,70 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Stack;
 
 /****************************** Classes ********************************/
+
+/** external command
+ */
+class Command
+{
+  // --------------------------- constants --------------------------------
+
+  // --------------------------- variables --------------------------------
+  private ArrayList<String> commandLine;
+
+  // ------------------------ native functions ----------------------------
+
+  // ---------------------------- methods ---------------------------------
+
+  /** create external command
+   */
+  Command()
+  {
+    commandLine = new ArrayList<String>();
+  }
+
+  /** clear command array
+   */
+  public void clear()
+  {
+    commandLine.clear();
+  }
+
+  /** append arguments to command array
+   * @param arguments strings to append
+   */
+  public void append(Object... arguments)
+  {
+    for (Object object : arguments)
+    {
+      commandLine.add(object.toString());
+    }
+  }
+
+  /** append arguments to command array
+   * @param strings strings to append
+   */
+  public void append(String[] strings)
+  {
+    for (String string : strings)
+    {
+      commandLine.add(string);
+    }
+  }
+
+  /** get command array
+   * @return command array
+   */
+  public String[] getCommandArray()
+  {
+    return commandLine.toArray(new String[commandLine.size()]);
+  }
+}
 
 /** execute external command
  */
@@ -30,14 +92,17 @@ class Exec
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  public final BufferedWriter stdin;
-  public final BufferedReader stdout;
-  public final BufferedReader stderr;
+  private static HashSet<Process> processHash = new HashSet<Process>();
 
-  private Process      process;
-  private int          pid;
-  private StringBuffer stdoutLine = new StringBuffer();
-  private StringBuffer stderrLine = new StringBuffer();
+  private final BufferedWriter  stdin;
+  private final BufferedReader  stdout;
+  private final BufferedReader  stderr;
+  private final Stack<String>   stdoutStack = new Stack<String>();
+  private final Stack<String>   stderrStack = new Stack<String>();
+  private final DataInputStream stdoutBinary;
+
+  private Process               process;
+  private int                   pid;
 
   // ------------------------ native functions ----------------------------
 
@@ -45,195 +110,153 @@ class Exec
 
   /** execute external command
    * @param path working directory or null
-   * @param commandLine command line
+   * @param command command to execute
+   * @param binaryFlag true to read stdout in binary mode
    */
-  public Exec(String path, String commandLine)
+  public Exec(String path, Command command, boolean binaryFlag)
     throws IOException
   {
-    // get shell
-    String shell;
-    if (Settings.hostSystem == Settings.HostSystems.WINDOWS)
-    {
-      shell = "bash.exe";
-    }
-    else
-    {
-      shell = "/bin/sh";
-    }
-
-    /* Workaround for a bug/incompatibility off Unix and Windows.
-       The call of exec("FOO1=\"\"","FOO2=\"\"") become on
-       Unix: FOO1="" FOO2=""
-       Windows: FOO1=" FOO2="
-       Someone seems to eat up the double ".
-       Fix: escape " on Windows
-    */
-    if (Settings.hostSystem == Settings.HostSystems.WINDOWS)
-    {
-      commandLine = StringUtils.escape(commandLine,false,'"');
-    }    
-
-    // create command array
-    String[] cmdArray = new String[]{shell,"-c","echo $$;"+commandLine};
+    // get command array
+    String[] commandArray = command.getCommandArray();
     if (Settings.debugFlag)
     {
-      System.err.println("DEBUG Execute: "+commandLine);
-/*
-      System.err.print("Execute:");
-      for (String string :cmdArray)
-      {
-        System.err.print(" ");
-        System.err.print(string);
-      }
-      System.err.println();
-*/
+      System.err.println("DEBUG execute: "+StringUtils.join(commandArray));
     }
 
     // start process
-    process = Runtime.getRuntime().exec(cmdArray,null,(path != null) ? new File(path) : null);
-    stdin  = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-    stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+    process = Runtime.getRuntime().exec(commandArray,null,(path != null) ? new File(path) : null);
+    processHash.add(process);
+    stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
+    if (binaryFlag)
+    {
+      stdout       = null;
+      stdoutBinary = new DataInputStream(process.getInputStream());
+    }
+    else
+    {
+      stdout       = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      stdoutBinary = null;
+    }
     stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-    String line = stdout.readLine();
-    try
-    {
-      pid = Integer.parseInt(line);
-    }
-    catch (NumberFormatException exception)
-    {
-      throw new IOException("Cannot execute '"+commandLine+"' (error: "+exception.getMessage()+")");
-    }
   }
 
   /** execute external command
    * @param path working directory or null
-   * @param commandLine command line
+   * @param command command to execute
    */
-  public Exec(String path, StringBuffer commandLine)
+  public Exec(String path, Command command)
     throws IOException
   {
-    this(path,commandLine.toString());
+    this(path,command,false);
   }
 
   /** execute external command
-   * @param commandLine command line
+   * @param command command to execute
    */
-  public Exec(String commandLine)
+  public Exec(Command command)
     throws IOException
   {
-    this(null,commandLine);
+    this(null,command);
   }
 
-  /** execute external command
-   * @param commandLine command line
+  /** done execute command
    */
-  public Exec(StringBuffer commandLine)
-    throws IOException
+  public void done()
   {
-    this(null,commandLine);
+    waitFor();
   }
 
   /** get next line from stdout
    * @return line or null
    */
-  public String getNextLineStdout()
+  public String getStdout()
   {
     String line = null;
 
-    try
+    if (stdoutStack.isEmpty())
     {
-      line = stdout.readLine();
+      if (stdout != null)
+      {
+        try
+        {
+          line = stdout.readLine();
+        }
+        catch (IOException exception)
+        {
+          /* ignored => no input */
+        }
+      }
     }
-    catch (IOException exception)
+    else
     {
-      /* ignored => no input */
+      line = stdoutStack.pop();
     }
 
     return line;
   }
 
-  public String xgetNextLineStdout()
+  /** push back line from stdout
+   * @param  line
+   */
+  public void ungetStdout(String line)
   {
-    String line = null;
-
-    /* Note: do not use readline(). This blocks until the line
-             is complete even in non-blocking mode of the used
-             file! Instead read char and check for EOL.
-    */
-    try
-    {
-      boolean eolFlag = false;
-      while (stdout.ready() && !eolFlag)
-      {
-        char ch = (char)stdout.read();
-        switch (ch)
-        {
-          case '\n':
-            eolFlag = true;
-            break;
-          case '\r':
-            break;
-          default:
-            stdoutLine.append(ch);
-            break;
-        }
-      }
-      if (eolFlag)
-      {
-        line = stdoutLine.toString();
-        stdoutLine.setLength(0);
-      }
-    }
-    catch (IOException exception)
-    {
-      /* ignored => no input */
-    }
-Dprintf.dprintf("line=%s",line);
-
-    return line;
+    if (line != null) stdoutStack.push(line);
   }
 
   /** get next line from stderr
    * @return line or null
    */
-  public String getNextLineStderr()
+  public String getStderr()
   {
     String line = null;
 
-    /* Note: do not use readline(). This blocks until the line
-             is complete even in non-blocking mode of the used
-             file! Instead read char and check for EOL.
-    */
-    try
+    if (stderrStack.isEmpty())
     {
-      boolean eolFlag = false;
-      while (stderr.ready() && !eolFlag)
+      try
       {
-        char ch = (char)stderr.read();
-        switch (ch)
-        {
-          case '\n':
-            eolFlag = true;
-            break;
-          case '\r':
-            break;
-          default:
-            stderrLine.append(ch);
-            break;
-        }
+        line = stderr.readLine();
       }
-      if (eolFlag)
+      catch (IOException exception)
       {
-        line = stderrLine.toString();
-        stderrLine.setLength(0);
+        /* ignored => no input */
       }
     }
-    catch (IOException exception)
+    else
     {
-      /* ignored => no input */
+      line = stderrStack.pop();
     }
 
     return line;
+  }
+
+  /** push back line from stderr
+   * @param  line
+   */
+  public void ungetStderr(String line)
+  {
+    if (line != null) stderrStack.push(line);
+  }
+
+  /** read data from stdout
+   * @return line or null
+   */
+  public int readStdout(byte[] buffer)
+  {
+    int n = 0;
+
+    if (stdoutBinary != null)
+    {
+      try
+      {
+        n = stdoutBinary.read(buffer);
+      }
+      catch (IOException exception)
+      {
+        /* ignored => no input */
+      }
+    }
+
+    return n;
   }
 
   /** wait until exec terminated
@@ -241,14 +264,19 @@ Dprintf.dprintf("line=%s",line);
    */
   public int waitFor()
   {
+    int exitCode = -1;
+
     try
     {
-      return process.waitFor();
+      exitCode = process.waitFor();
+      processHash.remove(process);
     }
     catch (InterruptedException exception)
     {
-      return -1;
+      exitCode = -1;
     }
+
+    return exitCode;
   }
 
   /** check if external command terminated
@@ -267,138 +295,7 @@ Dprintf.dprintf("line=%s",line);
     }
   }
 
-  /** suspend external command execution
-   */
-  public void suspend()
-  {
-    sendSignal("STOP");
-  }
-
-  /** resume external command execution
-   */
-  public void resume()
-  {
-    sendSignal("CONT");
-  }
-
-  /** cancel external command
-   */
-  public void cancel()
-  {
-    sendSignal("STOP");
-    sendSignal("KILL");
-  }
-
   //-----------------------------------------------------------------------
-
-  /** get all PIDs of external command
-   * @return array with PIDs
-   */
-  private int[] getAllPIDs()
-  {
-    HashSet<Integer> pidHashSet = new HashSet<Integer>();
-    Process          process    = null;
-    BufferedReader   stdout     = null;
-
-    // get pids
-    pidHashSet.add(pid);
-    switch (Settings.hostSystem)
-    {
-      case LINUX:
-      case SOLARIS:
-      case MACOS:
-      case QNX:
-        try
-        {
-          process = Runtime.getRuntime().exec(new String[]{"ps","-A","-o","pid,ppid"});
-          stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-          // ignore title line
-          stdout.readLine();
-
-          // read pids 
-          String line;
-          while ((line = stdout.readLine()) != null)
-          {
-            Object[] data = new Object[2];
-            if (!StringParser.parse(line,"%d %d",data))
-            {
-              return null;
-            }
-            int pid  = (Integer)data[0];
-            int ppid = (Integer)data[1];
-
-            if (pidHashSet.contains(ppid)) pidHashSet.add(pid);
-          }
-        }
-        catch (IOException exception)
-        {
-          return null;
-        }
-        finally
-        {
-          try
-          {
-            if (stdout != null) stdout.close();
-            if (process != null) process.destroy();
-          }
-          catch (IOException exception)
-          {
-            // ignored
-          }
-        }
-        break;
-      case WINDOWS:
-        break;
-    }
-
-    // convert to int-array
-    int[] pids = new int[pidHashSet.size()];
-    int z = 0;
-    for (Integer pid : pidHashSet)
-    {
-      pids[z] = (int)pid;
-      z++;
-    }
-
-    return pids;
-  }
-
-  /** send signal to external command and all sub-processes
-   * @param signal signal to send
-   */
-  private void sendSignal(String signal)
-  {
-    // get all pids of sub-processes
-    int[] pids = getAllPIDs();
-//for (int pid : pids) Dprintf.dprintf("send %s to %d\n",signal,pid);
-//Dprintf.dprintf("pids=%s\n",pids);
-
-    // build command
-    String[] cmdArray = new String[1+2+pids.length];
-    cmdArray[0] = "kill";
-    cmdArray[1] = "-s";
-    cmdArray[2] = signal;
-    for (int z = 0; z < pids.length; z++)
-    {
-      cmdArray[3+z] = Integer.toString(pids[z]);
-    }
-
-    // execute
-    try
-    {
-      Process process = Runtime.getRuntime().exec(cmdArray);
-      process.waitFor();
-    }
-    catch (IOException exception)
-    {
-      /* ignored */
-    }
-    catch (InterruptedException exception)
-    {
-      /* ignored */
-    }
-  }
 }
 
 /* end of file */
