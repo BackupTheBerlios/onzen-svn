@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -122,7 +122,16 @@ class RepositoryGit extends Repository
    * @param revision revision to get
    * @return file data (array of lines)
    */
-  public byte[] getFileData(FileData fileData, String revision)
+  public byte[] getFileBytes(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get all changed files
+   * @return fileDataSet file data set with modified files
+   */
+  public HashSet<FileData> getChangedFiles()
     throws RepositoryException
   {
     return null;
