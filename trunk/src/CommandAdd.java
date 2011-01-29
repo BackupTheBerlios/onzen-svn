@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command add
+* Contents: command add files/directories
 * Systems: all
 *
 \***********************************************************************/
@@ -103,7 +103,7 @@ import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
 
-/** add command
+/** add files/directories command
  */
 class CommandAdd
 {
@@ -111,13 +111,15 @@ class CommandAdd
    */
   class Data
   {
-    String  message;
-    boolean binaryFlag;
+    HashSet<FileData> fileDataSet;
+    String            message;
+    boolean           binaryFlag;
 
     Data()
     {
-      this.message    = "";
-      this.binaryFlag = false;
+      this.fileDataSet = new HashSet<FileData>();
+      this.message     = "";
+      this.binaryFlag  = false;
     }
   };
 
@@ -128,23 +130,21 @@ class CommandAdd
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell             shell;
-  private final Repository        repository;
-  private final HashSet<FileData> fileDataSet;
-
-  private final Display           display;
-  private final Data              data = new Data();
-  private final String[]          history;       
+  private final Shell      shell;
+  private final Repository repository;
+  private final Display    display;
 
   // dialog
-  private final Shell             dialog;        
+  private final Data       data = new Data();
+  private final Shell      dialog;        
+  private final String[]   history;       
 
   // widgets
-  private final List              widgetFiles;   
-  private final List              widgetHistory; 
-  private final Text              widgetMessage; 
-  private final Button            widgetBinary;  
-  private final Button            widgetAdd;     
+  private final List       widgetFiles;   
+  private final List       widgetHistory; 
+  private final Text       widgetMessage; 
+  private final Button     widgetBinary;  
+  private final Button     widgetAdd;     
 
   // ------------------------ native functions ----------------------------
 
@@ -153,20 +153,17 @@ class CommandAdd
   /** add command
    * @param shell shell
    * @param repository repository
-   * @param fileDataSet files to add
    */
-  CommandAdd(final Shell shell, final Repository repository, final HashSet<FileData> fileDataSet)
+  CommandAdd(final Shell shell, final Repository repository)
     throws RepositoryException
   {
     Composite composite;
     Label     label;
-    Table     table;
     Button    button;
 
     // initialize variables
-    this.shell           = shell;
-    this.repository      = repository;
-    this.fileDataSet     = fileDataSet;
+    this.shell      = shell;
+    this.repository = repository;
 
     // get display
     display = shell.getDisplay();
@@ -343,12 +340,6 @@ class CommandAdd
     // show dialog
     Dialogs.show(dialog);
 
-    // add files
-    for (FileData fileData : fileDataSet)
-    {
-      widgetFiles.add(fileData.name);
-    }
-
     // add history
     for (String string : history)
     {
@@ -356,6 +347,39 @@ class CommandAdd
     }
 
     // update
+  }
+
+  /** add command
+   * @param shell shell
+   * @param repository repository
+   * @param fileDataSet files to add
+   */
+  CommandAdd(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    this(shell,repository);
+
+    // add files
+    for (FileData fileData : fileDataSet)
+    {
+      data.fileDataSet.add(fileData);
+      widgetFiles.add(fileData.name);
+    }
+  }
+
+  /** add command
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file to add
+   */
+  CommandAdd(Shell shell, Repository repository, FileData fileData)
+    throws RepositoryException
+  {
+    this(shell,repository);
+
+    // add file
+    data.fileDataSet.add(fileData);
+    widgetFiles.add(fileData.name);
   }
 
   /** run dialog
@@ -371,13 +395,10 @@ class CommandAdd
       {
         // add files
         message = new Message(data.message);
-        repository.add(fileDataSet,message,data.binaryFlag);
+        repository.add(data.fileDataSet,message,data.binaryFlag);
 
-        // update states
-        repository.updateStates(fileDataSet);
-
-        // store history
-        Message.addHistory(data.message);
+        // add to history
+        message.addToHistory();
       }
       finally
       {
