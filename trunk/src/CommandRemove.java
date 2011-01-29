@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command remove
+* Contents: command remove files/directories
 * Systems: all
 *
 \***********************************************************************/
@@ -111,11 +111,13 @@ class CommandRemove
    */
   class Data
   {
-    String message;
+    HashSet<FileData> fileDataSet;
+    String            message;
 
     Data()
     {
-      this.message = "";
+      this.fileDataSet = new HashSet<FileData>();
+      this.message     = "";
     }
   };
 
@@ -126,22 +128,20 @@ class CommandRemove
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell             shell;
-  private final Repository        repository;
-  private final HashSet<FileData> fileDataSet;
-
-  private final Display           display;
-  private final Data              data = new Data();
-  private final String[]          history;       
+  private final Shell      shell;
+  private final Repository repository;
+  private final Display    display;
 
   // dialog
-  private final Shell             dialog;        
+  private final Data       data = new Data();
+  private final String[]   history;       
+  private final Shell      dialog;        
 
   // widgets
-  private final List              widgetFiles;   
-  private final List              widgetHistory; 
-  private final Text              widgetMessage; 
-  private final Button            widgetRemove;     
+  private final List       widgetFiles;   
+  private final List       widgetHistory; 
+  private final Text       widgetMessage; 
+  private final Button     widgetRemove;     
 
   // ------------------------ native functions ----------------------------
 
@@ -150,20 +150,17 @@ class CommandRemove
   /** remove command
    * @param shell shell
    * @param repository repository
-   * @param fileDataSet files remove
    */
-  CommandRemove(final Shell shell, final Repository repository, final HashSet<FileData> fileDataSet)
+  CommandRemove(final Shell shell, final Repository repository)
     throws RepositoryException
   {
     Composite composite;
     Label     label;
-    Table     table;
     Button    button;
 
     // initialize variables
-    this.shell       = shell;
-    this.repository  = repository;
-    this.fileDataSet = fileDataSet;
+    this.shell      = shell;
+    this.repository = repository;
 
     // get display
     display = shell.getDisplay();
@@ -335,12 +332,6 @@ class CommandRemove
     // show dialog
     Dialogs.show(dialog);
 
-    // add files
-    for (FileData fileData : fileDataSet)
-    {
-      widgetFiles.add(fileData.name);
-    }
-
     // add history
     for (String string : history)
     {
@@ -348,6 +339,39 @@ class CommandRemove
     }
 
     // update
+  }
+
+  /** remove command
+   * @param shell shell
+   * @param repository repository
+   * @param fileDataSet files remove
+   */
+  CommandRemove(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    this(shell,repository);
+
+    // add files
+    for (FileData fileData : fileDataSet)
+    {
+      data.fileDataSet.add(fileData);
+      widgetFiles.add(fileData.name);
+    }
+  }
+
+  /** remove command
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file remove
+   */
+  CommandRemove(Shell shell, Repository repository, FileData fileData)
+    throws RepositoryException
+  {
+    this(shell,repository);
+
+    // add file
+    data.fileDataSet.add(fileData);
+    widgetFiles.add(fileData.name);
   }
 
   /** run dialog
@@ -363,13 +387,10 @@ class CommandRemove
       {
         // remove files
         message = new Message(data.message);
-        repository.remove(fileDataSet,message);
+        repository.remove(data.fileDataSet,message);
 
-        // update states
-        repository.updateStates(fileDataSet);
-
-        // store history
-        Message.addHistory(data.message);
+        // add to history
+        message.addToHistory();
       }
       finally
       {
