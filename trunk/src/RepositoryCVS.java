@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -537,7 +537,7 @@ Dprintf.dprintf("file=%s",fileData);
    * @param revision revision to get
    * @return file data (array of lines)
    */
-  public byte[] getFileData(FileData fileData, String revision)
+  public byte[] getFileBytes(FileData fileData, String revision)
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
@@ -569,6 +569,101 @@ Dprintf.dprintf("file=%s",fileData);
     }
 
     return output.toByteArray();
+  }
+
+  /** get all changed files
+   * @return fileDataSet file data set with modified files
+   */
+  public HashSet<FileData> getChangedFiles()
+    throws RepositoryException
+  {
+    final Pattern PATTERN_UNKNOWN  = Pattern.compile("^\\?\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_UPDATE   = Pattern.compile("^U\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_MODIFIED = Pattern.compile("^M\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_CONFLICT = Pattern.compile("^C\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_MERGE    = Pattern.compile("^Merging differences.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_ADDED    = Pattern.compile("^A\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_REMOVED  = Pattern.compile("^R\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_EMPTY    = Pattern.compile("^\\s*",Pattern.CASE_INSENSITIVE);
+
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+
+    try
+    {
+      Command command = new Command();
+      Exec    exec;
+      Matcher matcher;
+      String  line;
+
+      // get list of files which may be updated or which are locally changed
+      command.clear();
+      command.append("cvs","-n","-q","update","-d");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // read list
+      boolean mergeFlag = false;
+      while ((line = exec.getStdout()) != null)
+      {
+        if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
+        {
+          fileDataSet.add(new FileData(matcher.group(1),FileData.States.UNKNOWN));
+          mergeFlag = false;
+        }
+        else if ((matcher = PATTERN_UPDATE.matcher(line)).matches())
+        {
+          fileDataSet.add(new FileData(matcher.group(1),FileData.States.UPDATE));
+          mergeFlag = false;
+        }
+        else if ((matcher = PATTERN_MODIFIED.matcher(line)).matches())
+        {
+          fileDataSet.add(new FileData(matcher.group(1),FileData.States.MODIFIED));
+          mergeFlag = false;
+        }
+        else if ((matcher = PATTERN_MERGE.matcher(line)).matches())
+        {
+          mergeFlag = true;
+        }
+        else if ((matcher = PATTERN_CONFLICT.matcher(line)).matches())
+        {
+          if (mergeFlag)
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.MERGE));
+          }
+          else
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.CONFLICT));
+          }
+          mergeFlag = false;
+        }
+        else if ((matcher = PATTERN_ADDED.matcher(line)).matches())
+        {
+          fileDataSet.add(new FileData(matcher.group(1),FileData.States.ADDED));
+          mergeFlag = false;
+        }
+        else if ((matcher = PATTERN_REMOVED.matcher(line)).matches())
+        {
+          fileDataSet.add(new FileData(matcher.group(1),FileData.States.REMOVED));
+          mergeFlag = false;
+        }
+        else if ((matcher = PATTERN_EMPTY.matcher(line)).matches())
+        {
+        }
+        else
+        {
+Dprintf.dprintf("unknown %s",line);
+        }
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return fileDataSet;
   }
 
   /** 
@@ -818,7 +913,7 @@ Dprintf.dprintf("file=%s",fileData);
   public DiffData[] diff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
-    final Pattern PATTERN_DIFF = Pattern.compile("^diff.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF        = Pattern.compile("^diff.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_DIFF_ADD    = Pattern.compile("^([\\d,]+)a([\\d,]+)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_DIFF_DELETE = Pattern.compile("^([\\d,]+)d([\\d,]+)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_DIFF_CHANGE = Pattern.compile("^([\\d,]+)c([\\d,]+)",Pattern.CASE_INSENSITIVE);
@@ -833,12 +928,12 @@ Dprintf.dprintf("file=%s",fileData);
       String  line;
 
       String[] oldFileLines = null;
-      if (newRevision != null)
+      if (oldRevision != null)
       {
         // check out new revision
         command.clear();
         command.append("cvs","up","-p");
-        command.append("-r",newRevision);
+        command.append("-r",oldRevision);
         command.append("--");
         command.append(fileData.getFileName());
         exec = new Exec(rootPath,command);
@@ -902,7 +997,7 @@ Dprintf.dprintf("file=%s",fileData);
              <i>d<j> - lines delete 
              <i>c<j> - lines changed 
       */
-      int                lineNb = 0;
+      int                lineNb = 1;
       DiffData           diffData;
       ArrayList<String> keepLinesList = new ArrayList<String>();
       ArrayList<String> addedLinesList = new ArrayList<String>();
@@ -915,12 +1010,14 @@ Dprintf.dprintf("file=%s",fileData);
           // add lines
           int[] oldIndex = parseDiffIndex(matcher.group(1));
           int[] newIndex = parseDiffIndex(matcher.group(2));
+//Dprintf.dprintf("oldIndex=%d,%d",oldIndex[0],oldIndex[1]);
+//Dprintf.dprintf("newIndex=%d,%d",newIndex[0],newIndex[1]);
 
           // get keep lines
           keepLinesList.clear();
-          while ((lineNb < oldIndex[0]) && (lineNb < oldFileLines.length))
+          while ((lineNb <= oldIndex[0]) && (lineNb <= oldFileLines.length))
           {
-            keepLinesList.add(oldFileLines[lineNb]);
+            keepLinesList.add(oldFileLines[lineNb-1]);
             lineNb++;
           }
           diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
@@ -947,9 +1044,9 @@ Dprintf.dprintf("file=%s",fileData);
 
           // get keep lines
           keepLinesList.clear();
-          while ((lineNb < oldIndex[0]) && (lineNb < oldFileLines.length))
+          while ((lineNb <= oldIndex[0]) && (lineNb <= oldFileLines.length))
           {
-            keepLinesList.add(oldFileLines[lineNb]);
+            keepLinesList.add(oldFileLines[lineNb-1]);
             lineNb++;
           }
           diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
@@ -977,9 +1074,9 @@ Dprintf.dprintf("file=%s",fileData);
 
           // get keep lines
           keepLinesList.clear();
-          while ((lineNb < oldIndex[0]) && (lineNb < oldFileLines.length))
+          while ((lineNb <= oldIndex[0]) && (lineNb <= oldFileLines.length))
           {
-            keepLinesList.add(oldFileLines[lineNb]);
+            keepLinesList.add(oldFileLines[lineNb-1]);
             lineNb++;
           }
           diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
@@ -1017,6 +1114,20 @@ else {
 //Dprintf.dprintf("line=%s",line);
 }
       }
+
+      // get rest of keep lines
+      if (lineNb <= oldFileLines.length)
+      {
+        keepLinesList.clear();
+        while (lineNb <= oldFileLines.length)
+        {
+          keepLinesList.add(oldFileLines[lineNb-1]);
+          lineNb++;
+        }
+        diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+        diffDataList.add(diffData);
+      }
+//Dprintf.dprintf("diffData=%s",diffData);
     }
     catch (IOException exception)
     {
@@ -1052,17 +1163,17 @@ else {
   private FileData.States parseState(String string)
   {
     if      (string.equalsIgnoreCase("Up-to-date"      )) return FileData.States.OK;
-    else if (string.equalsIgnoreCase("Locally Modified")) return FileData.States.MODIFIED;
-    else if (string.equalsIgnoreCase("Needs Merge"     )) return FileData.States.MERGE;
-    else if (string.equalsIgnoreCase("Conflict"        )) return FileData.States.CONFLICT;
-    else if (string.equalsIgnoreCase("Removed"         )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("Unknown"         )) return FileData.States.UNKNOWN;
     else if (string.equalsIgnoreCase("Update"          )) return FileData.States.UPDATE;
     else if (string.equalsIgnoreCase("Needs patch"     )) return FileData.States.UPDATE;
     else if (string.equalsIgnoreCase("Needs update"    )) return FileData.States.UPDATE;
     else if (string.equalsIgnoreCase("Needs Checkout"  )) return FileData.States.CHECKOUT;
-    else if (string.equalsIgnoreCase("Unknown"         )) return FileData.States.UNKNOWN;
-    else if (string.equalsIgnoreCase("Entry invalid"   )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("Locally Modified")) return FileData.States.MODIFIED;
+    else if (string.equalsIgnoreCase("Needs Merge"     )) return FileData.States.MERGE;
+    else if (string.equalsIgnoreCase("Conflict"        )) return FileData.States.CONFLICT;
     else if (string.equalsIgnoreCase("Locally Added"   )) return FileData.States.ADDED;
+    else if (string.equalsIgnoreCase("Entry invalid"   )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("Removed"         )) return FileData.States.REMOVED;
     else                                                  return FileData.States.UNKNOWN;
   }
 
