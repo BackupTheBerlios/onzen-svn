@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevert.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command revert
+* Contents: command revert files
 * Systems: all
 *
 \***********************************************************************/
@@ -111,35 +111,35 @@ class CommandRevert
    */
   class Data
   {
-    String revision;
+    HashSet<FileData> fileDataSet;
+    String[]          revisions;
+    String            revision;
 
     Data()
     {
-      this.revision = null;
+      this.fileDataSet = new HashSet<FileData>();
+      this.revisions   = null;
+      this.revision    = null;
     }
   };
 
   // --------------------------- constants --------------------------------
 
-  // colors
-
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell             shell;
-  private final Repository        repository;
-  private final HashSet<FileData> fileDataSet;
-
-  private final Display           display;
-  private final Data              data = new Data();
+  private final Shell      shell;
+  private final Repository repository;
+  private final Display    display;
 
   // dialog
-  private final Shell             dialog;        
+  private final Data       data = new Data();
+  private final Shell      dialog;        
 
   // widgets
-  private final List              widgetFiles;   
-  private final Combo             widgetRevision; 
-  private final Button            widgetRevert;  
+  private final List       widgetFiles;   
+  private final Combo      widgetRevision; 
+  private final Button     widgetRevert;  
 
   // ------------------------ native functions ----------------------------
 
@@ -148,38 +148,20 @@ class CommandRevert
   /** revert command
    * @param shell shell
    * @param repository repository
-   * @param fileDataSet files to revert
    */
-  CommandRevert(final Shell shell, final Repository repository, final HashSet<FileData> fileDataSet)
+  CommandRevert(final Shell shell, final Repository repository)
     throws RepositoryException
   {
-    String[]  revisions = null;
     Composite composite,subComposite;
     Label     label;
-    Table     table;
     Button    button;
 
     // initialize variables
-    this.shell           = shell;
-    this.repository      = repository;
-    this.fileDataSet     = fileDataSet;
+    this.shell      = shell;
+    this.repository = repository;
 
     // get display
     display = shell.getDisplay();
-
-    // get revisions (only if single file is seleccted)
-    try
-    {
-      if (fileDataSet.size() == 1)
-      {
-        FileData fileData = fileDataSet.toArray(new FileData[1])[0];
-        revisions = repository.getRevisions(fileData);
-      }
-    }
-    catch (RepositoryException exception)
-    {
-      throw new RepositoryException("Getting revisions fail",exception);
-    }
 
     // add files dialog
     dialog = Dialogs.open(shell,"Revert files",Settings.geometryRevert.x,Settings.geometryRevert.y,new double[]{1.0,0.0},1.0);
@@ -255,24 +237,88 @@ class CommandRevert
     // show dialog
     Dialogs.show(dialog);
 
+    // update
+  }
+
+  /** revert command
+   * @param shell shell
+   * @param repository repository
+   * @param fileDataSet files to revert
+   */
+  CommandRevert(final Shell shell, final Repository repository, HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    this(shell,repository);
+
     // add files
     for (FileData fileData : fileDataSet)
     {
+      data.fileDataSet.add(fileData);
       widgetFiles.add(fileData.name);
     }
 
-    // add revisions (only if single file is seleccted)
-    if (revisions != null)
+    // get revisions (only if single file is seleccted)
+    try
     {
-      for (String revision : revisions)
+      if (fileDataSet.size() == 1)
       {
-        widgetRevision.add(revision);
+        // get revisions
+        FileData fileData = fileDataSet.toArray(new FileData[1])[0];
+        data.revisions = repository.getRevisions(fileData);
+
+        // add revisions (only if single file is seleccted)
+        if (data.revisions != null)
+        {
+          for (String revision : data.revisions)
+          {
+            widgetRevision.add(revision);
+          }
+        }
+        widgetRevision.add(repository.getLastRevision());
+        widgetRevision.select(widgetRevision.getItemCount()-1);
       }
     }
-    widgetRevision.add(repository.getLastRevision());
-    widgetRevision.select(widgetRevision.getItemCount()-1);
+    catch (RepositoryException exception)
+    {
+      throw new RepositoryException("Getting revisions fail",exception);
+    }
+  }
 
-    // update
+  /** revert command
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file to revert
+   */
+  CommandRevert(final Shell shell, final Repository repository, FileData fileData)
+    throws RepositoryException
+  {
+    this(shell,repository);
+
+    // add file
+    data.fileDataSet.add(fileData);
+    widgetFiles.add(fileData.name);
+
+    // get revisions (only if single file is seleccted)
+    try
+    {
+      // get revisions
+      data.revisions = repository.getRevisions(fileData);
+
+      // add revisions (only if single file is seleccted)
+      if (data.revisions != null)
+      {
+        for (String revision : data.revisions)
+        {
+          widgetRevision.add(revision);
+        }
+      }
+      widgetRevision.add(repository.getLastRevision());
+      widgetRevision.select(widgetRevision.getItemCount()-1);
+    }
+    catch (RepositoryException exception)
+    {
+      throw new RepositoryException("Getting revisions fail",exception);
+    }
   }
 
   /** run dialog
@@ -284,10 +330,7 @@ class CommandRevert
     if ((Boolean)Dialogs.run(dialog,false))
     {
       // revert files
-      repository.revert(fileDataSet,data.revision);
-
-      // update states
-      repository.updateStates(fileDataSet);
+      repository.revert(data.fileDataSet,data.revision);
 
       return true;
     }
