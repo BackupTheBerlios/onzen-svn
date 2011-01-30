@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -83,7 +83,6 @@ class RepositorySVN extends Repository
    * @return 
    */
   public String getLastRevision()
-    throws RepositoryException
   {
     return "???";
   }
@@ -200,6 +199,17 @@ class RepositorySVN extends Repository
   public void patch(FileData fileData)
     throws RepositoryException
   {
+  }
+
+  /** get annotations to file
+   * @param fileData file data
+   * @param revision revision
+   * @return annotation array
+   */
+  public AnnotationData[] annotations(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return null;
   }
 
   /** convert data to string

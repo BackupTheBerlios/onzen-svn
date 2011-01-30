@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -82,7 +82,6 @@ class RepositoryGit extends Repository
    * @return 
    */
   public String getLastRevision()
-    throws RepositoryException
   {
     return "???";
   }
@@ -199,6 +198,17 @@ class RepositoryGit extends Repository
   public void patch(FileData fileData)
     throws RepositoryException
   {
+  }
+
+  /** get annotations to file
+   * @param fileData file data
+   * @param revision revision
+   * @return annotation array
+   */
+  public AnnotationData[] annotations(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return null;
   }
 
   /** convert data to string
