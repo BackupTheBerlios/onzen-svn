@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevert.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command revert files
 * Systems: all
@@ -128,7 +128,6 @@ class CommandRevert
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
   private final Repository repository;
   private final Display    display;
 
@@ -150,14 +149,12 @@ class CommandRevert
    * @param repository repository
    */
   CommandRevert(final Shell shell, final Repository repository)
-    throws RepositoryException
   {
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.shell      = shell;
     this.repository = repository;
 
     // get display
@@ -186,6 +183,7 @@ class CommandRevert
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetRevision = Widgets.newSelect(subComposite);
+        widgetRevision.setEnabled(false);
         Widgets.layout(widgetRevision,0,1,TableLayoutData.WE);
         widgetRevision.setToolTipText("Revision to revert to.");
       }
@@ -238,6 +236,8 @@ class CommandRevert
     Dialogs.show(dialog);
 
     // update
+    widgetRevision.add(repository.getLastRevision());
+    widgetRevision.select(0);
   }
 
   /** revert command
@@ -246,7 +246,6 @@ class CommandRevert
    * @param fileDataSet files to revert
    */
   CommandRevert(final Shell shell, final Repository repository, HashSet<FileData> fileDataSet)
-    throws RepositoryException
   {
     this(shell,repository);
 
@@ -257,30 +256,55 @@ class CommandRevert
       widgetFiles.add(fileData.name);
     }
 
-    // get revisions (only if single file is seleccted)
-    try
+    if (fileDataSet.size() == 1)
     {
-      if (fileDataSet.size() == 1)
-      {
-        // get revisions
-        FileData fileData = fileDataSet.toArray(new FileData[1])[0];
-        data.revisions = repository.getRevisions(fileData);
+      // get file data
+      FileData fileData = fileDataSet.toArray(new FileData[1])[0];
 
-        // add revisions (only if single file is seleccted)
-        if (data.revisions != null)
+      // start add revisions (only if single file is seleccted)
+      Background.run(new BackgroundTask(data,repository,fileData)
+      {
+        public void run()
         {
-          for (String revision : data.revisions)
+          final Data       data       = (Data)      userData[0];
+          final Repository repository = (Repository)userData[1];
+          final FileData   fileData   = (FileData)  userData[2];
+
+          try
           {
-            widgetRevision.add(revision);
+            // get revisions
+            data.revisions = repository.getRevisions(fileData);
+            if (data.revisions.length > 0)
+            {
+              // add revisions
+              if (!display.isDisposed())
+              {
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    if (!widgetRevision.isDisposed())
+                    {
+                      widgetRevision.removeAll();
+                      for (String revision : data.revisions)
+                      {
+                        widgetRevision.add(revision);
+                      }
+                      widgetRevision.add(repository.getLastRevision());
+                      widgetRevision.select(data.revisions.length);
+                      widgetRevision.setEnabled(true);
+                    }
+                  }
+                });
+              }
+            }
+          }
+          catch (RepositoryException exception)
+          {
+            Dialogs.error(dialog,String.format("Getting revisions fail: %s",exception));
           }
         }
-        widgetRevision.add(repository.getLastRevision());
-        widgetRevision.select(widgetRevision.getItemCount()-1);
-      }
-    }
-    catch (RepositoryException exception)
-    {
-      throw new RepositoryException("Getting revisions fail",exception);
+      });
     }
   }
 
@@ -290,7 +314,6 @@ class CommandRevert
    * @param fileData file to revert
    */
   CommandRevert(final Shell shell, final Repository repository, FileData fileData)
-    throws RepositoryException
   {
     this(shell,repository);
 
@@ -298,41 +321,75 @@ class CommandRevert
     data.fileDataSet.add(fileData);
     widgetFiles.add(fileData.name);
 
-    // get revisions (only if single file is seleccted)
-    try
+    // start add revisions (only if single file is seleccted)
+    Background.run(new BackgroundTask(data,repository,fileData)
     {
-      // get revisions
-      data.revisions = repository.getRevisions(fileData);
-
-      // add revisions (only if single file is seleccted)
-      if (data.revisions != null)
+      public void run()
       {
-        for (String revision : data.revisions)
+        final Data data             = (Data)      userData[0];
+        final Repository repository = (Repository)userData[1];
+        final FileData fileData     = (FileData)  userData[2];
+
+        try
         {
-          widgetRevision.add(revision);
+          // get revisions
+          data.revisions = repository.getRevisions(fileData);
+          if (data.revisions.length > 0)
+          {
+            // add revisions
+            if (!display.isDisposed())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  if (!widgetRevision.isDisposed())
+                  {
+                    widgetRevision.removeAll();
+                    for (String revision : data.revisions)
+                    {
+                      widgetRevision.add(revision);
+                    }
+                    widgetRevision.add(repository.getLastRevision());
+                    widgetRevision.select(data.revisions.length);
+                    widgetRevision.setEnabled(true);
+                  }
+                }
+              });
+            }
+          }
+        }
+        catch (RepositoryException exception)
+        {
+          Dialogs.error(dialog,String.format("Getting revisions fail: %s",exception));
         }
       }
-      widgetRevision.add(repository.getLastRevision());
-      widgetRevision.select(widgetRevision.getItemCount()-1);
-    }
-    catch (RepositoryException exception)
-    {
-      throw new RepositoryException("Getting revisions fail",exception);
-    }
+    });
   }
 
   /** run dialog
    */
   public boolean run()
-    throws RepositoryException
   {
     widgetRevision.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      // revert files
-      repository.revert(data.fileDataSet,data.revision);
+      try
+      {
+        // revert files
+        repository.revert(data.fileDataSet,data.revision);
 
-      return true;
+        return true;
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(dialog,
+                      String.format("Cannot revert files (error: %s)",
+                                    exception.getMessage()
+                                   )
+                     );
+        return false;
+      }
     }
     else
     {
