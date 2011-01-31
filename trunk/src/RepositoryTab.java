@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: repository tab
 * Systems: all
@@ -212,18 +212,34 @@ class RepositoryTab
 
   // --------------------------- constants --------------------------------
 
+  // colors
+  public static Color COLOR_OK;
+  public static Color COLOR_UNKNOWN;
+  public static Color COLOR_MODIFIED;
+  public static Color COLOR_CHECKOUT;
+  public static Color COLOR_UPDATE;
+  public static Color COLOR_MERGE;
+  public static Color COLOR_CONFLICT;
+  public static Color COLOR_ADDED;
+  public static Color COLOR_REMOVED;
+  public static Color COLOR_NOT_EXISTS;
+  public static Color COLOR_WAITING;
+  public static Color COLOR_ERROR;
+  public static Color COLOR_UPDATE_STATUS;
+
   // --------------------------- variables --------------------------------
   // repository
   public  String              name;
-  public  Repository          repository;
+  public  final Repository    repository;
 
   // global variable references
+  private final Onzen         onzen;
   private final Shell         shell;
   private final Display       display;
 
   // widgets
   private TabFolder           widgetTabFolder;
-  public  Composite           widgetTab;
+  public  final Composite     widgetTab;
   private Tree                widgetFileTree;
 
   // widget variables
@@ -239,11 +255,11 @@ class RepositoryTab
   // ---------------------------- methods ---------------------------------
 
   /** create repository tab
+   * @param onzen Onzen instance
    * @param parentTabFolder parent tab folder
-   * @param name name of repository
    * @param repository repository
    */
-  RepositoryTab(TabFolder parentTabFolder, Repository repository)
+  RepositoryTab(Onzen onzen, TabFolder parentTabFolder, Repository repository)
   {
     Menu       menu;
     MenuItem   menuItem;
@@ -255,12 +271,28 @@ class RepositoryTab
     Text       text;
 
     // initialize variables
+    this.onzen           = onzen;
     this.repository      = repository;
     this.widgetTabFolder = parentTabFolder;
 
     // get shell, display
     shell   = parentTabFolder.getShell();
     display = shell.getDisplay();
+
+    // init colors
+    COLOR_OK            = new Color(display,Settings.colorStatusOK.background          );
+    COLOR_UNKNOWN       = new Color(display,Settings.colorStatusUnknown.background     );
+    COLOR_MODIFIED      = new Color(display,Settings.colorStatusModified.background    );
+    COLOR_CHECKOUT      = new Color(display,Settings.colorStatusCheckout.background    );
+    COLOR_UPDATE        = new Color(display,Settings.colorStatusUpdate.background      );
+    COLOR_MERGE         = new Color(display,Settings.colorStatusMerge.background       );
+    COLOR_CONFLICT      = new Color(display,Settings.colorStatusConflict.background    );
+    COLOR_ADDED         = new Color(display,Settings.colorStatusAdded.background       );
+    COLOR_REMOVED       = new Color(display,Settings.colorStatusRemoved.background     );
+    COLOR_NOT_EXISTS    = new Color(display,Settings.colorStatusNotExists.background   );
+    COLOR_WAITING       = new Color(display,Settings.colorStatusWaiting.background     );
+    COLOR_ERROR         = new Color(display,Settings.colorStatusError.background       );
+    COLOR_UPDATE_STATUS = new Color(display,Settings.colorStatusUpdateStatus.foreground);
 
     // create tab
     widgetTab = Widgets.addTab(parentTabFolder,repository.title,this);
@@ -300,84 +332,123 @@ class RepositoryTab
 
       menu = Widgets.newPopupMenu(shell);
       {
-/*
-        menuItem = Widgets.addMenuItem(menu,"Open/Close");
+        menuItem = Widgets.addMenuItem(menu,"Update");
         menuItem.addSelectionListener(new SelectionListener()
         {
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            MenuItem widget = (MenuItem)selectionEvent.widget;
-
-            TreeItem[] treeItems = widgetFileTree.getSelection();
-            if (treeItems != null)
-            {
-              FileData fileData = (FileData)treeItems[0].getData();
-              if (fileData.type == Types.DIRECTORY)
-              {
-                Event treeEvent = new Event();
-                treeEvent.item = treeItems[0];
-                if (treeItems[0].getExpanded())
-                {
-                  widgetFileTree.notifyListeners(SWT.Collapse,treeEvent);
-                  treeItems[0].setExpanded(false);
-                }
-                else
-                {
-                  widgetFileTree.notifyListeners(SWT.Expand,treeEvent);
-                  treeItems[0].setExpanded(true);
-                }
-              }
-            }
-          }
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
           }
-        });
-
-        menuItem = Widgets.addMenuSeparator(menu);
-
-        menuItem = Widgets.addMenuItem(menu,"Include");
-        menuItem.addSelectionListener(new SelectionListener()
-        {
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            MenuItem widget = (MenuItem)selectionEvent.widget;
-
-            for (TreeItem treeItem : widgetFileTree.getSelection())
-            {
-              FileData fileData = (FileData)treeItem.getData();
-              includeAdd(EntryTypes.FILE,fileData.name);
-              excludeRemove(fileData.name);
-              switch (fileData.type)
-              {
-                case FILE:      treeItem.setImage(Onzen.IMAGE_FILE_INCLUDED);      break;
-                case DIRECTORY: treeItem.setImage(Onzen.IMAGE_DIRECTORY_INCLUDED); break;
-                case LINK:      treeItem.setImage(Onzen.IMAGE_LINK_INCLUDED);      break;
-                case DEVICE:    treeItem.setImage(Onzen.IMAGE_FILE_INCLUDED);      break;
-                case SPECIAL:   treeItem.setImage(Onzen.IMAGE_FILE_INCLUDED);      break;
-                case FIFO:      treeItem.setImage(Onzen.IMAGE_FILE_INCLUDED);      break;
-                case SOCKET:    treeItem.setImage(Onzen.IMAGE_FILE_INCLUDED);      break;
-              }
-            }
+            update();
           }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Commit");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
           }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            commit();
+          }
         });
-*/
+
+        menuItem = Widgets.addMenuItem(menu,"Patch");
+menuItem.setEnabled(false);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+Dprintf.dprintf("");
+//            patch();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Add");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            add();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Remove");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            remove();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Revert");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            revert();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Diff");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            diff();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Revisions");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            revisions();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Solve");
+menuItem.setEnabled(false);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+Dprintf.dprintf("");
+//            solve();
+          }
+        });
+
+//        menuItem = Widgets.addMenuSeparator(menu);
       }
       widgetFileTree.setMenu(menu);
       widgetFileTree.setToolTipText("Tree representation of files.\nDouble-click to open sub-directories, right-click to open context menu.");
     }
-/*
-    Widgets.addEventListener(new WidgetEventListener(widgetTabFolder,selectJobEvent)
-    {
-      public void trigger(Control control)
-      {
-        Widgets.setEnabled(control,selectedJobId != 0);
-      }
-    });
-*/
 
     // add root directory
     addRootDirectory();
@@ -414,9 +485,26 @@ class RepositoryTab
     Widgets.moveTab(widgetTabFolder,widgetTab,index);
   }
 
+  /** show repository tab
+   */
+  public void show()
+  {
+    Widgets.showTab(widgetTabFolder,widgetTab);
+  }
+
+  /** open directory in file-tree
+   * @param directory directory to open
+   * @return true iff directory opened
+   */
+  public boolean openDirectory(String directory)
+  {
+    return openSubDirectory(widgetFileTree.getItems(),directory);
+  }
+
   /** edit repository tab
    */
-  public void edit()
+// ??? obsolete
+  public void xedit()
   {
     Composite composite;
     Label     label;
@@ -581,8 +669,7 @@ throw new Error("NYI");
       }
     }
 
-    // update file data
-    repository.updateStates(fileDataSet,true);
+    // start update file data
     asyncUpdateFileStatus(fileDataSet);
   }
 
@@ -603,63 +690,196 @@ throw new Error("NYI");
     }
   }
 
-  /** update selected entries
+  /** commit selected entries
    */
   public void commit()
   {
-    // dialog data
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandCommit commandCommit = new CommandCommit(shell,repository,fileDataSet);
+      if (commandCommit.run())
+      {
+        asyncUpdateFileStatus(fileDataSet);
+      }
+    }
+  }
+
+  /** add selected entries
+   */
+  public void add()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandAdd commandAdd = new CommandAdd(shell,repository,fileDataSet);
+      if (commandAdd.run())
+      {
+        asyncUpdateFileStatus(fileDataSet);
+      }
+    }
+  }
+
+  /** remove selected entries
+   */
+  public void remove()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandRemove commandRemove = new CommandRemove(shell,repository,fileDataSet);
+      if (commandRemove.run())
+      {
+        asyncUpdateFileStatus(fileDataSet);
+      }
+    }
+  }
+
+  /** revert selected entries
+   */
+  public void revert()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandRevert commandRevert = new CommandRevert(shell,repository,fileDataSet);
+      if (commandRevert.run())
+      {
+        asyncUpdateFileStatus(fileDataSet);
+      }
+    }
+  }
+
+  /** rename selected entry
+   */
+  public void rename()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandRename commandRename = new CommandRename(shell,repository,fileData);
+      if (commandRename.run())
+      {
+        asyncUpdateFileStatus(fileData);
+      }
+    }
+  }
+
+  /** view selected entry
+   */
+  public void view()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandView commandView = new CommandView(shell,repository,fileData);
+      commandView.run();
+    }
+  }
+
+  /** diff selected entry
+   */
+  public void diff()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandDiff commandDiff = new CommandDiff(shell,repository,fileData);
+      commandDiff.run();
+    }
+  }
+
+  /** show revision info of selected entry
+   */
+  public void revisionInfo()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,repository,fileData);
+      commandRevisionInfo.run();
+    }
+  }
+
+  /** show revision tree of selected entry
+   */
+  public void revisions()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandRevisions commandRevisions = new CommandRevisions(shell,repository,fileData);
+      commandRevisions.run();
+    }
+  }
+
+  /** show list of all changed files
+   */
+  public void changedFiles()
+  {
+    CommandChangedFiles commandChangedFiles = new CommandChangedFiles(shell,repository);
+    commandChangedFiles.run();
+  }
+
+  /** show annotatiosn of file
+   */
+  public void annotations()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandAnnotations commandAnnotations = new CommandAnnotations(shell,repository,fileData);
+      commandAnnotations.run();
+    }
+  }
+
+  /** open file with external program
+   */
+  public void openFileWith()
+  {
+    /** dialog data
+     */
     class Data
     {
-      String message;
+      String path;
 
       Data()
       {
-        this.message = "";
+        this.path = null;
       }
     };
 
-    // variables
-    final Data              data = new Data();
-    Composite               composite;
-    Label                   label;
-    Table                   table;
-    Button                  button;
-    final HashSet<FileData> fileDataSet = getSelectedFileDataSet();
-    final String[]          history = Message.getHistory();
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite;
+    Label       label;
+    Button      button;
 
-    // get commit message
-    final Shell dialog = Dialogs.open(shell,"Commit files",Settings.geometryCommit.x,Settings.geometryCommit.y,new double[]{1.0,0.0},1.0);
+    // 
+//    if (selectedRepositoryTab != null)
+//    {
+//      data.path = selectedRepositoryTab.repository.rootPath;
+//    }
+//    else
+//    {
+      data.path = "";
+//    }
 
-    final List   widgetFiles;
-    final List   widgetHistory;
-    final Text   widgetMessage;
-    final Button widgetCommit;
+    // new directory dialog
+    dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetPath;
+    final Button widgetCreate;
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Files:");
+      label = Widgets.newLabel(composite,"Path:");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
-      widgetFiles = Widgets.newList(composite);
-      widgetFiles.setBackground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetFiles,1,0,TableLayoutData.NSWE);
-      widgetFiles.setToolTipText("Files to commit.");
-
-      label = Widgets.newLabel(composite,"History:");
-      Widgets.layout(label,2,0,TableLayoutData.W);
-
-      widgetHistory = Widgets.newList(composite);
-      widgetHistory.setBackground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetHistory,3,0,TableLayoutData.NSWE);
-      widgetHistory.setToolTipText("Commit message history.");
-
-      label = Widgets.newLabel(composite,"Message:");
-      Widgets.layout(label,4,0,TableLayoutData.W);
-
-      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-      Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to commit.");
+      widgetPath = Widgets.newText(composite);
+      widgetPath.setText(data.path);
+      Widgets.layout(widgetPath,1,1,TableLayoutData.WE);
     }
 
     // buttons
@@ -667,9 +887,9 @@ throw new Error("NYI");
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetCommit = Widgets.newButton(composite,"Commit");
-      Widgets.layout(widgetCommit,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      widgetCommit.addSelectionListener(new SelectionListener()
+      widgetCreate = Widgets.newButton(composite,"Create");
+      Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetCreate.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -678,17 +898,28 @@ throw new Error("NYI");
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.message = widgetMessage.getText();
-
-          Settings.geometryCommit = dialog.getSize();
-
-          Dialogs.close(dialog,true);
+          File file = new File(widgetPath.getText());
+          if      (file.exists())
+          {
+            Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
+            return;
+          }
+          else if (!file.getParentFile().canWrite())
+          {
+            Dialogs.error(shell,"Permission denied for parent directory '%s'!",file.getParentFile().getPath());
+            return;
+          }
+          else
+          {
+            data.path = widgetPath.getText();
+            Dialogs.close(dialog,true);
+          }
         }
       });
-      widgetCommit.setToolTipText("Commit files.");
+      widgetCreate.setToolTipText("Create new directory.");
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -704,286 +935,524 @@ throw new Error("NYI");
     }
 
     // listeners
-    widgetHistory.addMouseListener(new MouseListener()
+    widgetPath.addSelectionListener(new SelectionListener()
     {
-      public void mouseDoubleClick(MouseEvent mouseEvent)
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        List widget = (List)mouseEvent.widget;
-
-        int i = widget.getSelectionIndex();
-        if (i >= 0)
-        {
-          widgetMessage.setText(history[i]);
-          widgetMessage.setFocus();
-        }
+        widgetCreate.setFocus();
       }
-      public void mouseDown(MouseEvent mouseEvent)
-      {
-      }
-      public void mouseUp(MouseEvent mouseEvent)
-      {
-      }
-    });
-    widgetMessage.addKeyListener(new KeyListener()
-    {
-      public void keyPressed(KeyEvent keyEvent)
-      {
-        Text widget = (Text)keyEvent.widget;
-
-        if ((keyEvent.stateMask & SWT.CTRL) != 0)
-        {
-          int i = widgetHistory.getSelectionIndex();
-
-          if (keyEvent.keyCode == SWT.ARROW_DOWN)
-          {
-            // next history entry
-            if (i >= 0)
-            {
-              if (i < history.length-1)
-              {
-                widgetHistory.setSelection(i+1);
-                widgetMessage.setText(history[i+1]);
-                widgetMessage.setFocus();
-              }
-            }
-          }
-          else if (keyEvent.keyCode == SWT.ARROW_UP)
-          {
-            // previous history entry
-            if (i >= 0)
-            {
-              if (i > 0)
-              {
-                widgetHistory.setSelection(i-1);
-                widgetMessage.setText(history[i-1]);
-                widgetMessage.setFocus();
-              }
-            }
-          }
-          else if (keyEvent.keyCode == SWT.HOME)
-          {
-            // first history entry
-            if (history.length > 0)
-            {
-              widgetHistory.setSelection(0);
-              widgetMessage.setText(history[0]);
-              widgetMessage.setFocus();
-            }
-          }
-          else if (keyEvent.keyCode == SWT.END)
-          {
-            // last history entry
-            if (history.length > 0)
-            {
-              widgetHistory.setSelection(history.length-1);
-              widgetMessage.setText(history[history.length-1]);
-              widgetMessage.setFocus();
-            }
-          }
-          else if (keyEvent.character == SWT.CR)
-          {
-            // invoke add-button
-            Widgets.invoke(widgetCommit);
-          }
-        }
-      }
-      public void keyReleased(KeyEvent keyEvent)
+      public void widgetSelected(SelectionEvent selectionEvent)
       {
       }
     });
 
-    // add files
-    for (FileData fileData : fileDataSet)
-    {
-      widgetFiles.add(fileData.name);
-    }
-
-    // add history
-    for (String string : history)
-    {
-      widgetHistory.add(string.replaceAll("\n","\\\\n"));
-    }
+    // show dialog
+    Dialogs.show(dialog);
 
     // run
-    widgetMessage.setFocus();
+    widgetPath.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      try
+      // create directory
+      File file = new File(data.path);
+      if (!file.mkdirs())
       {
-        Message message = null;
-        try
-        {
-          // commit files
-          message = new Message(data.message);
-          repository.commit(fileDataSet,message);
-
-          // update view
-          asyncUpdateFileStatus(fileDataSet);
-
-          // store history
-          Message.addHistory(data.message);
-        }
-        finally
-        {
-          message.done();
-        }
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Commit fail: %s",exception.getMessage());
+        Dialogs.error(shell,"Cannot create new directory '%s'",data.path);
         return;
+      }
+      
+Dprintf.dprintf("");
+
+      // update file list
+    }
+  }
+
+  /** create new file
+   */
+  public void newFile()
+  {
+    /** dialog data
+     */
+    class Data
+    {
+      String fileName;
+
+      Data()
+      {
+        this.fileName = null;
+      }
+    };
+
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite;
+    Label       label;
+    Button      button;
+
+    // new directory dialog
+    dialog = Dialogs.open(shell,"New file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetFileName;
+    final Button widgetCreate;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"File name:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      widgetFileName = Widgets.newText(composite);
+      widgetFileName.setText(data.fileName);
+      widgetFileName.setSelection(data.fileName.length(),data.fileName.length());
+      Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetCreate = Widgets.newButton(composite,"Create");
+      Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetCreate.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          File file = new File(widgetFileName.getText());
+          if      (file.exists())
+          {
+            Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
+            return;
+          }
+          else if (!file.getParentFile().canWrite())
+          {
+            Dialogs.error(shell,"Permission denied for parent directory '%s'!",file.getParentFile().getPath());
+            return;
+          }
+          else
+          {
+            data.fileName = widgetFileName.getText();
+            Dialogs.close(dialog,true);
+          }
+        }
+      });
+      widgetCreate.setToolTipText("Create new directory.");
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetFileName.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetCreate.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+
+    // show dialog
+    Dialogs.show(dialog);
+
+    // run
+    widgetFileName.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      // create file
+      File file = new File(data.fileName);
+Dprintf.dprintf("");
+/*
+      if (!file.mkdirs())
+      {
+        Dialogs.error(shell,"Cannot create new file '%s'",data.fileName);
+        return;
+      }
+*/
+    
+      // update file list
+Dprintf.dprintf("");
+    }
+  }
+
+  /** create new directory
+   */
+  public void newDirectory()
+  {
+    /** dialog data
+     */
+    class Data
+    {
+      String path;
+
+      Data()
+      {
+        this.path = null;
+      }
+    };
+
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite;
+    Label       label;
+    Button      button;
+
+    // new directory dialog
+    dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetPath;
+    final Button widgetCreate;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Path:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      widgetPath = Widgets.newText(composite);
+      widgetPath.setText(data.path);
+      widgetPath.setSelection(data.path.length(),data.path.length());
+      Widgets.layout(widgetPath,1,1,TableLayoutData.WE);
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetCreate = Widgets.newButton(composite,"Create");
+      Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetCreate.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          File file = new File(widgetPath.getText());
+          if      (file.exists())
+          {
+            Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
+            return;
+          }
+          else if (!file.getParentFile().canWrite())
+          {
+            Dialogs.error(shell,"Permission denied for parent directory '%s'!",file.getParentFile().getPath());
+            return;
+          }
+          else
+          {
+            data.path = widgetPath.getText();
+            Dialogs.close(dialog,true);
+          }
+        }
+      });
+      widgetCreate.setToolTipText("Create new directory.");
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetPath.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetCreate.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+
+    // show dialog
+    Dialogs.show(dialog);
+
+    // run
+    widgetPath.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      // create directory
+      File file = new File(data.path);
+      if (!file.mkdirs())
+      {
+        Dialogs.error(shell,"Cannot create new directory '%s'",data.path);
+        return;
+      }
+      
+      // update file list
+Dprintf.dprintf("");
+    }
+  }
+
+  /** rename local file/directory
+   */
+  public void renameLocalFile()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      /** dialog data
+       */
+      class Data
+      {
+        String newFileName;
+
+        Data()
+        {
+          this.newFileName = null;
+        }
+      };
+
+      final Data  data = new Data();
+      final Shell dialog;
+      Composite   composite,subComposite;
+      Label       label;
+      Button      button;
+
+      // rename file/directory dialog
+      dialog = Dialogs.open(shell,"Rename file/directory",Settings.geometryDeleteLocalFiles.x,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+      final Text   widgetNewFileName;
+      final Button widgetRename;
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+      {
+        label = Widgets.newLabel(composite,"Old file name:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        label = Widgets.newView(composite);
+        label.setText(fileData.getFileName());
+        Widgets.layout(label,0,1,TableLayoutData.WE);
+
+        label = Widgets.newLabel(composite,"New file name:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
+
+        widgetNewFileName = Widgets.newText(composite);
+        Widgets.layout(widgetNewFileName,1,1,TableLayoutData.WE);
+      }
+
+      // buttons
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      {
+        widgetRename = Widgets.newButton(composite,"Rename");
+        Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetRename.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            data.newFileName = widgetNewFileName.getText();
+
+            Dialogs.close(dialog,true);
+          }
+        });
+        widgetRename.setToolTipText("Create new directory.");
+
+        button = Widgets.newButton(composite,"Cancel");
+        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            Dialogs.close(dialog,false);
+          }
+        });
+      }
+
+      // listeners
+      widgetNewFileName.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+          widgetRename.setFocus();
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+        }
+      });
+
+      // show dialog
+      Dialogs.show(dialog);
+
+      // update
+      data.newFileName = fileData.getFileName();
+      widgetNewFileName.setText(data.newFileName);
+
+      // run
+      widgetNewFileName.setFocus();
+      widgetNewFileName.setSelection(data.newFileName.length(),data.newFileName.length());
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        // create directory
+        File oldFile = new File(fileData.getFileName(repository));
+        File newFile = new File(repository.rootPath,data.newFileName);
+        if (!oldFile.renameTo(newFile))
+        {
+          Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n%s",fileData.getFileName(),data.newFileName);
+          return;
+        }
+        fileData.setFileName(data.newFileName);
+
+        // update file list
+Dprintf.dprintf("");
       }
     }
   }
 
-  /** add selected entries
+  /** delete local files/directories
    */
-  public void add()
+  public void deleteLocalFiles()
   {
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      try
+      final Shell dialog;
+      Composite   composite,subComposite;
+      Label       label;
+      Button      button;
+
+      // delete dialog
+      dialog = Dialogs.open(shell,"Delete files/directories",Settings.geometryDeleteLocalFiles.x,Settings.geometryDeleteLocalFiles.y,new double[]{1.0,0.0},1.0);
+
+      final List   widgetFiles;   
+      final Button widgetDelete;
+      final Button widgetCancel;
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(1.0,1.0,4));
+      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
       {
-        CommandAdd commandAdd = new CommandAdd(shell,repository,fileDataSet);
-        if (commandAdd.run())
+        widgetFiles = Widgets.newList(composite);
+        widgetFiles.setBackground(Onzen.COLOR_GRAY);
+        Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
+        widgetFiles.setToolTipText("Local files/directories to delete.");
+      }
+
+      // buttons
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      {
+        widgetDelete = Widgets.newButton(composite,"Delete");
+        Widgets.layout(widgetDelete,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetDelete.addSelectionListener(new SelectionListener()
         {
-          asyncUpdateFileStatus(fileDataSet);
-        }
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Add fail: %s",exception.getMessage());
-        return;
-      }
-    }
-  }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
 
-  /** remove selected entries
-   */
-  public void remove()
-  {
-    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
-    if (fileDataSet != null)
-    {
-      try
-      {
-        CommandRemove commandRemove = new CommandRemove(shell,repository,fileDataSet);
-        if (commandRemove.run())
+            Dialogs.close(dialog,true);
+          }
+        });
+        widgetDelete.setToolTipText("Delete local files/directories.");
+
+        widgetCancel = Widgets.newButton(composite,"Cancel");
+        Widgets.layout(widgetCancel,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+        widgetCancel.addSelectionListener(new SelectionListener()
         {
-          asyncUpdateFileStatus(fileDataSet);
-        }
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Remove fail: %s",exception.getMessage());
-        return;
-      }
-    }
-  }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
 
-  /** revert selected entries
-   */
-  public void revert()
-  {
-    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
-    if (fileDataSet != null)
-    {
-      try
+            Dialogs.close(dialog,false);
+          }
+        });
+      }
+
+      // listeners
+
+      // show dialog
+      Dialogs.show(dialog);
+
+      // add files
+      for (FileData fileData : fileDataSet)
       {
-        CommandRevert commandRevert = new CommandRevert(shell,repository,fileDataSet);
-        if (commandRevert.run())
+        widgetFiles.add(fileData.name);
+      }
+
+      // run
+      widgetCancel.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        // delete files/directories
+        boolean skipAll = false;
+        for (FileData fileData : fileDataSet)
         {
-          asyncUpdateFileStatus(fileDataSet);
+          File file = new File(fileData.getFileName(repository));
+          if (!file.delete() && !skipAll)
+          {
+            switch (Dialogs.select(shell,
+                                   "Error",
+                                   String.format("Cannot delete file/directory '%s'.\n\nContinue?",file.getPath()),
+                                   new String[]{"Yes","Yes, always","No"},
+                                   2
+                                  )
+                   )
+            {
+              case 0:
+                break;
+              case 1:
+                skipAll = true;
+                break;
+              case 2:
+                return;
+            }
+          }
         }
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Revert fail: %s",exception.getMessage());
-        return;
-      }
-    }
-  }
 
-  /** rename selected entry
-   */
-  public void rename()
-  {
-    FileData fileData = getSelectedFileData();
-    if (fileData != null)
-    {
-      try
-      {
-        CommandRename commandRename = new CommandRename(shell,repository,fileData);
-        if (commandRename.run())
-        {
-          asyncUpdateFileStatus(fileData);
-        }
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Rename fail: %s",exception.getMessage());
-        return;
-      }
-    }
-  }
-
-  /** view selected entry
-   */
-  public void view()
-  {
-    FileData fileData = getSelectedFileData();
-    if (fileData != null)
-    {
-      try
-      {
-        CommandView commandView = new CommandView(shell,repository,fileData);
-        commandView.run();
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"View fail: %s",exception.getMessage());
-        return;
-      }
-    }
-  }
-
-  /** diff selected entry
-   */
-  public void diff()
-  {
-    FileData fileData = getSelectedFileData();
-    if (fileData != null)
-    {
-      try
-      {
-        CommandDiff commandDiff = new CommandDiff(shell,repository,fileData);
-        commandDiff.run();
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Diff fail: %s",exception.getMessage());
-        return;
-      }
-    }
-  }
-
-  /** show revision tree of selected entry
-   */
-  public void revisions()
-  {
-    FileData fileData = getSelectedFileData();
-    if (fileData != null)
-    {
-      try
-      {
-        CommandRevisions commandRevisions = new CommandRevisions(shell,repository,fileData);
-        commandRevisions.run();
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Show revisions fail: %s",exception.getMessage());
-        return;
+        // update file list
+Dprintf.dprintf("");
       }
     }
   }
@@ -1011,28 +1480,29 @@ throw new Error("NYI");
     rootTreeItem.setImage(Onzen.IMAGE_DIRECTORY);
     widgetFileTree.addListener(SWT.Expand,new Listener()
     {
-      public void handleEvent(final Event event)
+      public void handleEvent(Event event)
       {
-        final TreeItem treeItem = (TreeItem)event.item;
-        FileData       fileData = (FileData)treeItem.getData();
+        TreeItem treeItem = (TreeItem)event.item;
+        FileData fileData = (FileData)treeItem.getData();
         if (fileData.type == FileData.Types.DIRECTORY)
         {
-          openFileTreeDirectory(treeItem);
+          openFileTreeItem(treeItem);
         }
       }
     });
     widgetFileTree.addListener(SWT.Collapse,new Listener()
     {
-      public void handleEvent(final Event event)
+      public void handleEvent(Event event)
       {
-        final TreeItem treeItem = (TreeItem)event.item;
-        closeFileTreeDirectory(treeItem);
+        TreeItem treeItem = (TreeItem)event.item;
+        closeFileTreeItem(treeItem);
       }
     });
     widgetFileTree.addMouseListener(new MouseListener()
     {
-      public void mouseDoubleClick(final MouseEvent mouseEvent)
+      public void mouseDoubleClick(MouseEvent mouseEvent)
       {
+//Dprintf.dprintf("mouseEvent=%s",mouseEvent);
         TreeItem treeItem = widgetFileTree.getItem(new Point(mouseEvent.x,mouseEvent.y));
         if (treeItem != null)
         {
@@ -1045,12 +1515,10 @@ throw new Error("NYI");
               if (treeItem.getExpanded())
               {
                 widgetFileTree.notifyListeners(SWT.Collapse,treeEvent);
-                treeItem.setExpanded(false);
               }
               else
               {
                 widgetFileTree.notifyListeners(SWT.Expand,treeEvent);
-                treeItem.setExpanded(true);
               }
               break;
             case FILE:
@@ -1071,10 +1539,51 @@ throw new Error("NYI");
       {
       }
     });
+    /* Note: do not use SelectionListener, because after a mouse-click
+       the selection listener is executed, too! (this cause open and
+       closing the sub-tree immediately)
+    */
+    widgetFileTree.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+//Dprintf.dprintf("keyEvent=%s",keyEvent);
+        if ((keyEvent.stateMask == 0) && (keyEvent.keyCode == SWT.CR))
+        {
+// NYI: handling more than one item?
+          TreeItem[] treeItems = widgetFileTree.getSelection();
+          if ((treeItems != null) && (treeItems.length > 0) && (treeItems[0] != null))
+          {
+            FileData fileData = (FileData)treeItems[0].getData();
+            switch (fileData.type)
+            {
+              case DIRECTORY:
+                Event treeEvent = new Event();
+                treeEvent.item = treeItems[0];
+                if (treeItems[0].getExpanded())
+                {
+                  widgetFileTree.notifyListeners(SWT.Collapse,treeEvent);
+                }
+                else
+                {
+                  widgetFileTree.notifyListeners(SWT.Expand,treeEvent);
+                }
+                break;
+              case FILE:
+              case LINK:
+                openFile(treeItems[0]);
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      }
 
-    // open root directory
-    openFileTreeDirectory(rootTreeItem);
-    rootTreeItem.setExpanded(true);
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
   }
 
   /** clear file tree, close all sub-directories
@@ -1132,44 +1641,86 @@ throw new Error("NYI");
     return index;
   }
 
-  /** open file sub-tree
-   * @param treeItem parent tree item
+  /** open file sub-tree item
+   * @param treeItem tree item to open
    */
-  private void openFileTreeDirectory(TreeItem treeItem)
+  private void openFileTreeItem(TreeItem treeItem)
   {
     FileData directoryData = (FileData)treeItem.getData();
-    TreeItem subTreeItem;
 
-    // remove existing sub-items
-    treeItem.removeAll();
-
-    // get file list data
-    HashSet<FileData> fileDataSet = repository.listFiles(directoryData.name);
-
-    // add sub-tree
-    for (FileData fileData : fileDataSet)
+    if (!treeItem.getExpanded())
     {
-      // create tree item
-      subTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,fileData),fileData,false);
-      subTreeItem.setText(0,fileData.title);
-      subTreeItem.setImage(getFileDataImage(fileData));
-//Dprintf.dprintf("fileData=%s",fileData);
+      // remove existing sub-items
+      treeItem.removeAll();
 
-      // store tree item reference
-      fileDataMap.put(fileData,subTreeItem);
+      // open directory and get file list data
+      HashSet<FileData> fileDataSet = repository.openDirectory(directoryData.name);
+
+      // add sub-tree
+      for (FileData fileData : fileDataSet)
+      {
+        // create tree item
+        TreeItem subTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,fileData),fileData,false);
+        subTreeItem.setText(0,fileData.title);
+        subTreeItem.setImage(getFileDataImage(fileData));
+  //Dprintf.dprintf("fileData=%s",fileData);
+
+        // store tree item reference
+        fileDataMap.put(fileData,subTreeItem);
+      }
+      treeItem.setExpanded(true);
+
+      // start update states
+      asyncUpdateFileStatus(fileDataSet,directoryData.getFileName(repository));
     }
-
-    // start update states
-    asyncUpdateFileStatus(fileDataSet);
   }
 
   /** close file sub-tree
    * @param treeItem tree item to close
    */
-  private void closeFileTreeDirectory(TreeItem treeItem)
+  private void closeFileTreeItem(TreeItem treeItem)
   {
+    FileData directoryData = (FileData)treeItem.getData();
+
+    // close directory
+    repository.closeDirectory(directoryData.name);
+
+    // remove sub-tree
+    treeItem.setExpanded(false);
     treeItem.removeAll();
     new TreeItem(treeItem,SWT.NONE);
+  }
+
+  /** open sub-directory
+   * @param treeItems tree items
+   * @param directory directory to open
+   * @return true iff sub-directory opened
+   */
+  private boolean openSubDirectory(TreeItem[] treeItems, String directory)
+  {
+    for (TreeItem treeItem : treeItems)
+    {
+      FileData fileData = (FileData)treeItem.getData();
+
+      if (directory.startsWith(fileData.getFileName()))
+      {
+        // open this tree item
+        openFileTreeItem(treeItem);
+
+        if (!directory.equals(fileData.getFileName()))
+        {
+          // go down to sub-items
+          return openSubDirectory(treeItem.getItems(),directory);
+        }
+        else
+        {
+          // done
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   /** open file (with external command)
@@ -1182,7 +1733,7 @@ throw new Error("NYI");
     // find editor command with file mime-type
     String command = null;
     String mimeType = fileData.getMimeType(repository.rootPath);
-    for (Editor editor : Settings.editors)
+    for (Settings.Editor editor : Settings.editors)
     {
       if (editor.pattern.matcher(mimeType).matches())
       {
@@ -1300,7 +1851,7 @@ throw new Error("NYI");
           {
             TableItem tableItem = widgetEditors.getItem(index);
 
-            Editor editor = (Editor)tableItem.getData();
+            Settings.Editor editor = (Settings.Editor)tableItem.getData();
 
             data.mimeType = null;
             data.command  = editor.command;
@@ -1331,7 +1882,7 @@ throw new Error("NYI");
       });
 
       // add editors
-      for (Editor editor : Settings.editors)
+      for (Settings.Editor editor : Settings.editors)
       {
         TableItem tableItem = new TableItem(widgetEditors,SWT.NONE);
         tableItem.setData(editor);
@@ -1340,14 +1891,15 @@ throw new Error("NYI");
       }
 
       // run
-      if ((Boolean)Dialogs.run(dialog))
+      widgetCommand.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
       {
         if (!data.command.isEmpty())
         {
           if (data.mimeType != null)
           {
             // add editor
-            Editor editor = new Editor(data.mimeType,data.command);
+            Settings.Editor editor = new Settings.Editor(data.mimeType,data.command);
             Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
             Settings.editors[Settings.editors.length-1] = editor;
           }
@@ -1396,6 +1948,30 @@ throw new Error("NYI");
     return image;
   }
 
+  /** get file data state string
+   * @param fileData file data
+   * @return string
+   */
+  private String getFileDataStateString(FileData fileData)
+  {
+    String string = null;
+    switch (fileData.type)
+    {
+      case DIRECTORY:
+        string = "";
+        break;     
+      case FILE:
+      case LINK:
+        string = fileData.state.toString();
+        break;
+      default:
+        string = "";
+        break;
+    }
+
+    return string;
+  }
+
   /** get file data background color
    * @param fileData file data
    * @return color
@@ -1403,21 +1979,33 @@ throw new Error("NYI");
   private Color getFileDataBackground(FileData fileData)
   {
     Color color = null;
-    switch (fileData.state)
+    switch (fileData.type)
     {
-      case OK        : color = Onzen.COLOR_WHITE;       break;
-      case MODIFIED  : color = Onzen.COLOR_GREEN;       break;
-      case MERGE     : color = Onzen.COLOR_DARK_YELLOW; break;
-      case CONFLICT  : color = Onzen.COLOR_RED;         break;
-      case REMOVED   : color = Onzen.COLOR_DARK_BLUE;   break;
-      case UPDATE    : color = Onzen.COLOR_YELLOW;      break;
-      case CHECKOUT  : color = Onzen.COLOR_BLUE;        break;
-      case UNKNOWN   : color = Onzen.COLOR_DARK_GRAY;   break;
-      case NOT_EXISTS: color = Onzen.COLOR_DARK_GRAY;   break;
-      case WAITING   : color = Onzen.COLOR_WHITE;       break;
-      case ADDED     : color = Onzen.COLOR_MAGENTA;     break;
-      case ERROR     : color = Onzen.COLOR_DARK_RED;    break;
-      default        : color = Onzen.COLOR_GRAY;        break;
+      case DIRECTORY:
+        color = COLOR_OK;
+        break;     
+      case FILE:
+      case LINK:
+        switch (fileData.state)
+        {
+          case OK        : color = COLOR_OK;         break;
+          case UNKNOWN   : color = COLOR_UNKNOWN;    break;
+          case MODIFIED  : color = COLOR_MODIFIED;   break;
+          case CHECKOUT  : color = COLOR_CHECKOUT;   break;
+          case UPDATE    : color = COLOR_UPDATE;     break;
+          case MERGE     : color = COLOR_MERGE;      break;
+          case CONFLICT  : color = COLOR_CONFLICT;   break;
+          case ADDED     : color = COLOR_ADDED;      break;
+          case REMOVED   : color = COLOR_REMOVED;    break;
+          case NOT_EXISTS: color = COLOR_NOT_EXISTS; break;
+          case WAITING   : color = COLOR_WAITING;    break;
+          case ERROR     : color = COLOR_ERROR;      break;
+          default        : color = COLOR_UNKNOWN;    break;
+        }
+        break;
+      default:
+        color = COLOR_OK;
+        break;
     }
 
     return color;
@@ -1456,12 +2044,13 @@ throw new Error("NYI");
    * @param fileData file data
    */
   private void updateFileStatus(TreeItem treeItem, FileData fileData)
-  {
-    treeItem.setText(1,fileData.state.toString());
+  {    
+    treeItem.setText(1,getFileDataStateString(fileData));
     treeItem.setText(2,fileData.workingRevision);
 //    treeItem.setText(3,simpleDateFormat.format(new Date(fileData.datetime*1000)));
 //      subTreeItem.setText(2,Units.formatByteSize(fileData.size));
     treeItem.setText(3,fileData.branch);
+    treeItem.setForeground(Onzen.COLOR_BLACK);
     treeItem.setBackground(getFileDataBackground(fileData));
   }
 
@@ -1503,46 +2092,119 @@ throw new Error("NYI");
     }
   }
 
-  private void asyncUpdateFileStatus(HashSet<FileData> fileDataSet)
+  /** asyncronous update file state
+   * @param fileDataSet file data set to update states
+   */
+  private void asyncUpdateFileStatus(HashSet<FileData> fileDataSet, String title)
   {
-    Background.run(new BackgroundTask(repository,fileDataSet,fileDataMap)
+    Background.run(new BackgroundTask(repository,fileDataSet,fileDataMap,title)
     {
       public void run()
       {
-        Repository repository                      = (Repository)                    userData[0];
-        HashSet<FileData> fileDataSet              = (HashSet<FileData>)             userData[1];
-        WeakHashMap<FileData,TreeItem> fileDataMap = (WeakHashMap<FileData,TreeItem>)userData[2];
+        final Repository                     repository  = (Repository)                    userData[0];
+        final HashSet<FileData>              fileDataSet = (HashSet<FileData>)             userData[1];
+        final WeakHashMap<FileData,TreeItem> fileDataMap = (WeakHashMap<FileData,TreeItem>)userData[2];
+        final String                         title       = (String)                        userData[3];
 
-        // update states
-Dprintf.dprintf("");
-        repository.updateStates(fileDataSet,true);
-Dprintf.dprintf("");
-
-        // update tree items
+        // update tree items: status update in progress
         for (final FileData fileData : fileDataSet)
         {
           final TreeItem treeItem = fileDataMap.get(fileData);
-          if (!treeItem.isDisposed())
-          {
 //Dprintf.dprintf("fileData=%s",fileData);
-            display.syncExec(new Runnable()
+          display.syncExec(new Runnable()
+          {
+            public void run()
             {
-              public void run()
-              {
-                updateFileStatus(treeItem,fileData);
-              }
-            });
-          }
+              if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+            }
+          });
+        }
+
+        // update states
+        try
+        {
+          onzen.setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
+          repository.updateStates(fileDataSet,true);
+        }
+        finally
+        {
+          onzen.clearStatusText();
+        }
+
+        // update tree items: set status color
+        for (final FileData fileData : fileDataSet)
+        {
+          final TreeItem treeItem = fileDataMap.get(fileData);
+//Dprintf.dprintf("fileData=%s",fileData);
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              if (!treeItem.isDisposed()) updateFileStatus(treeItem,fileData);
+            }
+          });
         }
       }
     });
   }
 
+  /** asyncronous update file state
+   * @param fileDataSet file data set to update states
+   */
+  private void asyncUpdateFileStatus(HashSet<FileData> fileDataSet)
+  {
+    asyncUpdateFileStatus(fileDataSet,null);
+  }
+
+  /** asyncronous update file state
+   * @param fileData file data
+   */
   private void asyncUpdateFileStatus(FileData fileData)
   {
-    HashSet<FileData> fileDataSet = new HashSet<FileData>();
-    fileDataSet.add(fileData);
-    asyncUpdateFileStatus(fileDataSet);
+    Background.run(new BackgroundTask(repository,fileData,fileDataMap)
+    {
+      public void run()
+      {
+        final Repository                     repository  = (Repository)                    userData[0];
+        final FileData                       fileData    = (FileData)                      userData[1];
+        final WeakHashMap<FileData,TreeItem> fileDataMap = (WeakHashMap<FileData,TreeItem>)userData[2];
+
+        final TreeItem treeItem = fileDataMap.get(fileData);
+
+        // update tree items: status update in progress
+//Dprintf.dprintf("fileData=%s",fileData);
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+          }
+        });
+
+        // update states: set status color
+        HashSet<FileData> fileDataSet = new HashSet<FileData>();
+        fileDataSet.add(fileData);
+        try
+        {
+          onzen.setStatusText("Update states of '%s'...",fileData.getFileName(repository.rootPath));
+          repository.updateStates(fileDataSet,true);
+        }
+        finally
+        {
+          onzen.clearStatusText();
+        }
+
+        // update tree items
+//Dprintf.dprintf("fileData=%s",fileData);
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            if (!treeItem.isDisposed()) updateFileStatus(treeItem,fileData);
+          }
+        });
+      }
+    });
   }
 }
 
