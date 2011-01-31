@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: repository tab
 * Systems: all
@@ -229,8 +229,7 @@ class RepositoryTab
 
   // --------------------------- variables --------------------------------
   // repository
-  public  String              name;
-  public  final Repository    repository;
+  public  final Repository    repository;           // repository instance of tab
 
   // global variable references
   private final Onzen         onzen;
@@ -501,150 +500,6 @@ Dprintf.dprintf("");
     return openSubDirectory(widgetFileTree.getItems(),directory);
   }
 
-  /** edit repository tab
-   */
-// ??? obsolete
-  public void xedit()
-  {
-    Composite composite;
-    Label     label;
-    Button    button;
-
-    // create dialog
-    final Shell dialog = Dialogs.open(shell,"Edit repository",300,70,new double[]{1.0,0.0},1.0);
-
-    // create widgets
-    final Text   widgetTitle;
-    final Text   widgetRootPath;
-    final Text   widgetMasterRepository;
-    final Button widgetAdd;
-    composite = Widgets.newComposite(dialog,SWT.NONE,4);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
-    {
-      label = Widgets.newLabel(composite,"Title:");
-      Widgets.layout(label,0,0,TableLayoutData.W);
-
-      widgetTitle = Widgets.newText(composite);
-      widgetTitle.setText(name);
-      Widgets.layout(widgetTitle,0,1,TableLayoutData.WE);
-
-      label = Widgets.newLabel(composite,"Root path:");
-      Widgets.layout(label,1,0,TableLayoutData.W);
-
-      widgetRootPath = Widgets.newText(composite);
-      widgetRootPath.setText(repository.rootPath);
-      Widgets.layout(widgetRootPath,1,1,TableLayoutData.WE);
-
-/*
-      label = Widgets.newLabel(composite,"Type:");
-      Widgets.layout(label,1,0,TableLayoutData.W);
-
-      subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(0.0,0.0));
-      Widgets.layout(subComposite,1,1,TableLayoutData.WE);
-      {
-        button = Widgets.newRadio(subComposite,"file");
-        button.setSelection(true);
-        Widgets.layout(button,0,0,TableLayoutData.W);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-            entryType[0] = EntryTypes.FILE;
-          }
-        });
-        button = Widgets.newRadio(subComposite,"image");
-        button.setSelection(false);
-        Widgets.layout(button,0,1,TableLayoutData.W);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-            entryType[0] = EntryTypes.IMAGE;
-          }
-        });
-      }
-*/
-    }
-
-    // buttons
-    composite = Widgets.newComposite(dialog,SWT.NONE,4);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
-    {
-      button = Widgets.newButton(composite,"Save");
-      Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-
-          name = widgetTitle.getText();
-
-          Widgets.setTabTitle(widgetTabFolder,widgetTab,name);
-          repository.rootPath = widgetRootPath.getText();
-
-          Dialogs.close(dialog,true);
-        }
-      });
-
-      button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,60,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-          Dialogs.close(dialog,false);
-        }
-      });
-    }
-/*
-    // add selection listeners
-    widgetPattern.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        widgetAdd.forceFocus();
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-throw new Error("NYI");
-      }
-    });
-    widgetAdd.addSelectionListener(new SelectionListener()
-    {
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        Button widget = (Button)selectionEvent.widget;
-        pattern[0] = widgetPattern.getText().trim();
-        Dialogs.close(dialog,true);
-      }
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-*/
-
-    Dialogs.run(dialog);
-  }
-
   //-----------------------------------------------------------------------
 
   /** update states of selected entries
@@ -854,16 +709,6 @@ throw new Error("NYI");
     Composite   composite,subComposite;
     Label       label;
     Button      button;
-
-    // 
-//    if (selectedRepositoryTab != null)
-//    {
-//      data.path = selectedRepositoryTab.repository.rootPath;
-//    }
-//    else
-//    {
-      data.path = "";
-//    }
 
     // new directory dialog
     dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
@@ -1462,7 +1307,7 @@ Dprintf.dprintf("");
    */
   public String toString()
   {
-    return "RepositoryTab {"+name+"}";
+    return "RepositoryTab {"+repository.title+"}";
   }
 
   //-----------------------------------------------------------------------
