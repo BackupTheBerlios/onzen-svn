@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandCommit.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command comit
+* Contents: command commit files/directories
 * Systems: all
 *
 \***********************************************************************/
@@ -103,7 +103,7 @@ import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
 
-/** commit command
+/** commit files/directories command
  */
 class CommandCommit
 {
@@ -111,13 +111,15 @@ class CommandCommit
    */
   class Data
   {
-    String  message;
-    boolean binaryFlag;
+    HashSet<FileData> fileDataSet;
+    String            message;
+    boolean           binaryFlag;
 
     Data()
     {
-      this.message    = "";
-      this.binaryFlag = false;
+      this.fileDataSet = new HashSet<FileData>();
+      this.message     = "";
+      this.binaryFlag  = false;
     }
   };
 
@@ -128,22 +130,20 @@ class CommandCommit
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell             shell;
-  private final Repository        repository;
-  private final HashSet<FileData> fileDataSet;
-
-  private final Display           display;
-  private final Data              data = new Data();
-  private final String[]          history;       
+  private final Shell      shell;
+  private final Repository repository;
+  private final Display    display;
 
   // dialog
-  private final Shell             dialog;        
+  private final Data       data = new Data();
+  private final String[]   history;       
+  private final Shell      dialog;        
 
   // widgets
-  private final List              widgetFiles;   
-  private final List              widgetHistory; 
-  private final Text              widgetMessage; 
-  private final Button            widgetCommit;     
+  private final List       widgetFiles;   
+  private final List       widgetHistory; 
+  private final Text       widgetMessage; 
+  private final Button     widgetCommit;     
 
   // ------------------------ native functions ----------------------------
 
@@ -152,20 +152,16 @@ class CommandCommit
   /** commit command
    * @param shell shell
    * @param repository repository
-   * @param fileDataSet files to commit
    */
-  CommandCommit(final Shell shell, final Repository repository, final HashSet<FileData> fileDataSet)
-    throws RepositoryException
+  CommandCommit(final Shell shell, final Repository repository)
   {
     Composite composite;
     Label     label;
-    Table     table;
     Button    button;
 
     // initialize variables
-    this.shell       = shell;
-    this.repository  = repository;
-    this.fileDataSet = fileDataSet;
+    this.shell      = shell;
+    this.repository = repository;
 
     // get display
     display = shell.getDisplay();
@@ -270,8 +266,6 @@ class CommandCommit
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        Text widget = (Text)keyEvent.widget;
-
         if ((keyEvent.stateMask & SWT.CTRL) != 0)
         {
           int i = widgetHistory.getSelectionIndex();
@@ -337,12 +331,6 @@ class CommandCommit
     // show dialog
     Dialogs.show(dialog);
 
-    // add files
-    for (FileData fileData : fileDataSet)
-    {
-      widgetFiles.add(fileData.name);
-    }
-
     // add history
     for (String string : history)
     {
@@ -352,10 +340,40 @@ class CommandCommit
     // update
   }
 
+  /** commit command
+   * @param shell shell
+   * @param repository repository
+   * @param fileDataSet files to commit
+   */
+  CommandCommit(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+  {
+    this(shell,repository);
+
+    // add files
+    for (FileData fileData : fileDataSet)
+    {
+      data.fileDataSet.add(fileData);
+      widgetFiles.add(fileData.name);
+    }
+  }
+
+  /** commit command
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file to commit
+   */
+  CommandCommit(Shell shell, Repository repository, FileData fileData)
+  {
+    this(shell,repository);
+
+    // add file
+    data.fileDataSet.add(fileData);
+    widgetFiles.add(fileData.name);
+  }
+
   /** run dialog
    */
   public boolean run()
-    throws RepositoryException
   {
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
@@ -365,13 +383,19 @@ class CommandCommit
       {
         // commit files
         message = new Message(data.message);
-        repository.commit(fileDataSet,message);
+        repository.commit(data.fileDataSet,message);
 
-        // update states
-        repository.updateStates(fileDataSet);
-
-        // store history
-        Message.addHistory(data.message);
+        // add to history
+        message.addToHistory();
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(dialog,
+                      String.format("Cannot commit files (error: %s)",
+                                    exception.getMessage()
+                                   )
+                     );
+        return false;
       }
       finally
       {
