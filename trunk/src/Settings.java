@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -528,6 +528,8 @@ public class Settings
   public static Point                    geometryRevisions             = new Point(800,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryRevisionBox           = new Point(200, 70);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometryRevisionInfo          = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryView                  = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
