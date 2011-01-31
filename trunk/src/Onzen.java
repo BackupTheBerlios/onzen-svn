@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Onzen.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: Onzen
 * Systems: all
@@ -18,9 +18,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.security.KeyStore;
+
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -30,6 +32,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
+import java.util.Iterator;
 
 // graphics
 import org.eclipse.swt.custom.SashForm;
@@ -51,6 +54,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -58,6 +62,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -210,10 +215,70 @@ class Units
  */
 public class Onzen
 {
+  /** status text
+   */
+  class StatusText
+  {
+    final Thread thread;
+    final String text;
+
+    /** create status text
+     * @param format format
+     * @param arguments optional arguments
+     */
+    StatusText(String format, Object... arguments)
+    {
+      this.thread = Thread.currentThread();
+      this.text   = String.format(format,arguments);
+    }
+
+    /** convert to string
+     * @return string
+     */
+    public String toString()
+    {
+      return text;
+    }
+  };
+
   // --------------------------- constants --------------------------------
+
+  // colors
+  public static Color            COLOR_BLACK;
+  public static Color            COLOR_WHITE;
+  public static Color            COLOR_GREEN;
+  public static Color            COLOR_DARK_RED;
+  public static Color            COLOR_RED;
+  public static Color            COLOR_DARK_BLUE;
+  public static Color            COLOR_BLUE;
+  public static Color            COLOR_DARK_YELLOW;
+  public static Color            COLOR_YELLOW;
+  public static Color            COLOR_DARK_GRAY;
+  public static Color            COLOR_GRAY;
+  public static Color            COLOR_MAGENTA;
+
+  // images
+  public static Image            IMAGE_DIRECTORY;
+  public static Image            IMAGE_FILE;
+  public static Image            IMAGE_LINK;
+  public static Image            IMAGE_ARRAY_UP;
+  public static Image            IMAGE_ARRAY_DOWN;
+  public static Image            IMAGE_ARROW_LEFT;
+  public static Image            IMAGE_ARROW_RIGHT;
+  public static Image            IMAGE_CLEAR;
+
+  // cursors
+  public static Cursor           CURSOR_WAIT;
+
+  // date/time format
+  public static SimpleDateFormat DATE_FORMAT     = new SimpleDateFormat(Settings.dateFormat);
+  public static SimpleDateFormat TIME_FORMAT     = new SimpleDateFormat(Settings.timeFormat);
+  public static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat(Settings.dateTimeFormat);
+
+
+  // command line options
   private static final Option[] options =
   {
-
     new Option("--help",              "-h",Options.Types.BOOLEAN,    "helpFlag"),
 
     new Option("--debug",             null,Options.Types.BOOLEAN,    "debugFlag"),
@@ -225,18 +290,31 @@ public class Onzen
   };
 
   // --------------------------- variables --------------------------------
-  private Display       display;
-  private Shell         shell;
+  private Display                   display;
+  private Shell                     shell;
 
-  private TabFolder     widgetTabFolder;
+  private String                    repositoryListName = null;
+  private RepositoryList            repositoryList;
+  private Composite                 repositoryTabEmpty = null;
+  private LinkedList<RepositoryTab> repositoryTabList = new LinkedList<RepositoryTab>();
+  private RepositoryTab             selectedRepositoryTab = null;
+  private LinkedList<StatusText>    statusTextList = new LinkedList<StatusText>();
 
-  private Button        widgetButtonUpdate;
-  private Button        widgetButtonCommit;
-  private Button        widgetButtonAdd;
+  private Menu                      menuRepositories;
 
-  private Label         widgetStatus;
+  private TabFolder                 widgetTabFolder;
 
-  private RepositoryTab selectedRepositoryTab;
+  private Button                    widgetButtonUpdate;
+  private Button                    widgetButtonCommit;
+  private Button                    widgetButtonPatch;
+  private Button                    widgetButtonAdd;
+  private Button                    widgetButtonRemove;
+  private Button                    widgetButtonRevert;
+  private Button                    widgetButtonDiff;
+  private Button                    widgetButtonRevisions;
+  private Button                    widgetButtonSolve;
+
+  private Label                     widgetStatus;
 
   // ------------------------ native functions ----------------------------
 
@@ -246,7 +324,7 @@ public class Onzen
    * @param format format string
    * @param args optional arguments
    */
-  private void printError(String format, Object... args)
+  public static void printError(String format, Object... args)
   {
     System.err.println("ERROR: "+String.format(format,args));
   }
@@ -255,517 +333,17 @@ public class Onzen
    * @param format format string
    * @param args optional arguments
    */
-  private void printWarning(String format, Object... args)
+  public static void printWarning(String format, Object... args)
   {
     System.err.println("Warning: "+String.format(format,args));
   }
 
-  /** print program usage
-   * @param
-   * @return
+  /** main
+   * @param args command line arguments
    */
-  private void printUsage()
+  public static void main(String[] args)
   {
-    System.out.println("onzen usage: <options> --");
-    System.out.println("");
-    System.out.println("Options: ");
-    System.out.println("");
-    System.out.println("         -h|--help                      - print this help");
-  }
-
-  /** parse arguments
-   * @param args arguments
-   */
-  private void parseArguments(String[] args)
-  {
-    // parse arguments
-    int z = 0;
-    boolean endOfOptions = false;
-    while (z < args.length)
-    {
-      if      (!endOfOptions && args[z].equals("--"))
-      {
-        endOfOptions = true;
-        z++;
-      }
-      else if (!endOfOptions && (args[z].startsWith("--") || args[z].startsWith("-")))
-      {
-        int i = Options.parse(options,args,z,Settings.class);
-        if (i < 0)
-        {
-          throw new Error("Unknown option '"+args[z]+"'!");
-        }
-        z = i;
-      }
-      else
-      {
-        z++;
-      }
-    }
-
-    // help
-    if (Settings.helpFlag)
-    {
-      printUsage();
-      System.exit(0);
-    }
-
-    // check arguments
-  }
-
-  /** create main window
-   */
-  private void createWindow()
-  {
-    Composite composite;
-    Button    button;
-    Label     label;
-
-    // create window
-    shell = new Shell(display);
-    shell.setText("Onzen");
-    shell.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    // create tab
-    widgetTabFolder = Widgets.newTabFolder(shell);
-    Widgets.layout(widgetTabFolder,0,0,TableLayoutData.NSWE);
-    widgetTabFolder.addSelectionListener(new SelectionListener()
-    {
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        TabFolder tabFolder = (TabFolder)selectionEvent.widget;
-        TabItem   tabItem = (TabItem)selectionEvent.item;
-
-        selectedRepositoryTab = (RepositoryTab)tabItem.getData();;
-      }
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-
-Dprintf.dprintf("");
-    Repository repository = new RepositoryCVS("/home/torsten/projects/onzen");
-    RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,"Oonzen",repository);
-
-    // create buttons
-    composite = Widgets.newComposite(shell);
-    composite.setLayout(new TableLayout(0.0,1.0,2));
-    Widgets.layout(composite,1,0,TableLayoutData.W);
-    {
-      widgetButtonUpdate = Widgets.newButton(composite,"Update");
-      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      widgetButtonUpdate.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-          if (selectedRepositoryTab != null)
-          {
-            selectedRepositoryTab.update();
-          }
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      widgetButtonCommit = Widgets.newButton(composite,"Commit");
-      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      widgetButtonCommit.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-          if (selectedRepositoryTab != null)
-          {
-            selectedRepositoryTab.commit();
-          }
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      button = Widgets.newButton(composite,"Patch");
-button.setEnabled(false);
-      Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-          if (selectedRepositoryTab != null)
-          {
-//            selectedRepositoryTab.patch();
-          }
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      widgetButtonAdd = Widgets.newButton(composite,"Add");
-      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      widgetButtonAdd.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-          if (selectedRepositoryTab != null)
-          {
-            selectedRepositoryTab.add();
-          }
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      button = Widgets.newButton(composite,"Remove");
-button.setEnabled(false);
-      Widgets.layout(button,0,4,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-//          Dialogs.close(dialog,false);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      button = Widgets.newButton(composite,"Revert");
-button.setEnabled(false);
-      Widgets.layout(button,0,5,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-//          Dialogs.close(dialog,false);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      button = Widgets.newButton(composite,"Diff");
-button.setEnabled(false);
-      Widgets.layout(button,0,6,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-//          Dialogs.close(dialog,false);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      button = Widgets.newButton(composite,"Solve");
-button.setEnabled(false);
-      Widgets.layout(button,0,7,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-//          Dialogs.close(dialog,false);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-    }
-
-    // create status line
-    composite = Widgets.newComposite(shell);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},2));
-    Widgets.layout(composite,2,0,TableLayoutData.WE);
-    {
-      label = Widgets.newLabel(composite,"Status:");
-      Widgets.layout(label,0,0,TableLayoutData.W);
-
-      widgetStatus = Widgets.newView(composite,"",SWT.NONE);
-      Widgets.layout(widgetStatus,0,1,TableLayoutData.WE);
-    }
-
-    // window listener
-    display.addFilter(SWT.KeyDown,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-//        if (event.stateMaks & SWT.CTRL)
-        switch (event.keyCode)
-        {
-          case SWT.F1:
-//            Widgets.showTab(widgetTabFolder,tabStatus.widgetTab);
-            event.doit = false;
-            break;
-          case SWT.F2:
-//            Widgets.showTab(widgetTabFolder,tabJobs.widgetTab);
-            event.doit = false;
-            break;
-          case SWT.F3:
-//            Widgets.showTab(widgetTabFolder,tabRestore.widgetTab);
-            event.doit = false;
-            break;
-          default:
-            break;
-          case SWT.F5:
-            if (selectedRepositoryTab != null)
-            {
-              selectedRepositoryTab.updateStates();
-            }
-            event.doit = false;
-            break;
-        }
-      }
-    });
-  }
-
-  /** create menu
-   */
-  private void createMenu()
-  {
-    Menu     menuBar;
-    Menu     menu,subMenu;
-    MenuItem menuItem;
-
-    // create menu
-    menuBar = Widgets.newMenuBar(shell);
-
-    menu = Widgets.addMenu(menuBar,"Program");
-    {
-      menuItem = Widgets.addMenuItem(menu,"Open repository...",SWT.CTRL+'O');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          openRepository();
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      menuItem = Widgets.addMenuItem(menu,"Close repository...",SWT.CTRL+'W');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          closeRepository();
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      menuItem = Widgets.addMenuItem(menu,"Edit repository...",SWT.CTRL+'E');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          editRepository();
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      Widgets.addMenuSeparator(menu);
-
-      menuItem = Widgets.addMenuItem(menu,"Quit",SWT.CTRL+'Q');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-
-          // send close-evemnt to shell
-          Event event = new Event();
-          shell.notifyListeners(SWT.Close,event);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-    }
-
-    menu = Widgets.addMenu(menuBar,"Command");
-    {
-      menuItem = Widgets.addMenuItem(menu,"Update",SWT.CTRL+'U');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          Widgets.invoke(widgetButtonUpdate);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      menuItem = Widgets.addMenuItem(menu,"Commit...",'#');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          Widgets.invoke(widgetButtonCommit);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      menuItem = Widgets.addMenuItem(menu,"Add...",'+');
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          Widgets.invoke(widgetButtonAdd);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-    }
-
-    menu = Widgets.addMenu(menuBar,"View");
-    {
-    }
-
-    menu = Widgets.addMenu(menuBar,"File/Directory");
-    {
-    }
-
-    menu = Widgets.addMenu(menuBar,"Options");
-    {
-    }
-
-    menu = Widgets.addMenu(menuBar,"Help");
-    {
-      menuItem = Widgets.addMenuItem(menu,"About");
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-          Dialogs.info(shell,"About","Onzen "+Config.VERSION_MAJOR+"."+Config.VERSION_MINOR+".\n\nWritten by Torsten Rupp.");
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-    }
-
-    if (Settings.debugFlag)
-    {
-      menu = Widgets.addMenu(menuBar,"Debug");
-      {
-      }
-    }
-  }
-
-  /** run application
-   */
-  private void run()
-  {
-    // set window size, manage window (approximate height according to height of a text line)
-    shell.setSize(840,600+5*(Widgets.getTextHeight(shell)+4));
-    shell.open();
-
-    // add close listener
-    shell.addListener(SWT.Close,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-        shell.dispose();
-      }
-    });
-
-    // SWT event loop
-    while (!shell.isDisposed())
-    {
-//System.err.print(".");
-      if (!display.readAndDispatch())
-      {
-        display.sleep();
-      }
-    }
-  }
-
-  /** open new repository tab
-   * @param rootPath root path
-   */
-  private void openRepository(String rootPath)
-  {
-    Repository repository = null;
-    switch (Repository.getType(rootPath))
-    {
-      case CVS:
-        repository = new RepositoryCVS(rootPath);
-        break;
-      case SVN:
-        repository = new RepositorySVN(rootPath);
-        break;
-      case HG:
-        repository = new RepositoryHG(rootPath);
-        break;
-      case GIT:
-        repository = new RepositoryGit(rootPath);
-        break;
-      default:
-        return;
-    }
-
-    RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,rootPath,repository);
-  }
-
-  /** open new repository tab
-   */
-  private void openRepository()
-  {
-    String rootPath = Dialogs.directory(shell,"Open repository","");
-    if (rootPath != null)
-    {
-      openRepository(rootPath);
-    }
-  }
-
-  /** close selected repository tab
-   */
-  private void closeRepository()
-  {
-    if (selectedRepositoryTab != null)
-    {
-      RepositoryTab repositoryTab = selectedRepositoryTab;
-
-      selectedRepositoryTab = null;
-      repositoryTab.close();
-    }
-  }
-
-  /** edit selected repository tab
-   */
-  private void editRepository()
-  {
-    if (selectedRepositoryTab != null)
-    {
-      RepositoryTab repositoryTab = selectedRepositoryTab;
-
-      repositoryTab.edit();
-    }
+    new Onzen(args);
   }
 
   /** onzen main
@@ -773,8 +351,7 @@ button.setEnabled(false);
    */
   Onzen(String[] args)
   {
-    selectedRepositoryTab = null;
-
+    int exitcode = 255;
     try
     {
       // load settings
@@ -783,21 +360,26 @@ button.setEnabled(false);
       // parse arguments
       parseArguments(args);
 
-      // start message broadcast
-      Message.startBroadcast();
-Message.addHistory("Hello 1");
-Message.addHistory("Tral\nlala");
-Message.addHistory("Und nun?");
+      // init
+      initAll();
 
-      // init display
-      display = new Display();
-
-      // open main window
-      createWindow();
-      createMenu();
+      // load repository list
+      loadRepositoryList(repositoryListName);
+/*
+Repository repositoryX = new RepositoryCVS("/home/torsten/projects/onzen");
+repositoryX.title = "Ooooonzen";
+repositoryList.add(repositoryX);
+RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
+/**/
 
       // run
-      run();
+      exitcode = run();
+
+      // save repository list
+      if (repositoryList != null) repositoryList.save();
+
+      // done
+      doneAll();
 
       // save settings
       Settings.save();
@@ -838,14 +420,1558 @@ Message.addHistory("Und nun?");
         }
       }
     }
+
+    System.exit(exitcode);
   }
 
-  /** main
-   * @param args command line arguments
+  /** set status text
+   * @param format format string
+   * @param arguments optional arguments
    */
-  public static void main(String[] args)
+  public void setStatusText(final String format, final Object... arguments)
   {
-    new Onzen(args);
+    // create status text
+    final StatusText statusText = new StatusText(format,arguments);
+
+    // add to list
+    synchronized(statusTextList)
+    {
+      statusTextList.add(statusText);
+    }
+
+    // show
+    display.syncExec(new Runnable()
+    {
+      public void run()
+      {
+        widgetStatus.setText(statusText.text);
+      }
+    });
+  }
+
+  /** clear status text
+   */
+  public void clearStatusText()
+  {
+    // remove last status text of current thread
+    synchronized(statusTextList)
+    {
+      // remove from status text list
+      Iterator<StatusText> iterator = statusTextList.descendingIterator();
+      while (iterator.hasNext())
+      {
+        StatusText statusText = iterator.next();
+        if (statusText.thread == Thread.currentThread())
+        {
+          iterator.remove();
+          break;
+        }
+      }
+    }
+
+    // get last text or ""
+    final String string;
+    synchronized(statusTextList)
+    {
+      string = (statusTextList.peekLast() != null) ? statusTextList.peekLast().text : "";
+    }
+
+    // show
+    display.syncExec(new Runnable()
+    {
+      public void run()
+      {
+        widgetStatus.setText(string);
+      }
+    });
+  }
+
+  //-----------------------------------------------------------------------
+
+  /** print program usage
+   */
+  private void printUsage()
+  {
+    System.out.println("onzen usage: <options> [--] [<repository list name>]");
+    System.out.println("");
+    System.out.println("Options: ");
+    System.out.println("");
+    System.out.println("         -h|--help                      - print this help");
+    System.out.println("         --debug                        - enable debug mode");
+  }
+
+  /** parse arguments
+   * @param args arguments
+   */
+  private void parseArguments(String[] args)
+  {
+    // parse arguments
+    int z = 0;
+    boolean endOfOptions = false;
+    while (z < args.length)
+    {
+      if      (!endOfOptions && args[z].equals("--"))
+      {
+        endOfOptions = true;
+        z++;
+      }
+      else if (!endOfOptions && (args[z].startsWith("--") || args[z].startsWith("-")))
+      {
+        int i = Options.parse(options,args,z,Settings.class);
+        if (i < 0)
+        {
+          throw new Error("Unknown option '"+args[z]+"'!");
+        }
+        z = i;
+      }
+      else
+      {
+        repositoryListName = args[z];
+        z++;
+      }
+    }
+
+    // help
+    if (Settings.helpFlag)
+    {
+      printUsage();
+      System.exit(0);
+    }
+
+    // check arguments
+  }
+
+  /** init display variables
+   */
+  private void initDisplay()
+  {
+    display = new Display();
+
+    // get colors
+    COLOR_BLACK       = display.getSystemColor(SWT.COLOR_BLACK);
+    COLOR_WHITE       = display.getSystemColor(SWT.COLOR_WHITE);
+    COLOR_GREEN       = display.getSystemColor(SWT.COLOR_GREEN);
+    COLOR_DARK_RED    = display.getSystemColor(SWT.COLOR_DARK_RED);
+    COLOR_RED         = display.getSystemColor(SWT.COLOR_RED);
+    COLOR_DARK_BLUE   = display.getSystemColor(SWT.COLOR_DARK_BLUE);
+    COLOR_BLUE        = display.getSystemColor(SWT.COLOR_BLUE);
+    COLOR_DARK_YELLOW = display.getSystemColor(SWT.COLOR_DARK_YELLOW);
+    COLOR_YELLOW      = display.getSystemColor(SWT.COLOR_YELLOW);    
+    COLOR_DARK_GRAY   = display.getSystemColor(SWT.COLOR_DARK_GRAY);
+    COLOR_GRAY        = display.getSystemColor(SWT.COLOR_GRAY);
+    COLOR_MAGENTA     = new Color(null,0xFF,0xA0,0xA0);                         
+
+    // get images
+    IMAGE_DIRECTORY   = Widgets.loadImage(display,"directory.png");
+    IMAGE_FILE        = Widgets.loadImage(display,"file.png");
+    IMAGE_LINK        = Widgets.loadImage(display,"link.png");
+    IMAGE_ARRAY_UP    = Widgets.loadImage(display,"arrow-up.png");
+    IMAGE_ARRAY_DOWN  = Widgets.loadImage(display,"arrow-down.png");
+    IMAGE_ARROW_LEFT  = Widgets.loadImage(display,"arrow-left.png");
+    IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
+    IMAGE_CLEAR       = Widgets.loadImage(display,"clear.png");
+
+    // get cursors
+    CURSOR_WAIT       = new Cursor(display,SWT.CURSOR_WAIT);
+  }
+
+  /** create main window
+   */
+  private void createWindow()
+  {
+    Composite composite;
+    Button    button;
+    Label     label;
+
+    // create window
+    shell = new Shell(display);
+    shell.setText("Onzen");
+    shell.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+    // create tab
+    widgetTabFolder = Widgets.newTabFolder(shell);
+    Widgets.layout(widgetTabFolder,0,0,TableLayoutData.NSWE);
+    widgetTabFolder.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        TabFolder tabFolder = (TabFolder)selectionEvent.widget;
+        TabItem   tabItem = (TabItem)selectionEvent.item;
+
+        // deselect previous repository
+        if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+
+        // select new repository
+        selectedRepositoryTab = (RepositoryTab)tabItem.getData();;
+        selectedRepositoryTab.repository.selected = true;
+      }
+    });
+    addRepositoryTabEmpty();
+
+    // create buttons
+    composite = Widgets.newComposite(shell);
+    composite.setLayout(new TableLayout(0.0,1.0,2));
+    Widgets.layout(composite,1,0,TableLayoutData.W);
+    {
+      widgetButtonUpdate = Widgets.newButton(composite,"Update");
+      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonUpdate.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.update();
+          }
+        }
+      });
+
+      widgetButtonCommit = Widgets.newButton(composite,"Commit");
+      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonCommit.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.commit();
+          }
+        }
+      });
+
+      widgetButtonPatch = Widgets.newButton(composite,"Patch");
+widgetButtonPatch.setEnabled(false);
+      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonPatch.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+//            selectedRepositoryTab.patch();
+Dprintf.dprintf("");
+          }
+        }
+      });
+
+      widgetButtonAdd = Widgets.newButton(composite,"Add");
+      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonAdd.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.add();
+          }
+        }
+      });
+
+      widgetButtonRemove = Widgets.newButton(composite,"Remove");
+      Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonRemove.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.remove();
+          }
+        }
+      });
+
+      widgetButtonRevert = Widgets.newButton(composite,"Revert");
+      Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonRevert.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.revert();
+          }
+        }
+      });
+
+      widgetButtonDiff = Widgets.newButton(composite,"Diff");
+      Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonDiff.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.diff();
+          }
+        }
+      });
+
+      widgetButtonRevisions = Widgets.newButton(composite,"Revisions");
+      Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonRevisions.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.revisions();
+          }
+        }
+      });
+
+      widgetButtonSolve = Widgets.newButton(composite,"Solve");
+widgetButtonSolve.setEnabled(false);
+      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonSolve.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+//          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // create status line
+    composite = Widgets.newComposite(shell);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},2));
+    Widgets.layout(composite,2,0,TableLayoutData.WE);
+    {
+      label = Widgets.newLabel(composite,"Status:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      widgetStatus = Widgets.newView(composite,"",SWT.NONE);
+      Widgets.layout(widgetStatus,0,1,TableLayoutData.WE);
+    }
+
+    // window listener
+    display.addFilter(SWT.KeyDown,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+//        if (event.stateMaks & SWT.CTRL)
+        switch (event.keyCode)
+        {
+          case SWT.F1:
+//            Widgets.showTab(widgetTabFolder,tabStatus.widgetTab);
+            event.doit = false;
+            break;
+          case SWT.F2:
+//            Widgets.showTab(widgetTabFolder,tabJobs.widgetTab);
+            event.doit = false;
+            break;
+          case SWT.F3:
+//            Widgets.showTab(widgetTabFolder,tabRestore.widgetTab);
+            event.doit = false;
+            break;
+          case SWT.F5:
+            if (selectedRepositoryTab != null)
+            {
+              selectedRepositoryTab.updateStates();
+            }
+            event.doit = false;
+            break;
+          default:
+            break;
+        }
+      }
+    });
+  }
+
+  /** create menu
+   */
+  private void createMenu()
+  {
+    Menu     menuBar;
+    Menu     menu,subMenu;
+    MenuItem menuItem;
+
+    // create menu
+    menuBar = Widgets.newMenuBar(shell);
+
+    menu = Widgets.addMenu(menuBar,"Program");
+    {
+      menuItem = Widgets.addMenuItem(menu,"New repository list...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          newRepositoryList();
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Open repository list...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          loadRepositoryList();
+        }
+      });
+
+/*
+      menuItem = Widgets.addMenuItem(menu,"Edit repository list...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          MenuItem widget = (MenuItem)selectionEvent.widget;
+
+          editRepositoryList();
+        }
+      });
+*/
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"New repository...");
+menuItem.setEnabled(false);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+//          newRepository(rootPath);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Open repository...",Settings.keyOpenRepository);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          String rootPath = Dialogs.directory(shell,"Open repository","");
+          if (rootPath != null)
+          {
+            openRepository(rootPath);
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Edit repository...",Settings.keyEditRepository);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          editRepository(selectedRepositoryTab);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Close repository...",Settings.keyCloseRepository);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          MenuItem widget = (MenuItem)selectionEvent.widget;
+
+          closeRepository();
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"Quit",SWT.CTRL+'Q');
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          // send close-evemnt to shell
+          Widgets.notify(shell,SWT.Close,0);
+        }
+      });
+    }
+
+    menu = Widgets.addMenu(menuBar,"Command");
+    {
+      menuItem = Widgets.addMenuItem(menu,"Status",Settings.keyStatus);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.updateStates();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Update",Settings.keyUpdate);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonUpdate);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Commit...",Settings.keyCommit);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonCommit);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Create patch...",Settings.keyPatch);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Commit patch...",Settings.keyCommitPatch);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Revert...",Settings.keyRevert);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonRevert);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Apply patches",Settings.keyApplyPatches);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Unapply patches",Settings.keyUnapplyPatches);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"Add...",Settings.keyAdd);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonAdd);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Remove...",Settings.keyRemove);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonRemove);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Rename...",Settings.keyRename);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.rename();
+          }
+        }
+      });
+    }
+
+    menu = Widgets.addMenu(menuBar,"View");
+    {
+      menuItem = Widgets.addMenuItem(menu,"Revision info...",Settings.keyRevisionInfo);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.revisionInfo();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Revisions...",Settings.keyRevisions);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonRevisions);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Diff...",Settings.keyDiff);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonDiff);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Changed files...",Settings.keyChangedFiles);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.changedFiles();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Annotations...",Settings.keyAnnotations);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.annotations();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"View/Solve conflict...",Settings.keySolve);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetButtonSolve);
+        }
+      });
+    }
+
+    menu = Widgets.addMenu(menuBar,"File/Directory");
+    {
+      menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
+menuItem.setEnabled(false);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.openFileWith();
+          }
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"New file...",Settings.keyNewFile);
+menuItem.setEnabled(false);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("");
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.newFile();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"New directory...",Settings.keyNewDirectory);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.newDirectory();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Rename local file/directory...",Settings.keyRenameLocal);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.renameLocalFile();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Delete local files/directories...",Settings.keyDeleteLocal);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.deleteLocalFiles();
+          }
+        }
+      });
+    }
+
+    menuRepositories = Widgets.addMenu(menuBar,"Repositories");
+    {
+    }
+
+    menu = Widgets.addMenu(menuBar,"Options");
+    {
+    }
+
+    menu = Widgets.addMenu(menuBar,"Help");
+    {
+      menuItem = Widgets.addMenuItem(menu,"About");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.info(shell,"About","Onzen "+Config.VERSION_MAJOR+"."+Config.VERSION_MINOR+".\n\nWritten by Torsten Rupp.");
+        }
+      });
+    }
+
+    if (Settings.debugFlag)
+    {
+      menu = Widgets.addMenu(menuBar,"Debug");
+      {
+        menuItem = Widgets.addMenuItem(menu,"Restart");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            // send close event with restart
+            Widgets.notify(shell,SWT.Close,64);
+          }
+        });
+
+/*
+menuItem = Widgets.addMenuItem(menu,"XXXXX");
+menuItem.addSelectionListener(new SelectionListener()
+{
+  public void widgetDefaultSelected(SelectionEvent selectionEvent)
+  {
+  }
+  public void widgetSelected(SelectionEvent selectionEvent)
+  {
+  }
+});
+*/
+      }
+    }
+  }
+
+  /** create event handlers
+   */
+  private void createEventHandlers()
+  {
+  }
+
+  /** init all
+   */
+  private void initAll()
+  {
+    // load message history, start message broadcast
+    Message.loadHistory();
+    Message.startBroadcast();
+/*
+new Message("Hello 1").addToHistory();
+new Message("Tral\nlala").addToHistory();
+new Message("Und nun?").addToHistory();
+*/
+
+    // init display
+    initDisplay();
+
+    // open main window
+    createWindow();
+    createMenu();
+    createEventHandlers();
+  }
+
+  /** done all
+   */
+  private void doneAll()
+  {
+    // shutdown running background tasks
+    Background.executorService.shutdownNow();
+  }
+
+  /** run application
+   * @return exit code
+   */
+  private int run()
+  {
+    final int[] result = new int[1];
+
+    // set window size, manage window
+    shell.setSize(Settings.geometryMain.x,Settings.geometryMain.y);
+    shell.open();
+
+    // listener
+    shell.addListener(SWT.Resize,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        Settings.geometryMain = shell.getSize();
+      }
+    });
+    shell.addListener(SWT.Close,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        // store exitcode
+        result[0] = event.index;
+
+        // close
+        shell.dispose();
+      }
+    });
+
+    // SWT event loop
+    while (!shell.isDisposed())
+    {
+//System.err.print(".");
+      if (!display.readAndDispatch())
+      {
+        display.sleep();
+      }
+    }
+
+    return result[0];
+  }
+
+  /** add empty "New" tab repository
+   */
+  private void addRepositoryTabEmpty()
+  {
+    // create empty tab (workaround for a problem when creating first tab which is not shown - bug in SWT?)
+    if (repositoryTabEmpty != null) Widgets.removeTab(widgetTabFolder,repositoryTabEmpty);
+    repositoryTabEmpty = Widgets.addTab(widgetTabFolder,"New",null);
+    repositoryTabEmpty.setLayout(new TableLayout(1.0,1.0,2));
+    Widgets.layout(repositoryTabEmpty,0,0,TableLayoutData.NSWE);
+    {
+      Label label = Widgets.newLabel(repositoryTabEmpty,"Open a repository list or add a repository from the menu.");
+      Widgets.layout(label,0,0,TableLayoutData.NONE);
+    }
+  }
+
+  /** remove empty "New" tab repository
+   */
+  private void removeRepositoryTabEmpty()
+  {
+    if (repositoryTabEmpty != null)
+    {
+      Widgets.removeTab(widgetTabFolder,repositoryTabEmpty);
+      repositoryTabEmpty = null;
+    }
+  }
+
+  /** clear repository tab list
+   */
+  private void clearRepositories()
+  {
+    // deselect repository
+    if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+    selectedRepositoryTab = null;
+
+    // remove old tabs (Note: empty tab is workaround for a problem when creating first tab which is not shown - bug in SWT?)
+    for (RepositoryTab repositoryTab : repositoryTabList)
+    {
+      repositoryTab.close();
+    }
+    repositoryTabList.clear();
+    addRepositoryTabEmpty();
+
+    // remove entries in repository menu
+    MenuItem[] menuItems = menuRepositories.getItems();
+    for (MenuItem menuItem : menuRepositories.getItems())
+    {
+      menuItem.dispose();
+    }
+  }
+
+  /** set repository tab list
+   * @param repositoryList repository list to set
+   */
+  private void setRepositoryList(RepositoryList repositoryList)
+  {
+    RepositoryTab newSelectedRepositoryTab = null;
+
+    // clear repositories
+    clearRepositories();
+
+    // set repository list
+    this.repositoryList = repositoryList;
+    for (Repository repository : repositoryList)
+    {
+      // add repository tab
+      RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
+      repositoryTabList.add(repositoryTab);
+
+      // save select repository
+      if (repository.selected)
+      {
+        newSelectedRepositoryTab = repositoryTab;
+      }
+
+      // open sub-directories in repository tab, remove unknown sub-directories
+      for (String directory : repository.getOpenDirectories())
+      {
+        if (!repositoryTab.openDirectory(directory))
+        {
+          repository.closeDirectory(directory);
+        }
+      }
+    }
+
+    // remove empty tab if repository list is not empty
+    if (repositoryTabList.size() > 0)
+    {
+      removeRepositoryTabEmpty();
+    }
+
+    // select new tab
+    if (newSelectedRepositoryTab != null)
+    {
+      // deselect repository
+      if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+
+      // set selection
+      selectedRepositoryTab = newSelectedRepositoryTab;
+
+      // show
+      selectedRepositoryTab.show();
+    }
+
+    // set repository menu
+    for (RepositoryTab repositoryTab : repositoryTabList)
+    {
+      MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repositoryTab.repository.title);
+      menuItem.setData(repositoryTab);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          MenuItem widget = (MenuItem)selectionEvent.widget;
+
+          // deselect previous repository
+          if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+
+          // select new repository
+          selectedRepositoryTab = (RepositoryTab)widget.getData();
+          selectedRepositoryTab.repository.selected = true;
+
+          // show tab
+          selectedRepositoryTab.show();
+        }
+      });
+    }
+  }
+
+  /** add a repository tab to the repository tab list
+   * @param repository repository to add
+   */
+  private void addRepositoryTab(Repository repository)
+  {
+    // add to list
+    repositoryList.add(repository);
+    repositoryList.save();
+
+    // add tab, set default selected tab
+    RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
+    repositoryTabList.add(repositoryTab);
+    if (repositoryTabList.size() == 1)
+    {
+      // deselect previous repository
+      if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+
+      // select new repository
+      selectedRepositoryTab = repositoryTab;
+      selectedRepositoryTab.repository.selected = true;
+    }
+
+    // remove empty tab, set default selected tab
+    removeRepositoryTabEmpty();
+  }
+
+  /** remove a repository tab fro9m the repository tab list
+   * @param repositoryTab repository tab to remove
+   */
+  private void removeRepositoryTab(RepositoryTab repositoryTab)
+  {
+    // remove from list
+    repositoryList.remove(repositoryTab.repository);
+    repositoryList.save();
+
+    // add empty tab if list will become empty
+    if (repositoryTabList.size() <= 1)
+    {
+      addRepositoryTabEmpty();
+    }
+
+    // close tab, remove from repository list
+    repositoryTab.close();
+    repositoryTabList.remove(repositoryTab);
+  }
+
+  private void newRepositoryList()
+  {
+Dprintf.dprintf("");
+  }
+
+  /** load repository list from file
+   * @param repositoryListName name of repository list
+   */
+  private void loadRepositoryList(String repositoryListName)
+  {
+    if (repositoryListName == null)
+    {
+      /** dialog data
+       */
+      class Data
+      {
+        String[] names;
+        String   name;
+
+        Data()
+        {
+          this.name = null;
+        }
+      };
+
+      final Data  data = new Data();
+      final Shell dialog;
+      Composite   composite,subComposite;
+      Label       label;
+      Button      button;
+
+      // get names
+      data.names = RepositoryList.listNames();
+
+      // name dialog
+      dialog = Dialogs.open(shell,"Select repository list",300,300,new double[]{1.0,0.0},1.0);
+
+      final List   widgetNames;
+      final Text   widgetNewName;
+      final Button widgetOpen;
+      final Button widgetNew;
+      final Button widgetDelete;
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
+      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+      {
+        widgetNames = Widgets.newList(composite);
+        widgetNames.setBackground(Onzen.COLOR_GRAY);
+        Widgets.layout(widgetNames,0,0,TableLayoutData.NSWE);
+        widgetNames.setToolTipText("Repository list names.");
+
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+        {
+          label = Widgets.newLabel(subComposite,"New:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          widgetNewName = Widgets.newText(subComposite);
+          Widgets.layout(widgetNewName,0,1,TableLayoutData.WE);
+          widgetNewName.setToolTipText("New repository list name.");
+        }
+      }
+
+      // buttons
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      {
+        widgetOpen = Widgets.newButton(composite,"Open");
+        widgetOpen.setEnabled(false);
+        Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetOpen.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            int index = widgetNames.getSelectionIndex();
+            if ((index >= 0) && (index < data.names.length))
+            {
+              data.name = data.names[index];
+
+              Dialogs.close(dialog,true);
+            }
+          }
+        });
+        widgetOpen.setToolTipText("Open selected repository list.");
+
+        widgetNew = Widgets.newButton(composite,"New");
+        widgetNew.setEnabled(false);
+        Widgets.layout(widgetNew,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetNew.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            data.name = widgetNewName.getText();
+
+            Dialogs.close(dialog,true);
+          }
+        });
+
+        widgetDelete = Widgets.newButton(composite,"Delete");
+        widgetDelete.setEnabled(false);
+        Widgets.layout(widgetDelete,0,2,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetDelete.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            int index = widgetNames.getSelectionIndex();
+            if ((index >= 0) && (index < data.names.length))
+            {
+              if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",data.names[index])))
+              {
+                // delete repository list
+                RepositoryList.delete(data.names[index]);
+
+                // remove name from array
+                String[] newNames = new String[data.names.length-1];
+                System.arraycopy(data.names,0,newNames,0,index);
+                System.arraycopy(data.names,index+1,newNames,0,data.names.length-1-index);
+                data.names = newNames;
+
+                // update widgets
+                widgetNames.remove(index);
+                widgetOpen.setEnabled(false);
+                widgetDelete.setEnabled(false);
+              }
+            }
+          }
+        });
+
+        button = Widgets.newButton(composite,"Cancel");
+        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            Dialogs.close(dialog,false);
+          }
+        });
+      }
+
+      // listeners
+      widgetNames.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+          List widget = (List)selectionEvent.widget;
+
+          int index = widget.getSelectionIndex();
+          if ((index >= 0) && (index < data.names.length))
+          {
+            Widgets.invoke(widgetOpen);
+          }
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          List widget = (List)selectionEvent.widget;
+
+          int index = widget.getSelectionIndex();
+          widgetOpen.setEnabled((index >= 0) && (index < data.names.length));
+          widgetDelete.setEnabled((index >= 0) && (index < data.names.length));
+        }
+      });
+      widgetNewName.addKeyListener(new KeyListener()
+      {
+        public void keyPressed(KeyEvent keyEvent)
+        {
+        }
+        public void keyReleased(KeyEvent keyEvent)
+        {
+          Text widget = (Text)keyEvent.widget;
+
+          widgetNew.setEnabled(!widget.getText().isEmpty());
+        }
+      });
+
+      // show dialog
+      Dialogs.show(dialog);
+
+      // add names
+      for (String name : data.names)
+      {
+        widgetNames.add(name);
+      }
+
+      // run
+      widgetNames.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        repositoryListName = data.name;
+      }
+      else
+      {
+        return;
+      }
+    }
+
+    // add repositories from list
+    setRepositoryList(new RepositoryList(repositoryListName));
+  }
+
+  /** load repository list from file
+   */
+  private void loadRepositoryList()
+  {
+    loadRepositoryList(null);
+  }
+
+  /** edit repository list
+   */
+  private void editRepositoryList()
+  {
+Dprintf.dprintf("");
+  }
+
+  /** open new repository tab
+   * @param rootPath root path
+   */
+  private void openRepository(String rootPath)
+  {
+    // open repository
+    Repository repository = null;
+    switch (Repository.getType(rootPath))
+    {
+      case CVS:
+        repository = new RepositoryCVS(rootPath);
+        break;
+      case SVN:
+        repository = new RepositorySVN(rootPath);
+        break;
+      case HG:
+        repository = new RepositoryHG(rootPath);
+        break;
+      case GIT:
+        repository = new RepositoryGit(rootPath);
+        break;
+      default:
+        return;
+    }
+
+    if (repository != null)
+    {
+      // add repository
+      addRepositoryTab(repository);
+    }
+  }
+
+  /** edit repository
+   */
+  private void editRepository(RepositoryTab repositoryTab)
+  {
+    if (selectedRepositoryTab != null)
+    {
+      /** dialog data
+       */
+      class Data
+      {
+        String title;
+        String rootPath;
+
+        Data()
+        {
+          this.title    = null;
+          this.rootPath = null;
+        }
+      };
+
+      final Data  data = new Data();
+      final Shell dialog;
+      Composite   composite,subComposite;
+      Label       label;
+      Button      button;
+
+      // repository edit dialog
+      dialog = Dialogs.open(shell,"Edit repository",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+      final Text   widgetTitle;
+      final Text   widgetRootPath;
+      final Text   widgetMasterRepository;
+      final Button widgetSave;
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+      {
+        label = Widgets.newLabel(composite,"Title:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        widgetTitle = Widgets.newText(composite);
+        widgetTitle.setText(repositoryTab.repository.title);
+        Widgets.layout(widgetTitle,0,1,TableLayoutData.WE);
+        widgetTitle.setToolTipText("Repository title.");
+
+        label = Widgets.newLabel(composite,"Root path:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
+
+        widgetRootPath = Widgets.newText(composite);
+        widgetRootPath.setText(repositoryTab.repository.rootPath);
+        Widgets.layout(widgetRootPath,1,1,TableLayoutData.WE);
+      }
+
+      // buttons
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      {
+        widgetSave = Widgets.newButton(composite,"Save");
+        Widgets.layout(widgetSave,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetSave.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            data.title    = widgetTitle.getText();
+            data.rootPath = widgetRootPath.getText();
+
+            Dialogs.close(dialog,true);
+          }
+        });
+        widgetSave.setToolTipText("Open selected repository list.");
+
+        button = Widgets.newButton(composite,"Cancel");
+        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            Dialogs.close(dialog,false);
+          }
+        });
+      }
+
+      // listeners
+      widgetTitle.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+          widgetRootPath.setFocus();
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+        }
+      });
+      widgetRootPath.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+          widgetSave.setFocus();
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+        }
+      });
+
+      // show dialog
+      Dialogs.show(dialog);
+
+      // set title
+      widgetTitle.setText(selectedRepositoryTab.repository.title);
+
+      // run
+      widgetTitle.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        repositoryTab.setTitle(data.title);
+        repositoryTab.repository.rootPath = data.rootPath;
+
+        repositoryList.save();
+      }
+    }
+  }
+
+  /** close selected repository tab
+   */
+  private void closeRepository()
+  {
+    if (selectedRepositoryTab != null)
+    {
+      // remove tab
+      removeRepositoryTab(selectedRepositoryTab);
+
+      // deselect repository
+      selectedRepositoryTab.repository.selected = false;
+      selectedRepositoryTab = null;
+    }
   }
 }
 
