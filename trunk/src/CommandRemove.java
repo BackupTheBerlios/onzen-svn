@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command remove files/directories
 * Systems: all
@@ -152,7 +152,6 @@ class CommandRemove
    * @param repository repository
    */
   CommandRemove(final Shell shell, final Repository repository)
-    throws RepositoryException
   {
     Composite composite;
     Label     label;
@@ -265,8 +264,6 @@ class CommandRemove
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        Text widget = (Text)keyEvent.widget;
-
         if ((keyEvent.stateMask & SWT.CTRL) != 0)
         {
           int i = widgetHistory.getSelectionIndex();
@@ -347,7 +344,6 @@ class CommandRemove
    * @param fileDataSet files remove
    */
   CommandRemove(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
-    throws RepositoryException
   {
     this(shell,repository);
 
@@ -365,7 +361,6 @@ class CommandRemove
    * @param fileData file remove
    */
   CommandRemove(Shell shell, Repository repository, FileData fileData)
-    throws RepositoryException
   {
     this(shell,repository);
 
@@ -377,7 +372,6 @@ class CommandRemove
   /** run dialog
    */
   public boolean run()
-    throws RepositoryException
   {
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
@@ -391,6 +385,15 @@ class CommandRemove
 
         // add to history
         message.addToHistory();
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(dialog,
+                      String.format("Cannot remove files (error: %s)",
+                                    exception.getMessage()
+                                   )
+                     );
+        return false;
       }
       finally
       {

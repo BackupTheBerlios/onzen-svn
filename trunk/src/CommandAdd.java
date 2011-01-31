@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command add files/directories
 * Systems: all
@@ -130,7 +130,6 @@ class CommandAdd
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
   private final Repository repository;
   private final Display    display;
 
@@ -155,14 +154,12 @@ class CommandAdd
    * @param repository repository
    */
   CommandAdd(final Shell shell, final Repository repository)
-    throws RepositoryException
   {
     Composite composite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.shell      = shell;
     this.repository = repository;
 
     // get display
@@ -273,8 +270,6 @@ class CommandAdd
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        Text widget = (Text)keyEvent.widget;
-
         if ((keyEvent.stateMask & SWT.CTRL) != 0)
         {
           int i = widgetHistory.getSelectionIndex();
@@ -355,7 +350,6 @@ class CommandAdd
    * @param fileDataSet files to add
    */
   CommandAdd(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
-    throws RepositoryException
   {
     this(shell,repository);
 
@@ -373,7 +367,6 @@ class CommandAdd
    * @param fileData file to add
    */
   CommandAdd(Shell shell, Repository repository, FileData fileData)
-    throws RepositoryException
   {
     this(shell,repository);
 
@@ -385,7 +378,6 @@ class CommandAdd
   /** run dialog
    */
   public boolean run()
-    throws RepositoryException
   {
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
@@ -399,6 +391,15 @@ class CommandAdd
 
         // add to history
         message.addToHistory();
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(dialog,
+                      String.format("Cannot add files (error: %s)",
+                                    exception.getMessage()
+                                   )
+                     );
+        return false;
       }
       finally
       {

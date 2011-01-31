@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandView.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: command view file
 * Systems: all
@@ -136,7 +136,6 @@ class CommandView
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
   private final Repository repository;
   private final Display    display;
   private final FileData   fileData;
@@ -162,14 +161,12 @@ class CommandView
    * @param revision revision to view
    */
   CommandView(final Shell shell, final Repository repository, final FileData fileData, final String revision)
-    throws RepositoryException
   {
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.shell      = shell;
     this.repository = repository;
     this.fileData   = fileData;
 
@@ -396,7 +393,6 @@ Dprintf.dprintf("");
    * @param fileData file to view
    */
   CommandView(final Shell shell, final Repository repository, final FileData fileData)
-    throws RepositoryException
   {
     this(shell,repository,fileData,null);
   }
@@ -404,10 +400,12 @@ Dprintf.dprintf("");
   /** run dialog
    */
   public void run()
-    throws RepositoryException
   {
-    widgetRevision.setFocus();
-    Dialogs.run(dialog);
+    if (!dialog.isDisposed())
+    {
+      widgetRevision.setFocus();
+      Dialogs.run(dialog);
+    }
   }
 
   /** convert data to string

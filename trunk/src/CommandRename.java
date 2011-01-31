@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRename.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command rename
+* Contents: command rename file/directory
 * Systems: all
 *
 \***********************************************************************/
@@ -130,15 +130,13 @@ class CommandRename
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
   private final Repository repository;
+  private final Display    display;
   private final FileData   fileData;
 
-  private final Display    display;
+  // dialog
   private final Data       data = new Data();
   private final String[]   history;       
-
-  // dialog
   private final Shell      dialog;        
 
   // widgets
@@ -157,16 +155,13 @@ class CommandRename
    * @param fileData file to rename
    */
   CommandRename(final Shell shell, final Repository repository, final FileData fileData)
-    throws RepositoryException
   {
 
     Composite composite,subComposite;
     Label     label;
-    Table     table;
     Button    button;
 
     // initialize variables
-    this.shell      = shell;
     this.repository = repository;
     this.fileData   = fileData;
 
@@ -176,7 +171,7 @@ class CommandRename
     // get history
     history = Message.getHistory();
 
-    // add files dialog
+    // rename files dialog
     dialog = Dialogs.open(shell,"Rename file",Settings.geometryRename.x,Settings.geometryRename.y,new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
@@ -377,14 +372,16 @@ Dprintf.dprintf("");
     }
 
     // update
+    data.newFileName = fileData.getFileName();
+    widgetNewFileName.setText(data.newFileName);
   }
 
   /** run dialog
    */
   public boolean run()
-    throws RepositoryException
   {
     widgetNewFileName.setFocus();
+    widgetNewFileName.setSelection(data.newFileName.length(),data.newFileName.length());
     if ((Boolean)Dialogs.run(dialog,false))
     {
       Message message = null;
@@ -394,11 +391,19 @@ Dprintf.dprintf("");
         message = new Message(data.message);
         repository.rename(fileData,data.newFileName,message);//data.binaryFlag);
 
-        // update states
-        repository.updateStates(fileData);
-
-        // store history
-        Message.addHistory(data.message);
+        // add to history
+        message.addToHistory();
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(dialog,
+                      String.format("Cannot rename file\n\n'%s'\n\ninto\n\n'%s'\n\n(error: %s)",
+                                    fileData.getFileName(),
+                                    data.newFileName,
+                                    exception.getMessage()
+                                   )
+                     );
+        return false;
       }
       finally
       {
