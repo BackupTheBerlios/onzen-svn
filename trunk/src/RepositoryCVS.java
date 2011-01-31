@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -60,7 +60,7 @@ class RepositoryCVS extends Repository
    */
   class RevisionInfo
   {
-    final String   id;
+    final String   revision;
     final String   symbolicName;
     final int[]    revisionNumbers;
     final Date     date;
@@ -72,7 +72,7 @@ class RepositoryCVS extends Repository
      * @param 
      */
     RevisionInfo(ArrayList<Integer> revisionNumbers,
-                 String             id,
+                 String             revision,
                  String             symbolicName,
                  Date               date,
                  String             author,
@@ -85,7 +85,7 @@ class RepositoryCVS extends Repository
       {
         this.revisionNumbers[z] = revisionNumbers.get(z).intValue();
       }
-      this.id            = id;
+      this.revision      = revision;
       this.symbolicName  = symbolicName;
       this.date          = date;
       this.author        = author;
@@ -98,7 +98,7 @@ class RepositoryCVS extends Repository
      */
     public String toString()
     {
-      return "Revision info {"+id+", id: "+id+", name: "+symbolicName+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
+      return "Revision info {revision: "+revision+", name: "+symbolicName+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
     }
   }
 
@@ -160,12 +160,14 @@ class RepositoryCVS extends Repository
     {
       try
       {
+        // get status
         command.clear();
         command.append("cvs","status");
         command.append("--");
         if (directory != null) command.append(directory);
-
         exec = new Exec(rootPath,command);
+
+        // parse status data
         while ((line = exec.getStdout()) != null)
         {
 //Dprintf.dprintf("line=%s",line);
@@ -278,6 +280,10 @@ class RepositoryCVS extends Repository
             tags.clear();
           }
         }
+
+        // done
+        exec.done();
+
         if (baseName != null)
         {
           fileData = findFileData(fileDataSet,directory,baseName);
@@ -359,12 +365,12 @@ Dprintf.dprintf("file=%s",fileData);
       Command command = new Command();
       int     exitCode;
 
+      // update files
       command.clear();
       command.append("cvs","update","-d");
       if (Settings.cvsPruneEmtpyDirectories) command.append("-P");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
@@ -404,11 +410,11 @@ Dprintf.dprintf("file=%s",fileData);
     String            line;
     try
     {
+      // get log
       command.clear();
       command.append("cvs","log");
       command.append("--");
       command.append(fileData.getFileName());
-
       exec = new Exec(rootPath,command);
 
       // find "description:"
@@ -422,6 +428,7 @@ Dprintf.dprintf("file=%s",fileData);
 
       if (descriptionFound)
       {
+        // parse revisions
         while ((line = exec.getStdout()) != null)
         {
           if ((matcher = PATTERN_REVISION.matcher(line)).matches())
@@ -430,6 +437,9 @@ Dprintf.dprintf("file=%s",fileData);
           }
         }
       }
+
+      // done
+      exec.done();
     }
     catch (IOException exception)
     {
@@ -498,7 +508,7 @@ Dprintf.dprintf("file=%s",fileData);
    * @param 
    * @return 
    */
-  public String[] getFile(FileData fileData, String revision)
+  public String[] getFileLines(FileData fileData, String revision)
     throws RepositoryException
   {
     ArrayList<String> lineList = new ArrayList<String>();
@@ -508,20 +518,22 @@ Dprintf.dprintf("file=%s",fileData);
       Exec    exec;
       String  line;
 
+      // get file
       command.clear();
       command.append("cvs","up","-p");
-      if (revision != null)
-      {
-        command.append("-r",revision);
-      }
+      if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(fileData.getFileName());
       exec = new Exec(rootPath,command);
 
+      // read file data
       while ((line = exec.getStdout()) != null)
       {
         lineList.add(line);
       }
+
+      // done
+      exec.done();
     }
     catch (IOException exception)
     {
@@ -547,26 +559,29 @@ Dprintf.dprintf("file=%s",fileData);
       int     n;
       byte[]  buffer = new byte[4*1024];
 
+      // get file data
       command.clear();
       command.append("cvs","up","-p");
-      if (revision != null)
-      {
-        command.append("-r",revision);
-      }
+      if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(fileData.getFileName());
       exec = new Exec(rootPath,command,true);
 
+      // read file bytes into byte array stream
       while ((n = exec.readStdout(buffer)) > 0)
       {
         output.write(buffer,0,n);
       }
+
+      // done
+      exec.done();
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
     }
 
+    // convert byte array stream into array
     return output.toByteArray();
   }
 
@@ -671,247 +686,7 @@ Dprintf.dprintf("unknown %s",line);
    * @param 
    * @return 
    */
-  public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
-    throws RepositoryException
-  {
-    try
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      command.clear();
-      command.append("cvs","commit","-F");
-      command.append(commitMessage.getFileName());
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
-
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-      }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(exception);
-    }
-  }
-
-  /** 
-   * @param 
-   * @return 
-   */
-  public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
-    throws RepositoryException
-  {
-    try
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      command.clear();
-      command.append("cvs","add");
-      if (binaryFlag) command.append("-k","b");
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
-
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-      }
-
-      if (commitMessage != null)
-      {
-        command.clear();
-        command.append("cvs","commit");
-        command.append("-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-        }
-      }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(exception);
-    }
-  }
-
-  /** 
-   * @param 
-   * @return 
-   */
-  public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
-    throws RepositoryException
-  {
-    try
-    {
-      // delete local files
-      for (FileData fileData : fileDataSet)
-      {
-        new File(fileData.getFileName(rootPath)).delete();
-      }
-
-      // remove from repository
-      Command command = new Command();
-      int     exitCode;
-
-      command.clear();
-      command.append("cvs","remove");
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
-
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-      }
-
-      if (commitMessage != null)
-      {
-        command.clear();
-        command.append("cvs","commit");
-        command.append("-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-        }
-      }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(exception);
-    }
-  }
-
-  /** 
-   * @param 
-   * @return 
-   */
-  public void revert(HashSet<FileData> fileDataSet, String revision)
-    throws RepositoryException
-  {
-    try
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      command.clear();
-      command.append("cvs","update");
-      command.append("-r",revision);
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
-
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-      }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(exception);
-    }
-  }
-
-  /** rename file
-   * @param fileData file data to rename
-   * @param newName new name
-   */
-  public void rename(FileData fileData, String newName, Message commitMessage)
-    throws RepositoryException
-  {
-    try
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      // rename local file
-      File oldFile = new File(rootPath,fileData.getFileName());
-      File newFile = new File(rootPath,newName);
-      if (!newFile.exists())
-      {
-        if (!oldFile.renameTo(newFile))
-        {
-          throw new RepositoryException("Cannot rename file '%s' to '%s'",oldFile.getName(),newFile.getName());
-        }
-      }
-      else
-      {
-        throw new RepositoryException("File '%s' already exists",newFile.getName());
-      }
-
-      // add new file
-      command.clear();
-      command.append("cvs","add");
-      switch (fileData.mode)
-      {
-        case TEXT:
-          break;
-        case BINARY:
-          command.append("-k","b");
-          break;
-        default:
-          break;
-      }
-      command.append("--");
-      command.append(getFileDataName(fileData));
-
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-      }
-
-      // remove old file
-      command.clear();
-      command.append("cvs","remove");
-      command.append("--");
-      command.append(getFileDataName(fileData));
-
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-      }
-
-      // commit
-      if (commitMessage != null)
-      {
-        command.clear();
-        command.append("cvs","commit");
-        command.append("-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataName(fileData));
-        command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
-
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
-        }
-      }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(exception);
-    }
-  }
-
-  /** 
-   * @param 
-   * @return 
-   */
-  public DiffData[] diff(FileData fileData, String oldRevision, String newRevision)
+  public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
     final Pattern PATTERN_DIFF        = Pattern.compile("^diff.*",Pattern.CASE_INSENSITIVE);
@@ -949,6 +724,7 @@ Dprintf.dprintf("unknown %s",line);
         // done
         exec.done();
 
+        // convert to lines array
         newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
       }
       else
@@ -977,7 +753,7 @@ Dprintf.dprintf("unknown %s",line);
         }
       }
 
-      // diff
+      // diff file
       command.clear();
       command.append("cvs","diff");
       if (oldRevision != null) command.append("-r",oldRevision);
@@ -1131,6 +907,9 @@ else {
         diffDataList.add(diffData);
       }
 //Dprintf.dprintf("diffData=%s",diffData);
+
+      // done
+      exec.done();
     }
     catch (IOException exception)
     {
@@ -1144,240 +923,38 @@ else {
    * @param 
    * @return 
    */
-  public DiffData[] diffOLD(FileData fileData, String oldRevision, String newRevision)
+  public void getPatch(FileData fileData)
     throws RepositoryException
   {
-    final Pattern PATTERN_DIFF        = Pattern.compile("^diff.*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF_ADD    = Pattern.compile("^([\\d,]+)a([\\d,]+)",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF_DELETE = Pattern.compile("^([\\d,]+)d([\\d,]+)",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF_CHANGE = Pattern.compile("^([\\d,]+)c([\\d,]+)",Pattern.CASE_INSENSITIVE);
-
-    ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
-
-    try
-    {
-      Command command = new Command();
-      Exec    exec;
-      Matcher matcher;
-      String  line;
-
-      String[] oldFileLines = null;
-      if (oldRevision != null)
-      {
-        // check out new revision
-        command.clear();
-        command.append("cvs","up","-p");
-        command.append("-r",oldRevision);
-        command.append("--");
-        command.append(fileData.getFileName());
-        exec = new Exec(rootPath,command);
-
-        // read content
-        ArrayList<String> oldFileLineList = new ArrayList<String>();
-        while ((line = exec.getStdout()) != null)
-        {
-          oldFileLineList.add(line);
-        }
-
-        // done
-        exec.done();
-
-        oldFileLines = oldFileLineList.toArray(new String[oldFileLineList.size()]);
-      }
-      else
-      {
-        // use local revision
-        try
-        {
-          // open file
-          BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
-
-          // read content
-          ArrayList<String> oldFileLineList = new ArrayList<String>();
-          while ((line = bufferedReader.readLine()) != null)
-          {
-            oldFileLineList.add(line);
-          }
-
-          // close file
-          bufferedReader.close();
-
-          oldFileLines = oldFileLineList.toArray(new String[oldFileLineList.size()]);
-        }
-        catch (IOException exception)
-        {
-          throw new RepositoryException(exception);
-        }
-      }
-
-      // diff
-      command.clear();
-      command.append("cvs","diff");
-      if (oldRevision != null) command.append("-r",oldRevision);
-      if (newRevision != null) command.append("-r",newRevision);
-      command.append("--");
-      command.append(fileData.getFileName());
-      exec = new Exec(rootPath,command);
-
-      // skip diff header
-      while ((line = exec.getStdout()) != null)
-      {
-        if (PATTERN_DIFF.matcher(line).matches()) break;
-      }
-
-      /* parse diff output
-           Format:
-             <i>a<j> - lines added 
-             <i>d<j> - lines delete 
-             <i>c<j> - lines changed 
-      */
-      int                lineNb = 1;
-      DiffData           diffData;
-      ArrayList<String> keepLinesList = new ArrayList<String>();
-      ArrayList<String> addedLinesList = new ArrayList<String>();
-      ArrayList<String> deletedLinesList = new ArrayList<String>();
-      while ((line = exec.getStdout()) != null)
-      {
-//Dprintf.dprintf("line=%s",line);
-        if      ((matcher = PATTERN_DIFF_ADD.matcher(line)).matches())
-        {
-          // add lines
-          int[] oldIndex = parseDiffIndex(matcher.group(1));
-          int[] newIndex = parseDiffIndex(matcher.group(2));
-//Dprintf.dprintf("oldIndex=%d,%d",oldIndex[0],oldIndex[1]);
-//Dprintf.dprintf("newIndex=%d,%d",newIndex[0],newIndex[1]);
-
-          // get keep lines
-          keepLinesList.clear();
-          while ((lineNb <= oldIndex[0]) && (lineNb <= oldFileLines.length))
-          {
-            keepLinesList.add(oldFileLines[lineNb-1]);
-            lineNb++;
-          }
-          diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
-          diffDataList.add(diffData);
-//Dprintf.dprintf("diffData=%s",diffData);
-
-          // get added lines
-          addedLinesList.clear();
-          for (int z = 0; z < newIndex[1]; z++)
-          {
-            line = exec.getStdout();
-            if (!line.startsWith(">")) throw new RepositoryException("Invalid add diff output: '"+line+"'");
-            addedLinesList.add(line.substring(2));
-          }
-          diffData = new DiffData(DiffData.BlockTypes.ADD,addedLinesList);
-          diffDataList.add(diffData);
-//Dprintf.dprintf("diffData=%s",diffData);
-        }        
-        else if ((matcher = PATTERN_DIFF_DELETE.matcher(line)).matches())
-        {
-          // delete lines
-          int[] oldIndex = parseDiffIndex(matcher.group(1));
-          int[] newIndex = parseDiffIndex(matcher.group(2));
-
-          // get keep lines
-          keepLinesList.clear();
-          while ((lineNb <= oldIndex[0]) && (lineNb <= oldFileLines.length))
-          {
-            keepLinesList.add(oldFileLines[lineNb-1]);
-            lineNb++;
-          }
-          diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
-          diffDataList.add(diffData);
-//Dprintf.dprintf("diffData=%s",diffData);
-
-          // get deleted lines
-          deletedLinesList.clear();
-          for (int z = 0; z < oldIndex[1]; z++)
-          {
-            line = exec.getStdout();
-            if (!line.startsWith("<")) throw new RepositoryException("Invalid delete diff output: '"+line+"'");
-            deletedLinesList.add(line.substring(2));
-            lineNb++;
-          }
-          diffData = new DiffData(DiffData.BlockTypes.DELETE,deletedLinesList);
-          diffDataList.add(diffData);
-//Dprintf.dprintf("diffData=%s",diffData);
-        }        
-        else if ((matcher = PATTERN_DIFF_CHANGE.matcher(line)).matches())
-        {
-          // change lines
-          int[] oldIndex = parseDiffIndex(matcher.group(1));
-          int[] newIndex = parseDiffIndex(matcher.group(2));
-
-          // get keep lines
-          keepLinesList.clear();
-          while ((lineNb <= oldIndex[0]) && (lineNb <= oldFileLines.length))
-          {
-            keepLinesList.add(oldFileLines[lineNb-1]);
-            lineNb++;
-          }
-          diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
-          diffDataList.add(diffData);
-//Dprintf.dprintf("diffData=%s",diffData);
-
-          // get delete lines
-          deletedLinesList.clear();
-          for (int z = 0; z < oldIndex[1]; z++)
-          {
-            line = exec.getStdout();
-            if (!line.startsWith("<")) throw new RepositoryException("Invalid change diff output: '"+line+"'");
-            deletedLinesList.add(line.substring(2));
-          }
-
-          // skip separator "---"
-          line = exec.getStdout();
-          if (!line.startsWith("---")) throw new RepositoryException("Invalid diff output: expected separator, got '"+line+"'");
-
-          // get added lines
-          addedLinesList.clear();
-          for (int z = 0; z < newIndex[1]; z++)
-          {
-            line = exec.getStdout();
-            if (!line.startsWith(">")) throw new RepositoryException("Invalid change diff output: '"+line+"'");
-            addedLinesList.add(line.substring(2));
-            lineNb++;
-          }
-
-          diffData = new DiffData(DiffData.BlockTypes.CHANGE,addedLinesList,deletedLinesList);
-          diffDataList.add(diffData);
-//Dprintf.dprintf("diffData=%s",diffData);
-        }
-else {
-//Dprintf.dprintf("line=%s",line);
-}
-      }
-
-      // get rest of keep lines
-      if (lineNb <= oldFileLines.length)
-      {
-        keepLinesList.clear();
-        while (lineNb <= oldFileLines.length)
-        {
-          keepLinesList.add(oldFileLines[lineNb-1]);
-          lineNb++;
-        }
-        diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
-        diffDataList.add(diffData);
-      }
-//Dprintf.dprintf("diffData=%s",diffData);
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(exception);
-    }
-
-    return diffDataList.toArray(new DiffData[diffDataList.size()]);
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** get log to file
+   * @param fileData file data
+   * @return log array
    */
-  public void patch(FileData fileData)
+  public LogData[] getLog(FileData fileData)
     throws RepositoryException
   {
+    // get revision info
+    LinkedList<RevisionInfo> revisionInfoList = new LinkedList<RevisionInfo>();
+    HashMap<String,String>   symbolicNamesMap = new HashMap<String,String>();
+    getRevisionInfo(fileData,revisionInfoList,symbolicNamesMap);
+//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+
+    // create log array
+    LogData[] logData = new LogData[revisionInfoList.size()];
+    int z = 0;
+    for (RevisionInfo revisionInfo : revisionInfoList)
+    {
+      logData[z] = new LogData(revisionInfo.revision,
+                               revisionInfo.date,
+                               revisionInfo.author,
+                               revisionInfo.commitMessage
+                              );
+      z++;
+    }
+
+    return logData;
   }
 
   /** get annotations to file
@@ -1385,7 +962,7 @@ else {
    * @param revision revision
    * @return annotation array
    */
-  public AnnotationData[] annotations(FileData fileData, String revision)
+  public AnnotationData[] getAnnotations(FileData fileData, String revision)
     throws RepositoryException
   {
     final Pattern PATTERN_ANNOTATION = Pattern.compile("^\\s*([\\.\\d]+)\\s+\\((\\S+)\\s+(\\S+)\\):\\s(.*)\\s*",Pattern.CASE_INSENSITIVE);
@@ -1432,6 +1009,9 @@ else {
 Dprintf.dprintf("unknown %s",line);
         }
       }
+
+      // done
+      exec.done();
     }
     catch (IOException exception)
     {
@@ -1439,6 +1019,244 @@ Dprintf.dprintf("unknown %s",line);
     }
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // commit files
+      command.clear();
+      command.append("cvs","commit","-F");
+      command.append(commitMessage.getFileName());
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // add files
+      command.clear();
+      command.append("cvs","add");
+      if (binaryFlag) command.append("-k","b");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+      }
+
+      if (commitMessage != null)
+      {
+        // commit added files
+        command.clear();
+        command.append("cvs","commit");
+        command.append("-F",commitMessage.getFileName());
+        command.append("--");
+        command.append(getFileDataNames(fileDataSet));
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        }
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
+    throws RepositoryException
+  {
+    try
+    {
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
+      // remove from repository
+      Command command = new Command();
+      int     exitCode;
+
+      // remove files
+      command.clear();
+      command.append("cvs","remove");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+      }
+
+      if (commitMessage != null)
+      {
+        // commit removed files
+        command.clear();
+        command.append("cvs","commit");
+        command.append("-F",commitMessage.getFileName());
+        command.append("--");
+        command.append(getFileDataNames(fileDataSet));
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        }
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  public void revert(HashSet<FileData> fileDataSet, String revision)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // revert files
+      command.clear();
+      command.append("cvs","update");
+      command.append("-r",revision);
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
+  /** rename file
+   * @param fileData file data to rename
+   * @param newName new name
+   */
+  public void rename(FileData fileData, String newName, Message commitMessage)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // rename local file
+      File oldFile = new File(rootPath,fileData.getFileName());
+      File newFile = new File(rootPath,newName);
+      if (!newFile.exists())
+      {
+        if (!oldFile.renameTo(newFile))
+        {
+          throw new RepositoryException("Cannot rename file '%s' to '%s'",oldFile.getName(),newFile.getName());
+        }
+      }
+      else
+      {
+        throw new RepositoryException("File '%s' already exists",newFile.getName());
+      }
+
+      // add new file
+      command.clear();
+      command.append("cvs","add");
+      switch (fileData.mode)
+      {
+        case TEXT:
+          break;
+        case BINARY:
+          command.append("-k","b");
+          break;
+        default:
+          break;
+      }
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+      }
+
+      // remove old file
+      command.clear();
+      command.append("cvs","remove");
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+      }
+
+      // commit
+      if (commitMessage != null)
+      {
+        // commit remove/add (=rename) file
+        command.clear();
+        command.append("cvs","commit");
+        command.append("-F",commitMessage.getFileName());
+        command.append("--");
+        command.append(getFileDataName(fileData));
+        command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        }
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
   }
 
   /** convert data to string
@@ -1521,7 +1339,7 @@ Dprintf.dprintf("unknown %s",line);
     String         line;                    
     try
     {
-      // cvs command
+      // get log
       command.clear();
       command.append("cvs","log");
       command.append("--");
@@ -1630,6 +1448,9 @@ Dprintf.dprintf("unknown %s",line);
           }
         }
       }
+
+      // done
+      exec.done();
     }
     catch (IOException exception)
     {
@@ -1717,7 +1538,7 @@ Dprintf.dprintf("unknown %s",line);
         if (branchRevisionData == null)
         {
 Dprintf.dprintf("xxxxxxxxxxxxxxxxx %s",branchId);
-          branchRevisionData = new RevisionData(revisionInfo.id,
+          branchRevisionData = new RevisionData(revisionInfo.revision,
                                                 revisionInfo.date,
                                                 revisionInfo.author,
                                                 revisionInfo.commitMessage
@@ -1747,7 +1568,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxx %s",branchId);
       else if (revisionInfo.revisionNumbers.length-2 == branchRevisionNumbers.length)
       {
         // add revision
-        RevisionData revisionData = new RevisionData(revisionInfo.id,
+        RevisionData revisionData = new RevisionData(revisionInfo.revision,
                                                      revisionInfo.date,
                                                      revisionInfo.author,
                                                      revisionInfo.commitMessage
