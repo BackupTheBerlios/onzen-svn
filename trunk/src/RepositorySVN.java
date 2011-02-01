@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -111,7 +111,7 @@ class RepositorySVN extends Repository
    * @param 
    * @return 
    */
-  public String[] getFile(FileData fileData, String revision)
+  public String[] getFileLines(FileData fileData, String revision)
     throws RepositoryException
   {
     return null;
@@ -132,6 +132,47 @@ class RepositorySVN extends Repository
    * @return fileDataSet file data set with modified files
    */
   public HashSet<FileData> getChangedFiles()
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get diff of file
+   * @param fileData file data
+   * @param revision revision to get diff for
+   * @return diff data
+   */
+  public DiffData[] getDiff(FileData fileData, String revision1, String revision2)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get patch for file
+   * @param fileData file data
+   * @return patch data
+   */
+  public void getPatch(FileData fileData)
+    throws RepositoryException
+  {
+  }
+
+  /** get log to file
+   * @param fileData file data
+   * @return log array
+   */
+  public LogData[] getLog(FileData fileData)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get annotations to file
+   * @param fileData file data
+   * @param revision revision
+   * @return annotation array
+   */
+  public AnnotationData[] getAnnotations(FileData fileData, String revision)
     throws RepositoryException
   {
     return null;
@@ -180,36 +221,6 @@ class RepositorySVN extends Repository
   public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException
   {
-  }
-
-  /** 
-   * @param 
-   * @return 
-   */
-  public DiffData[] diff(FileData fileData, String revision1, String revision2)
-    throws RepositoryException
-  {
-    return null;
-  }
-
-  /** 
-   * @param 
-   * @return 
-   */
-  public void patch(FileData fileData)
-    throws RepositoryException
-  {
-  }
-
-  /** get annotations to file
-   * @param fileData file data
-   * @param revision revision
-   * @return annotation array
-   */
-  public AnnotationData[] annotations(FileData fileData, String revision)
-    throws RepositoryException
-  {
-    return null;
   }
 
   /** convert data to string

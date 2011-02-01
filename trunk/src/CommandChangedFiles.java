@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: command show changed files
 * Systems: all
@@ -148,7 +148,6 @@ class CommandChangedFiles
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
   private final Repository repository;
   private final Display    display;
 
@@ -180,7 +179,6 @@ class CommandChangedFiles
    * @param repository repository
    */
   CommandChangedFiles(final Shell shell, final Repository repository)
-    throws RepositoryException
   {
     Composite   composite,subComposite;
     Label       label;
@@ -190,7 +188,6 @@ class CommandChangedFiles
     MenuItem    menuItem;
 
     // initialize variables
-    this.shell       = shell;
     this.repository  = repository;
 
     // get display
@@ -693,19 +690,11 @@ menuItem.setEnabled(false);
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            try
+            CommandCommit commandCommit = new CommandCommit(shell,repository,fileDataSet);
+            if (commandCommit.run())
             {
-              CommandCommit commandCommit = new CommandCommit(shell,repository,fileDataSet);
-              if (commandCommit.run())
-              {
-                repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
-              }
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Commit fail: %s",exception.getMessage());
-              return;
+              repository.updateStates(fileDataSet);
+              Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
         }
@@ -752,19 +741,11 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            try
+            CommandAdd commandAdd = new CommandAdd(shell,repository,fileDataSet);
+            if (commandAdd.run())
             {
-              CommandAdd commandAdd = new CommandAdd(shell,repository,fileDataSet);
-              if (commandAdd.run())
-              {
-                repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
-              }
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Add fail: %s",exception.getMessage());
-              return;
+              repository.updateStates(fileDataSet);
+              Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
         }
@@ -790,19 +771,11 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            try
+            CommandRemove commandRemove = new CommandRemove(shell,repository,fileDataSet);
+            if (commandRemove.run())
             {
-              CommandRemove commandRemove = new CommandRemove(shell,repository,fileDataSet);
-              if (commandRemove.run())
-              {
-                repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
-              }
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Remove fail: %s",exception.getMessage());
-              return;
+              repository.updateStates(fileDataSet);
+              Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
         }
@@ -828,19 +801,11 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            try
+            CommandRevert commandRevert = new CommandRevert(shell,repository,fileDataSet);
+            if (commandRevert.run())
             {
-              CommandRevert commandRevert = new CommandRevert(shell,repository,fileDataSet);
-              if (commandRevert.run())
-              {
-                repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
-              }
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Revert fail: %s",exception.getMessage());
-              return;
+              repository.updateStates(fileDataSet);
+              Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
         }
@@ -866,16 +831,8 @@ Dprintf.dprintf("");
           FileData fileData = getSelectedFileData();
           if (fileData != null)
           {
-            try
-            {
-              CommandDiff commandDiff = new CommandDiff(shell,repository,fileData);
-              commandDiff.run();
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Diff fail: %s",exception.getMessage());
-              return;
-            }
+            CommandDiff commandDiff = new CommandDiff(shell,repository,fileData);
+            commandDiff.run();
           }
         }
       });
@@ -900,16 +857,8 @@ Dprintf.dprintf("");
           FileData fileData = getSelectedFileData();
           if (fileData != null)
           {
-            try
-            {
-              CommandRevisions commandRevisions = new CommandRevisions(shell,repository,fileData);
-              commandRevisions.run();
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Show revisions fail: %s",exception.getMessage());
-              return;
-            }
+            CommandRevisions commandRevisions = new CommandRevisions(shell,repository,fileData);
+            commandRevisions.run();
           }
         }
       });
@@ -1042,20 +991,33 @@ Dprintf.dprintf("");
     Dialogs.show(dialog);
 
     // get changed files
-    data.fileDataSet = repository.getChangedFiles();
+    try
+    {
+      data.fileDataSet = repository.getChangedFiles();
 Dprintf.dprintf("");
+}
+catch (RepositoryException exception)
+{
+Dprintf.dprintf("");
+}
     Widgets.notify(dialog,USER_EVENT_FILTER);
   }
 
   /** run dialog
    */
   public boolean run()
-    throws RepositoryException
   {
-    widgetFiles.setFocus();
-    if ((Boolean)Dialogs.run(dialog,false))
+    if (!dialog.isDisposed())
     {
-      return true;
+      widgetFiles.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
     }
     else
     {

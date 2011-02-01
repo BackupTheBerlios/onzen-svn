@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryList.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: repository lists
 * Systems: all
@@ -39,6 +39,7 @@ import javax.xml.bind.annotation.XmlType;
 /****************************** Classes ********************************/
 
 @XmlRootElement()
+@XmlType(propOrder={"repositories"})
 @XmlAccessorType(XmlAccessType.NONE)
 public class RepositoryList implements Iterable<Repository>
 {
@@ -47,9 +48,9 @@ public class RepositoryList implements Iterable<Repository>
 
   // --------------------------- variables --------------------------------
   @XmlElement(name = "repository")
-  private LinkedList<Repository> repositories;
+  private LinkedList<Repository> repositories;      // list of repositories
 
-  private String                 name;
+  private String                 name;              // repository list name
 
   // ------------------------ native functions ----------------------------
 

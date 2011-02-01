@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAnnotations.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command view file
+* Contents: command view file annotations
 * Systems: all
 *
 \***********************************************************************/
@@ -128,7 +128,6 @@ class CommandAnnotations
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
   private final Repository repository;
   private final Display    display;
   private final Clipboard  clipboard;
@@ -149,20 +148,19 @@ class CommandAnnotations
 
   // ---------------------------- methods ---------------------------------
 
-  /** view command
+  /** view annotations
    * @param shell shell
    * @param repository repository
-   * @param fileData file to view
+   * @param fileData file to view annotions
+   * @param revision to view annotions
    */
-  CommandAnnotations(final Shell shell, final Repository repository, final FileData fileData, final RevisionData revisionData)
-    throws RepositoryException
+  CommandAnnotations(Shell shell, Repository repository, FileData fileData, String revision)
   {
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.shell      = shell;
     this.repository = repository;
     this.fileData   = fileData;
 
@@ -274,7 +272,7 @@ class CommandAnnotations
           Button widget = (Button)selectionEvent.widget;
 
           Settings.geometryAnnotations = dialog.getSize();
-          Settings.geometryAnnotationsColumn = new ColumnSizes(Widgets.getTableColumnWidth(widgetAnnotations));
+          Settings.geometryAnnotationsColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetAnnotations));
 
           Dialogs.close(dialog,false);
         }
@@ -384,8 +382,8 @@ class CommandAnnotations
     // show dialog
     Dialogs.show(dialog);
 
-    // start get annotations of last revision
-    show(repository.getLastRevision());
+    // start get annotations of revision
+    show(revision);
 
     // start add revisions
     Background.run(new BackgroundTask(data,repository,fileData)
@@ -433,21 +431,30 @@ class CommandAnnotations
     });
   }
 
-  /** view command
+  /** view annotations
    * @param shell shell
    * @param repository repository
-   * @param fileData file to view
+   * @param fileData file to view annotions
+   * @param revisionData revision data
+   */
+  CommandAnnotations(Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
+  {
+    this(shell,repository,fileData,revisionData.revision);
+  }
+
+  /** view annotations of last revision
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file to view annotions
    */
   CommandAnnotations(Shell shell, Repository repository, FileData fileData)
-    throws RepositoryException
   {
-    this(shell,repository,fileData,null);
+    this(shell,repository,fileData,repository.getLastRevision());
   }
 
   /** run dialog
    */
   public void run()
-    throws RepositoryException
   {
     widgetFind.setFocus();
     Dialogs.run(dialog);
@@ -621,11 +628,12 @@ class CommandAnnotations
         // get annotations
         try
         {
-          data.annotationData = repository.annotations(fileData,revision);
+          data.annotationData = repository.getAnnotations(fileData,revision);
         }
         catch (RepositoryException exception)
         {
           Dialogs.error(dialog,"Getting file annotations fail: %s",exception.getMessage());
+          return;
         }
 
         // show

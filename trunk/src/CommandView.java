@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandView.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command view file
 * Systems: all
@@ -308,7 +308,7 @@ class CommandView
           // get new revision
           try
           {
-            data.lines = repository.getFile(fileData,data.revisions[event.index]);
+            data.lines = repository.getFileLines(fileData,data.revisions[event.index]);
           }
           catch (RepositoryException exception)
           {
