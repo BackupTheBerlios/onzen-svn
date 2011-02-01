@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevisions.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
-* Contents: command revision tree
+* Contents: command show file revisions tree
 * Systems: all
 *
 \***********************************************************************/
@@ -44,6 +44,7 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceEvent;
@@ -103,7 +104,7 @@ import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
 
-/** revision tree command
+/** view file revisions tree command
  */
 class CommandRevisions
 {
@@ -127,16 +128,18 @@ class CommandRevisions
    */
   class Data
   {
-    DrawInfo[]   drawInfos;
-    boolean      containerResizeFlag;
-    Point        containerResizeStart;
-    Point        containerResizeDelta;
-    Rectangle    containerResizeRectangle;
-    RevisionData selectedRevisionData0,selectedRevisionData1;
-    RevisionData selectedRevisionData;
+    RevisionData[] revisionTree;
+    DrawInfo[]     drawInfos;
+    boolean        containerResizeFlag;
+    Point          containerResizeStart;
+    Point          containerResizeDelta;
+    Rectangle      containerResizeRectangle;
+    RevisionData   selectedRevisionData0,selectedRevisionData1;
+    RevisionData   selectedRevisionData;
 
     Data()
     {
+      this.revisionTree             = null;
       this.drawInfos                = null;
       this.containerResizeFlag      = false;
       this.containerResizeStart     = new Point(0,0);
@@ -165,27 +168,26 @@ class CommandRevisions
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell          shell;
-  private final Repository     repository;
-
-  private final Display        display;
-  private final Data           data = new Data();
-  private final RevisionData[] revisionTree;
+  private final Display    display;
+  private final Repository repository;
+  private final Clipboard  clipboard;
+  private final FileData   fileData;
 
   // dialog
-  private final Shell          dialog;
+  private final Data       data = new Data();
+  private final Shell      dialog;
 
   // widgets
-  private final Label          widgetSelectedRevision0;
-  private final Label          widgetSelectedRevision1;
-  private final Canvas         widgetRevisions;
-  private final Button         widgetDiff;
-  private final Button         widgetPatch;
-  private final Label          widgetSelectedRevision;
-  private final Button         widgetView;
-  private final Button         widgetSave;
-  private final Button         widgetRevert;
-  private final Button         widgetClose;
+  private final Label      widgetSelectedRevision0;
+  private final Label      widgetSelectedRevision1;
+  private final Canvas     widgetRevisions;
+  private final Button     widgetDiff;
+  private final Button     widgetPatch;
+  private final Label      widgetSelectedRevision;
+  private final Button     widgetView;
+  private final Button     widgetSave;
+  private final Button     widgetRevert;
+  private final Button     widgetClose;
 
   // ------------------------ native functions ----------------------------
 
@@ -197,7 +199,6 @@ class CommandRevisions
    * @param fileData file data
    */
   CommandRevisions(final Shell shell, final Repository repository, final FileData fileData)
-    throws RepositoryException
   {
     Composite         composite,subComposite;
     ScrolledComposite scrolledComposite;
@@ -205,22 +206,12 @@ class CommandRevisions
     Button            button;
 
     // initialize variables
-    this.shell           = shell;
-    this.repository      = repository;
+    this.repository = repository;
+    this.fileData   = fileData;
 
-    // get display
-    display = shell.getDisplay();
-
-    // get revision tree
-    try
-    {
-      revisionTree = repository.getRevisionTree(fileData);
-    }
-    catch (RepositoryException exception)
-    {
-      throw new RepositoryException("Getting revisions fail",exception);
-    }
-//printRevisionTree(revisionTree);
+    // get display, clipboard
+    display   = shell.getDisplay();
+    clipboard = new Clipboard(display);
 
     // create dialog
     dialog = Dialogs.open(shell,"Revisions: "+fileData.getFileName(),Settings.geometryRevisions.x,Settings.geometryRevisions.y,new double[]{1.0,0.0},1.0);
@@ -229,16 +220,13 @@ class CommandRevisions
     composite.setLayout(new TableLayout(1.0,1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      // get size of tree
-      Point size = getSize(revisionTree);
-
       // create scrolled canvas
       scrolledComposite = Widgets.newScrolledComposite(composite,SWT.BORDER|SWT.H_SCROLL|SWT.V_SCROLL);
       scrolledComposite.setBackground(Onzen.COLOR_WHITE);
       scrolledComposite.setLayout(new TableLayout(1.0,1.0,4));
       Widgets.layout(scrolledComposite,0,0,TableLayoutData.NSWE); //,0,0,4);
       {
-        // do not set canvas size here; it will increase the widget to the size of the tree!
+        // Note: do not set canvas size here; it will increase the widget to the size of the tree!
         widgetRevisions = Widgets.newCanvas(scrolledComposite);
         widgetRevisions.setBackground(Onzen.COLOR_WHITE);
         Widgets.layout(widgetRevisions,0,0,TableLayoutData.NONE);
@@ -259,7 +247,7 @@ class CommandRevisions
       {
         public void modified(Control control)
         {
-          widgetSelectedRevision0.setText((data.selectedRevisionData0 != null) ? data.selectedRevisionData0.revision : "");
+          if (!widgetSelectedRevision0.isDisposed()) widgetSelectedRevision0.setText((data.selectedRevisionData0 != null) ? data.selectedRevisionData0.revision : "");
         }
       });
 
@@ -272,7 +260,7 @@ class CommandRevisions
       {
         public void modified(Control control)
         {
-          widgetSelectedRevision1.setText((data.selectedRevisionData1 != null) ? data.selectedRevisionData1.revision : "");
+          if (!widgetSelectedRevision1.isDisposed()) widgetSelectedRevision1.setText((data.selectedRevisionData1 != null) ? data.selectedRevisionData1.revision : "");
         }
       });
 
@@ -286,29 +274,20 @@ class CommandRevisions
       {
         public void modified(Control control)
         {
-          control.setEnabled((data.selectedRevisionData0 != null) && (data.selectedRevisionData1 != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData0 != null) && (data.selectedRevisionData1 != null));
         }
       });
       widgetDiff.addSelectionListener(new SelectionListener()
       {
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          try
-          {
-            CommandDiff commandDiff = new CommandDiff(dialog,
-                                                      repository,
-                                                      fileData,
-                                                      data.selectedRevisionData0.revision,
-                                                      (data.selectedRevisionData1 != null) ? data.selectedRevisionData1.revision : null
-                                                     );
-            commandDiff.run();
-          }
-          catch (RepositoryException exception)
-          {
-            Dialogs.error(shell,"Cannot diff file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
-          }
+          CommandDiff commandDiff = new CommandDiff(dialog,
+                                                    repository,
+                                                    fileData,
+                                                    data.selectedRevisionData0.revision,
+                                                    (data.selectedRevisionData1 != null) ? data.selectedRevisionData1.revision : null
+                                                   );
+          commandDiff.run();
         }
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -322,7 +301,7 @@ class CommandRevisions
       {
         public void modified(Control control)
         {
-          control.setEnabled((data.selectedRevisionData0 != null) && (data.selectedRevisionData1 != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData0 != null) && (data.selectedRevisionData1 != null));
         }
       });
       widgetPatch.addSelectionListener(new SelectionListener()
@@ -358,7 +337,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          widgetSelectedRevision.setText((data.selectedRevisionData != null) ? data.selectedRevisionData.revision : "");
+          if (!widgetSelectedRevision.isDisposed()) widgetSelectedRevision.setText((data.selectedRevisionData != null) ? data.selectedRevisionData.revision : "");
         }
       });
 
@@ -372,7 +351,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          control.setEnabled((fileData.mode == FileData.Modes.TEXT) && (data.selectedRevisionData != null));
+          if (!control.isDisposed()) control.setEnabled((fileData.mode == FileData.Modes.TEXT) && (data.selectedRevisionData != null));
         }
       });
       widgetView.addSelectionListener(new SelectionListener()
@@ -386,15 +365,8 @@ throw new RepositoryException("NYI");
 
           if (data.selectedRevisionData != null)
           {
-            try
-            {
-              CommandView commandView = new CommandView(dialog,repository,fileData,data.selectedRevisionData);
-              commandView.run();
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Cannot view file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
-            }
+            CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(dialog,repository,fileData,data.selectedRevisionData.revision);
+            commandRevisionInfo.run();
           }
         }
       });
@@ -406,7 +378,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          control.setEnabled((data.selectedRevisionData != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData != null));
         }
       });
       widgetSave.addSelectionListener(new SelectionListener()
@@ -423,7 +395,7 @@ throw new RepositoryException("NYI");
             try
             {
               // get file
-              byte[] fileDataBytes =  repository.getFileData(fileData,data.selectedRevisionData.revision);
+              byte[] fileDataBytes =  repository.getFileBytes(fileData,data.selectedRevisionData.revision);
 
               // save to file
               String fileName = Dialogs.fileSave(dialog,"Save file");
@@ -456,7 +428,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          control.setEnabled((data.selectedRevisionData != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData != null));
         }
       });
       widgetRevert.addSelectionListener(new SelectionListener()
@@ -524,6 +496,8 @@ throw new RepositoryException("NYI");
           if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
           {
 Dprintf.dprintf("");
+            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repository,fileData,drawInfo.revisionData);
+            rommandRevisionInfo.run();
             break;
           }
         }
@@ -573,10 +547,10 @@ Dprintf.dprintf("");
           data.containerResizeDelta.y = mouseEvent.y-data.containerResizeStart.y;
           data.containerResizeFlag    = false;
 
-          // set size and draw
+          // set size and redraw
           Settings.geometryRevisionBox.x = Math.max(Settings.geometryRevisionBox.x+data.containerResizeDelta.x,CONTAINER_MIN_WIDTH );
           Settings.geometryRevisionBox.y = Math.max(Settings.geometryRevisionBox.y+data.containerResizeDelta.y,CONTAINER_MIN_HEIGHT);
-          draw();
+          setSize();
         }
       }
     });
@@ -605,8 +579,8 @@ Dprintf.dprintf("");
     // show dialog
     Dialogs.show(dialog);
 
-    // set size and draw
-    draw();
+    // show
+    show();
   }
 
   /** set scroll value
@@ -827,7 +801,7 @@ Dprintf.dprintf("");
     gc.dispose();
 
     // redraw
-    redraw(revisionTree,MARGIN,MARGIN,0,0,drawInfoList);
+    redraw(data.revisionTree,MARGIN,MARGIN,0,0,drawInfoList);
 
     // get container, handles coordinates
     data.drawInfos = drawInfoList.toArray(new DrawInfo[drawInfoList.size()]);
@@ -845,21 +819,89 @@ Dprintf.dprintf("");
     gc.dispose();
 
     // redraw
-    redraw(revisionTree,MARGIN,MARGIN,containerDeltaWidth,containerDeltaHeight,null);
+    redraw(data.revisionTree,MARGIN,MARGIN,containerDeltaWidth,containerDeltaHeight,null);
   }
 
-  /** set canvas size and draw revision tree
+  /** set canvas size and redraw
    */
-  private void draw()
+  private void setSize()
   {
-    // set canvas size
-    Point size = getSize(revisionTree);
-    size.x += 2*MARGIN;
-    size.y += 2*MARGIN;
-    widgetRevisions.setSize(size);
+    if (!widgetRevisions.isDisposed())
+    {
+      // set canvas size
+      Point size = getSize(data.revisionTree);
+      size.x += 2*MARGIN;
+      size.y += 2*MARGIN;
+      widgetRevisions.setSize(size);
 
-    // redraw
-    redraw();
+      // redraw
+      redraw();
+    }
+  }
+
+  /** show revisions: set canvas size and draw revision tree
+   */
+  private void show(String revision)
+  {
+    // clear
+    if (!display.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          data.revisionTree = null;
+          Widgets.modified(data);
+         }
+      });
+    }
+
+    // start show annotations
+    Background.run(new BackgroundTask(data,repository,fileData,revision)
+    {
+      public void run()
+      {
+        final Data       data       = (Data)      userData[0];
+        final Repository repository = (Repository)userData[1];
+        final FileData   fileData   = (FileData)  userData[2];
+        final String     revision   = (String)    userData[3];
+
+        // get revision tree
+        try
+        {
+          data.revisionTree = repository.getRevisionTree(fileData);
+        }
+        catch (RepositoryException exception)
+        {
+          Dialogs.error(dialog,"Getting file revisions fail: %s",exception.getMessage());
+          return;
+        }
+//        printRevisionTree(revisionTree);
+
+        // show
+        if (!display.isDisposed())
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              // set canvas size and redraw
+              setSize();
+
+              // notify modification
+              Widgets.modified(data);
+            }
+          });
+        }
+      }
+    });
+  }
+
+  /** show revisions: set canvas size and draw revision tree
+   */
+  private void show()
+  {
+    show(repository.getLastRevision());
   }
 
   /** print revision tree (for debugging)
