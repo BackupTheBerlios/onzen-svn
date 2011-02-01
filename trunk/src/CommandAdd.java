@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command add files/directories
 * Systems: all
@@ -10,30 +10,25 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -386,29 +381,41 @@ class CommandAdd
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      Message message = null;
-      try
+      Background.run(new BackgroundTask(data,onzen,repository)
       {
-        // add files
-        message = new Message(data.message);
-        repository.add(data.fileDataSet,message,data.binaryFlag);
+        public void run()
+        {
+          final Data       data        = (Data)      userData[0];
+          final Onzen      onzen       = (Onzen)     userData[1];
+          final Repository repository  = (Repository)userData[2];
 
-        // add message to history
-        message.addToHistory();
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(dialog,
-                      String.format("Cannot add files (error: %s)",
-                                    exception.getMessage()
-                                   )
-                     );
-        return false;
-      }
-      finally
-      {
-        message.done();
-      }
+          onzen.setStatusText("Add files...");
+          Message message = null;
+          try
+          {
+            // add files
+            message = new Message(data.message);
+            repository.add(data.fileDataSet,message,data.binaryFlag);
+
+            // add message to history
+            message.addToHistory();
+          }
+          catch (RepositoryException exception)
+          {
+            Dialogs.error(dialog,
+                          String.format("Cannot add files (error: %s)",
+                                        exception.getMessage()
+                                       )
+                         );
+            return;
+          }
+          finally
+          {
+            message.done();
+            onzen.clearStatusText();
+          }
+        }
+      });
 
       return true;
     }
