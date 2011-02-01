@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command add files/directories
 * Systems: all
@@ -130,6 +130,7 @@ class CommandAdd
   // --------------------------- variables --------------------------------
 
   // global variable references
+  private final Onzen      onzen;
   private final Repository repository;
   private final Display    display;
 
@@ -150,16 +151,18 @@ class CommandAdd
   // ---------------------------- methods ---------------------------------
 
   /** add command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    */
-  CommandAdd(final Shell shell, final Repository repository)
+  CommandAdd(Onzen onzen, final Shell shell, final Repository repository)
   {
     Composite composite;
     Label     label;
     Button    button;
 
     // initialize variables
+    this.onzen      = onzen;
     this.repository = repository;
 
     // get display
@@ -345,13 +348,14 @@ class CommandAdd
   }
 
   /** add command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileDataSet files to add
    */
-  CommandAdd(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+  CommandAdd(Onzen onzen, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
   {
-    this(shell,repository);
+    this(onzen,shell,repository);
 
     // add files
     for (FileData fileData : fileDataSet)
@@ -366,9 +370,9 @@ class CommandAdd
    * @param repository repository
    * @param fileData file to add
    */
-  CommandAdd(Shell shell, Repository repository, FileData fileData)
+  CommandAdd(Onzen onzen, Shell shell, Repository repository, FileData fileData)
   {
-    this(shell,repository);
+    this(onzen,shell,repository);
 
     // add file
     data.fileDataSet.add(fileData);
@@ -389,7 +393,7 @@ class CommandAdd
         message = new Message(data.message);
         repository.add(data.fileDataSet,message,data.binaryFlag);
 
-        // add to history
+        // add message to history
         message.addToHistory();
       }
       catch (RepositoryException exception)

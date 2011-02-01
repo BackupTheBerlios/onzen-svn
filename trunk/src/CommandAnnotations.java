@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAnnotations.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command view file annotations
 * Systems: all
@@ -128,6 +128,7 @@ class CommandAnnotations
   // --------------------------- variables --------------------------------
 
   // global variable references
+  private final Onzen      onzen;
   private final Repository repository;
   private final Display    display;
   private final Clipboard  clipboard;
@@ -149,18 +150,20 @@ class CommandAnnotations
   // ---------------------------- methods ---------------------------------
 
   /** view annotations
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileData file to view annotions
    * @param revision to view annotions
    */
-  CommandAnnotations(Shell shell, Repository repository, FileData fileData, String revision)
+  CommandAnnotations(Onzen onzen, Shell shell, Repository repository, FileData fileData, String revision)
   {
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
+    this.onzen      = onzen;
     this.repository = repository;
     this.fileData   = fileData;
 
@@ -220,7 +223,7 @@ class CommandAnnotations
         label = Widgets.newLabel(subComposite,"Find:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFind = Widgets.newText(subComposite);
+        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         widgetFind.setEnabled(false);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         Widgets.addModifyListener(new WidgetListener(widgetFind,data)
@@ -432,24 +435,26 @@ class CommandAnnotations
   }
 
   /** view annotations
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileData file to view annotions
    * @param revisionData revision data
    */
-  CommandAnnotations(Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
+  CommandAnnotations(Onzen onzen, Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
   {
-    this(shell,repository,fileData,revisionData.revision);
+    this(onzen,shell,repository,fileData,revisionData.revision);
   }
 
   /** view annotations of last revision
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileData file to view annotions
    */
-  CommandAnnotations(Shell shell, Repository repository, FileData fileData)
+  CommandAnnotations(Onzen onzen, Shell shell, Repository repository, FileData fileData)
   {
-    this(shell,repository,fileData,repository.getLastRevision());
+    this(onzen,shell,repository,fileData,repository.getLastRevision());
   }
 
   /** run dialog
@@ -658,11 +663,11 @@ class CommandAnnotations
                 }
               }
 
-              // focus text find
-              widgetFind.setFocus();
-
               // notify modification
               Widgets.modified(data);
+
+              // focus text find
+              widgetFind.setFocus();
             }
           });
         }
