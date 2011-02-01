@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevert.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command revert files
 * Systems: all
@@ -10,30 +10,25 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -128,6 +123,7 @@ class CommandRevert
   // --------------------------- variables --------------------------------
 
   // global variable references
+  private final Onzen      onzen;
   private final Repository repository;
   private final Display    display;
 
@@ -145,16 +141,18 @@ class CommandRevert
   // ---------------------------- methods ---------------------------------
 
   /** revert command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    */
-  CommandRevert(final Shell shell, final Repository repository)
+  CommandRevert(Onzen onzen, final Shell shell, final Repository repository)
   {
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
+    this.onzen      = onzen;
     this.repository = repository;
 
     // get display
@@ -241,13 +239,14 @@ class CommandRevert
   }
 
   /** revert command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileDataSet files to revert
    */
-  CommandRevert(final Shell shell, final Repository repository, HashSet<FileData> fileDataSet)
+  CommandRevert(Onzen onzen, final Shell shell, final Repository repository, HashSet<FileData> fileDataSet)
   {
-    this(shell,repository);
+    this(onzen,shell,repository);
 
     // add files
     for (FileData fileData : fileDataSet)
@@ -309,13 +308,14 @@ class CommandRevert
   }
 
   /** revert command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileData file to revert
    */
-  CommandRevert(final Shell shell, final Repository repository, FileData fileData)
+  CommandRevert(Onzen onzen, final Shell shell, final Repository repository, FileData fileData)
   {
-    this(shell,repository);
+    this(onzen,shell,repository);
 
     // add file
     data.fileDataSet.add(fileData);

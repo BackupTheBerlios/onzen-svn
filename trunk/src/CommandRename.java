@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRename.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command rename file/directory
 * Systems: all
@@ -10,30 +10,25 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.HashSet;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -130,6 +125,7 @@ class CommandRename
   // --------------------------- variables --------------------------------
 
   // global variable references
+  private final Onzen      onzen;
   private final Repository repository;
   private final Display    display;
   private final FileData   fileData;
@@ -150,18 +146,19 @@ class CommandRename
   // ---------------------------- methods ---------------------------------
 
   /** rename command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileData file to rename
    */
-  CommandRename(final Shell shell, final Repository repository, final FileData fileData)
+  CommandRename(Onzen onzen, final Shell shell, final Repository repository, final FileData fileData)
   {
-
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
+    this.onzen      = onzen;
     this.repository = repository;
     this.fileData   = fileData;
 
@@ -389,9 +386,9 @@ Dprintf.dprintf("");
       {
         // rename file
         message = new Message(data.message);
-        repository.rename(fileData,data.newFileName,message);//data.binaryFlag);
+        repository.rename(fileData,data.newFileName,message);
 
-        // add to history
+        // add message to history
         message.addToHistory();
       }
       catch (RepositoryException exception)

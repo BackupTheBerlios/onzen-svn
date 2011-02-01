@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command remove files/directories
 * Systems: all
@@ -10,30 +10,25 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -128,7 +123,7 @@ class CommandRemove
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
+  private final Onzen      onzen;
   private final Repository repository;
   private final Display    display;
 
@@ -148,17 +143,18 @@ class CommandRemove
   // ---------------------------- methods ---------------------------------
 
   /** remove command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    */
-  CommandRemove(final Shell shell, final Repository repository)
+  CommandRemove(Onzen onzen, final Shell shell, final Repository repository)
   {
     Composite composite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.shell      = shell;
+    this.onzen      = onzen;
     this.repository = repository;
 
     // get display
@@ -339,13 +335,14 @@ class CommandRemove
   }
 
   /** remove command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileDataSet files remove
    */
-  CommandRemove(Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+  CommandRemove(Onzen onzen, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
   {
-    this(shell,repository);
+    this(onzen,shell,repository);
 
     // add files
     for (FileData fileData : fileDataSet)
@@ -356,13 +353,14 @@ class CommandRemove
   }
 
   /** remove command
+   * @param onzen onzen instance
    * @param shell shell
    * @param repository repository
    * @param fileData file remove
    */
-  CommandRemove(Shell shell, Repository repository, FileData fileData)
+  CommandRemove(Onzen onzen, Shell shell, Repository repository, FileData fileData)
   {
-    this(shell,repository);
+    this(onzen,shell,repository);
 
     // add file
     data.fileDataSet.add(fileData);
@@ -383,7 +381,7 @@ class CommandRemove
         message = new Message(data.message);
         repository.remove(data.fileDataSet,message);
 
-        // add to history
+        // add message to history
         message.addToHistory();
       }
       catch (RepositoryException exception)
