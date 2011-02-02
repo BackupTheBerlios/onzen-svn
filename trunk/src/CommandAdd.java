@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command add files/directories
 * Systems: all
@@ -125,40 +125,38 @@ class CommandAdd
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Onzen      onzen;
-  private final Repository repository;
-  private final Display    display;
+  private final RepositoryTab repositoryTab;
+  private final Display       display;
 
   // dialog
-  private final Data       data = new Data();
-  private final Shell      dialog;        
-  private final String[]   history;       
+  private final Data          data = new Data();
+  private final Shell         dialog;        
+  private final String[]      history;       
 
   // widgets
-  private final List       widgetFiles;   
-  private final List       widgetHistory; 
-  private final Text       widgetMessage; 
-  private final Button     widgetBinary;  
-  private final Button     widgetAdd;     
+  private final List          widgetFiles;   
+  private final List          widgetHistory; 
+  private final Text          widgetMessage; 
+  private final Button        widgetBinary;  
+  private final Button        widgetAdd;     
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** add command
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    */
-  CommandAdd(Onzen onzen, final Shell shell, final Repository repository)
+  CommandAdd(RepositoryTab repositoryTab, final Shell shell, final Repository repository)
   {
     Composite composite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.onzen      = onzen;
-    this.repository = repository;
+    this.repositoryTab = repositoryTab;
 
     // get display
     display = shell.getDisplay();
@@ -343,14 +341,14 @@ class CommandAdd
   }
 
   /** add command
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileDataSet files to add
    */
-  CommandAdd(Onzen onzen, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+  CommandAdd(RepositoryTab repositoryTab, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
   {
-    this(onzen,shell,repository);
+    this(repositoryTab,shell,repository);
 
     // add files
     for (FileData fileData : fileDataSet)
@@ -361,13 +359,14 @@ class CommandAdd
   }
 
   /** add command
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to add
    */
-  CommandAdd(Onzen onzen, Shell shell, Repository repository, FileData fileData)
+  CommandAdd(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
   {
-    this(onzen,shell,repository);
+    this(repositoryTab,shell,repository);
 
     // add file
     data.fileDataSet.add(fileData);
@@ -376,46 +375,32 @@ class CommandAdd
 
   /** run dialog
    */
-  public boolean run()
+  public void run()
   {
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      Background.run(new BackgroundTask(data,onzen,repository)
+      Background.run(new BackgroundRunnable(data,repositoryTab)
       {
         public void run()
         {
-          final Data       data        = (Data)      userData[0];
-          final Onzen      onzen       = (Onzen)     userData[1];
-          final Repository repository  = (Repository)userData[2];
+          final Data          data          = (Data)         userData[0];
+          final RepositoryTab repositoryTab = (RepositoryTab)userData[1];
 
-          onzen.setStatusText("Add files...");
-          Message message = null;
-          try
-          {
-            // add files
-            message = new Message(data.message);
-            repository.add(data.fileDataSet,message,data.binaryFlag);
-
-            // add message to history
-            message.addToHistory();
-          }
-          catch (RepositoryException exception)
-          {
-            Dialogs.error(dialog,
-                          String.format("Cannot add files (error: %s)",
-                                        exception.getMessage()
-                                       )
-                         );
-            return;
-          }
-          finally
-          {
-            message.done();
-            onzen.clearStatusText();
-          }
+          add(data,repositoryTab);
         }
       });
+    }
+  }
+
+  /** run and wait for dialog
+   */
+  public boolean execute()
+  {
+    widgetMessage.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      add(data,repositoryTab);
 
       return true;
     }
@@ -434,6 +419,44 @@ class CommandAdd
   }
 
   //-----------------------------------------------------------------------
+
+  /** do add
+   * @param data data
+   * @param repositoryTab repository tab
+   */
+  private void add(Data data, RepositoryTab repositoryTab)
+  {
+    repositoryTab.setStatusText("Add files...");
+    Message message = null;
+    try
+    {
+      // add files
+      message = new Message(data.message);
+      repositoryTab.repository.add(data.fileDataSet,message,data.binaryFlag);
+
+      // add message to history
+      message.addToHistory();
+
+      // update file states
+Dprintf.dprintf("");
+      repositoryTab.updateFileStatus(data.fileDataSet);
+Dprintf.dprintf("");
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(dialog,
+                    String.format("Cannot add files (error: %s)",
+                                  exception.getMessage()
+                                 )
+                   );
+      return;
+    }
+    finally
+    {
+      message.done();
+      repositoryTab.clearStatusText();
+    }
+  }
 }
 
 /* end of file */
