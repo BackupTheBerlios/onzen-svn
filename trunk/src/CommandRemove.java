@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command remove files/directories
 * Systems: all
@@ -123,39 +123,37 @@ class CommandRemove
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Onzen      onzen;
-  private final Repository repository;
-  private final Display    display;
+  private final RepositoryTab repositoryTab;
+  private final Display       display;
 
   // dialog
-  private final Data       data = new Data();
-  private final String[]   history;       
-  private final Shell      dialog;        
+  private final Data          data = new Data();
+  private final String[]      history;       
+  private final Shell         dialog;        
 
   // widgets
-  private final List       widgetFiles;   
-  private final List       widgetHistory; 
-  private final Text       widgetMessage; 
-  private final Button     widgetRemove;     
+  private final List          widgetFiles;   
+  private final List          widgetHistory; 
+  private final Text          widgetMessage; 
+  private final Button        widgetRemove;     
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** remove command
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    */
-  CommandRemove(Onzen onzen, final Shell shell, final Repository repository)
+  CommandRemove(RepositoryTab repositoryTab, final Shell shell, final Repository repository)
   {
     Composite composite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.onzen      = onzen;
-    this.repository = repository;
+    this.repositoryTab = repositoryTab;
 
     // get display
     display = shell.getDisplay();
@@ -263,31 +261,28 @@ class CommandRemove
         if ((keyEvent.stateMask & SWT.CTRL) != 0)
         {
           int i = widgetHistory.getSelectionIndex();
+          if (i < 0) i = history.length;
 
           if (keyEvent.keyCode == SWT.ARROW_DOWN)
           {
             // next history entry
-            if (i >= 0)
+            if (i < history.length-1)
             {
-              if (i < history.length-1)
-              {
-                widgetHistory.setSelection(i+1);
-                widgetMessage.setText(history[i+1]);
-                widgetMessage.setFocus();
-              }
+              widgetHistory.setSelection(i+1);
+              widgetHistory.showSelection();
+              widgetMessage.setText(history[i+1]);
+              widgetMessage.setFocus();
             }
           }
           else if (keyEvent.keyCode == SWT.ARROW_UP)
           {
             // previous history entry
-            if (i >= 0)
+            if (i > 0)
             {
-              if (i > 0)
-              {
-                widgetHistory.setSelection(i-1);
-                widgetMessage.setText(history[i-1]);
-                widgetMessage.setFocus();
-              }
+              widgetHistory.setSelection(i-1);
+              widgetHistory.showSelection();
+              widgetMessage.setText(history[i-1]);
+              widgetMessage.setFocus();
             }
           }
           else if (keyEvent.keyCode == SWT.HOME)
@@ -296,6 +291,7 @@ class CommandRemove
             if (history.length > 0)
             {
               widgetHistory.setSelection(0);
+              widgetHistory.showSelection();
               widgetMessage.setText(history[0]);
               widgetMessage.setFocus();
             }
@@ -306,13 +302,14 @@ class CommandRemove
             if (history.length > 0)
             {
               widgetHistory.setSelection(history.length-1);
+              widgetHistory.showSelection();
               widgetMessage.setText(history[history.length-1]);
               widgetMessage.setFocus();
             }
           }
           else if (keyEvent.character == SWT.CR)
           {
-            // invoke remove-button
+            // invoke commit-button
             Widgets.invoke(widgetRemove);
           }
         }
@@ -326,23 +323,29 @@ class CommandRemove
     Dialogs.show(dialog);
 
     // add history
-    for (String string : history)
+    if (!widgetHistory.isDisposed())
     {
-      widgetHistory.add(string.replaceAll("\n","\\\\n"));
+      for (String string : history)
+      {
+        widgetHistory.add(string.replaceAll("\n","\\\\n"));
+      }
+      widgetHistory.setSelection(widgetHistory.getItemCount()-1);
+      widgetHistory.showSelection();
+      widgetHistory.deselectAll();
     }
 
     // update
   }
 
   /** remove command
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileDataSet files remove
    */
-  CommandRemove(Onzen onzen, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
+  CommandRemove(RepositoryTab repositoryTab, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
   {
-    this(onzen,shell,repository);
+    this(repositoryTab,shell,repository);
 
     // add files
     for (FileData fileData : fileDataSet)
@@ -353,14 +356,14 @@ class CommandRemove
   }
 
   /** remove command
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file remove
    */
-  CommandRemove(Onzen onzen, Shell shell, Repository repository, FileData fileData)
+  CommandRemove(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
   {
-    this(onzen,shell,repository);
+    this(repositoryTab,shell,repository);
 
     // add file
     data.fileDataSet.add(fileData);
@@ -369,34 +372,29 @@ class CommandRemove
 
   /** run dialog
    */
-  public boolean run()
+  public void run()
   {
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      Message message = null;
-      try
+      Background.run(new BackgroundRunnable()
       {
-        // remove files
-        message = new Message(data.message);
-        repository.remove(data.fileDataSet,message);
+        public void run()
+        {
+          remove();
+        }
+      });
+    }
+  }
 
-        // add message to history
-        message.addToHistory();
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(dialog,
-                      String.format("Cannot remove files (error: %s)",
-                                    exception.getMessage()
-                                   )
-                     );
-        return false;
-      }
-      finally
-      {
-        message.done();
-      }
+  /** run and wait for dialog
+   */
+  public boolean execute()
+  {
+    widgetMessage.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      remove();
 
       return true;
     }
@@ -415,6 +413,50 @@ class CommandRemove
   }
 
   //-----------------------------------------------------------------------
+
+  /** do remove
+   */
+  private void remove()
+  {
+    repositoryTab.setStatusText("Remove files...");
+    Message message = null;
+    try
+    {
+      // remove files
+      message = new Message(data.message);
+      repositoryTab.repository.remove(data.fileDataSet,message);
+
+      // add message to history
+      message.addToHistory();
+
+      // update file states
+      repositoryTab.repository.updateStates(data.fileDataSet);
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          repositoryTab.updateFileStatus(data.fileDataSet);
+        }
+      });
+    }
+    catch (RepositoryException exception)
+    {
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(dialog,"Cannot remove files (error: %s)",exceptionMessage);
+        }
+      });
+      return;
+    }
+    finally
+    {
+      message.done();
+      repositoryTab.clearStatusText();
+    }
+  }
 }
 
 /* end of file */

@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandCommit.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command commit files/directories
 * Systems: all
@@ -261,31 +261,28 @@ class CommandCommit
         if ((keyEvent.stateMask & SWT.CTRL) != 0)
         {
           int i = widgetHistory.getSelectionIndex();
+          if (i < 0) i = history.length;
 
           if (keyEvent.keyCode == SWT.ARROW_DOWN)
           {
             // next history entry
-            if (i >= 0)
+            if (i < history.length-1)
             {
-              if (i < history.length-1)
-              {
-                widgetHistory.setSelection(i+1);
-                widgetMessage.setText(history[i+1]);
-                widgetMessage.setFocus();
-              }
+              widgetHistory.setSelection(i+1);
+              widgetHistory.showSelection();
+              widgetMessage.setText(history[i+1]);
+              widgetMessage.setFocus();
             }
           }
           else if (keyEvent.keyCode == SWT.ARROW_UP)
           {
             // previous history entry
-            if (i >= 0)
+            if (i > 0)
             {
-              if (i > 0)
-              {
-                widgetHistory.setSelection(i-1);
-                widgetMessage.setText(history[i-1]);
-                widgetMessage.setFocus();
-              }
+              widgetHistory.setSelection(i-1);
+              widgetHistory.showSelection();
+              widgetMessage.setText(history[i-1]);
+              widgetMessage.setFocus();
             }
           }
           else if (keyEvent.keyCode == SWT.HOME)
@@ -294,6 +291,7 @@ class CommandCommit
             if (history.length > 0)
             {
               widgetHistory.setSelection(0);
+              widgetHistory.showSelection();
               widgetMessage.setText(history[0]);
               widgetMessage.setFocus();
             }
@@ -304,6 +302,7 @@ class CommandCommit
             if (history.length > 0)
             {
               widgetHistory.setSelection(history.length-1);
+              widgetHistory.showSelection();
               widgetMessage.setText(history[history.length-1]);
               widgetMessage.setFocus();
             }
@@ -324,9 +323,15 @@ class CommandCommit
     Dialogs.show(dialog);
 
     // add history
-    for (String string : history)
+    if (!widgetHistory.isDisposed())
     {
-      widgetHistory.add(string.replaceAll("\n","\\\\n"));
+      for (String string : history)
+      {
+        widgetHistory.add(string.replaceAll("\n","\\\\n"));
+      }
+      widgetHistory.setSelection(widgetHistory.getItemCount()-1);
+      widgetHistory.showSelection();
+      widgetHistory.deselectAll();
     }
 
     // update
@@ -376,7 +381,7 @@ class CommandCommit
       {
         public void run()
         {
-          commit(data,repositoryTab);
+          commit();
         }
       });
     }
@@ -389,7 +394,7 @@ class CommandCommit
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      commit(data,repositoryTab);
+      commit();
 
       return true;
     }
@@ -413,7 +418,7 @@ class CommandCommit
    * @param data data
    * @param repositoryTab repository tab
    */
-  private void commit(final Data data, final RepositoryTab repositoryTab)
+  private void commit()
   {
     repositoryTab.setStatusText("Commit files...");
     Message message = null;
@@ -427,7 +432,6 @@ class CommandCommit
       message.addToHistory();
 
       // update file states
-Dprintf.dprintf("");
       repositoryTab.repository.updateStates(data.fileDataSet);
       display.syncExec(new Runnable()
       {
@@ -436,7 +440,6 @@ Dprintf.dprintf("");
           repositoryTab.updateFileStatus(data.fileDataSet);
         }
       });
-Dprintf.dprintf("");
     }
     catch (RepositoryException exception)
     {
