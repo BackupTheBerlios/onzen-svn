@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: repository tab
 * Systems: all
@@ -500,6 +500,16 @@ Dprintf.dprintf("");
     return openSubDirectory(widgetFileTree.getItems(),directory);
   }
 
+  public void setStatusText(String format, Object... arguments)
+  {
+    onzen.setStatusText(format,arguments);
+  }
+
+  public void clearStatusText()
+  {
+    onzen.clearStatusText();
+  }
+
   //-----------------------------------------------------------------------
 
   /** update states of selected entries
@@ -552,11 +562,8 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandCommit commandCommit = new CommandCommit(shell,repository,fileDataSet);
-      if (commandCommit.run())
-      {
-        asyncUpdateFileStatus(fileDataSet);
-      }
+      CommandCommit commandCommit = new CommandCommit(this,shell,repository,fileDataSet);
+      commandCommit.run();
     }
   }
 
@@ -567,11 +574,8 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandAdd commandAdd = new CommandAdd(shell,repository,fileDataSet);
-      if (commandAdd.run())
-      {
-        asyncUpdateFileStatus(fileDataSet);
-      }
+      CommandAdd commandAdd = new CommandAdd(this,shell,repository,fileDataSet);
+      commandAdd.run();
     }
   }
 
@@ -582,11 +586,8 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandRemove commandRemove = new CommandRemove(shell,repository,fileDataSet);
-      if (commandRemove.run())
-      {
-        asyncUpdateFileStatus(fileDataSet);
-      }
+      CommandRemove commandRemove = new CommandRemove(this,shell,repository,fileDataSet);
+      commandRemove.run();
     }
   }
 
@@ -597,11 +598,8 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandRevert commandRevert = new CommandRevert(shell,repository,fileDataSet);
-      if (commandRevert.run())
-      {
-        asyncUpdateFileStatus(fileDataSet);
-      }
+      CommandRevert commandRevert = new CommandRevert(this,shell,repository,fileDataSet);
+      commandRevert.run();
     }
   }
 
@@ -612,11 +610,8 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandRename commandRename = new CommandRename(shell,repository,fileData);
-      if (commandRename.run())
-      {
-        asyncUpdateFileStatus(fileData);
-      }
+      CommandRename commandRename = new CommandRename(this,shell,repository,fileData);
+      commandRename.run();
     }
   }
 
@@ -627,7 +622,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandView commandView = new CommandView(shell,repository,fileData);
+      CommandView commandView = new CommandView(this,shell,repository,fileData);
       commandView.run();
     }
   }
@@ -639,7 +634,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandDiff commandDiff = new CommandDiff(shell,repository,fileData);
+      CommandDiff commandDiff = new CommandDiff(this,shell,repository,fileData);
       commandDiff.run();
     }
   }
@@ -651,7 +646,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,repository,fileData);
+      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(this,shell,repository,fileData);
       commandRevisionInfo.run();
     }
   }
@@ -663,7 +658,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandRevisions commandRevisions = new CommandRevisions(shell,repository,fileData);
+      CommandRevisions commandRevisions = new CommandRevisions(this,shell,repository,fileData);
       commandRevisions.run();
     }
   }
@@ -672,7 +667,7 @@ Dprintf.dprintf("");
    */
   public void changedFiles()
   {
-    CommandChangedFiles commandChangedFiles = new CommandChangedFiles(shell,repository);
+    CommandChangedFiles commandChangedFiles = new CommandChangedFiles(this,shell,repository);
     commandChangedFiles.run();
   }
 
@@ -683,7 +678,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandAnnotations commandAnnotations = new CommandAnnotations(shell,repository,fileData);
+      CommandAnnotations commandAnnotations = new CommandAnnotations(this,shell,repository,fileData);
       commandAnnotations.run();
     }
   }
@@ -1316,8 +1311,7 @@ Dprintf.dprintf("");
    */
   private void addRootDirectory()
   {
-    FileData rootFileData = new FileData("/",
-                                         "",
+    FileData rootFileData = new FileData("",
                                          FileData.Types.DIRECTORY
                                         );
     TreeItem rootTreeItem = Widgets.addTreeItem(widgetFileTree,rootFileData,true);
@@ -1506,9 +1500,8 @@ Dprintf.dprintf("");
       {
         // create tree item
         TreeItem subTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,fileData),fileData,false);
-        subTreeItem.setText(0,fileData.title);
+        subTreeItem.setText(0,fileData.getBaseName());
         subTreeItem.setImage(getFileDataImage(fileData));
-  //Dprintf.dprintf("fileData=%s",fileData);
 
         // store tree item reference
         fileDataMap.put(fileData,subTreeItem);
@@ -1892,8 +1885,6 @@ Dprintf.dprintf("");
   {    
     treeItem.setText(1,getFileDataStateString(fileData));
     treeItem.setText(2,fileData.workingRevision);
-//    treeItem.setText(3,simpleDateFormat.format(new Date(fileData.datetime*1000)));
-//      subTreeItem.setText(2,Units.formatByteSize(fileData.size));
     treeItem.setText(3,fileData.branch);
     treeItem.setForeground(Onzen.COLOR_BLACK);
     treeItem.setBackground(getFileDataBackground(fileData));
@@ -1907,14 +1898,6 @@ Dprintf.dprintf("");
     updateFileStatus(treeItem,(FileData)treeItem.getData());
   }
 
-  /** update file tree item
-   * @param fileData file data
-   */
-  private void updateFileStatus(FileData fileData)
-  {
-    updateFileStatus(fileDataMap.get(fileData),fileData);
-  }
-
   /** update file tree items
    * @param treeItems tree items to update
    */
@@ -1926,10 +1909,18 @@ Dprintf.dprintf("");
     }
   }
 
+  /** update file tree item
+   * @param fileData file data
+   */
+  protected void updateFileStatus(FileData fileData)
+  {
+    updateFileStatus(fileDataMap.get(fileData),fileData);
+  }
+
   /** update file tree items
    * @param fileDataSet file data set
    */
-  private void updateFileStatus(HashSet<FileData> fileDataSet)
+  protected void updateFileStatus(HashSet<FileData> fileDataSet)
   {
     for (FileData fileData : fileDataSet)
     {
@@ -1940,17 +1931,12 @@ Dprintf.dprintf("");
   /** asyncronous update file state
    * @param fileDataSet file data set to update states
    */
-  private void asyncUpdateFileStatus(HashSet<FileData> fileDataSet, String title)
+  protected void asyncUpdateFileStatus(HashSet<FileData> fileDataSet, String title)
   {
-    Background.run(new BackgroundTask(repository,fileDataSet,fileDataMap,title)
+    Background.run(new BackgroundRunnable(repository,fileDataSet,fileDataMap,title)
     {
-      public void run()
+      public void run(Repository repository, HashSet<FileData> fileDataSet, WeakHashMap<FileData,TreeItem> fileDataMap, String title)
       {
-        final Repository                     repository  = (Repository)                    userData[0];
-        final HashSet<FileData>              fileDataSet = (HashSet<FileData>)             userData[1];
-        final WeakHashMap<FileData,TreeItem> fileDataMap = (WeakHashMap<FileData,TreeItem>)userData[2];
-        final String                         title       = (String)                        userData[3];
-
         // update tree items: status update in progress
         for (final FileData fileData : fileDataSet)
         {
@@ -1996,7 +1982,7 @@ Dprintf.dprintf("");
   /** asyncronous update file state
    * @param fileDataSet file data set to update states
    */
-  private void asyncUpdateFileStatus(HashSet<FileData> fileDataSet)
+  protected void asyncUpdateFileStatus(HashSet<FileData> fileDataSet)
   {
     asyncUpdateFileStatus(fileDataSet,null);
   }
@@ -2004,16 +1990,12 @@ Dprintf.dprintf("");
   /** asyncronous update file state
    * @param fileData file data
    */
-  private void asyncUpdateFileStatus(FileData fileData)
+  protected void asyncUpdateFileStatus(FileData fileData)
   {
-    Background.run(new BackgroundTask(repository,fileData,fileDataMap)
+    Background.run(new BackgroundRunnable(repository,fileData,fileDataMap)
     {
-      public void run()
+      public void run(Repository repository, final FileData fileData, WeakHashMap<FileData,TreeItem> fileDataMap)
       {
-        final Repository                     repository  = (Repository)                    userData[0];
-        final FileData                       fileData    = (FileData)                      userData[1];
-        final WeakHashMap<FileData,TreeItem> fileDataMap = (WeakHashMap<FileData,TreeItem>)userData[2];
-
         final TreeItem treeItem = fileDataMap.get(fileData);
 
         // update tree items: status update in progress
