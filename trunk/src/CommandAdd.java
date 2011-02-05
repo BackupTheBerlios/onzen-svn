@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: command add files/directories
 * Systems: all
@@ -380,14 +380,11 @@ class CommandAdd
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      Background.run(new BackgroundRunnable(data,repositoryTab)
+      Background.run(new BackgroundRunnable()
       {
         public void run()
         {
-          final Data          data          = (Data)         userData[0];
-          final RepositoryTab repositoryTab = (RepositoryTab)userData[1];
-
-          add(data,repositoryTab);
+          add();
         }
       });
     }
@@ -400,7 +397,7 @@ class CommandAdd
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      add(data,repositoryTab);
+      add();
 
       return true;
     }
@@ -421,10 +418,8 @@ class CommandAdd
   //-----------------------------------------------------------------------
 
   /** do add
-   * @param data data
-   * @param repositoryTab repository tab
    */
-  private void add(Data data, RepositoryTab repositoryTab)
+  private void add()
   {
     repositoryTab.setStatusText("Add files...");
     Message message = null;
@@ -438,17 +433,25 @@ class CommandAdd
       message.addToHistory();
 
       // update file states
-Dprintf.dprintf("");
-      repositoryTab.updateFileStatus(data.fileDataSet);
-Dprintf.dprintf("");
+      repositoryTab.repository.updateStates(data.fileDataSet);
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          repositoryTab.updateFileStatus(data.fileDataSet);
+        }
+      });
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(dialog,
-                    String.format("Cannot add files (error: %s)",
-                                  exception.getMessage()
-                                 )
-                   );
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(dialog,"Cannot add files (error: %s)",exceptionMessage);
+        }
+      });
       return;
     }
     finally
