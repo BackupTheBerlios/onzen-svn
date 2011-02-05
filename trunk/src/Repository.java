@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -11,21 +11,14 @@
 /****************************** Imports ********************************/
 // base
 import java.io.Serializable;
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
 import java.io.File;
-//import java.io.PrintWriter;
-//import java.io.FileWriter;
-//import java.io.BufferedReader;
 import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
 
 //import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -210,7 +203,6 @@ class FileData
   };
 
   // --------------------------- variables --------------------------------
-  public final String title;   // ??? remove and replace by getBaseName()
   public       String name;
   public final Types  type;
   public       long   size;
@@ -226,7 +218,6 @@ class FileData
   // ---------------------------- methods ---------------------------------
 
   /** create file data
-   * @param title title text
    * @param name file name
    * @param type file type (see FileData.Types)
    * @param state state (see FileData.States)
@@ -234,40 +225,47 @@ class FileData
    * @param size file size [bytes]
    * @param datetime file date/time [s]
    */
-  public FileData(String title, String name, Types type, States state, Modes mode, long size, long datetime)
+  public FileData(String name, Types type, States state, Modes mode, long size, long datetime)
   {
-    this.title              = title;
+    this.name               = name;
     this.type               = type;
+    this.size               = size;
+    this.datetime           = datetime;
     this.state              = state;
     this.mode               = mode;
     this.workingRevision    = "";
     this.repositoryRevision = "";
     this.branch             = "";
-    this.name               = name;
-    this.size               = size;
-    this.datetime           = datetime;
   }
 
   /** create file data
-   * @param title title text
    * @param name file name
-   * @param type file type
+   * @param type file type (see FileData.Types)
    * @param size file size [bytes]
    * @param datetime file date/time [s]
    */
-  public FileData(String title, String name, Types type, long size, long datetime)
+  public FileData(String name, Types type, long size, long datetime)
   {
-    this(title,name,type,States.UNKNOWN,Modes.UNKNOWN,size,datetime);
+    this(name,type,States.UNKNOWN,Modes.UNKNOWN,size,datetime);
   }
 
   /** create file data
-   * @param title title text
    * @param name file name
-   * @param type file type
+   * @param type file type (see FileData.Types)
    */
-  public FileData(String title, String name, Types type)
+  public FileData(String name, Types type)
   {
-    this(title,name,type,0L,0L);
+    this(name,type,0L,0L);
+  }
+
+  /** create file data
+   * @param name file name
+   * @param state state (see FileData.States)
+   * @param mode mode (see FileData.Modes)
+   */
+  public FileData(String name, States state, Modes mode)
+  {
+    this(name,Types.FILE,state,mode,0L,0L);
   }
 
   /** create file data
@@ -276,7 +274,7 @@ class FileData
    */
   public FileData(String name, States state)
   {
-    this(name,name,Types.FILE,state,Modes.UNKNOWN,0L,0L);
+    this(name,state,Modes.UNKNOWN);
   }
 
   /** get file name
@@ -489,7 +487,7 @@ class BranchData
   public final Date           date;
   public final String         author;
   public final String[]       commitMessage;
-  public final RevisionData[] revisionTree;
+  public final RevisionData[] revisionDataTree;
 
   // ------------------------ native functions ----------------------------
 
@@ -500,15 +498,15 @@ class BranchData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
-   * @param revisionTree branch revision tree
+   * @param revisionDataTree branch revision data tree
    */
-  public BranchData(String name, Date date, String author, String[] commitMessage, RevisionData[] revisionTree)
+  public BranchData(String name, Date date, String author, String[] commitMessage, RevisionData[] revisionDataTree)
   {
-    this.name          = name;
-    this.date          = date;
-    this.author        = author;
-    this.commitMessage = commitMessage;
-    this.revisionTree  = revisionTree;
+    this.name             = name;
+    this.date             = date;
+    this.author           = author;
+    this.commitMessage    = commitMessage;
+    this.revisionDataTree = revisionDataTree;
   }
 
   /** create branch data
@@ -527,7 +525,7 @@ class BranchData
    */
   public String toString()
   {
-    return "BranchData {"+name+", date: "+date+", author: "+author+", message: "+commitMessage+", revisions: "+revisionTree+"}";
+    return "BranchData {"+name+", date: "+date+", author: "+author+", message: "+commitMessage+", revisions: "+revisionDataTree+"}";
   }
 }
 
@@ -594,13 +592,39 @@ class DiffData
    * @param addedLines lines to add
    * @param deletedLines lines to delete
    */
-  public DiffData(BlockTypes blockType, ArrayList<String> addedLines, ArrayList<String> deletedLines)
+  public DiffData(BlockTypes blockType, AbstractList<String> addedLinesList, AbstractList<String> deletedLinesList)
   {
     this(blockType,
-         addedLines.toArray(new String[addedLines.size()]),
-         deletedLines.toArray(new String[deletedLines.size()])
+         addedLinesList.toArray(new String[addedLinesList.size()]),
+         deletedLinesList.toArray(new String[deletedLinesList.size()])
         );
   }
+
+  /** create diff data
+   * @param blockType block type
+   * @param addedLines lines to add
+   * @param deletedLinesList lines to delete
+   */
+  public DiffData(BlockTypes blockType, String[] addedLines, AbstractList<String> deletedLinesList)
+  {
+    this(blockType,
+         addedLines,
+         deletedLinesList.toArray(new String[deletedLinesList.size()])
+        );
+  }
+  /** create diff data
+   * @param blockType block type
+   * @param addedLines lines to add
+   * @param deletedLines lines to delete
+   */
+  public DiffData(BlockTypes blockType, AbstractList<String> addedLinesList, String[] deletedLines)
+  {
+    this(blockType,
+         addedLinesList.toArray(new String[addedLinesList.size()]),
+         deletedLines
+        );
+  }
+
 
   /** create diff data
    * @param blockType block type
@@ -637,10 +661,10 @@ class DiffData
    * @param blockType block type
    * @param lines lines to keep/add/delete
    */
-  public DiffData(BlockTypes blockType, ArrayList<String> lines)
+  public DiffData(BlockTypes blockType, AbstractList<String> linesList)
   {
     this(blockType,
-         lines.toArray(new String[lines.size()])
+         linesList.toArray(new String[linesList.size()])
         );
   }
 
@@ -655,7 +679,6 @@ class DiffData
 
 // ------------------------------------------------------------------------
 
-
 /** revision data
  */
 class RevisionData
@@ -664,6 +687,7 @@ class RevisionData
 
   // --------------------------- variables --------------------------------
   public final String       revision;
+  public final String       symbolicName;
   public final Date         date;
   public final String       author;
   public final String[]     commitMessage;
@@ -675,14 +699,16 @@ class RevisionData
 
   /** create revision data
    * @param revision revision
+   * @param symbolicName symbolic name of this revision or null
    * @param date date
    * @param author author name
    * @param commitMessage commit message
    * @param branches branches
    */
-  public RevisionData(String revision, Date date, String author, String[] commitMessage, BranchData[] branches)
+  public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage, BranchData[] branches)
   {
     this.revision      = revision;
+    this.symbolicName  = symbolicName;
     this.date          = date;
     this.author        = author;
     this.commitMessage = commitMessage;
@@ -691,14 +717,15 @@ class RevisionData
 
   /** create revision data
    * @param revision revision
+   * @param symbolicName symbolic name of this revision or null
    * @param date date
    * @param author author name
    * @param commitMessage commit message
    * @param branch branch
    */
-  public RevisionData(String revision, Date date, String author, String[] commitMessage, BranchData branchData)
+  public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage, BranchData branchData)
   {
-    this(revision,date,author,commitMessage,new BranchData[]{branchData});
+    this(revision,symbolicName,date,author,commitMessage,new BranchData[]{branchData});
   }
 
   /** create revision data
@@ -707,9 +734,9 @@ class RevisionData
    * @param author author name
    * @param commitMessage commit message
    */
-  public RevisionData(String revision, Date date, String author, String[] commitMessage)
+  public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage)
   {
-    this(revision,date,author,commitMessage,new BranchData[]{});
+    this(revision,symbolicName,date,author,commitMessage,new BranchData[]{});
   }
 
   /** add branch
@@ -717,12 +744,12 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
-   * @param subRevisionTree branch sub-revision tree
+   * @param subRevisionDataTree branch sub-revision data tree
    */
-  public void addBranch(String name, Date date, String author, String[] commitMessage, RevisionData[] subRevisionTree)
+  public void addBranch(String name, Date date, String author, String[] commitMessage, RevisionData[] subRevisionDataTree)
   {
     // create branch data
-    BranchData branchData = new BranchData(name,date,author,commitMessage,subRevisionTree);
+    BranchData branchData = new BranchData(name,date,author,commitMessage,subRevisionDataTree);
 
     // add to branches array
     branches = Arrays.copyOf(branches,branches.length+1);
@@ -940,6 +967,14 @@ abstract class Repository implements Serializable
     this(null);
   }
 
+  /** check if repository support patch queues
+   * @return true iff patch queues are supported
+   */
+  public boolean supportPatchQueues()
+  {
+    return false;
+  }
+
   /** get file type
    * @param file file
    * @return file type
@@ -976,31 +1011,47 @@ abstract class Repository implements Serializable
    */
   public String[] getOpenDirectories()
   {
-    return openDirectories.toArray(new String[openDirectories.size()]);
+    synchronized(openDirectories)
+    {
+      return openDirectories.toArray(new String[openDirectories.size()]);
+    }
   }
 
   /** open sub-directory
-   * @param subDirectory sub-directory
+   * @param directory sub-directory to open
    * @return file data set
    */
-  public HashSet<FileData> openDirectory(String subDirectory)
+  public HashSet<FileData> openDirectory(String directory)
   {
     // list files
-    HashSet<FileData> fileDataSet = listFiles(subDirectory);
+    HashSet<FileData> fileDataSet = listFiles(directory);
 
     // add sub-directory to list with open directories
-    openDirectories.add(subDirectory);
+    synchronized(openDirectories)
+    {
+      openDirectories.add(directory);
+    }
 
     return fileDataSet;
   }
 
   /** close sub-directory
-   * @param subDirectory sub-directory
+   * @param directory sub-directory to close
    */
-  public void closeDirectory(String subDirectory)
+  public void closeDirectory(String directory)
   {
-    // remove sub-directory from list with open directories
-    openDirectories.remove(subDirectory);
+    synchronized(openDirectories)
+    {
+      // remove directory and sub-directories from list with open directories
+      String[] subDirectories = openDirectories.toArray(new String[openDirectories.size()]);
+      for (String subDirectory : subDirectories)
+      {
+        if (subDirectory.startsWith(directory))
+        {
+          openDirectories.remove(subDirectory);
+        }
+      }
+    }
   }
 
   /** get list of files
@@ -1062,8 +1113,7 @@ abstract class Repository implements Serializable
         // add file data
         if (!filterFlag)
         {
-          FileData fileData = new FileData(file.getName(),
-                                           (!subDirectory.equals("")?subDirectory+File.separator:"")+file.getName(),
+          FileData fileData = new FileData((!subDirectory.equals("")?subDirectory+File.separator:"")+file.getName(),
                                            type,
                                            file.length(),
                                            file.lastModified()
@@ -1079,7 +1129,7 @@ abstract class Repository implements Serializable
   /** update file states
    * @param fileDataSet file data set to update
    * @param fileDirectoryHashSet directory set to check for new/missing files
-   * @param addNewFlag add missing file
+   * @param addNewFlag add missing files
    */
   abstract public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectoryHashSet, boolean addNewFlag);
 
@@ -1127,29 +1177,41 @@ abstract class Repository implements Serializable
     updateStates(fileDataSet);
   }
 
-  /** update file data
-   * @param fileDataSet file data set
-   */
-  abstract public void update(HashSet<FileData> fileDataSet)
-    throws RepositoryException;
-
   /** get last revision name
    * @return last revision name
    */
   abstract public String getLastRevision();
 
-  /** get revisions of file
+  /** get revision names of file
    * @param fileData file data
    * @return array with revision names
    */
-  abstract public String[] getRevisions(FileData fileData)
+  abstract public String[] getRevisionNames(FileData fileData)
     throws RepositoryException;
 
-  /** get revision tree
+  /** get revision data
    * @param fileData file data
-   * @return revision tree
+   * @param revision revision
+   * @return revision data
    */
-  abstract public RevisionData[] getRevisionTree(FileData fileData)
+  abstract public RevisionData getRevisionData(FileData fileData, String revision)
+    throws RepositoryException;
+
+  /** get revision data of last revision
+   * @param fileData file data
+   * @return revision data
+   */
+  public RevisionData getRevisionData(FileData fileData)
+    throws RepositoryException
+  {
+    return getRevisionData(fileData,getLastRevision());
+  }
+
+  /** get revision data tree
+   * @param fileData file data
+   * @return revision data tree
+   */
+  abstract public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException;
 
   /** get file data (text lines)
@@ -1244,6 +1306,12 @@ abstract class Repository implements Serializable
   {
     return getAnnotations(fileData,getLastRevision());
   }
+
+  /** update file from respository
+   * @param fileDataSet file data set
+   */
+  abstract public void update(HashSet<FileData> fileDataSet)
+    throws RepositoryException;
 
   /** commit files
    * @param fileDataSet file data set

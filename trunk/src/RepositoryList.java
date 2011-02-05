@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryList.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: repository lists
 * Systems: all
@@ -18,7 +18,6 @@ import java.io.Writer;
 
 import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -48,9 +47,9 @@ public class RepositoryList implements Iterable<Repository>
 
   // --------------------------- variables --------------------------------
   @XmlElement(name = "repository")
-  private LinkedList<Repository> repositories;      // list of repositories
+  private ArrayList<Repository> repositories;      // list of repositories
 
-  private String                 name;              // repository list name
+  private String                name;              // repository list name
 
   // ------------------------ native functions ----------------------------
 
@@ -61,7 +60,7 @@ public class RepositoryList implements Iterable<Repository>
    */
   RepositoryList(String name)
   {
-    this.repositories = new LinkedList<Repository>();
+    this.repositories = new ArrayList<Repository>();
     if (name != null) load(name);
   }
 
@@ -129,8 +128,11 @@ Dprintf.dprintf("fileName=%s",fileName);
 
         // read xml file
         RepositoryList tmpRepositories = (RepositoryList)unmarshaller.unmarshal(new FileReader(fileName));
-        repositories.clear();
-        repositories.addAll(tmpRepositories.repositories);
+        synchronized(repositories)
+        {
+          repositories.clear();
+          repositories.addAll(tmpRepositories.repositories);
+        }
 /*
 for (Repository repository : repositories)
 {
@@ -183,6 +185,7 @@ exception.printStackTrace();
 for (Repository repository : repositories)
 {
 Dprintf.dprintf("repository=%s",repository);
+for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
 }
 /**/
       // write xml file
@@ -226,14 +229,20 @@ exception.printStackTrace();
    */
   public Iterator<Repository> iterator()
   {
-    return repositories.iterator(); 
+    synchronized(repositories)
+    {
+      return repositories.iterator();
+    }
   }
 
   /** clear repository list
    */
   public void clear()
   {
-    repositories.clear();
+    synchronized(repositories)
+    {
+      repositories.clear();
+    }
   }
 
   /** add repository to list
@@ -241,7 +250,10 @@ exception.printStackTrace();
    */
   public void add(Repository repository)
   {
-    repositories.add(repository);
+    synchronized(repositories)
+    {
+      repositories.add(repository);
+    }
   }
 
   /** remove repository from list
@@ -249,7 +261,23 @@ exception.printStackTrace();
    */
   public void remove(Repository repository)
   {
-    repositories.remove(repository);
+    synchronized(repositories)
+    {
+      repositories.remove(repository);
+    }
+  }
+
+  /** move repository to new position
+   * @param repository repository
+   * @param newIndex new index (0..n)
+   */
+  public void move(Repository repository, int newIndex)
+  {
+    synchronized(repositories)
+    {
+      repositories.remove(repository);
+      repositories.add(newIndex,repository);
+    }    
   }
 
   /** get repository list size
@@ -257,7 +285,10 @@ exception.printStackTrace();
    */
   public int size()
   {
-    return repositories.size();
+    synchronized(repositories)
+    {
+      return repositories.size();
+    }
   }
 }
 

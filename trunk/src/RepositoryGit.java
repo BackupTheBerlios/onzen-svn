@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -61,54 +61,58 @@ class RepositoryGit extends Repository
     this(null);
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** update file states
+   * @param fileDataSet file data set to update
+   * @param fileDirectoryHashSet directory set to check for new/missing files
+   * @param addNewFlag add missing files
    */
-  public void updateStates(HashSet<FileData> fileDataHashSet, HashSet<String> fileDirectoryHashSet, boolean addNewFlag)
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, boolean addNewFlag)
   {
   }
 
-  /** 
-   * @param 
-   * @return 
-   */
-  public void update(HashSet<FileData> fileDataHashSet)
-  {
-  }
-
-  /** 
-   * @param 
-   * @return 
+  /** get last revision name
+   * @return last revision name
    */
   public String getLastRevision()
   {
     return "???";
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** get revision names of file
+   * @param fileData file data
+   * @return array with revision names
    */
-  public String[] getRevisions(FileData fileData)
+  public String[] getRevisionNames(FileData fileData)
     throws RepositoryException
   {
     return null;
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** get revision data
+   * @param fileData file data
+   * @param revision revision
+   * @return revision data
    */
-  public RevisionData[] getRevisionTree(FileData fileData)
+  public RevisionData getRevisionData(FileData fileData, String revision)
     throws RepositoryException
   {
     return null;
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** get revision data tree
+   * @param fileData file data
+   * @return revision data tree
+   */
+  public RevisionData[] getRevisionDataTree(FileData fileData)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get file data (text lines)
+   * @param fileData file data
+   * @param revision revision to get
+   * @return file data (array of lines)
    */
   public String[] getFileLines(FileData fileData, String revision)
     throws RepositoryException
@@ -141,7 +145,7 @@ class RepositoryGit extends Repository
    * @param revision revision to get diff for
    * @return diff data
    */
-  public DiffData[] getDiff(FileData fileData, String revision1, String revision2)
+  public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
     return null;
@@ -177,38 +181,46 @@ class RepositoryGit extends Repository
     return null;
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** update file from respository
+   * @param fileDataSet file data set
    */
-  public void commit(HashSet<FileData> fileDataHashSet, Message commitMessage)
+  public void update(HashSet<FileData> fileDataSet)
+  {
+  }
+
+  /** commit files
+   * @param fileDataSet file data set
+   * @param commitMessagec commit message
+   */
+  public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
   {
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** add files
+   * @param fileDataSet file data set
+   * @param commitMessagec commit message
+   * @param binaryFlag true to add file as binary files, false otherwise
    */
-  public void add(HashSet<FileData> fileDataHashSet, Message commitMessage, boolean binaryFlag)
+  public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** remove files
+   * @param fileDataSet file data set
+   * @param commitMessagec commit message
    */
-  public void remove(HashSet<FileData> fileDataHashSet, Message commitMessage)
+  public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
   {
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** revert files
+   * @param fileDataSet file data set
+   * @param revision revision to revert to
    */
-  public void revert(HashSet<FileData> fileDataHashSet, String revision)
+  public void revert(HashSet<FileData> fileDataSet, String revision)
     throws RepositoryException
   {
   }
@@ -216,6 +228,7 @@ class RepositoryGit extends Repository
   /** rename file
    * @param fileData file data to rename
    * @param newName new name
+   * @param commitMessagec commit message
    */
   public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException
