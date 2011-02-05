@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevisionInfo.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: command show file revision
 * Systems: all
@@ -10,35 +10,31 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.HashSet;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
 import org.eclipse.swt.custom.CaretListener;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.LineStyleEvent;
@@ -111,90 +107,121 @@ class CommandRevisionInfo
    */
   class Data
   {
-    String  newFileName;
-    String  message;
-    boolean binaryFlag;
+    RevisionData revisionData;
+    LogData[]    logData;
 
     Data()
     {
-      this.newFileName = null;
-      this.message     = "";
-      this.binaryFlag  = false;
+      this.revisionData = null;
+      this.logData      = null;
     }
   };
 
   // --------------------------- constants --------------------------------
 
-  // colors
-
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Shell      shell;
-  private final Repository repository;
-  private final Display    display;
-  private final FileData   fileData;
+  private final RepositoryTab repositoryTab;
+  private final Display       display;
+  private final FileData      fileData;
 
   // dialog
-  private final Data       data = new Data();
-  private final String[]   history;       
-  private final Shell      dialog;        
+  private final Data          data = new Data();
+  private final Shell         dialog;        
 
   // widgets
-//  private final Text       widgetNewFileName;
+  private final Label         widgetRevision;
+  private final Label         widgetAuthor;
+  private final Text          widgetCommitMessage;
+  private final Text          widgetLog;
+  private final Button        widgetButtonClose;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
-  /** rename command
+  /** show revision command
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
-   * @param fileData file to rename
+   * @param fileData file to show revision information
+   * @param revision revision to show or null
    */
-  CommandRevisionInfo(final Shell shell, final Repository repository, final FileData fileData)
-    throws RepositoryException
+  CommandRevisionInfo(final RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revision)
   {
-    Composite composite,subComposite;
-    Label     label;
-    Button    button;
+    Composite         composite,subComposite;
+    Label             label;
+    ScrolledComposite scrolledComposite;
+    Button            button;
 
     // initialize variables
-    this.shell      = shell;
-    this.repository = repository;
-    this.fileData   = fileData;
+    this.repositoryTab = repositoryTab;
+    this.fileData      = fileData;
 
     // get display
     display = shell.getDisplay();
 
-    // get history
-    history = Message.getHistory();
-
     // add files dialog
-    dialog = Dialogs.open(shell,"File revision: "+fileData.getFileName(),Settings.geometryRename.x,Settings.geometryRename.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"File revision: "+fileData.getFileName(),Settings.geometryRevisionInfo.x,Settings.geometryRevisionInfo.y,new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0}));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,0,0,TableLayoutData.WE);
-      {
-        label = Widgets.newLabel(subComposite,"Revision:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+      label = Widgets.newLabel(composite,"Name:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
 
-        label = Widgets.newView(subComposite);
-        label.setText(fileData.getFileName());
-        Widgets.layout(label,0,1,TableLayoutData.WE);
+      label = Widgets.newLabel(composite);
+      label.setText(fileData.getFileName());
+      Widgets.layout(label,0,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(subComposite,"Date:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+      label = Widgets.newLabel(composite,"Revision:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
 
-        label = Widgets.newView(subComposite);
-        label.setText(Onzen.DATE_FORMAT.format(fileData.datetime));
-        Widgets.layout(label,1,1,TableLayoutData.WE);
-      }
+      widgetRevision = Widgets.newLabel(composite);
+      Widgets.layout(widgetRevision,1,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Date:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+
+      label = Widgets.newLabel(composite);
+      label.setText(Onzen.DATETIME_FORMAT.format(fileData.datetime));
+      Widgets.layout(label,2,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Size:");
+      Widgets.layout(label,3,0,TableLayoutData.W);
+
+      label = Widgets.newLabel(composite);
+      label.setText(Units.formatByteSize(fileData.size));
+      Widgets.layout(label,3,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Mode:");
+      Widgets.layout(label,4,0,TableLayoutData.W);
+
+      label = Widgets.newLabel(composite);
+      label.setText(fileData.mode.toString());
+      Widgets.layout(label,4,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Author:");
+      Widgets.layout(label,5,0,TableLayoutData.W);
+
+      widgetAuthor = Widgets.newLabel(composite);
+      Widgets.layout(widgetAuthor,5,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Commit message:");
+      Widgets.layout(label,6,0,TableLayoutData.NW);
+
+      widgetCommitMessage = Widgets.newText(composite,SWT.MULTI|SWT.READ_ONLY|SWT.BORDER|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetCommitMessage.setBackground(Onzen.COLOR_BACKGROUND);
+      Widgets.layout(widgetCommitMessage,6,1,TableLayoutData.NSWE);
+
+      label = Widgets.newLabel(composite,"Log:");
+      Widgets.layout(label,7,0,TableLayoutData.NW);
+
+      widgetLog = Widgets.newText(composite,SWT.MULTI|SWT.READ_ONLY|SWT.BORDER|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetLog.setBackground(Onzen.COLOR_BACKGROUND);
+      Widgets.layout(widgetLog,7,1,TableLayoutData.NSWE);
     }
 
     // buttons
@@ -202,9 +229,9 @@ class CommandRevisionInfo
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      button = Widgets.newButton(composite,"Close");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
+      widgetButtonClose = Widgets.newButton(composite,"Close");
+      Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -212,6 +239,8 @@ class CommandRevisionInfo
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Button widget = (Button)selectionEvent.widget;
+
+          Settings.geometryRevisionInfo = dialog.getSize();
 
           Dialogs.close(dialog);
         }
@@ -223,15 +252,137 @@ class CommandRevisionInfo
     // show dialog
     Dialogs.show(dialog);
 
-    // update
+    if (revision != null)
+    {
+      // start get revision info
+      Background.run(new BackgroundRunnable(fileData,revision)
+      {
+        public void run(FileData fileData, final String revision)
+        {
+          // get revision info
+          repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
+          try
+          {
+            data.revisionData = repositoryTab.repository.getRevisionData(fileData,revision);
+          }
+          catch (RepositoryException exception)
+          {
+            final String exceptionMessage = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(dialog,"Getting file revision '%s' fail: %s",revision,exceptionMessage);
+              }
+            });
+            return;
+          }
+          finally
+          {
+            repositoryTab.clearStatusText();
+          }
+
+          // show
+          show();
+        }
+      });
+    }
+
+    // start get log
+    Background.run(new BackgroundRunnable(data,repositoryTab,fileData)
+    {
+      public void run()
+      {
+        final Data          data          = (Data)         userData[0];
+        final RepositoryTab repositoryTab = (RepositoryTab)userData[1];
+        final FileData      fileData      = (FileData)     userData[2];
+
+        // get log
+        repositoryTab.setStatusText("Get log for '%s'...",fileData.getFileName());
+        try
+        {
+          data.logData = repositoryTab.repository.getLog(fileData);
+        }
+        catch (RepositoryException exception)
+        {
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,"Getting log of file fail: %s",exceptionMessage);
+            }
+          });
+          return;
+        }
+        finally
+        {
+          repositoryTab.clearStatusText();
+        }
+
+        // show
+        if (!display.isDisposed())
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              if (!widgetLog.isDisposed())
+              {
+                StringBuilder buffer = new StringBuilder();
+                for (LogData logData : data.logData)
+                {
+                  buffer.append("Revision: "); buffer.append(logData.revision); buffer.append('\n');
+                  buffer.append("---"); buffer.append('\n');
+                  for (String line : logData.commitMessage)
+                  {
+                    buffer.append(line); buffer.append('\n');
+                  }
+                  buffer.append('\n');
+                }
+                widgetLog.setText(buffer.toString());
+              }
+            }
+          });
+        }
+      }
+    });
+  }
+
+  /** show revision command
+   * @param repositoryTab repository tab
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file to show revision information
+   * @param revisionData revision to show
+   */
+  CommandRevisionInfo(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
+  {
+    this(repositoryTab,shell,repository,fileData,(String)null);
+    data.revisionData = revisionData;
+    show();
+  }
+
+  /** show revision command of last revision
+   * @param repositoryTab repository tab
+   * @param shell shell
+   * @param repository repository
+   * @param fileData file to show revision information
+   */
+  CommandRevisionInfo(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  {
+    this(repositoryTab,shell,repository,fileData,repository.getLastRevision());
   }
 
   /** run dialog
    */
   public void run()
-    throws RepositoryException
   {
-    Dialogs.run(dialog);
+    if (!dialog.isDisposed())
+    {
+      widgetButtonClose.setFocus();
+      Dialogs.run(dialog);
+    }
   }
 
   /** convert data to string
@@ -243,6 +394,36 @@ class CommandRevisionInfo
   }
 
   //-----------------------------------------------------------------------
+
+  /** show revision info
+   */
+  private void show()
+  {
+    if (!display.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (data.revisionData != null)
+          {
+            StringBuilder buffer = new StringBuilder();
+            for (String line : data.revisionData.commitMessage)
+            {
+              buffer.append(line); buffer.append('\n');
+            }
+
+            if (!widgetRevision.isDisposed()) widgetRevision.setText(data.revisionData.revision);
+            if (!widgetAuthor.isDisposed()) widgetAuthor.setText(data.revisionData.author);
+            if (!widgetCommitMessage.isDisposed()) widgetCommitMessage.setText(buffer.toString());
+
+            // notify modification
+            Widgets.modified(data);
+          }
+        }
+      });
+    }
+  }
 }
 
 /* end of file */
