@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAnnotations.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command view file annotations
 * Systems: all
@@ -10,30 +10,25 @@
 
 /****************************** Imports ********************************/
 // base
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.HashSet;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -113,12 +108,12 @@ class CommandAnnotations
    */
   class Data
   {
-    String[]         revisions;
-    AnnotationData[] annotationData;
+    String[]         revisionNames;      // revision names
+    AnnotationData[] annotationData;     // annotation data
 
     Data()
     {
-      this.revisions      = null;
+      this.revisionNames  = null;
       this.annotationData = null;
     }
   };
@@ -128,44 +123,42 @@ class CommandAnnotations
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Onzen      onzen;
-  private final Repository repository;
-  private final Display    display;
-  private final Clipboard  clipboard;
-  private final FileData   fileData;
+  private final RepositoryTab repositoryTab;
+  private final Display       display;
+  private final Clipboard     clipboard;
+  private final FileData      fileData;
 
   // dialog
-  private final Data       data = new Data();
-  private final Shell      dialog;        
+  private final Data          data = new Data();
+  private final Shell         dialog;        
 
   // widgets
-  private final Table      widgetAnnotations;
-  private final Text       widgetFind;
-  private final Button     widgetFindPrev;
-  private final Button     widgetFindNext;
-  private final Combo      widgetRevision;
+  private final Table         widgetAnnotations;
+  private final Text          widgetFind;
+  private final Button        widgetFindPrev;
+  private final Button        widgetFindNext;
+  private final Combo         widgetRevision;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** view annotations
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to view annotions
    * @param revision to view annotions
    */
-  CommandAnnotations(Onzen onzen, Shell shell, Repository repository, FileData fileData, String revision)
+  CommandAnnotations(final RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revision)
   {
     Composite composite,subComposite;
     Label     label;
     Button    button;
 
     // initialize variables
-    this.onzen      = onzen;
-    this.repository = repository;
-    this.fileData   = fileData;
+    this.repositoryTab = repositoryTab;
+    this.fileData      = fileData;
 
     // get display, clipboard
     display   = shell.getDisplay();
@@ -192,7 +185,7 @@ class CommandAnnotations
         {
           public void modified(Control control)
           {
-            Widgets.setEnabled(control,(data.revisions != null));
+            Widgets.setEnabled(control,(data.revisionNames != null));
           }
         });
         widgetRevision.setToolTipText("Revision to view.");
@@ -293,9 +286,9 @@ class CommandAnnotations
         Combo widget = (Combo)selectionEvent.widget;
 
         int index = widget.getSelectionIndex();
-        if ((index >= 0) && (index < data.revisions.length))
+        if ((index >= 0) && (index < data.revisionNames.length))
         {
-          show(data.revisions[index]);
+          show(data.revisionNames[index]);
         }
       }
     });
@@ -389,72 +382,85 @@ class CommandAnnotations
     show(revision);
 
     // start add revisions
-    Background.run(new BackgroundTask(data,repository,fileData)
+    Background.run(new BackgroundRunnable(fileData,revision)
     {
-      public void run()
+      public void run(final FileData fileData, final String revision)
       {
-        final Data       data       = (Data)      userData[0];
-        final Repository repository = (Repository)userData[1];
-        final FileData   fileData   = (FileData)  userData[2];
-
+        // get revisions
+        repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
         try
         {
-          // get revisions
-          data.revisions = repository.getRevisions(fileData);
-          if (data.revisions.length > 0)
-          {
-            // add revisions
-            if (!display.isDisposed())
-            {
-              display.syncExec(new Runnable()
-              {
-                public void run()
-                {
-                  if (!widgetRevision.isDisposed())
-                  {
-                    for (String revision : data.revisions)
-                    {
-                      widgetRevision.add(revision);
-                    }
-                    widgetRevision.select(data.revisions.length-1);
-                  }
-
-                  // notify modification
-                  Widgets.modified(data);
-                }
-              });
-            }
-          }
+          data.revisionNames = repositoryTab.repository.getRevisionNames(fileData);
         }
         catch (RepositoryException exception)
         {
-          Dialogs.error(dialog,String.format("Getting revisions fail: %s",exception));
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,String.format("Getting revisions fail: %s",exceptionMessage));
+            }
+          });
+          return;
+        }
+        repositoryTab.clearStatusText();
+
+        if (data.revisionNames.length > 0)
+        {
+          // add revisions
+          if (!display.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (!widgetRevision.isDisposed())
+                {
+                  int selectedIndex = -1;
+                  for (int z = 0; z < data.revisionNames.length; z++)
+                  {
+                    widgetRevision.add(data.revisionNames[z]);
+                    if (data.revisionNames[z].equals(revision))
+                    {
+                      selectedIndex = z;
+                    }
+                  }
+                  if (selectedIndex == -1) selectedIndex = data.revisionNames.length-1;
+                  widgetRevision.select(selectedIndex);
+                }
+
+                // notify modification
+                Widgets.modified(data);
+              }
+            });
+          }
         }
       }
     });
   }
 
   /** view annotations
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to view annotions
    * @param revisionData revision data
    */
-  CommandAnnotations(Onzen onzen, Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
+  CommandAnnotations(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
   {
-    this(onzen,shell,repository,fileData,revisionData.revision);
+    this(repositoryTab,shell,repository,fileData,revisionData.revision);
   }
 
   /** view annotations of last revision
-   * @param onzen onzen instance
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to view annotions
    */
-  CommandAnnotations(Onzen onzen, Shell shell, Repository repository, FileData fileData)
+  CommandAnnotations(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
   {
-    this(onzen,shell,repository,fileData,repository.getLastRevision());
+    this(repositoryTab,shell,repository,fileData,repositoryTab.repository.getLastRevision());
   }
 
   /** run dialog
@@ -621,25 +627,29 @@ class CommandAnnotations
     }
 
     // start show annotations
-    Background.run(new BackgroundTask(data,repository,fileData,revision)
+    Background.run(new BackgroundRunnable(fileData,revision)
     {
-      public void run()
+      public void run(FileData fileData, final String revision)
       {
-        final Data       data       = (Data)      userData[0];
-        final Repository repository = (Repository)userData[1];
-        final FileData   fileData   = (FileData)  userData[2];
-        final String     revision   = (String)    userData[3];
-
         // get annotations
+        repositoryTab.setStatusText("Get annotations for '%s'...",fileData.getFileName());
         try
         {
-          data.annotationData = repository.getAnnotations(fileData,revision);
+          data.annotationData = repositoryTab.repository.getAnnotations(fileData,revision);
         }
         catch (RepositoryException exception)
         {
-          Dialogs.error(dialog,"Getting file annotations fail: %s",exception.getMessage());
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,"Getting file annotations fail: %s",exceptionMessage);
+            }
+          });
           return;
         }
+        repositoryTab.clearStatusText();
 
         // show
         if (!display.isDisposed())
@@ -652,16 +662,6 @@ class CommandAnnotations
               setText(data.annotationData,
                       widgetAnnotations
                      );
-
-              // set selected revision
-              for (int z = 0; z < data.revisions.length; z++)
-              {
-                if (data.revisions[z].equals(revision))
-                {
-                  widgetRevision.select(z);
-                  break;
-                }
-              }
 
               // notify modification
               Widgets.modified(data);
