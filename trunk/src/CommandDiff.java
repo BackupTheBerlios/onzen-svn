@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandDiff.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command show file diff
 * Systems: all
@@ -10,25 +10,25 @@
 
 /****************************** Imports ********************************/
 // base
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.HashSet;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -109,14 +109,14 @@ class CommandDiff
   class Data
   {
     DiffData[]            diffData;           // diff data
-    String[]              revisions;          // revisions
+    String[]              revisionNames;      // revision names
     DiffData.BlockTypes[] lineTypes;          // array with line block types
 
     Data()
     {
-      this.diffData  = null;
-      this.revisions = null;
-      this.lineTypes = null;
+      this.diffData      = null;
+      this.revisionNames = null;
+      this.lineTypes     = null;
     }
   };
 
@@ -139,7 +139,7 @@ class CommandDiff
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Repository    repository;
+  private final RepositoryTab repositoryTab;
   private final Display       display;
   private final Clipboard     clipboard;
   private final FileData      fileData;
@@ -185,13 +185,14 @@ class CommandDiff
   // ---------------------------- methods ---------------------------------
 
   /** diff command
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to show diff for
    * @param revisionLeft left revision or null
    * @param revisionRight right revision or null
    */
-  CommandDiff(Shell shell, Repository repository, FileData fileData, String revisionLeft, String revisionRight)
+  CommandDiff(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revisionLeft, String revisionRight)
   {
     Composite composite,subComposite;
     Label     label;
@@ -199,8 +200,8 @@ class CommandDiff
     Listener  listener;
 
     // initialize variables
-    this.repository = repository;
-    this.fileData   = fileData;
+    this.repositoryTab = repositoryTab;
+    this.fileData      = fileData;
 
     // get display, clipboard
     display   = shell.getDisplay();
@@ -250,6 +251,7 @@ class CommandDiff
       Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
         widgetLineNumbersLeft = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbersLeft.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersLeft,0,0,TableLayoutData.NS,0,0,0,0,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbersLeft,data)
@@ -261,6 +263,7 @@ class CommandDiff
         });
 
         widgetTextLeft = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetTextLeft.setFont(Onzen.FONT_DIFF);
         widgetTextLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetTextLeft,0,1,TableLayoutData.NSWE);
         Widgets.addModifyListener(new WidgetListener(widgetTextLeft,data)
@@ -282,6 +285,7 @@ class CommandDiff
       Widgets.layout(subComposite,1,2,TableLayoutData.NSWE);
       {
         widgetLineNumbersRight = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbersRight.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersRight,0,0,TableLayoutData.NS,0,0,0,0,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbersRight,data)
@@ -293,6 +297,7 @@ class CommandDiff
         });
 
         widgetTextRight = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetTextRight.setFont(Onzen.FONT_DIFF);
         widgetTextRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetTextRight,0,1,TableLayoutData.NSWE);
         Widgets.addModifyListener(new WidgetListener(widgetTextRight,data)
@@ -313,7 +318,7 @@ class CommandDiff
         label = Widgets.newLabel(subComposite,"Find:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFindLeft = Widgets.newText(subComposite);
+        widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         widgetFindLeft.setEnabled(false);
         Widgets.layout(widgetFindLeft,0,1,TableLayoutData.WE);
         Widgets.addModifyListener(new WidgetListener(widgetFindLeft,data)
@@ -354,7 +359,7 @@ class CommandDiff
         label = Widgets.newLabel(subComposite,"Find:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFindRight = Widgets.newText(subComposite);
+        widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         widgetFindRight.setEnabled(false);
         Widgets.layout(widgetFindRight,0,1,TableLayoutData.WE);
         Widgets.addModifyListener(new WidgetListener(widgetFindRight,data)
@@ -389,8 +394,9 @@ class CommandDiff
       }
 
       widgetLineDiff = Widgets.newStyledText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL);
+      widgetLineDiff.setFont(Onzen.FONT_DIFF_LINE);
       widgetLineDiff.setForeground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetLineDiff,3,0,TableLayoutData.WE,0,3,0,0,SWT.DEFAULT,60);
+      Widgets.layout(widgetLineDiff,3,0,TableLayoutData.WE,0,3,0,0,SWT.DEFAULT,8+2*(Widgets.getTextHeight(widgetLineDiff)+8));
       Widgets.addModifyListener(new WidgetListener(widgetLineDiff,data)
       {
         public void modified(Control control)
@@ -499,7 +505,7 @@ class CommandDiff
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.revisions != null));
+          Widgets.setEnabled(control,(data.revisionNames != null));
         }
       });
 
@@ -511,7 +517,7 @@ class CommandDiff
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.revisions != null));
+          Widgets.setEnabled(control,(data.revisionNames != null));
         }
       });
 
@@ -522,7 +528,7 @@ class CommandDiff
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.revisions != null));
+          Widgets.setEnabled(control,(data.revisionNames != null));
         }
       });
 
@@ -669,13 +675,13 @@ class CommandDiff
       public void lineGetStyle(LineStyleEvent lineStyleEvent)
       {
 //Dprintf.dprintf("x %d %s",lineStyleEvent.lineOffset,lineStyleEvent.lineText);
-         String findText = widgetFindLeft.getText();
+         String findText = widgetFindLeft.getText().toLowerCase();
          int    findTextLength = findText.length();
          if (findTextLength > 0)
          {
            ArrayList<StyleRange> styleRangeList = new ArrayList<StyleRange>();
            int                   index = 0;
-           while ((index = lineStyleEvent.lineText.indexOf(findText,index)) >= 0)
+           while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
            {
              styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_DIFF_SEARCH_TEXT,null));
              index += findTextLength;
@@ -707,7 +713,8 @@ class CommandDiff
                          widgetChanged.getSelection(),
                          widgetChangedWhitespaces.getSelection(),
                          COLOR_DIFF_NONE,
-                         COLOR_DIFF_CHANGED
+                         COLOR_DIFF_CHANGED,
+                         COLOR_DIFF_CHANGED_WHITESPACES
                         );
       }
     });
@@ -729,7 +736,8 @@ class CommandDiff
                          widgetChanged.getSelection(),
                          widgetChangedWhitespaces.getSelection(),
                          COLOR_DIFF_NONE,
-                         COLOR_DIFF_CHANGED
+                         COLOR_DIFF_CHANGED,
+                         COLOR_DIFF_CHANGED_WHITESPACES
                         );
       }
     });
@@ -771,13 +779,13 @@ class CommandDiff
       public void lineGetStyle(LineStyleEvent lineStyleEvent)
       {
 //Dprintf.dprintf("x %d %s",lineStyleEvent.lineOffset,lineStyleEvent.lineText);
-         String findText = widgetFindRight.getText();
+         String findText = widgetFindRight.getText().toLowerCase();
          int    findTextLength = findText.length();
          if (findTextLength > 0)
          {
            ArrayList<StyleRange> styleRangeList = new ArrayList<StyleRange>();
            int                   index = 0;
-           while ((index = lineStyleEvent.lineText.indexOf(findText,index)) >= 0)
+           while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
            {
              styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_DIFF_SEARCH_TEXT,null));
              index += findTextLength;
@@ -1046,7 +1054,7 @@ Dprintf.dprintf("NYI");
       public void widgetSelected(SelectionEvent selectionEvent)
       {
         int index = widgetRevision.getSelectionIndex();
-        if ((data.revisions != null) && (index < data.revisions.length-1))
+        if ((data.revisionNames != null) && (index < data.revisionNames.length-1))
         {
           widgetRevision.select(index+1);
           Widgets.notify(dialog,USER_EVENT_NEW_REVISION,index+1);
@@ -1150,16 +1158,16 @@ Dprintf.dprintf("");
     {
       public void handleEvent(Event event)
       {
-        if ((data.revisions != null) && (event.index >= 0) && (event.index < data.revisions.length))
+        if ((data.revisionNames != null) && (event.index >= 0) && (event.index < data.revisionNames.length))
         {
           // get new diff
-          if (event.index < data.revisions.length-1)
+          if (event.index < data.revisionNames.length-1)
           {
-            show(data.revisions[event.index+0],data.revisions[event.index+1]);
+            show(data.revisionNames[event.index+0],data.revisionNames[event.index+1]);
           }
           else
           {
-            show(data.revisions[event.index],null);
+            show(data.revisionNames[event.index],null);
           }
         }
       }
@@ -1187,7 +1195,8 @@ Dprintf.dprintf("");
                          widgetChanged.getSelection(),
                          widgetChangedWhitespaces.getSelection(),
                          COLOR_DIFF_NONE,
-                         COLOR_DIFF_CHANGED
+                         COLOR_DIFF_CHANGED,
+                         COLOR_DIFF_CHANGED_WHITESPACES
                         );
         drawBar(data.diffData,
                 widgetTextLeft.getClientArea().height/widgetTextLeft.getLineHeight(),
@@ -1255,54 +1264,68 @@ Dprintf.dprintf("");
     // get revisions (if not selected revision left and right)
     if ((revisionLeft == null) && (revisionRight == null))
     {
-      Background.run(new BackgroundTask(data,repository,fileData)
+      Background.run(new BackgroundRunnable(data,repositoryTab,fileData)
       {
         public void run()
         {
-          final Data       data       = (Data)      userData[0];
-          final Repository repository = (Repository)userData[1];
-          final FileData   fileData   = (FileData)  userData[2];
+          final Data          data          = (Data)         userData[0];
+          final RepositoryTab repositoryTab = (RepositoryTab)userData[1];
+          final FileData      fileData      = (FileData)     userData[2];
 
+          // get revisions
+          repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
           try
           {
-            // get revisions
-            data.revisions = repository.getRevisions(fileData);
-            if (data.revisions.length > 0)
-            {
-              // add revisions
-              if (!display.isDisposed())
-              {
-                display.syncExec(new Runnable()
-                {
-                  public void run()
-                  {
-                    if (!widgetRevision.isDisposed())
-                    {
-                      int selectedRevisionIndex = -1;
-                      for (int z = 0; z < data.revisions.length; z++)
-                      {
-                        String revision0 = (z < data.revisions.length-1) ? data.revisions[z] : repository.getLastRevision(); 
-                        String revision1 = (z+1 < data.revisions.length) ? data.revisions[z+1] : "local";
-                        widgetRevision.add(String.format("%s -> %s",revision0,revision1));
-        //                if (revisionLeft != null)
-        //                {
-        //                  if (revision.equals(revisionLeft)) selectedRevisionIndex = z;
-        //                }
-                      }
-                      if (selectedRevisionIndex < 0) selectedRevisionIndex = data.revisions.length-1;
-                      widgetRevision.select(selectedRevisionIndex);
-                    }
-
-                    // notify modified
-                    Widgets.modified(data);
-                  }
-                });
-              }
-            }
+            data.revisionNames = repositoryTab.repository.getRevisionNames(fileData);
           }
           catch (RepositoryException exception)
           {
-            Dialogs.error(dialog,String.format("Getting revisions fail: %s",exception));
+            final String exceptionMessage = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(dialog,String.format("Getting revisions fail: %s",exceptionMessage));
+              }
+            });
+            return;
+          }
+          finally
+          {
+            repositoryTab.clearStatusText();
+          }
+
+          if (data.revisionNames.length > 0)
+          {
+            // add revisions
+            if (!display.isDisposed())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  if (!widgetRevision.isDisposed())
+                  {
+                    int selectedRevisionIndex = -1;
+                    for (int z = 0; z < data.revisionNames.length; z++)
+                    {
+                      String revision0 = (z   < data.revisionNames.length-1) ? data.revisionNames[z  ] : repositoryTab.repository.getLastRevision(); 
+                      String revision1 = (z+1 < data.revisionNames.length  ) ? data.revisionNames[z+1] : "local";
+                      widgetRevision.add(String.format("%s -> %s",revision0,revision1));
+      //                if (revisionLeft != null)
+      //                {
+      //                  if (revision.equals(revisionLeft)) selectedRevisionIndex = z;
+      //                }
+                    }
+                    if (selectedRevisionIndex < 0) selectedRevisionIndex = data.revisionNames.length-1;
+                    widgetRevision.select(selectedRevisionIndex);
+                  }
+
+                  // notify modified
+                  Widgets.modified(data);
+                }
+              });
+            }
           }
         }
       });
@@ -1320,23 +1343,25 @@ Dprintf.dprintf("");
   }
 
   /** diff command
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to show diff for
    */
-  CommandDiff(final Shell shell, final Repository repository, final FileData fileData, String revision)
+  CommandDiff(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revision)
   {
-    this(shell,repository,fileData,revision,null);
+    this(repositoryTab,shell,repository,fileData,revision,null);
   }
 
   /** diff command
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file to show diff for
    */
-  CommandDiff(final Shell shell, final Repository repository, final FileData fileData)
+  CommandDiff(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
   {
-    this(shell,repository,fileData,null);
+    this(repositoryTab,shell,repository,fileData,null);
   }
 
   /** run dialog
@@ -1541,6 +1566,39 @@ Dprintf.dprintf("");
     return lineTypeList.toArray(new DiffData.BlockTypes[lineTypeList.size()]);
   }
 
+  private boolean equalsIgnoreWhitespaces(String string1, String string2)
+  {
+    int i1 = 0;
+    int i2 = 0;
+    int n1 = string1.length();
+    int n2 = string2.length();
+
+    boolean equal = true;
+    while (   (i1 < n1)
+           && (i2 < n2)
+           && equal
+          )
+    {
+      while ((i1 < n1) && Character.isWhitespace(string1.charAt(i1))) i1++;
+      while ((i2 < n2) && Character.isWhitespace(string2.charAt(i2))) i2++;
+
+      if (   (i1 < n1)
+          && (i2 < n2)
+          && (string1.charAt(i1) == string2.charAt(i2))
+         )
+      {
+        i1++;
+        i2++;
+      }
+      else
+      {
+        equal = false;
+      }
+    }
+
+    return ((i1 >= n1) && (i2 >= n2));
+  }
+
   /** update diff text coloring
    * @param diffData_ diff data
    * @param widgetTextLeft left text widget
@@ -1567,7 +1625,7 @@ Dprintf.dprintf("");
                                 Color      backgroundDiffAdd,
                                 Color      backgroundDiffDelete,
                                 Color      backgroundDiffChange,
-                                Color      backgroundDiffChangeWhitespaces
+                                Color      backgroundDiffChangedWhitespaces
                                )
   {
     int index = 0;
@@ -1628,14 +1686,9 @@ Dprintf.dprintf("");
 
           if (showChanged || showChangedWhitespaces)
           {
-            String lineNoSpaces1,lineNoSpaces2;
             for (int z = 0; z < m; z++)
             {
-              // get lines without spaces
-              lineNoSpaces1 = diffData.deletedLines[z].replaceAll("\\s*","");
-              lineNoSpaces2 = diffData.addedLines[z].replaceAll("\\s*","");
-
-              if (!lineNoSpaces1.equals(lineNoSpaces2))
+              if (!equalsIgnoreWhitespaces(diffData.deletedLines[z],diffData.addedLines[z]))
               {
                 // non-whitespace changes
                 if (showChanged)
@@ -1657,8 +1710,8 @@ Dprintf.dprintf("");
                 if (showChangedWhitespaces)
                 {
                   // show whitespace changes
-                  widgetTextLeft.setLineBackground(index+z,1,backgroundDiffChangeWhitespaces);
-                  widgetTextRight.setLineBackground(index+z,1,backgroundDiffChangeWhitespaces);
+                  widgetTextLeft.setLineBackground(index+z,1,backgroundDiffChangedWhitespaces);
+                  widgetTextRight.setLineBackground(index+z,1,backgroundDiffChangedWhitespaces);
                 }
                 else
                 {
@@ -1708,6 +1761,7 @@ Dprintf.dprintf("");
    * @param showChangedWhitespaces show whitespace changes
    * @param backgroundDiffNone background color of not shown added/deleted/changed lines
    * @param backgroundDiffChanged background color changed lines
+   * @param backgroundDiffChangedWhitespaces background color of lines with whitespace changes only
    */
   private void updateLineColors(StyledText widgetLineDiff,
                                 boolean    showAdded,
@@ -1715,7 +1769,8 @@ Dprintf.dprintf("");
                                 boolean    showChanged,
                                 boolean    showChangedWhitespaces,
                                 Color      backgroundDiffNone,
-                                Color      backgroundDiffChanged
+                                Color      backgroundDiffChanged,
+                                Color      backgroundDiffChangedWhitespaces
                                )
   {
     if      (widgetLineDiff.getLineCount() >= 2)
@@ -1726,6 +1781,11 @@ Dprintf.dprintf("");
       String line1 = widgetLineDiff.getLine(0);
       String line2 = widgetLineDiff.getLine(1);
 
+      // get changed color
+      Color backgroundDiff = equalsIgnoreWhitespaces(line1,line2)
+                               ? backgroundDiffChangedWhitespaces
+                               : backgroundDiffChanged;
+
       int z = 0;
 
       // compare start of lines and set color for equal/not equals characters
@@ -1733,8 +1793,8 @@ Dprintf.dprintf("");
       {
         if (line1.charAt(z) != line2.charAt(z))
         {
-          widgetLineDiff.setStyleRange(new StyleRange(lineIndex1+z,1,null,backgroundDiffChanged));
-          widgetLineDiff.setStyleRange(new StyleRange(lineIndex2+z,1,null,backgroundDiffChanged));
+          widgetLineDiff.setStyleRange(new StyleRange(lineIndex1+z,1,null,backgroundDiff));
+          widgetLineDiff.setStyleRange(new StyleRange(lineIndex2+z,1,null,backgroundDiff));
         }
         else
         {
@@ -1744,16 +1804,16 @@ Dprintf.dprintf("");
         z++;
       }
 
-      // set not equal colro for suffix of line1
+      // set "not equal" color for suffix of line1
       for (int i = z; i < line1.length(); i++)
       {
-        widgetLineDiff.setStyleRange(new StyleRange(lineIndex1+i,1,null,backgroundDiffChanged));
+        widgetLineDiff.setStyleRange(new StyleRange(lineIndex1+i,1,null,backgroundDiff));
       }
 
-      // set not equal colro for suffix of line1
+      // set "not equal" color for suffix of line1
       for (int i = z; i < line2.length(); i++)
       {
-        widgetLineDiff.setStyleRange(new StyleRange(lineIndex2+i,1,null,backgroundDiffChanged));
+        widgetLineDiff.setStyleRange(new StyleRange(lineIndex2+i,1,null,backgroundDiff));
       }
     }
     else if (widgetLineDiff.getLineCount() >= 1)
@@ -1869,14 +1929,9 @@ Dprintf.dprintf("");
             if (showChanged || showChangedWhitespaces)
             {
               // draw bar for replaced lines
-              String lineNoSpaces1,lineNoSpaces2;
               for (int z = 0; z < m; z++)
               {
-                // get lines without spaces
-                lineNoSpaces1 = diffData.deletedLines[z].replaceAll("\\s*","");
-                lineNoSpaces2 = diffData.addedLines[z].replaceAll("\\s*","");
-
-                if (!lineNoSpaces1.equals(lineNoSpaces2))
+                if (!equalsIgnoreWhitespaces(diffData.deletedLines[z],diffData.addedLines[z]))
                 {
                   // non-whitespace changes
                   if (showChanged)
@@ -2021,36 +2076,42 @@ Dprintf.dprintf("");
     }
 
     // start show diff
-    Background.run(new BackgroundTask(data,repository,fileData,revisionLeft,revisionRight)
+    Background.run(new BackgroundRunnable(fileData,revisionLeft,revisionRight)
     {
-      public void run()
+      public void run(FileData fileData, final String revisionLeft, final String revisionRight)
       {
-        final Data       data          = (Data)      userData[0];
-        final Repository repository    = (Repository)userData[1];
-        final FileData   fileData      = (FileData)  userData[2];
-        final String     revisionLeft  = (String)    userData[3];
-        final String     revisionRight = (String)    userData[4];
-
         // get diff data
+        repositoryTab.setStatusText("Get differences for '%s'...",fileData.getFileName());
         try
         {
           if      ((revisionLeft != null) && (revisionRight != null))
           {
-            data.diffData = repository.getDiff(fileData,revisionLeft,revisionRight);
+            data.diffData = repositoryTab.repository.getDiff(fileData,revisionLeft,revisionRight);
           }
           else if (revisionLeft != null)
           {
-            data.diffData = repository.getDiff(fileData,revisionLeft);
+            data.diffData = repositoryTab.repository.getDiff(fileData,revisionLeft);
           }
           else
           {
-            data.diffData = repository.getDiff(fileData,revisionLeft);
+            data.diffData = repositoryTab.repository.getDiff(fileData,revisionLeft);
           }
         }
         catch (RepositoryException exception)
         {
-          Dialogs.error(dialog,"Getting file differences fail: %s",exception.getMessage());
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,"Getting file differences fail: %s",exceptionMessage);
+            }
+          });
           return;
+        }
+        finally
+        {
+          repositoryTab.clearStatusText();
         }
 
         // show
@@ -2073,7 +2134,7 @@ Dprintf.dprintf("");
               }
               else
               {
-                widgetRevisionLeft.setText(repository.getLastRevision());
+                widgetRevisionLeft.setText(repositoryTab.repository.getLastRevision());
                 widgetRevisionRight.setText("local");
               }
 
@@ -2110,7 +2171,8 @@ Dprintf.dprintf("");
                                widgetChanged.getSelection(),
                                widgetChangedWhitespaces.getSelection(),
                                COLOR_DIFF_NONE,
-                               COLOR_DIFF_CHANGED
+                               COLOR_DIFF_CHANGED,
+                               COLOR_DIFF_CHANGED_WHITESPACES
                               );
               drawBar(data.diffData,
                       widgetTextLeft.getClientArea().height/widgetTextLeft.getLineHeight(),
