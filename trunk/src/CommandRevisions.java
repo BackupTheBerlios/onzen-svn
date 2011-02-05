@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevisions.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command show file revisions tree
 * Systems: all
@@ -10,27 +10,23 @@
 
 /****************************** Imports ********************************/
 // base
-import java.io.BufferedReader;
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
+//import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.File;
+//import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
+//import java.io.FileReader;
 import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
 
 import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
 //import java.util.WeakHashMap;
 
@@ -128,7 +124,7 @@ class CommandRevisions
    */
   class Data
   {
-    RevisionData[] revisionTree;
+    RevisionData[] revisionDataTree;
     DrawInfo[]     drawInfos;
     boolean        containerResizeFlag;
     Point          containerResizeStart;
@@ -139,7 +135,7 @@ class CommandRevisions
 
     Data()
     {
-      this.revisionTree             = null;
+      this.revisionDataTree         = null;
       this.drawInfos                = null;
       this.containerResizeFlag      = false;
       this.containerResizeStart     = new Point(0,0);
@@ -168,37 +164,38 @@ class CommandRevisions
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Display    display;
-  private final Repository repository;
-  private final Clipboard  clipboard;
-  private final FileData   fileData;
+  private final RepositoryTab repositoryTab;
+  private final Display       display;
+  private final Clipboard     clipboard;
+  private final FileData      fileData;
 
   // dialog
-  private final Data       data = new Data();
-  private final Shell      dialog;
+  private final Data          data = new Data();
+  private final Shell         dialog;
 
   // widgets
-  private final Label      widgetSelectedRevision0;
-  private final Label      widgetSelectedRevision1;
-  private final Canvas     widgetRevisions;
-  private final Button     widgetDiff;
-  private final Button     widgetPatch;
-  private final Label      widgetSelectedRevision;
-  private final Button     widgetView;
-  private final Button     widgetSave;
-  private final Button     widgetRevert;
-  private final Button     widgetClose;
+  private final Label         widgetSelectedRevision0;
+  private final Label         widgetSelectedRevision1;
+  private final Canvas        widgetRevisions;
+  private final Button        widgetDiff;
+  private final Button        widgetPatch;
+  private final Label         widgetSelectedRevision;
+  private final Button        widgetView;
+  private final Button        widgetSave;
+  private final Button        widgetRevert;
+  private final Button        widgetClose;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** create revision view
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    * @param fileData file data
    */
-  CommandRevisions(final Shell shell, final Repository repository, final FileData fileData)
+  CommandRevisions(final RepositoryTab repositoryTab, final Shell shell, final Repository repository, final FileData fileData)
   {
     Composite         composite,subComposite;
     ScrolledComposite scrolledComposite;
@@ -206,8 +203,8 @@ class CommandRevisions
     Button            button;
 
     // initialize variables
-    this.repository = repository;
-    this.fileData   = fileData;
+    this.repositoryTab = repositoryTab;
+    this.fileData      = fileData;
 
     // get display, clipboard
     display   = shell.getDisplay();
@@ -281,7 +278,8 @@ class CommandRevisions
       {
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          CommandDiff commandDiff = new CommandDiff(dialog,
+          CommandDiff commandDiff = new CommandDiff(repositoryTab,
+                                                    dialog,
                                                     repository,
                                                     fileData,
                                                     data.selectedRevisionData0.revision,
@@ -322,7 +320,7 @@ throw new RepositoryException("NYI");
             }
             catch (RepositoryException exception)
             {
-              Dialogs.error(shell,"Cannot create patch for file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+              Dialogs.error(dialog,"Cannot create patch for file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
             }
           }
         }
@@ -365,8 +363,8 @@ throw new RepositoryException("NYI");
 
           if (data.selectedRevisionData != null)
           {
-            CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(dialog,repository,fileData,data.selectedRevisionData.revision);
-            commandRevisionInfo.run();
+            CommandView commandView = new CommandView(repositoryTab,dialog,repository,fileData,data.selectedRevisionData.revision);
+            commandView.run();
           }
         }
       });
@@ -395,7 +393,7 @@ throw new RepositoryException("NYI");
             try
             {
               // get file
-              byte[] fileDataBytes =  repository.getFileBytes(fileData,data.selectedRevisionData.revision);
+              byte[] fileDataBytes =  repositoryTab.repository.getFileBytes(fileData,data.selectedRevisionData.revision);
 
               // save to file
               String fileName = Dialogs.fileSave(dialog,"Save file");
@@ -409,13 +407,13 @@ throw new RepositoryException("NYI");
                 }
                 catch (IOException exception)
                 {
-                  Dialogs.error(shell,"Cannot save file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+                  Dialogs.error(dialog,"Cannot save file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
                 }
               }
             }
             catch (RepositoryException exception)
             {
-              Dialogs.error(shell,"Cannot save file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+              Dialogs.error(dialog,"Cannot save file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
             }
           }
         }
@@ -447,14 +445,21 @@ throw new RepositoryException("NYI");
               try
               {
                 // revert file
-                repository.revert(fileData,data.selectedRevisionData.revision);
+                repositoryTab.repository.revert(fileData,data.selectedRevisionData.revision);
 
                 // update state
-                repository.updateStates(fileData);
+                repositoryTab.repository.updateStates(fileData);
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    repositoryTab.updateFileStatus(fileData);
+                  }
+                });
               }
               catch (RepositoryException exception)
               {
-                Dialogs.error(shell,"Cannot revert file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+                Dialogs.error(dialog,"Cannot revert file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
               }
             }
           }
@@ -496,7 +501,7 @@ throw new RepositoryException("NYI");
           if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
           {
 Dprintf.dprintf("");
-            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repository,fileData,drawInfo.revisionData);
+            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(repositoryTab,dialog,repository,fileData,drawInfo.revisionData);
             rommandRevisionInfo.run();
             break;
           }
@@ -567,15 +572,6 @@ Dprintf.dprintf("");
       }
     });
 
-/*
-    dialog.addListener(USER_EVENT_NEW_DIFF,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-      }
-    });
-*/
-
     // show dialog
     Dialogs.show(dialog);
 
@@ -612,23 +608,19 @@ Dprintf.dprintf("");
   //-----------------------------------------------------------------------
 
   /** get size of revision tree
-   * @param revisionTree
+   * @param revisionDataTree revision data tree
    * @return size of revision tree (in pixel)
    */
-  private Point getSize(RevisionData[] revisionTree)
+  private Point getSize(RevisionData[] revisionDataTree)
   {
     final int ENTRY_WIDTH  = Settings.geometryRevisionBox.x;
     final int ENTRY_HEIGHT = Settings.geometryRevisionBox.y;
 
     Point size = new Point(0,0);
 
-    boolean firstFlag = true;
-    for (RevisionData revisionData : revisionTree)
+    for (RevisionData revisionData : revisionDataTree)
     {
-      if (!firstFlag)
-      {
-        size.y += PADDING;
-      }
+      size.y += PADDING;
 
       size.x = Math.max(size.x,ENTRY_WIDTH);
       size.y += ENTRY_HEIGHT;
@@ -639,7 +631,7 @@ Dprintf.dprintf("");
         Point maxSubSize = new Point(0,0);
         for (BranchData branchData : revisionData.branches)
         {
-          Point subSize = getSize(branchData.revisionTree);
+          Point subSize = getSize(branchData.revisionDataTree);
 //Dprintf.dprintf("subSize=%s",subSize);
           maxSubSize.x = Math.max(maxSubSize.x,subSize.x);
           maxSubSize.y = Math.max(maxSubSize.y,subSize.y);
@@ -647,23 +639,21 @@ Dprintf.dprintf("");
 //Dprintf.dprintf("maxSubSize=%s",maxSubSize);
 
         // next column, get max. dy
-        size.x += PADDING+maxSubSize.x;
-        size.y = Math.max(size.y,PADDING+ENTRY_HEIGHT+maxSubSize.y);
+        size.x = Math.max(size.x,ENTRY_WIDTH+PADDING+maxSubSize.x);
+        size.y = size.y+maxSubSize.y;
       }
-
-      firstFlag = false;
     }
 
     return size;
   }
 
   /** redraw revision tree
-   * @param revisionTree revision tree
+   * @param revisionDataTree revision data tree
    * @param x,y base position
    * @param rectanglesList rectangle coordinates list
    * @param handles handles coordinates list
    */
-  private void redraw(RevisionData[]      revisionTree,
+  private void redraw(RevisionData[]      revisionDataTree,
                       int                 x,
                       int                 y,
                       int                 containerDeltaWidth,
@@ -682,7 +672,7 @@ Dprintf.dprintf("");
     GC      gc           = new GC(widgetRevisions);
     int     prevY        = y;
     int     dx,dy;
-    for (RevisionData revisionData : revisionTree)
+    for (RevisionData revisionData : revisionDataTree)
     {
       dy = 0;
 
@@ -750,7 +740,7 @@ Dprintf.dprintf("");
       {
 //Dprintf.dprintf("branchData=%s",branchData);
         // get size of sub-tree
-        Point subSize = getSize(branchData.revisionTree);
+        Point subSize = getSize(branchData.revisionDataTree);
 
         // draw connection L-line
         gc.setLineWidth(1);
@@ -767,7 +757,7 @@ Dprintf.dprintf("");
         gc.drawString(branchData.name,x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2+4,y+PADDING+ENTRY_HEIGHT/2,true);
 //Dprintf.dprintf("%d %d %s",x+width,y+height/2,width,height,branchData.name);
 
-        redraw(branchData.revisionTree,
+        redraw(branchData.revisionDataTree,
                x+dx+PADDING+ENTRY_WIDTH,
                y+   PADDING+ENTRY_HEIGHT,
                containerDeltaWidth,
@@ -801,7 +791,7 @@ Dprintf.dprintf("");
     gc.dispose();
 
     // redraw
-    redraw(data.revisionTree,MARGIN,MARGIN,0,0,drawInfoList);
+    redraw(data.revisionDataTree,MARGIN,MARGIN,0,0,drawInfoList);
 
     // get container, handles coordinates
     data.drawInfos = drawInfoList.toArray(new DrawInfo[drawInfoList.size()]);
@@ -819,7 +809,7 @@ Dprintf.dprintf("");
     gc.dispose();
 
     // redraw
-    redraw(data.revisionTree,MARGIN,MARGIN,containerDeltaWidth,containerDeltaHeight,null);
+    redraw(data.revisionDataTree,MARGIN,MARGIN,containerDeltaWidth,containerDeltaHeight,null);
   }
 
   /** set canvas size and redraw
@@ -829,7 +819,7 @@ Dprintf.dprintf("");
     if (!widgetRevisions.isDisposed())
     {
       // set canvas size
-      Point size = getSize(data.revisionTree);
+      Point size = getSize(data.revisionDataTree);
       size.x += 2*MARGIN;
       size.y += 2*MARGIN;
       widgetRevisions.setSize(size);
@@ -850,33 +840,40 @@ Dprintf.dprintf("");
       {
         public void run()
         {
-          data.revisionTree = null;
+          data.revisionDataTree = null;
           Widgets.modified(data);
          }
       });
     }
 
-    // start show annotations
-    Background.run(new BackgroundTask(data,repository,fileData,revision)
+    // start show revision tree
+    Background.run(new BackgroundRunnable(fileData,revision)
     {
-      public void run()
+      public void run(FileData fileData, String revision)
       {
-        final Data       data       = (Data)      userData[0];
-        final Repository repository = (Repository)userData[1];
-        final FileData   fileData   = (FileData)  userData[2];
-        final String     revision   = (String)    userData[3];
-
         // get revision tree
+        repositoryTab.setStatusText("Get revision data for '%s'...",fileData.getFileName());
         try
         {
-          data.revisionTree = repository.getRevisionTree(fileData);
+          data.revisionDataTree = repositoryTab.repository.getRevisionDataTree(fileData);
         }
         catch (RepositoryException exception)
         {
-          Dialogs.error(dialog,"Getting file revisions fail: %s",exception.getMessage());
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,"Getting file revisions fail: %s",exceptionMessage);
+            }
+          });
           return;
         }
-//        printRevisionTree(revisionTree);
+        finally
+        {
+          repositoryTab.clearStatusText();
+        }
+//printRevisionDataTree(data.revisionDataTree);
 
         // show
         if (!display.isDisposed())
@@ -901,33 +898,33 @@ Dprintf.dprintf("");
    */
   private void show()
   {
-    show(repository.getLastRevision());
+    show(repositoryTab.repository.getLastRevision());
   }
 
   /** print revision tree (for debugging)
-   * @param revisionTree revision tree to print
+   * @param revisionDataTree revision data tree to print
    * @param indent indentation
    */
-  private void printRevisionTree(RevisionData[] revisionTree, int indent)
+  private void printRevisionDataTree(RevisionData[] revisionDataTree, int indent)
   {
-    for (RevisionData revisionData : revisionTree)
+    for (RevisionData revisionData : revisionDataTree)
     {
       for (int z = 0; z < indent; z++) System.out.print(' ');
       System.out.println(revisionData.revision+": "+revisionData.date);
       for (BranchData branchData : revisionData.branches)
       {
-        printRevisionTree(branchData.revisionTree,indent+2);
+        printRevisionDataTree(branchData.revisionDataTree,indent+2);
       }
     }
   }
 
   /** print revision tree (for debugging)
-   * @param revisionTree revision tree to print
+   * @param revisionDataTree revision data tree to print
    */
-  private void printRevisionTree(RevisionData[] revisionTree)
+  private void printRevisionDataTree(RevisionData[] revisionDataTree)
   {
     System.out.println("Revision tree:");
-    printRevisionTree(revisionTree,2);
+    printRevisionDataTree(revisionDataTree,2);
   }
 }
 

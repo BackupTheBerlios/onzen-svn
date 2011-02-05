@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command show changed files
 * Systems: all
@@ -10,31 +10,26 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
+//import java.io.File;
+//import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.IOException;
 
-import java.text.SimpleDateFormat;
+//import java.text.SimpleDateFormat;
 
-import java.util.ArrayList;
+//import java.util.ArrayList;
 //import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Date;
+//import java.util.BitSet;
+//import java.util.Comparator;
+//import java.util.Date;
 import java.util.EnumSet;
 //import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+//import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-import java.util.ListIterator;
+//import java.util.ListIterator;
 //import java.util.StringTokenizer;
-import java.util.WeakHashMap;
+//import java.util.WeakHashMap;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -118,14 +113,12 @@ class CommandChangedFiles
     HashSet<FileData>        fileDataSet;
     EnumSet<FileData.States> showStates;
     FileDataComparator       fileDataComparator;
-//    FileData                 selectedFileData;
 
     Data()
     {
       this.fileDataSet        = null;
       this.showStates         = EnumSet.copyOf(Settings.changedFilesShowStates);
       this.fileDataComparator = new FileDataComparator();
-//      this.selectedFileData   = null;
     }
   };
 
@@ -148,37 +141,38 @@ class CommandChangedFiles
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final Repository repository;
-  private final Display    display;
+  private final RepositoryTab repositoryTab;
+  private final Display       display;
 
   // dialog
-  private final Data       data = new Data();
-  private final Shell      dialog;
+  private final Data          data = new Data();
+  private final Shell         dialog;
 
   // widgets
-  private final Text       widgetFilter;
-  private final Table      widgetFiles;
-  private final Button     widgetButtonUpdate;
-  private final Button     widgetButtonCommit;
-  private final Button     widgetButtonPatch;
-  private final Button     widgetButtonAdd;
-  private final Button     widgetButtonRemove;
-  private final Button     widgetButtonRevert;
-  private final Button     widgetButtonDiff;
-  private final Button     widgetButtonRevisions;
-  private final Button     widgetButtonSolve;
-  private final Button     widgetButtonReread;
-  private final Button     widgetClose;
+  private final Text          widgetFilter;
+  private final Table         widgetFiles;
+  private final Button        widgetButtonUpdate;
+  private final Button        widgetButtonCommit;
+  private final Button        widgetButtonPatch;
+  private final Button        widgetButtonAdd;
+  private final Button        widgetButtonRemove;
+  private final Button        widgetButtonRevert;
+  private final Button        widgetButtonDiff;
+  private final Button        widgetButtonRevisions;
+  private final Button        widgetButtonSolve;
+  private final Button        widgetButtonReread;
+  private final Button        widgetClose;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** changed files command
+   * @param repositoryTab repository tab
    * @param shell shell
    * @param repository repository
    */
-  CommandChangedFiles(final Shell shell, final Repository repository)
+  CommandChangedFiles(final RepositoryTab repositoryTab, final Shell shell, final Repository repository)
   {
     Composite   composite,subComposite;
     Label       label;
@@ -188,7 +182,7 @@ class CommandChangedFiles
     MenuItem    menuItem;
 
     // initialize variables
-    this.repository  = repository;
+    this.repositoryTab = repositoryTab;
 
     // get display
     display = shell.getDisplay();
@@ -658,7 +652,7 @@ menuItem.setEnabled(false);
           {
             try
             {
-              repository.update(fileDataSet);
+              repositoryTab.repository.update(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
             catch (RepositoryException exception)
@@ -690,10 +684,10 @@ menuItem.setEnabled(false);
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandCommit commandCommit = new CommandCommit(shell,repository,fileDataSet);
-            if (commandCommit.run())
+            CommandCommit commandCommit = new CommandCommit(repositoryTab,shell,repository,fileDataSet);
+            if (commandCommit.execute())
             {
-              repository.updateStates(fileDataSet);
+              repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
@@ -741,10 +735,10 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandAdd commandAdd = new CommandAdd(shell,repository,fileDataSet);
-            if (commandAdd.run())
+            CommandAdd commandAdd = new CommandAdd(repositoryTab,shell,repository,fileDataSet);
+            if (commandAdd.execute())
             {
-              repository.updateStates(fileDataSet);
+              repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
@@ -771,10 +765,10 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandRemove commandRemove = new CommandRemove(shell,repository,fileDataSet);
-            if (commandRemove.run())
+            CommandRemove commandRemove = new CommandRemove(repositoryTab,shell,repository,fileDataSet);
+            if (commandRemove.execute())
             {
-              repository.updateStates(fileDataSet);
+              repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
@@ -801,10 +795,10 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandRevert commandRevert = new CommandRevert(shell,repository,fileDataSet);
-            if (commandRevert.run())
+            CommandRevert commandRevert = new CommandRevert(repositoryTab,shell,repository,fileDataSet);
+            if (commandRevert.execute())
             {
-              repository.updateStates(fileDataSet);
+              repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
@@ -831,7 +825,7 @@ Dprintf.dprintf("");
           FileData fileData = getSelectedFileData();
           if (fileData != null)
           {
-            CommandDiff commandDiff = new CommandDiff(shell,repository,fileData);
+            CommandDiff commandDiff = new CommandDiff(repositoryTab,shell,repository,fileData);
             commandDiff.run();
           }
         }
@@ -857,7 +851,7 @@ Dprintf.dprintf("");
           FileData fileData = getSelectedFileData();
           if (fileData != null)
           {
-            CommandRevisions commandRevisions = new CommandRevisions(shell,repository,fileData);
+            CommandRevisions commandRevisions = new CommandRevisions(repositoryTab,shell,repository,fileData);
             commandRevisions.run();
           }
         }
@@ -895,7 +889,7 @@ Dprintf.dprintf("");
         {
           try
           {
-            data.fileDataSet = repository.getChangedFiles();
+            data.fileDataSet = repositoryTab.repository.getChangedFiles();
           }
           catch (RepositoryException exception)
           {
@@ -993,7 +987,7 @@ Dprintf.dprintf("");
     // get changed files
     try
     {
-      data.fileDataSet = repository.getChangedFiles();
+      data.fileDataSet = repositoryTab.repository.getChangedFiles();
 Dprintf.dprintf("");
 }
 catch (RepositoryException exception)
