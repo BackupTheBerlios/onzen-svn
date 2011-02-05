@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Onzen.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: Onzen
 * Systems: all
@@ -64,6 +64,7 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -241,7 +242,38 @@ public class Onzen
     }
   };
 
+  /** dialog data
+   */
+  class Data
+  {
+    boolean       mouseDownFlag;
+    boolean       dragTab;
+    int           dragTabStartX;
+    RepositoryTab dragTabRepositoryTab;
+    TabItem[]     dragTabItems;
+    TabItem       dragTabItem;
+    boolean       dragTabDrawMarker;
+    Point         dragTabMarker;
+    int           dragTabMarkerHeight;
+
+    Data()
+    {
+      this.dragTab              = false;
+      this.dragTabStartX        = 0;
+      this.dragTabRepositoryTab = null;
+      this.dragTabItems         = null;
+      this.dragTabItem          = null;
+      this.dragTabDrawMarker    = false;
+      this.dragTabMarker        = new Point(0,0);
+      this.dragTabMarkerHeight  = 0;
+    }
+  };
+
   // --------------------------- constants --------------------------------
+
+  // exit codes
+  public static int              EXITCODE_OK             =   0;
+  public static int              EXITCODE_INTERNAL_ERROR = 127;
 
   // colors
   public static Color            COLOR_BLACK;
@@ -256,6 +288,7 @@ public class Onzen
   public static Color            COLOR_DARK_GRAY;
   public static Color            COLOR_GRAY;
   public static Color            COLOR_MAGENTA;
+  public static Color            COLOR_BACKGROUND;
 
   // images
   public static Image            IMAGE_DIRECTORY;
@@ -266,6 +299,10 @@ public class Onzen
   public static Image            IMAGE_ARROW_LEFT;
   public static Image            IMAGE_ARROW_RIGHT;
   public static Image            IMAGE_CLEAR;
+
+  // fonts
+  public static Font             FONT_DIFF;
+  public static Font             FONT_DIFF_LINE;
 
   // cursors
   public static Cursor           CURSOR_WAIT;
@@ -293,12 +330,16 @@ public class Onzen
   private Display                   display;
   private Shell                     shell;
 
+  private final Data                data = new Data();
   private String                    repositoryListName = null;
   private RepositoryList            repositoryList;
   private Composite                 repositoryTabEmpty = null;
   private LinkedList<RepositoryTab> repositoryTabList = new LinkedList<RepositoryTab>();
   private RepositoryTab             selectedRepositoryTab = null;
   private LinkedList<StatusText>    statusTextList = new LinkedList<StatusText>();
+
+  private MenuItem                  menuItemApplyPatches;
+  private MenuItem                  menuItemUnapplyPatches;
 
   private Menu                      menuRepositories;
 
@@ -329,13 +370,44 @@ public class Onzen
     System.err.println("ERROR: "+String.format(format,args));
   }
 
+  /** print internal error to stderr
+   * @param format format string
+   * @param args optional arguments
+   */
+  public static void printInternalError(String format, Object... args)
+  {
+    System.err.println("INTERNAL ERROR: "+String.format(format,args));
+  }
+
+  /** print internal error to stderr
+   * @param throwable throwable
+   * @param args optional arguments
+   */
+  public static void printInternalError(Throwable throwable, Object... args)
+  {
+    printInternalError(throwable.toString());
+    if (Settings.debugFlag)
+    {
+      for (StackTraceElement stackTraceElement : throwable.getStackTrace())
+      {
+        System.err.println("  "+stackTraceElement);
+      }
+    }
+  }
+
   /** print warning to stderr
    * @param format format string
    * @param args optional arguments
    */
   public static void printWarning(String format, Object... args)
   {
-    System.err.println("Warning: "+String.format(format,args));
+    System.err.print("Warning: "+String.format(format,args));
+    if (Settings.debugFlag)
+    {
+      StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+      System.err.print(" at "+stackTrace[2].getFileName()+", "+stackTrace[2].getLineNumber());
+    }
+    System.err.println();
   }
 
   /** main
@@ -397,28 +469,18 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     }
     catch (AssertionError assertionError)
     {
-      System.err.println("INTERNAL ERROR: "+assertionError.toString());
-      for (StackTraceElement stackTraceElement : assertionError.getStackTrace())
-      {
-        System.err.println("  "+stackTraceElement);
-      }
-      System.err.println("");
+      printInternalError(assertionError);
       System.err.println("Please report this assertion error to torsten.rupp@gmx.net.");
     }
     catch (InternalError error)
     {
-      System.err.println("INTERNAL ERROR: "+error.getMessage());
+      printInternalError(error);
+      System.err.println("Please report this internal error to torsten.rupp@gmx.net.");
     }
     catch (Error error)
     {
-      System.err.println("ERROR: "+error.getMessage());
-      if (Settings.debugFlag)
-      {
-        for (StackTraceElement stackTraceElement : error.getStackTrace())
-        {
-          System.err.println("  "+stackTraceElement);
-        }
-      }
+      printInternalError(error);
+      System.err.println("Please report this error to torsten.rupp@gmx.net.");
     }
 
     System.exit(exitcode);
@@ -535,7 +597,7 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     if (Settings.helpFlag)
     {
       printUsage();
-      System.exit(0);
+      System.exit(EXITCODE_OK);
     }
 
     // check arguments
@@ -560,6 +622,7 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     COLOR_DARK_GRAY   = display.getSystemColor(SWT.COLOR_DARK_GRAY);
     COLOR_GRAY        = display.getSystemColor(SWT.COLOR_GRAY);
     COLOR_MAGENTA     = new Color(null,0xFF,0xA0,0xA0);                         
+    COLOR_BACKGROUND  = display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
 
     // get images
     IMAGE_DIRECTORY   = Widgets.loadImage(display,"directory.png");
@@ -570,6 +633,10 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     IMAGE_ARROW_LEFT  = Widgets.loadImage(display,"arrow-left.png");
     IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
     IMAGE_CLEAR       = Widgets.loadImage(display,"clear.png");
+
+    // fonts
+    FONT_DIFF         = Widgets.newFont(display,Settings.fontDiff);
+    FONT_DIFF_LINE    = Widgets.newFont(display,Settings.fontDiffLine);
 
     // get cursors
     CURSOR_WAIT       = new Cursor(display,SWT.CURSOR_WAIT);
@@ -591,6 +658,151 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     // create tab
     widgetTabFolder = Widgets.newTabFolder(shell);
     Widgets.layout(widgetTabFolder,0,0,TableLayoutData.NSWE);
+    widgetTabFolder.addPaintListener(new PaintListener()
+    {
+      public void paintControl(PaintEvent paintEvent)
+      {
+        if (data.dragTab && data.dragTabDrawMarker)
+        {
+          int[] marker = new int[2*7];
+          marker[0*2+0] = data.dragTabMarker.x+2; marker[0*2+1] = data.dragTabMarker.y+0;
+          marker[1*2+0] = data.dragTabMarker.x+2; marker[1*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
+          marker[2*2+0] = data.dragTabMarker.x+5; marker[2*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
+          marker[3*2+0] = data.dragTabMarker.x+0; marker[3*2+1] = data.dragTabMarker.y+5+data.dragTabMarkerHeight;
+          marker[4*2+0] = data.dragTabMarker.x-5; marker[4*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
+          marker[5*2+0] = data.dragTabMarker.x-2; marker[5*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
+          marker[6*2+0] = data.dragTabMarker.x-2; marker[6*2+1] = data.dragTabMarker.y+0;
+          paintEvent.gc.setAntialias(SWT.OFF);
+          paintEvent.gc.setBackground(Onzen.COLOR_BLUE);
+          paintEvent.gc.setForeground(Onzen.COLOR_MAGENTA);
+          paintEvent.gc.fillPolygon(marker);
+          paintEvent.gc.drawPolygon(marker);
+          paintEvent.gc.setAntialias(SWT.DEFAULT);
+        }
+      }
+    });
+    widgetTabFolder.addMouseListener(new MouseListener()
+    {
+      public void mouseDoubleClick(MouseEvent mouseEvent)
+      {
+        assert selectedRepositoryTab != null;
+
+        editRepository(selectedRepositoryTab);
+      }
+
+      public void mouseDown(final MouseEvent mouseEvent)
+      {
+        assert selectedRepositoryTab != null;
+
+        TabFolder tabFolder = (TabFolder)mouseEvent.widget;
+        TabItem   tabItem = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
+
+        if (tabItem != null)
+        {
+          // start dragging tab
+          data.dragTab              = true;
+          data.dragTabStartX        = mouseEvent.x;
+          data.dragTabRepositoryTab = (RepositoryTab)tabItem.getData();
+          data.dragTabItems         = tabFolder.getItems();
+          data.dragTabItem          = tabItem;
+        }
+      }
+
+      public void mouseUp(final MouseEvent mouseEvent)
+      {
+        assert selectedRepositoryTab != null;
+
+        if (data.dragTab)
+        {
+          TabFolder tabFolder = (TabFolder)mouseEvent.widget;
+          TabItem   tabItem   = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
+
+          if (   (tabItem != null)
+              && (data.dragTabItem != null)
+              && (tabItem != data.dragTabItem)
+              && (Math.abs(mouseEvent.x-data.dragTabStartX) > 20)
+             )
+          {
+            // get new tab index
+            int newTabIndex = tabFolder.indexOf(tabItem);
+            assert newTabIndex != -1;
+
+            // re-order tabs
+            Widgets.moveTab(widgetTabFolder,data.dragTabItem,newTabIndex);
+            repositoryList.move(data.dragTabRepositoryTab.repository,newTabIndex);
+
+            // set selected repository
+            if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+            selectedRepositoryTab = data.dragTabRepositoryTab;
+            selectedRepositoryTab.repository.selected = true;
+          }
+
+          // stop dragging tab
+          data.dragTab       = false;
+          data.dragTabItems  = null;
+          data.dragTabItem   = null;
+          widgetTabFolder.redraw();
+        }
+      }
+    });
+    widgetTabFolder.addMouseMoveListener(new MouseMoveListener()
+    {
+      public void mouseMove(MouseEvent mouseEvent)
+      {
+        if (data.dragTab)
+        {
+          TabFolder tabFolder = (TabFolder)mouseEvent.widget;
+          TabItem   tabItem   = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
+
+          // check if dragging (mouse is over another tab than drag tab and moved some way)
+          data.dragTabDrawMarker =    (tabItem != null)
+                                   && (data.dragTabItem != null)
+                                   && (tabItem != data.dragTabItem)
+                                   && (Math.abs(mouseEvent.x-data.dragTabStartX) > 20);
+
+          // get marker drawing position and height
+          if (data.dragTabDrawMarker)
+          {
+            // get new tab index
+            int newTabIndex = tabFolder.indexOf(tabItem);
+            assert newTabIndex != -1;
+
+            Rectangle bounds = data.dragTabItems[newTabIndex].getBounds();
+            if (mouseEvent.x > data.dragTabStartX)
+            {
+              // right
+              if (newTabIndex < data.dragTabItems.length-1)
+              {
+                Rectangle boundsNext = data.dragTabItems[newTabIndex+1].getBounds();
+                data.dragTabMarker.x = (bounds.x+bounds.width+boundsNext.x)/2;
+              }
+              else
+              {
+                data.dragTabMarker.x = bounds.x+bounds.width+4;
+              }
+            }
+            else
+            {
+              // left
+              if (newTabIndex > 0)
+              {
+                Rectangle boundsPrev = data.dragTabItems[newTabIndex-1].getBounds();
+                data.dragTabMarker.x = (boundsPrev.x+boundsPrev.width+bounds.x)/2;
+              }
+              else
+              {
+                data.dragTabMarker.x = bounds.x-4;
+              }
+            }
+            data.dragTabMarker.y     = 2;
+            data.dragTabMarkerHeight = bounds.height;
+          }
+
+          // redraw
+          widgetTabFolder.redraw();
+        }
+      }
+    });
     widgetTabFolder.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -605,8 +817,11 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
         if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
 
         // select new repository
-        selectedRepositoryTab = (RepositoryTab)tabItem.getData();;
-        selectedRepositoryTab.repository.selected = true;
+        selectedRepositoryTab = (RepositoryTab)tabItem.getData();
+        if (selectedRepositoryTab != null)
+        {
+          selectedRepositoryTab.repository.selected = true;
+        }
       }
     });
     addRepositoryTabEmpty();
@@ -1012,8 +1227,9 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Apply patches",Settings.keyApplyPatches);
-      menuItem.addSelectionListener(new SelectionListener()
+      menuItemApplyPatches = Widgets.addMenuItem(menu,"Apply patches",Settings.keyApplyPatches);
+      menuItemApplyPatches.setEnabled(false);
+      menuItemApplyPatches.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1024,8 +1240,9 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Unapply patches",Settings.keyUnapplyPatches);
-      menuItem.addSelectionListener(new SelectionListener()
+      menuItemUnapplyPatches = Widgets.addMenuItem(menu,"Unapply patches",Settings.keyUnapplyPatches);
+      menuItemUnapplyPatches.setEnabled(false);
+      menuItemUnapplyPatches.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1150,6 +1367,7 @@ Dprintf.dprintf("");
       });
 
       menuItem = Widgets.addMenuItem(menu,"View/Solve conflict...",Settings.keySolve);
+menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1165,7 +1383,6 @@ Dprintf.dprintf("");
     menu = Widgets.addMenu(menuBar,"File/Directory");
     {
       menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
-menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1475,14 +1692,7 @@ new Message("Und nun?").addToHistory();
     // select new tab
     if (newSelectedRepositoryTab != null)
     {
-      // deselect repository
-      if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
-
-      // set selection
-      selectedRepositoryTab = newSelectedRepositoryTab;
-
-      // show
-      selectedRepositoryTab.show();
+      selectRepository(newSelectedRepositoryTab);
     }
 
     // set repository menu
@@ -1499,15 +1709,7 @@ new Message("Und nun?").addToHistory();
         {
           MenuItem widget = (MenuItem)selectionEvent.widget;
 
-          // deselect previous repository
-          if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
-
-          // select new repository
-          selectedRepositoryTab = (RepositoryTab)widget.getData();
-          selectedRepositoryTab.repository.selected = true;
-
-          // show tab
-          selectedRepositoryTab.show();
+          selectRepository((RepositoryTab)widget.getData());
         }
       });
     }
@@ -1971,7 +2173,31 @@ Dprintf.dprintf("");
       // deselect repository
       selectedRepositoryTab.repository.selected = false;
       selectedRepositoryTab = null;
+
+      // select new repository
+      int index = widgetTabFolder.getSelectionIndex();
+      if (index >= 0)
+      {
+        TabItem tabItem = widgetTabFolder.getItem(index);
+        selectedRepositoryTab = (RepositoryTab)tabItem.getData();
+        selectedRepositoryTab.repository.selected = true;
+      }
     }
+  }
+
+  private void selectRepository(RepositoryTab repositoryTab)
+  {
+    // deselect previous repository
+    if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
+
+    // select new repository
+    selectedRepositoryTab = repositoryTab;
+    selectedRepositoryTab.repository.selected = true;
+
+    // show tab
+    selectedRepositoryTab.show();
+    menuItemApplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
+    menuItemUnapplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
   }
 }
 
