@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -34,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 
@@ -451,6 +452,77 @@ public class Settings
     }
   }
 
+  /** config value adapter String <-> font data
+   */
+  class ConfigValueAdapterFontData extends ConfigValueAdapter<String,FontData>
+  {
+    public FontData toValue(String string) throws Exception
+    {
+      FontData fontData = null;
+
+      Object[] data = new Object[3];
+      if      (StringParser.parse(string,"%s,%d,%s",data))
+      {
+        String name   = (String)data[0];
+        int    height = (Integer)data[1];
+        int    style;
+        if      (((String)data[2]).equalsIgnoreCase("normal")) style = SWT.NORMAL;
+        else if (((String)data[2]).equalsIgnoreCase("bold"  )) style = SWT.BOLD;
+        else if (((String)data[2]).equalsIgnoreCase("italic")) style = SWT.ITALIC;
+        else                                                   style = 0;
+
+        fontData = new FontData(name,height,style);
+      }
+      else if (StringParser.parse(string,"%s,%d",data))
+      {
+        String name   = (String)data[0];
+        int    height = (Integer)data[1];
+
+        fontData = new FontData(name,height,SWT.NORMAL);
+      }
+      else if (string.isEmpty())
+      {
+        fontData = null;
+      }
+      else if (StringParser.parse(string,"%s",data))
+      {
+        String name = (String)data[0];
+
+        fontData = new FontData(name);
+      }
+      else
+      {
+        throw new Exception(String.format("Cannot parse font definition '%s'",string));
+      }
+
+      return fontData;
+    }
+
+    public String toString(FontData fontData) throws Exception
+    {
+      String string;
+
+      if (fontData != null)
+      {
+        StringBuilder buffer = new StringBuilder();
+
+        buffer.append(fontData.getName());
+        buffer.append(',');
+        buffer.append(Integer.toString(fontData.getHeight()));
+        if      (fontData.getStyle() == SWT.BOLD  ) buffer.append(",bold");
+        else if (fontData.getStyle() == SWT.ITALIC) buffer.append(",italic");
+
+        string = buffer.toString();
+      }
+      else
+      {
+        string = "";
+      }
+
+      return string;
+    }
+  }
+
   // --------------------------- constants --------------------------------
   public static final String ONZEN_DIRECTORY                = System.getProperty("user.home")+File.separator+".onzen2";
 
@@ -531,7 +603,7 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryRevisionInfo          = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryView                  = new Point(500,300);
+  public static Point                    geometryView                  = new Point(500,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryNewFile               = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
@@ -586,6 +658,12 @@ public class Settings
   public static Color                   colorStatusError               = new Color(null,new RGB(255,  0,  0));
   @ConfigValue(type=ConfigValueAdapterColor.class)
   public static Color                   colorStatusUpdateStatus        = new Color(new RGB(128,128,128),null);
+
+  @ConfigComment(text={"","Fonts: <name>,<height>,normal|bold|italic"})
+  @ConfigValue(type=ConfigValueAdapterFontData.class)
+  public static FontData                fontDiff                       = null;
+  @ConfigValue(type=ConfigValueAdapterFontData.class)
+  public static FontData                fontDiffLine                   = null;
 
   @ConfigComment(text={"","shown file states in changed file list"})
   @ConfigValue(type=ConfigValueAdapterFileDataStates.class)
