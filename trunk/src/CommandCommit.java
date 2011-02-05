@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandCommit.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command commit files/directories
 * Systems: all
@@ -428,6 +428,7 @@ class CommandCommit
 
       // update file states
 Dprintf.dprintf("");
+      repositoryTab.repository.updateStates(data.fileDataSet);
       display.syncExec(new Runnable()
       {
         public void run()
