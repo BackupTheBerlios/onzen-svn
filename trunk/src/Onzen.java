@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Onzen.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: Onzen
 * Systems: all
@@ -298,7 +298,6 @@ public class Onzen
   public static Image            IMAGE_ARRAY_DOWN;
   public static Image            IMAGE_ARROW_LEFT;
   public static Image            IMAGE_ARROW_RIGHT;
-  public static Image            IMAGE_CLEAR;
 
   // fonts
   public static Font             FONT_DIFF;
@@ -632,7 +631,6 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     IMAGE_ARRAY_DOWN  = Widgets.loadImage(display,"arrow-down.png");
     IMAGE_ARROW_LEFT  = Widgets.loadImage(display,"arrow-left.png");
     IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
-    IMAGE_CLEAR       = Widgets.loadImage(display,"clear.png");
 
     // fonts
     FONT_DIFF         = Widgets.newFont(display,Settings.fontDiff);
@@ -1036,48 +1034,6 @@ widgetButtonSolve.setEnabled(false);
 
     menu = Widgets.addMenu(menuBar,"Program");
     {
-      menuItem = Widgets.addMenuItem(menu,"New repository list...");
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          newRepositoryList();
-        }
-      });
-
-      menuItem = Widgets.addMenuItem(menu,"Open repository list...");
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          loadRepositoryList();
-        }
-      });
-
-/*
-      menuItem = Widgets.addMenuItem(menu,"Edit repository list...");
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-
-          editRepositoryList();
-        }
-      });
-*/
-
-      Widgets.addMenuSeparator(menu);
-
       menuItem = Widgets.addMenuItem(menu,"New repository...");
 menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
@@ -1131,6 +1087,32 @@ Dprintf.dprintf("");
           MenuItem widget = (MenuItem)selectionEvent.widget;
 
           closeRepository();
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"New repository list...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          newRepositoryList();
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Load repository list...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          loadRepositoryList();
         }
       });
 
@@ -1763,7 +1745,182 @@ new Message("Und nun?").addToHistory();
 
   private void newRepositoryList()
   {
-Dprintf.dprintf("");
+    /** dialog data
+     */
+    class Data
+    {
+      String[] names;
+      String   newName;
+
+      Data()
+      {
+        this.newName = null;
+      }
+    };
+
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite;
+    Label       label;
+    Button      button;
+
+    // get names
+    data.names = RepositoryList.listNames();
+
+    // name dialog
+    dialog = Dialogs.open(shell,"New repository list",300,300,new double[]{1.0,0.0},1.0);
+
+    final List   widgetNames;
+    final Text   widgetNewName;
+    final Button widgetNew;
+    final Button widgetDelete;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      widgetNames = Widgets.newList(composite);
+      widgetNames.setBackground(Onzen.COLOR_GRAY);
+      Widgets.layout(widgetNames,0,0,TableLayoutData.NSWE);
+      widgetNames.setToolTipText("Repository list names.");
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+      {
+        label = Widgets.newLabel(subComposite,"New:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        widgetNewName = Widgets.newText(subComposite);
+        Widgets.layout(widgetNewName,0,1,TableLayoutData.WE);
+        widgetNewName.setToolTipText("Name of repository list to create.");
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetNew = Widgets.newButton(composite,"New");
+      widgetNew.setEnabled(false);
+      Widgets.layout(widgetNew,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetNew.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          data.newName = widgetNewName.getText().trim();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      widgetDelete = Widgets.newButton(composite,"Delete");
+      widgetDelete.setEnabled(false);
+      Widgets.layout(widgetDelete,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetDelete.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          int index = widgetNames.getSelectionIndex();
+          if ((index >= 0) && (index < data.names.length))
+          {
+            if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",data.names[index])))
+            {
+              // delete repository list
+              RepositoryList.delete(data.names[index]);
+
+              // remove name from array
+              String[] newNames = new String[data.names.length-1];
+              System.arraycopy(data.names,0,newNames,0,index);
+              System.arraycopy(data.names,index+1,newNames,0,data.names.length-1-index);
+              data.names = newNames;
+
+              // update widgets
+              widgetNames.remove(index);
+              widgetDelete.setEnabled(false);
+            }
+          }
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetNames.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        List widget = (List)selectionEvent.widget;
+
+        int index = widget.getSelectionIndex();
+        if ((index >= 0) && (index < data.names.length))
+        {
+          widgetNewName.setText(data.names[index]);
+          widgetNewName.setFocus();
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        List widget = (List)selectionEvent.widget;
+
+        int index = widget.getSelectionIndex();
+        widgetNew.setEnabled((index >= 0) && (index < data.names.length));
+        widgetDelete.setEnabled((index >= 0) && (index < data.names.length));
+      }
+    });
+    widgetNewName.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+        Text widget = (Text)keyEvent.widget;
+
+        widgetNew.setEnabled(!widget.getText().isEmpty());
+      }
+    });
+
+    // show dialog
+    Dialogs.show(dialog);
+
+    // add names
+    for (String name : data.names)
+    {
+      widgetNames.add(name);
+    }
+
+    // run
+    widgetNewName.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false) && !data.newName.isEmpty())
+    {
+      repositoryListName = data.newName;
+      setRepositoryList(new RepositoryList(repositoryListName));
+    }
   }
 
   /** load repository list from file
@@ -1972,14 +2129,13 @@ Dprintf.dprintf("");
       {
         repositoryListName = data.name;
       }
-      else
-      {
-        return;
-      }
     }
 
-    // add repositories from list
-    setRepositoryList(new RepositoryList(repositoryListName));
+    if (repositoryListName != null)
+    {
+      // add repositories from list
+      setRepositoryList(new RepositoryList(repositoryListName));
+    }
   }
 
   /** load repository list from file
@@ -1987,13 +2143,6 @@ Dprintf.dprintf("");
   private void loadRepositoryList()
   {
     loadRepositoryList(null);
-  }
-
-  /** edit repository list
-   */
-  private void editRepositoryList()
-  {
-Dprintf.dprintf("");
   }
 
   /** open new repository tab
@@ -2065,20 +2214,27 @@ Dprintf.dprintf("");
       composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
       Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
       {
-        label = Widgets.newLabel(composite,"Title:");
+        label = Widgets.newLabel(composite,"Type:");
         Widgets.layout(label,0,0,TableLayoutData.W);
+
+        label = Widgets.newLabel(composite);
+        label.setText(repositoryTab.repository.getType().toString());
+        Widgets.layout(label,0,1,TableLayoutData.W);
+
+        label = Widgets.newLabel(composite,"Title:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
 
         widgetTitle = Widgets.newText(composite);
         widgetTitle.setText(repositoryTab.repository.title);
-        Widgets.layout(widgetTitle,0,1,TableLayoutData.WE);
+        Widgets.layout(widgetTitle,1,1,TableLayoutData.WE);
         widgetTitle.setToolTipText("Repository title.");
 
         label = Widgets.newLabel(composite,"Root path:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+        Widgets.layout(label,2,0,TableLayoutData.W);
 
         widgetRootPath = Widgets.newText(composite);
         widgetRootPath.setText(repositoryTab.repository.rootPath);
-        Widgets.layout(widgetRootPath,1,1,TableLayoutData.WE);
+        Widgets.layout(widgetRootPath,2,1,TableLayoutData.WE);
       }
 
       // buttons
@@ -2167,24 +2323,30 @@ Dprintf.dprintf("");
   {
     if (selectedRepositoryTab != null)
     {
-      // remove tab
-      removeRepositoryTab(selectedRepositoryTab);
-
-      // deselect repository
-      selectedRepositoryTab.repository.selected = false;
-      selectedRepositoryTab = null;
-
-      // select new repository
-      int index = widgetTabFolder.getSelectionIndex();
-      if (index >= 0)
+      if (Dialogs.confirm(shell,String.format("Really close repository '%s'?",selectedRepositoryTab.repository.title)))
       {
-        TabItem tabItem = widgetTabFolder.getItem(index);
-        selectedRepositoryTab = (RepositoryTab)tabItem.getData();
-        selectedRepositoryTab.repository.selected = true;
+        // remove tab
+        removeRepositoryTab(selectedRepositoryTab);
+
+        // deselect repository
+        selectedRepositoryTab.repository.selected = false;
+        selectedRepositoryTab = null;
+
+        // select new repository
+        int index = widgetTabFolder.getSelectionIndex();
+        if (index >= 0)
+        {
+          TabItem tabItem = widgetTabFolder.getItem(index);
+          selectedRepositoryTab = (RepositoryTab)tabItem.getData();
+          selectedRepositoryTab.repository.selected = true;
+        }
       }
     }
   }
 
+  /** select repository
+   * @param repositoryTab repository tab to select
+   */
   private void selectRepository(RepositoryTab repositoryTab)
   {
     // deselect previous repository
