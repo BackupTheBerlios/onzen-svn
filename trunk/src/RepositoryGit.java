@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -190,7 +190,7 @@ class RepositoryGit extends Repository
 
   /** commit files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
@@ -199,7 +199,7 @@ class RepositoryGit extends Repository
 
   /** add files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
   public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
@@ -209,7 +209,7 @@ class RepositoryGit extends Repository
 
   /** remove files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
@@ -228,7 +228,7 @@ class RepositoryGit extends Repository
   /** rename file
    * @param fileData file data to rename
    * @param newName new name
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException

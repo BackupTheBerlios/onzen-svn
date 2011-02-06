@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandDiff.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command show file diff
 * Systems: all
@@ -18,6 +18,7 @@
 //import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 //import java.util.Arrays;
 //import java.util.BitSet;
 //import java.util.Comparator;
@@ -108,12 +109,14 @@ class CommandDiff
    */
   class Data
   {
-    DiffData[]            diffData;           // diff data
-    String[]              revisionNames;      // revision names
-    DiffData.BlockTypes[] lineTypes;          // array with line block types
+    EnumSet<DiffData.Types> showTypes;          // diff types to show
+    DiffData[]              diffData;           // diff data
+    String[]                revisionNames;      // revision names
+    DiffData.Types[]        lineTypes;          // array with line block types
 
     Data()
     {
+      this.showTypes     = EnumSet.copyOf(Settings.diffShowTypes);
       this.diffData      = null;
       this.revisionNames = null;
       this.lineTypes     = null;
@@ -258,7 +261,7 @@ class CommandDiff
         {
           public void modified(Control control)
           {
-            control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
           }
         });
 
@@ -270,7 +273,7 @@ class CommandDiff
         {
           public void modified(Control control)
           {
-            control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
           }
         });
       }
@@ -292,7 +295,7 @@ class CommandDiff
         {
           public void modified(Control control)
           {
-            control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
           }
         });
 
@@ -401,7 +404,7 @@ class CommandDiff
       {
         public void modified(Control control)
         {
-          control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
+          if (!control.isDisposed()) control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
         }
       });
     }
@@ -435,7 +438,7 @@ class CommandDiff
       });
 
       widgetAdded = Widgets.newCheckbox(composite,"Added");
-      widgetAdded.setSelection(true);
+      widgetAdded.setSelection(data.showTypes.contains(DiffData.Types.ADDED));
       widgetAdded.setBackground(COLOR_DIFF_ADDED);
       Widgets.layout(widgetAdded,0,1,TableLayoutData.W);
       widgetAdded.addSelectionListener(new SelectionListener()
@@ -445,13 +448,23 @@ class CommandDiff
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          Button widget = (Button)selectionEvent.widget;
+
+          if (widget.getSelection())
+          {
+            data.showTypes.add(DiffData.Types.ADDED);
+          }
+          else
+          {
+            data.showTypes.remove(DiffData.Types.ADDED);
+          };
           Widgets.notify(dialog,USER_EVENT_REFRESH_COLORS);
         }
       });
       widgetAdded.setToolTipText("Show added lines.");
 
       widgetDeleted = Widgets.newCheckbox(composite,"Deleted");
-      widgetDeleted.setSelection(true);
+      widgetDeleted.setSelection(data.showTypes.contains(DiffData.Types.DELETED));
       widgetDeleted.setBackground(COLOR_DIFF_DELETED);
       Widgets.layout(widgetDeleted,0,2,TableLayoutData.W);
       widgetDeleted.addSelectionListener(new SelectionListener()
@@ -461,13 +474,23 @@ class CommandDiff
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          Button widget = (Button)selectionEvent.widget;
+
+          if (widget.getSelection())
+          {
+            data.showTypes.add(DiffData.Types.DELETED);
+          }
+          else
+          {
+            data.showTypes.remove(DiffData.Types.DELETED);
+          };
           Widgets.notify(dialog,USER_EVENT_REFRESH_COLORS);
         }
       });
       widgetDeleted.setToolTipText("Show deleted lines.");
 
       widgetChanged = Widgets.newCheckbox(composite,"Changed");
-      widgetChanged.setSelection(true);
+      widgetChanged.setSelection(data.showTypes.contains(DiffData.Types.CHANGED));
       widgetChanged.setBackground(COLOR_DIFF_CHANGED);
       Widgets.layout(widgetChanged,0,3,TableLayoutData.W);
       widgetChanged.addSelectionListener(new SelectionListener()
@@ -477,13 +500,23 @@ class CommandDiff
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          Button widget = (Button)selectionEvent.widget;
+
+          if (widget.getSelection())
+          {
+            data.showTypes.add(DiffData.Types.CHANGED);
+          }
+          else
+          {
+            data.showTypes.remove(DiffData.Types.CHANGED);
+          };
           Widgets.notify(dialog,USER_EVENT_REFRESH_COLORS);
         }
       });
       widgetChanged.setToolTipText("Show changed lines.");
 
       widgetChangedWhitespaces = Widgets.newCheckbox(composite,"Changed spaces");
-      widgetChangedWhitespaces.setSelection(false);
+      widgetChangedWhitespaces.setSelection(data.showTypes.contains(DiffData.Types.CHANGED_WHITESPACES));
       widgetChangedWhitespaces.setBackground(COLOR_DIFF_CHANGED_WHITESPACES);
       Widgets.layout(widgetChangedWhitespaces,0,4,TableLayoutData.W);
       widgetChangedWhitespaces.addSelectionListener(new SelectionListener()
@@ -493,6 +526,16 @@ class CommandDiff
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          Button widget = (Button)selectionEvent.widget;
+
+          if (widget.getSelection())
+          {
+            data.showTypes.add(DiffData.Types.CHANGED_WHITESPACES);
+          }
+          else
+          {
+            data.showTypes.remove(DiffData.Types.CHANGED_WHITESPACES);
+          };
           Widgets.notify(dialog,USER_EVENT_REFRESH_COLORS);
         }
       });
@@ -574,7 +617,8 @@ class CommandDiff
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Settings.geometryDiff = dialog.getSize();
+          Settings.geometryDiff  = dialog.getSize();
+          Settings.diffShowTypes = data.showTypes;
 
           Dialogs.close(dialog);
         }
@@ -1069,14 +1113,14 @@ Dprintf.dprintf("NYI");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        int                 topIndex = widgetTextLeft.getTopIndex();
-        DiffData.BlockTypes lineType = data.lineTypes[topIndex];
+        int            topIndex = widgetTextLeft.getTopIndex();
+        DiffData.Types lineType = data.lineTypes[topIndex];
 
         while ((topIndex >= 0) && (data.lineTypes[topIndex] == lineType))
         {
           topIndex--;
         }
-        while ((topIndex >= 0) && (data.lineTypes[topIndex] == DiffData.BlockTypes.NONE))
+        while ((topIndex >= 0) && (data.lineTypes[topIndex] == DiffData.Types.NONE))
         {
           topIndex--;
         }
@@ -1104,14 +1148,14 @@ Dprintf.dprintf("NYI");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        int                 topIndex = widgetTextLeft.getTopIndex();
-        DiffData.BlockTypes lineType = data.lineTypes[topIndex];
+        int            topIndex = widgetTextLeft.getTopIndex();
+        DiffData.Types lineType = data.lineTypes[topIndex];
 
         while ((topIndex < data.lineTypes.length) && (data.lineTypes[topIndex] == lineType))
         {
           topIndex++;
         }
-        while ((topIndex < data.lineTypes.length) && (data.lineTypes[topIndex] == DiffData.BlockTypes.NONE))
+        while ((topIndex < data.lineTypes.length) && (data.lineTypes[topIndex] == DiffData.Types.NONE))
         {
           topIndex++;
         }
@@ -1395,16 +1439,16 @@ Dprintf.dprintf("");
    * @param widgetVerticalScrollBarRight right vertical scrollbar widget
    * @return line block types array
    */
-  private DiffData.BlockTypes[] setText(DiffData[] diffData_,
-                                        Text       widgetLineNumbersLeft,
-                                        Text       widgetLineNumbersRight,
-                                        StyledText widgetTextLeft,
-                                        StyledText widgetTextRight,
-                                        ScrollBar  widgetHorizontalScrollBarLeft,
-                                        ScrollBar  widgetVerticalScrollBarLeft,
-                                        ScrollBar  widgetHorizontalScrollBarRight,
-                                        ScrollBar  widgetVerticalScrollBarRight
-                                       )
+  private DiffData.Types[] setText(DiffData[] diffData_,
+                                   Text       widgetLineNumbersLeft,
+                                   Text       widgetLineNumbersRight,
+                                   StyledText widgetTextLeft,
+                                   StyledText widgetTextRight,
+                                   ScrollBar  widgetHorizontalScrollBarLeft,
+                                   ScrollBar  widgetVerticalScrollBarLeft,
+                                   ScrollBar  widgetHorizontalScrollBarRight,
+                                   ScrollBar  widgetVerticalScrollBarRight
+                                  )
   {
     StringBuilder lineNumbersLeft  = new StringBuilder();
     StringBuilder lineNumbersRight = new StringBuilder();
@@ -1414,13 +1458,13 @@ Dprintf.dprintf("");
     int           lineNbLeft       = 1;
     int           lineNbRight      = 1;
     int           maxWidth         = 0;
-    ArrayList<DiffData.BlockTypes> lineTypeList = new ArrayList<DiffData.BlockTypes>();
+    ArrayList<DiffData.Types> lineTypeList = new ArrayList<DiffData.Types>();
 
     // get text
     for (DiffData diffData : diffData_)
     {
 //Dprintf.dprintf("diffData=%s",diffData);
-      switch (diffData.blockType)
+      switch (diffData.type)
       {
         case KEEP:
           assert(diffData.keepLines != null);
@@ -1435,12 +1479,12 @@ Dprintf.dprintf("");
 
             maxWidth = Math.max(maxWidth,line.length());
 
-            lineTypeList.add(DiffData.BlockTypes.NONE);
+            lineTypeList.add(DiffData.Types.NONE);
           }
 
           index += diffData.keepLines.length;
           break;
-        case ADD:
+        case ADDED:
           assert(diffData.addedLines != null);
 
           for (String line : diffData.addedLines)
@@ -1453,12 +1497,12 @@ Dprintf.dprintf("");
 
             maxWidth = Math.max(maxWidth,line.length());
 
-            lineTypeList.add(DiffData.BlockTypes.ADD);
+            lineTypeList.add(DiffData.Types.ADDED);
           }
 
           index += diffData.addedLines.length;
           break;
-        case DELETE:
+        case DELETED:
           assert(diffData.deletedLines != null);
 
           for (String line : diffData.deletedLines)
@@ -1471,12 +1515,13 @@ Dprintf.dprintf("");
 
             maxWidth = Math.max(maxWidth,line.length());
 
-            lineTypeList.add(DiffData.BlockTypes.DELETE);
+            lineTypeList.add(DiffData.Types.DELETED);
           }
 
           index += diffData.deletedLines.length;
           break;
-        case CHANGE:
+        case CHANGED:
+        case CHANGED_WHITESPACES:
           assert(diffData.addedLines != null);
           assert(diffData.deletedLines != null);
 
@@ -1510,7 +1555,7 @@ Dprintf.dprintf("");
 
           for (int z = 0; z < Math.max(diffData.deletedLines.length,diffData.addedLines.length); z++)
           {
-            lineTypeList.add(DiffData.BlockTypes.CHANGE);
+            lineTypeList.add(DiffData.Types.CHANGED);
           }
 
           index += Math.max(diffData.deletedLines.length,diffData.addedLines.length);
@@ -1563,7 +1608,7 @@ Dprintf.dprintf("");
     widgetVerticalScrollBarLeft.setSelection(0);
     widgetVerticalScrollBarRight.setSelection(0);
 
-    return lineTypeList.toArray(new DiffData.BlockTypes[lineTypeList.size()]);
+    return lineTypeList.toArray(new DiffData.Types[lineTypeList.size()]);
   }
 
   private boolean equalsIgnoreWhitespaces(String string1, String string2)
@@ -1634,7 +1679,7 @@ Dprintf.dprintf("");
     for (DiffData diffData : diffData_)
     {
 //Dprintf.dprintf("diffData=%s",diffData);
-      switch (diffData.blockType)
+      switch (diffData.type)
       {
         case KEEP:
           assert(diffData.keepLines != null);
@@ -1645,7 +1690,7 @@ Dprintf.dprintf("");
 
           index += n;
           break;
-        case ADD:
+        case ADDED:
           assert(diffData.addedLines != null);
 
           n = diffData.addedLines.length;
@@ -1661,7 +1706,7 @@ Dprintf.dprintf("");
 
           index += n;
           break;
-        case DELETE:
+        case DELETED:
           assert(diffData.deletedLines != null);
 
           n = diffData.deletedLines.length;
@@ -1677,7 +1722,8 @@ Dprintf.dprintf("");
 
           index += n;
           break;
-        case CHANGE:
+        case CHANGED:
+        case CHANGED_WHITESPACES:
           assert(diffData.addedLines != null);
           assert(diffData.deletedLines != null);
 
@@ -1874,7 +1920,7 @@ Dprintf.dprintf("");
       width = size.width-1;
       for (DiffData diffData : diffData_)
       {
-        switch (diffData.blockType)
+        switch (diffData.type)
         {
           case KEEP:
             assert(diffData.keepLines != null);
@@ -1883,7 +1929,7 @@ Dprintf.dprintf("");
 
             index += n;
             break;
-          case ADD:
+          case ADDED:
             assert(diffData.addedLines != null);
 
             n = diffData.addedLines.length;
@@ -1893,7 +1939,7 @@ Dprintf.dprintf("");
             {
               y      = (((size.height-1)*index)+textLineCount-1)/textLineCount;
               height = Math.max(((size.height-1)*n+textLineCount-1)/textLineCount,1);
-  //Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
+//Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
 
               gc.setBackground(backgroundDiffAdded);
               gc.fillRectangle(0,y,width,height);
@@ -1901,7 +1947,7 @@ Dprintf.dprintf("");
 
             index += n;
             break;
-          case DELETE:
+          case DELETED:
             assert(diffData.deletedLines != null);
 
             n = diffData.deletedLines.length;
@@ -1911,7 +1957,7 @@ Dprintf.dprintf("");
             {
               y      = (((size.height-1)*index)+textLineCount-1)/textLineCount;
               height = Math.max(((size.height-1)*n+textLineCount-1)/textLineCount,1);
-  //Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
+//Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
 
               gc.setBackground(backgroundDiffDeleted);
               gc.fillRectangle(0,y,width,height);
@@ -1919,7 +1965,8 @@ Dprintf.dprintf("");
 
             index += n;
             break;
-          case CHANGE:
+          case CHANGED:
+          case CHANGED_WHITESPACES:
             assert(diffData.addedLines != null);
             assert(diffData.deletedLines != null);
 
@@ -1939,7 +1986,7 @@ Dprintf.dprintf("");
                     // show changes
                     y      = (((size.height-1)*(index+z))+textLineCount-1)/textLineCount;
                     height = Math.max(((size.height-1)+textLineCount-1)/textLineCount,1);
-  //Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
+//Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
 
                     gc.setBackground(backgroundDiffChanged);
                     gc.fillRectangle(0,y,width,height);
@@ -1953,7 +2000,7 @@ Dprintf.dprintf("");
                     // show whitespace changes
                     y      = (((size.height-1)*(index+z))+textLineCount-1)/textLineCount;
                     height = Math.max(((size.height-1)+textLineCount-1)/textLineCount,1);
-  //Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
+//Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
 
                     gc.setBackground(backgroundDiffChangedWhitespaces);
                     gc.fillRectangle(0,y,width,height);
@@ -1961,13 +2008,16 @@ Dprintf.dprintf("");
                 }
               }
 
-              // draw bar for added/deleted lines
-              y      = (((size.height-1)*(index+m))+textLineCount-1)/textLineCount;
-              height = Math.max(((size.height-1)*(n-m)+textLineCount-1)/textLineCount,1);
-  //Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
+              if (n > m)
+              {
+                // draw bar for added/deleted lines
+                y      = (((size.height-1)*(index+m))+textLineCount-1)/textLineCount;
+                height = Math.max(((size.height-1)*(n-m)+textLineCount-1)/textLineCount,1);
+//Dprintf.dprintf("y=%d h=%d size.height=%d",y,height,size.height);
 
-              gc.setBackground(backgroundDiffChanged);
-              gc.fillRectangle(0,y,width,height);
+                gc.setBackground(backgroundDiffChanged);
+                gc.fillRectangle(0,y,width,height);
+              }
             }
 
             index += n;

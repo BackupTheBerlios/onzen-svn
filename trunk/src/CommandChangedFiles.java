@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command show changed files
 * Systems: all
@@ -15,21 +15,14 @@
 //import java.io.BufferedReader;
 //import java.io.IOException;
 
-//import java.text.SimpleDateFormat;
-
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
 import java.util.EnumSet;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
 //import java.util.ListIterator;
-//import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -212,7 +205,7 @@ class CommandChangedFiles
         label = Widgets.newLabel(subComposite,"Filter:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFilter = Widgets.newText(subComposite);
+        widgetFilter = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         widgetFilter.setText("*");
         Widgets.layout(widgetFilter,0,1,TableLayoutData.WE);
         widgetFilter.addSelectionListener(new SelectionListener()
@@ -230,19 +223,6 @@ class CommandChangedFiles
           public void modifyText(ModifyEvent modifyEvent)
           {
             Widgets.notify(dialog,USER_EVENT_FILTER);
-          }
-        });
-
-        button = Widgets.newButton(subComposite,Onzen.IMAGE_CLEAR);
-        Widgets.layout(button,0,2,TableLayoutData.E);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            widgetFilter.setText("*");
           }
         });
       }
