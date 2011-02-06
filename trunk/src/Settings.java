@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -423,6 +423,41 @@ public class Settings
 
   /** config value adapter String <-> file data state set
    */
+  class ConfigValueAdapterDiffTypes extends ConfigValueAdapter<String,EnumSet<DiffData.Types>>
+  {
+    public EnumSet<DiffData.Types> toValue(String string) throws Exception
+    {
+      EnumSet<DiffData.Types> enumSet = EnumSet.noneOf(DiffData.Types.class);
+
+      StringTokenizer tokenizer = new StringTokenizer(string,",");
+      while (tokenizer.hasMoreTokens())
+      {
+        enumSet.add(DiffData.Types.parse(tokenizer.nextToken()));
+      }
+
+      return enumSet;
+    }
+
+    public String toString(EnumSet<DiffData.Types> enumSet) throws Exception
+    {
+      StringBuilder buffer = new StringBuilder();
+
+      for (DiffData.Types state : enumSet)
+      {
+        String string = state.toString();
+        if (string != null)
+        {
+          if (buffer.length() > 0) buffer.append(',');
+          buffer.append(string);
+        }
+      }
+
+      return buffer.toString();
+    }
+  }
+
+  /** config value adapter String <-> file data state set
+   */
   class ConfigValueAdapterFileDataStates extends ConfigValueAdapter<String,EnumSet<FileData.States>>
   {
     public EnumSet<FileData.States> toValue(String string) throws Exception
@@ -444,8 +479,12 @@ public class Settings
 
       for (FileData.States state : enumSet)
       {
-        if (buffer.length() > 0) buffer.append(',');
-        buffer.append(state.toString());
+        String string = state.toString();
+        if (string != null)
+        {
+          if (buffer.length() > 0) buffer.append(',');
+          buffer.append(string);
+        }
       }
 
       return buffer.toString();
@@ -665,6 +704,10 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterFontData.class)
   public static FontData                fontDiffLine                   = null;
 
+  @ConfigComment(text={"","shown diff types"})
+  @ConfigValue(type=ConfigValueAdapterDiffTypes.class)
+  public static EnumSet<DiffData.Types> diffShowTypes                  = EnumSet.allOf(DiffData.Types.class);
+
   @ConfigComment(text={"","shown file states in changed file list"})
   @ConfigValue(type=ConfigValueAdapterFileDataStates.class)
   public static EnumSet<FileData.States> changedFilesShowStates        = EnumSet.allOf(FileData.States.class);
@@ -765,8 +808,27 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterEditor.class)
   public static Editor[]         editors                        = new Editor[0];
 
+  // general flags
+  @ConfigComment(text={"","flags"})
+  @ConfigValue
+  public static boolean          immediateCommit                = true;
+
   // CVS
+  @ConfigComment(text={"","CVS specific settings"})
+  @ConfigValue
   public static boolean          cvsPruneEmtpyDirectories       = false;
+
+  // SVN
+//  @ConfigComment(text={"","SVN specific settings"})
+//  @ConfigValue()
+
+  // HG
+  @ConfigComment(text={"","HG specific settings"})
+  @ConfigValue
+  public static boolean          hgImmediatePush                = false;
+
+  // Git
+//  @ConfigComment(text={"","Git specific settings"})
 
   // debug
   public static boolean          debugFlag                      = false;
