@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command remove files/directories
 * Systems: all
@@ -108,11 +108,13 @@ class CommandRemove
   {
     HashSet<FileData> fileDataSet;
     String            message;
+    boolean           immediateCommitFlag;
 
     Data()
     {
-      this.fileDataSet = new HashSet<FileData>();
-      this.message     = "";
+      this.fileDataSet         = new HashSet<FileData>();
+      this.message             = "";
+      this.immediateCommitFlag = false;
     }
   };
 
@@ -135,6 +137,7 @@ class CommandRemove
   private final List          widgetFiles;   
   private final List          widgetHistory; 
   private final Text          widgetMessage; 
+  private final Button        widgetImmediateCommit;  
   private final Button        widgetRemove;     
 
   // ------------------------ native functions ----------------------------
@@ -148,7 +151,7 @@ class CommandRemove
    */
   CommandRemove(RepositoryTab repositoryTab, final Shell shell, final Repository repository)
   {
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Button    button;
 
@@ -188,8 +191,37 @@ class CommandRemove
       Widgets.layout(label,4,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage.setEnabled(Settings.immediateCommit);
       Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
+      Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
+      {
+        public void modified(Control control)
+        {
+          if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
+        }
+      });
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to remove files.");
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,6,0,TableLayoutData.WE);
+      {
+        widgetImmediateCommit = Widgets.newCheckbox(subComposite,"immediate commit");
+        widgetImmediateCommit.setSelection(Settings.immediateCommit);
+        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.W);
+        widgetImmediateCommit.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            data.immediateCommitFlag = widgetImmediateCommit.getSelection();
+            Widgets.modified(data);
+          }
+        });
+        widgetImmediateCommit.setToolTipText("Select this checkbox to commit added files immediately.");
+      }
     }
 
     // buttons
@@ -208,9 +240,11 @@ class CommandRemove
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.message = widgetMessage.getText();
+          data.message             = widgetMessage.getText();
+          data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
-          Settings.geometryRemove = dialog.getSize();
+          Settings.geometryRemove  = dialog.getSize();
+          Settings.immediateCommit = widgetImmediateCommit.getSelection();
 
           Dialogs.close(dialog,true);
         }
@@ -335,6 +369,7 @@ class CommandRemove
     }
 
     // update
+    data.immediateCommitFlag = Settings.immediateCommit;
   }
 
   /** remove command
@@ -423,7 +458,7 @@ class CommandRemove
     try
     {
       // remove files
-      message = new Message(data.message);
+      if (data.immediateCommitFlag) message = new Message(data.message);
       repositoryTab.repository.remove(data.fileDataSet,message);
 
       // add message to history
@@ -453,7 +488,7 @@ class CommandRemove
     }
     finally
     {
-      message.done();
+      if (message != null) message.done();
       repositoryTab.clearStatusText();
     }
   }

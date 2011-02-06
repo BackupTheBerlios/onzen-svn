@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 * $Author: torsten $
 * Contents: command add files/directories
 * Systems: all
@@ -15,20 +15,13 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-//import java.text.SimpleDateFormat;
-
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
 //import java.util.ListIterator;
-//import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -108,13 +101,15 @@ class CommandAdd
   {
     HashSet<FileData> fileDataSet;
     String            message;
+    boolean           immediateCommitFlag;
     boolean           binaryFlag;
 
     Data()
     {
-      this.fileDataSet = new HashSet<FileData>();
-      this.message     = "";
-      this.binaryFlag  = false;
+      this.fileDataSet         = new HashSet<FileData>();
+      this.message             = "";
+      this.immediateCommitFlag = false;
+      this.binaryFlag          = false;
     }
   };
 
@@ -137,6 +132,7 @@ class CommandAdd
   private final List          widgetFiles;   
   private final List          widgetHistory; 
   private final Text          widgetMessage; 
+  private final Button        widgetImmediateCommit;  
   private final Button        widgetBinary;  
   private final Button        widgetAdd;     
 
@@ -151,7 +147,7 @@ class CommandAdd
    */
   CommandAdd(RepositoryTab repositoryTab, final Shell shell, final Repository repository)
   {
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Button    button;
 
@@ -191,12 +187,41 @@ class CommandAdd
       Widgets.layout(label,4,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage.setEnabled(Settings.immediateCommit);
       Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
+      Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
+      {
+        public void modified(Control control)
+        {
+          if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
+        }
+      });
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to add files.");
 
-      widgetBinary = Widgets.newCheckbox(composite,"binary");
-      Widgets.layout(widgetBinary,6,0,TableLayoutData.W);
-      widgetBinary.setToolTipText("Select this checkbox to add binary files.");
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,6,0,TableLayoutData.WE);
+      {
+        widgetImmediateCommit = Widgets.newCheckbox(subComposite,"immediate commit");
+        widgetImmediateCommit.setSelection(Settings.immediateCommit);
+        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.W);
+        widgetImmediateCommit.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            data.immediateCommitFlag = widgetImmediateCommit.getSelection();
+            Widgets.modified(data);
+          }
+        });
+        widgetImmediateCommit.setToolTipText("Select this checkbox to commit added files immediately.");
+
+        widgetBinary = Widgets.newCheckbox(subComposite,"binary");
+        Widgets.layout(widgetBinary,0,1,TableLayoutData.W);
+        widgetBinary.setToolTipText("Select this checkbox to add binary files.");
+      }
     }
 
     // buttons
@@ -215,10 +240,12 @@ class CommandAdd
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.message    = widgetMessage.getText();
-          data.binaryFlag = widgetBinary.getSelection();
+          data.message             = widgetMessage.getText();
+          data.immediateCommitFlag = widgetImmediateCommit.getSelection();
+          data.binaryFlag          = widgetBinary.getSelection();
 
-          Settings.geometryAdd = dialog.getSize();
+          Settings.geometryAdd     = dialog.getSize();
+          Settings.immediateCommit = widgetImmediateCommit.getSelection();
 
           Dialogs.close(dialog,true);
         }
@@ -343,6 +370,7 @@ class CommandAdd
     }
 
     // update
+    data.immediateCommitFlag = Settings.immediateCommit;
   }
 
   /** add command
@@ -431,7 +459,7 @@ class CommandAdd
     try
     {
       // add files
-      message = new Message(data.message);
+      if (data.immediateCommitFlag) message = new Message(data.message);
       repositoryTab.repository.add(data.fileDataSet,message,data.binaryFlag);
 
       // add message to history
@@ -461,7 +489,7 @@ class CommandAdd
     }
     finally
     {
-      message.done();
+      if (message != null) message.done();
       repositoryTab.clearStatusText();
     }
   }

@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRename.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command rename file/directory
 * Systems: all
@@ -109,13 +109,13 @@ class CommandRename
     FileData fileData;
     String   newFileName;
     String   message;
-    boolean  binaryFlag;
+    boolean  immediateCommitFlag;
 
     Data()
     {
-      this.newFileName = null;
-      this.message     = "";
-      this.binaryFlag  = false;
+      this.newFileName         = null;
+      this.message             = "";
+      this.immediateCommitFlag = false;
     }
   };
 
@@ -138,6 +138,7 @@ class CommandRename
   private final Text          widgetNewFileName;
   private final List          widgetHistory; 
   private final Text          widgetMessage; 
+  private final Button        widgetImmediateCommit;  
   private final Button        widgetRename;
 
   // ------------------------ native functions ----------------------------
@@ -202,8 +203,37 @@ class CommandRename
       Widgets.layout(label,3,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage.setEnabled(Settings.immediateCommit);
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
+      Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
+      {
+        public void modified(Control control)
+        {
+          if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
+        }
+      });
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to rename file.");
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,6,0,TableLayoutData.WE);
+      {
+        widgetImmediateCommit = Widgets.newCheckbox(subComposite,"immediate commit");
+        widgetImmediateCommit.setSelection(Settings.immediateCommit);
+        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.W);
+        widgetImmediateCommit.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            data.immediateCommitFlag = widgetImmediateCommit.getSelection();
+            Widgets.modified(data);
+          }
+        });
+        widgetImmediateCommit.setToolTipText("Select this checkbox to commit added files immediately.");
+      }
     }
 
     // buttons
@@ -222,10 +252,12 @@ class CommandRename
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.newFileName = widgetNewFileName.getText();
-          data.message     = widgetMessage.getText();
+          data.newFileName         = widgetNewFileName.getText();
+          data.message             = widgetMessage.getText();
+          data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
-          Settings.geometryRename = dialog.getSize();
+          Settings.geometryRename  = dialog.getSize();
+          Settings.immediateCommit = widgetImmediateCommit.getSelection();
 
           Dialogs.close(dialog,true);
         }
@@ -360,8 +392,9 @@ class CommandRename
     }
 
     // update
-    data.fileData    = fileData;
-    data.newFileName = fileData.getFileName();
+    data.fileData            = fileData;
+    data.newFileName         = fileData.getFileName();
+    data.immediateCommitFlag = Settings.immediateCommit;
     widgetNewFileName.setText(data.newFileName);
   }
 
@@ -420,7 +453,7 @@ class CommandRename
     try
     {
       // rename file
-      message = new Message(data.message);
+      if (data.immediateCommitFlag) message = new Message(data.message);
       repositoryTab.repository.rename(data.fileData,data.newFileName,message);
 
       // add message to history
@@ -455,7 +488,7 @@ class CommandRename
     }
     finally
     {
-      message.done();
+      if (message != null) message.done();
       repositoryTab.clearStatusText();
     }
   }
