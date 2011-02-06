@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -927,6 +927,11 @@ public class Settings
                             long value = Long.parseLong(string);
                             field.set(null,addArrayUniq((long[])field.get(null),value));
                           }
+                          else if (type == boolean.class)
+                          {
+                            boolean value = StringUtils.parseBoolean(string);
+                            field.set(null,addArrayUniq((boolean[])field.get(null),value));
+                          }
                           else if (type == String.class)
                           {
                             field.set(null,addArrayUniq((String[])field.get(null),StringUtils.unescape(string)));
@@ -966,6 +971,11 @@ Dprintf.dprintf("field.getType()=%s",type);
                           {
                             long value = Long.parseLong(string);
                             field.setLong(null,value);
+                          }
+                          else if (type == boolean.class)
+                          {
+                            boolean value = StringUtils.parseBoolean(string);
+                            field.setBoolean(null,value);
                           }
                           else if (type == String.class)
                           {
@@ -1108,6 +1118,13 @@ exception.printStackTrace();
                       output.printf("%s = %ld\n",name,value);
                     }
                   }
+                  else if (type == boolean.class)
+                  {
+                    for (boolean value : (boolean[])field.get(null))
+                    {
+                      output.printf("%s = %s\n",name,value ? "yes" : "no");
+                    }
+                  }
                   else if (type == String.class)
                   {
                     for (String value : (String[])field.get(null))
@@ -1150,6 +1167,11 @@ Dprintf.dprintf("field.getType()=%s",type);
                   {
                     long value = field.getLong(null);
                     output.printf("%s = %ld\n",name,value);
+                  }
+                  else if (type == boolean.class)
+                  {
+                    boolean value = field.getBoolean(null);
+                    output.printf("%s = %s\n",name,value ? "yes" : "no");
                   }
                   else if (type == String.class)
                   {
@@ -1258,6 +1280,27 @@ exception.printStackTrace();
    * @return extended array or array
    */
   private static long[] addArrayUniq(long[] array, long n)
+  {
+    int z = 0;
+    while ((z < array.length) && (array[z] != n))
+    {
+      z++;
+    }
+    if (z >= array.length)
+    {
+      array = Arrays.copyOf(array,array.length+1);
+      array[array.length-1] = n;
+    }
+
+    return array;
+  }
+
+  /** unique add element to long array
+   * @param array array
+   * @param n element
+   * @return extended array or array
+   */
+  private static boolean[] addArrayUniq(boolean[] array, boolean n)
   {
     int z = 0;
     while ((z < array.length) && (array[z] != n))
