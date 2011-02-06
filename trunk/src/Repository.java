@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -475,61 +475,6 @@ class FileDataComparator implements Comparator<FileData>
 
 // ------------------------------------------------------------------------
 
-/** branch data
- */
-class BranchData
-{
-  // --------------------------- constants --------------------------------
-
-  // --------------------------- variables --------------------------------
-  public final String         name;
-  public final Date           date;
-  public final String         author;
-  public final String[]       commitMessage;
-  public final RevisionData[] revisionDataTree;
-
-  // ------------------------ native functions ----------------------------
-
-  // ---------------------------- methods ---------------------------------
-
-  /** create branch data
-   * @param revision revision
-   * @param date date
-   * @param author author name
-   * @param commitMessage commit message
-   * @param revisionDataTree branch revision data tree
-   */
-  public BranchData(String name, Date date, String author, String[] commitMessage, RevisionData[] revisionDataTree)
-  {
-    this.name             = name;
-    this.date             = date;
-    this.author           = author;
-    this.commitMessage    = commitMessage;
-    this.revisionDataTree = revisionDataTree;
-  }
-
-  /** create branch data
-   * @param revision revision
-   * @param date date
-   * @param author author name
-   * @param commitMessage commit message
-   */
-  public BranchData(String revision, Date date, String author, String[] commitMessage)
-  {
-    this(revision,date,author,commitMessage,null);
-  }
-
-  /** convert data to string
-   * @return string
-   */
-  public String toString()
-  {
-    return "BranchData {"+name+", date: "+date+", author: "+author+", message: "+commitMessage+", revisions: "+revisionDataTree+"}";
-  }
-}
-
-// ------------------------------------------------------------------------
-
 /** diff data
  */
 class DiffData
@@ -733,6 +678,61 @@ class DiffData
 
 // ------------------------------------------------------------------------
 
+/** branch data
+ */
+class BranchData
+{
+  // --------------------------- constants --------------------------------
+
+  // --------------------------- variables --------------------------------
+  public final String         name;
+  public final Date           date;
+  public final String         author;
+  public final String[]       commitMessage;
+  public final RevisionData[] revisionDataTree;
+
+  // ------------------------ native functions ----------------------------
+
+  // ---------------------------- methods ---------------------------------
+
+  /** create branch data
+   * @param revision revision
+   * @param date date
+   * @param author author name
+   * @param commitMessage commit message
+   * @param revisionDataTree branch revision data tree
+   */
+  public BranchData(String name, Date date, String author, String[] commitMessage, RevisionData[] revisionDataTree)
+  {
+    this.name             = name;
+    this.date             = date;
+    this.author           = author;
+    this.commitMessage    = commitMessage;
+    this.revisionDataTree = revisionDataTree;
+  }
+
+  /** create branch data
+   * @param revision revision
+   * @param date date
+   * @param author author name
+   * @param commitMessage commit message
+   */
+  public BranchData(String revision, Date date, String author, String[] commitMessage)
+  {
+    this(revision,date,author,commitMessage,null);
+  }
+
+  /** convert data to string
+   * @return string
+   */
+  public String toString()
+  {
+    return "BranchData {"+name+", date: "+date+", author: "+author+", message: "+commitMessage+", revisions: "+revisionDataTree+"}";
+  }
+}
+
+// ------------------------------------------------------------------------
+
 /** revision data
  */
 class RevisionData
@@ -775,11 +775,37 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
+   * @param branches branches
+   */
+  public RevisionData(String revision, String symbolicName, Date date, String author, AbstractList<String> commitMessageList, BranchData[] branches)
+  {
+    this(revision,symbolicName,date,author,commitMessageList.toArray(new String[commitMessageList.size()]),branches);
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param symbolicName symbolic name of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessage commit message
    * @param branch branch
    */
   public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage, BranchData branchData)
   {
     this(revision,symbolicName,date,author,commitMessage,new BranchData[]{branchData});
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param symbolicName symbolic name of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessage commit message
+   * @param branch branch
+   */
+  public RevisionData(String revision, String symbolicName, Date date, String author, AbstractList<String> commitMessageList, BranchData branchData)
+  {
+    this(revision,symbolicName,date,author,commitMessageList,new BranchData[]{branchData});
   }
 
   /** create revision data
@@ -791,6 +817,35 @@ class RevisionData
   public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage)
   {
     this(revision,symbolicName,date,author,commitMessage,new BranchData[]{});
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param date date
+   * @param author author name
+   * @param commitMessageList commit message
+   */
+  public RevisionData(String revision, String symbolicName, Date date, String author, AbstractList<String> commitMessageList)
+  {
+    this(revision,symbolicName,date,author,commitMessageList,new BranchData[]{});
+  }
+
+  /** get revision text for display
+   * @return revision text
+   */
+  public String getRevisionText()
+  {
+    StringBuilder buffer = new StringBuilder();
+
+    buffer.append(revision);
+    if (symbolicName != null)
+    {
+      buffer.append(" (");
+      buffer.append(symbolicName);
+      buffer.append(")");
+    }
+
+    return buffer.toString();
   }
 
   /** add branch
@@ -1214,8 +1269,7 @@ abstract class Repository implements Serializable
     for (FileData fileData : fileDataSet)
     {
       String directory = fileData.getDirectoryName();
-//      fileDirectoryHashSet.add(!directory.isEmpty() ? directory : null);
-      fileDirectoryHashSet.add(directory);
+      fileDirectoryHashSet.add(!directory.isEmpty() ? directory : null);
     }
 
     updateStates(fileDataSet,fileDirectoryHashSet,addNewFlag);
