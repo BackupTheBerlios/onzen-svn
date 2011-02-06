@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryHG.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: Mecurial repository functions
 * Systems: all
@@ -37,37 +37,30 @@ import java.util.LinkedList;
  */
 class RepositoryHG extends Repository
 {
-  /** revision info data
+  /** HG revision data
    */
-  class RevisionInfo
+  class RevisionDataHG extends RevisionData
   {
-    final String   revision;
-//    final String   symbolicName;
-    final Date     date;
-    final String   author;
-    final String[] commitMessage;
-//    final String[] branchRevisions;
+    private String changeSet;
 
-    /** create revision info
-     * @param revision revision string
+    /** create HG revision data
+     * @param revision revision
      * @param date date
      * @param author author name
-     * @param branchRevisions branch revisions
-     * @param commitMessage commit message lines
+     * @param commitMessageList commit message
      */
-    RevisionInfo(String               revision,
-                 Date                 date,
-                 String               author,
-                 AbstractList<String> branchRevisions,
-                 AbstractList<String> commitMessage
-                )
+    public RevisionDataHG(String revision, String changeSet, String symbolicName, Date date, String author, AbstractList<String> commitMessageList)
     {
-      this.revision        = revision;
-//      this.symbolicName    = symbolicName;
-      this.date            = date;
-      this.author          = author;
-//      this.branchRevisions = branchRevisions.toArray(new String[branchRevisions.size()]);
-      this.commitMessage   = commitMessage.toArray(new String[commitMessage.size()]);
+      super(revision,symbolicName,date,author,commitMessageList);
+      this.changeSet = changeSet;
+    }
+
+    /** get revision text for display
+     * @return revision text
+     */
+    public String getRevisionText()
+    {
+      return revision+" ("+changeSet+")";
     }
 
     /** convert data to string
@@ -75,7 +68,7 @@ class RepositoryHG extends Repository
      */
     public String toString()
     {
-      return "Revision info {revision: "+revision+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
+      return "HG revision data {revision: "+revision+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
     }
   }
 
@@ -342,17 +335,7 @@ Dprintf.dprintf("new name=%s",name);
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionInfo revisionInfo = parseLogData(exec);
-        if (revisionInfo != null)
-        {
-          revisionData = new RevisionData(revisionInfo.revision,
-                                          "",
-                                          revisionInfo.date,
-                                          revisionInfo.author,
-                                          revisionInfo.commitMessage
-                                         );
-                                          
-        }
+        revisionData = parseLogData(exec);
       }
 
       // done
@@ -373,7 +356,44 @@ Dprintf.dprintf("new name=%s",name);
   public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException
   {
-    return null;
+    LinkedList<RevisionDataHG> revisionDataList = new LinkedList<RevisionDataHG>();
+
+    // get revision info list
+    Command command = new Command(); 
+    Exec    exec;                    
+    try
+    {
+      // get log
+      command.clear();
+      command.append(HG_COMMAND,"-y","-v","log","--template","{rev} {node|short} {date|isodate} {author|user} {branches}\\n{desc}\\n-----\\n");
+      command.append("--");
+      command.append(fileData.getFileName());
+      exec = new Exec(rootPath,command);
+
+      // parse header
+      if (parseLogHeader(exec))
+      {
+        // parse data
+        RevisionDataHG revisionData;
+        while ((revisionData = parseLogData(exec)) != null)
+        {
+          // add revision info entry
+          revisionDataList.add(revisionData);
+        }
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+//for (RevisionDataHG revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+
+    // create revision data tree (=list of revisions)
+    return revisionDataList.toArray(new RevisionData[revisionDataList.size()]);
+
   }
 
   /** get file data (text lines)
@@ -818,14 +838,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionInfo revisionInfo;
-        while ((revisionInfo = parseLogData(exec)) != null)
+        RevisionDataHG revisionData;
+        while ((revisionData = parseLogData(exec)) != null)
         {
           // add log info entry
-          logDataList.add(new LogData(revisionInfo.revision,
-                                      revisionInfo.date,
-                                      revisionInfo.author,
-                                      revisionInfo.commitMessage
+          logDataList.add(new LogData(revisionData.revision,
+                                      revisionData.date,
+                                      revisionData.author,
+                                      revisionData.commitMessage
                                      )
                          );
         }
@@ -838,7 +858,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       throw new RepositoryException(exception);
     }
-//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//for (RevisionDataHG revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
@@ -1253,18 +1273,18 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    * @param symbolicNamesMap symbolic names map
    * @return revision info or null
    */
-  private RevisionInfo parseLogData(Exec exec)
+  private RevisionDataHG parseLogData(Exec exec)
     throws IOException
   {
     final Pattern PATTERN_REVISION = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(\\S+)\\s+(.*)",Pattern.CASE_INSENSITIVE);
 
-    RevisionInfo       revisionInfo = null;
+    RevisionDataHG     revisionData = null;
 
     boolean            dataDone      = false;
     Matcher            matcher;
     String             line;                  
     String             revision      = null;
-    String             id            = null;
+    String             changeSet     = null;
     Date               date          = null;
     String             author        = null;
     String             branches      = null;
@@ -1281,11 +1301,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       else if ((matcher = PATTERN_REVISION.matcher(line)).matches())
       {
         // revision
-        revision = matcher.group(1);
-        id       = matcher.group(2);
-        date     = parseDate(matcher.group(3));
-        author   = matcher.group(4);
-        branches = matcher.group(4);
+        revision  = matcher.group(1);
+        changeSet = matcher.group(2);
+        date      = parseDate(matcher.group(3));
+        author    = matcher.group(4);
+        branches  = matcher.group(4);
 
         // get commit message lines
         while (  ((line = exec.getStdout()) != null)
@@ -1308,18 +1328,19 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
 
         // add log info entry
-        revisionInfo = new RevisionInfo(revision,
-                                        date,
-                                        author,
-                                        null,
-                                        commitMessage
-                                       );
+        revisionData = new RevisionDataHG(revision,
+                                          changeSet,
+                                          "",
+                                          date,
+                                          author,
+                                          commitMessage
+                                         );
         dataDone = true;
       }
     }
-//Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//Dprintf.dprintf("revisionData=%s",revisionData);
 
-    return revisionInfo;
+    return revisionData;
   }
 }
 

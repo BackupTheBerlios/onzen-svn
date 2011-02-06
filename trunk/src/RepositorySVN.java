@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: Apache Subversion (SVN) repository
 * Systems: all
@@ -37,14 +37,10 @@ import java.util.regex.Matcher;
  */
 class RepositorySVN extends Repository
 {
-  /** revision info data
+  /** SVN revision data
    */
-  class RevisionInfo
+  class RevisionDataSVN extends RevisionData
   {
-    final String   revision;
-    final Date     date;
-    final String   author;
-    final String[] commitMessage;
     final String[] fileNames;
 
     /** create revision info
@@ -54,18 +50,15 @@ class RepositorySVN extends Repository
      * @param commitMessage commit message lines
      * @param fileNameList file name list
      */
-    RevisionInfo(String               revision,
-                 Date                 date,
-                 String               author,
-                 AbstractList<String> commitMessage,
-                 AbstractList<String> fileNameList
-                )
+    RevisionDataSVN(String               revision,
+                    Date                 date,
+                    String               author,
+                    AbstractList<String> commitMessage,
+                    AbstractList<String> fileNameList
+                   )
     {
-      this.revision      = revision;
-      this.date          = date;
-      this.author        = author;
-      this.commitMessage = commitMessage.toArray(new String[commitMessage.size()]);
-      this.fileNames     = fileNameList.toArray(new String[fileNameList.size()]);
+      super(revision,"",date,author,commitMessage);
+      this.fileNames = fileNameList.toArray(new String[fileNameList.size()]);
     }
 
     /** convert data to string
@@ -73,7 +66,7 @@ class RepositorySVN extends Repository
      */
     public String toString()
     {
-      return "Revision info {revision: "+revision+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
+      return "SVN revision data {revision: "+revision+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
     }
   }
 
@@ -363,17 +356,7 @@ Dprintf.dprintf("file=%s",fileData);
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionInfo revisionInfo = parseLogData(exec);
-        if (revisionInfo != null)
-        {
-          revisionData = new RevisionData(revisionInfo.revision,
-                                          "",
-                                          revisionInfo.date,
-                                          revisionInfo.author,
-                                          revisionInfo.commitMessage
-                                         );
-                                          
-        }
+        revisionData = parseLogData(exec);
       }
 
       // done
@@ -394,7 +377,7 @@ Dprintf.dprintf("file=%s",fileData);
   public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException
   {
-    LinkedList<RevisionInfo> revisionInfoList = new LinkedList<RevisionInfo>();
+    LinkedList<RevisionDataSVN> revisionDataList = new LinkedList<RevisionDataSVN>();
 
     // get revision info list
     Command command = new Command(); 
@@ -412,11 +395,11 @@ Dprintf.dprintf("file=%s",fileData);
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionInfo revisionInfo;
-        while ((revisionInfo = parseLogData(exec)) != null)
+        RevisionDataSVN revisionData;
+        while ((revisionData = parseLogData(exec)) != null)
         {
-          // add log info entry
-          revisionInfoList.add(revisionInfo);
+          // add revision info entry
+          revisionDataList.add(revisionData);
         }
       }
 
@@ -427,21 +410,9 @@ Dprintf.dprintf("file=%s",fileData);
     {
       throw new RepositoryException(exception);
     }
-//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//for (RevisionDataSVN revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
-    // create revision data list
-    ArrayList<RevisionData> revisionDataList = new ArrayList<RevisionData>();
-    for (RevisionInfo revisionInfo : revisionInfoList)
-    {
-       revisionDataList.add(new RevisionData(revisionInfo.revision,
-                                             "",
-                                             revisionInfo.date,
-                                             revisionInfo.author,
-                                             revisionInfo.commitMessage
-                                            )
-                           );
-    }
-
+    // create revision data tree (=list of revisions)
     return revisionDataList.toArray(new RevisionData[revisionDataList.size()]);
   }
 
@@ -895,14 +866,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionInfo revisionInfo;
-        while ((revisionInfo = parseLogData(exec)) != null)
+        RevisionDataSVN revisionData;
+        while ((revisionData = parseLogData(exec)) != null)
         {
           // add log info entry
-          logDataList.add(new LogData(revisionInfo.revision,
-                                      revisionInfo.date,
-                                      revisionInfo.author,
-                                      revisionInfo.commitMessage
+          logDataList.add(new LogData(revisionData.revision,
+                                      revisionData.date,
+                                      revisionData.author,
+                                      revisionData.commitMessage
                                      )
                          );
         }
@@ -916,7 +887,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       throw new RepositoryException(exception);
     }
-//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//for (RevisionDataSVN revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
@@ -1316,7 +1287,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
    * @param symbolicNamesMap symbolic names map
    * @return revision info or null
    */
-  private RevisionInfo parseLogData(Exec exec)
+  private RevisionDataSVN parseLogData(Exec exec)
     throws IOException
 //    throws RepositoryException
 
@@ -1324,7 +1295,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     final Pattern PATTERN_REVISION = Pattern.compile("^r(\\d+)\\s*\\|\\s*(\\S*)\\s*\\|\\s*(\\S*\\s+\\S*\\s+\\S*).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_FILE     = Pattern.compile("^\\s*?\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
 
-    RevisionInfo       revisionInfo = null;
+    RevisionDataSVN    revisionData = null;
 
     boolean            dataDone      = false;
     Matcher            matcher;
@@ -1382,18 +1353,18 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
         }
 
         // add log info entry
-        revisionInfo = new RevisionInfo(revision,
-                                        date,
-                                        author,
-                                        commitMessage,
-                                        fileNameList
-                                       );
+        revisionData = new RevisionDataSVN(revision,
+                                           date,
+                                           author,
+                                           commitMessage,
+                                           fileNameList
+                                          );
         dataDone = true;
       }
     }
-//Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//Dprintf.dprintf("revisionData=%s",revisionData);
 
-    return revisionInfo;
+    return revisionData;
   }
 }
 

@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: CVS repository functions
 * Systems: all
@@ -51,19 +51,14 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
  */
 class RepositoryCVS extends Repository
 {
-  /** revision info data
+  /** CVS revision data
    */
-  class RevisionInfo
+  class RevisionDataCVS extends RevisionData
   {
-    final String   revision;
     final int[]    revisionNumbers;
-    final String   symbolicName;
-    final Date     date;
-    final String   author;
-    final String[] commitMessage;
     final String[] branchRevisions;
 
-    /** create revision info
+    /** create CVS revision data
      * @param revision revision string
      * @param revisionNumbers revision numbers
      * @param symbolicName symbolic name of revision
@@ -72,26 +67,43 @@ class RepositoryCVS extends Repository
      * @param branchRevisions branch revisions
      * @param commitMessage commit message lines
      */
-    RevisionInfo(String                revision,
-                 AbstractList<Integer> revisionNumbers,
-                 String                symbolicName,
-                 Date                  date,
-                 String                author,
-                 AbstractList<String>  branchRevisions,
-                 AbstractList<String>  commitMessage
-                )
+    RevisionDataCVS(String                revision,
+                    AbstractList<Integer> revisionNumbers,
+                    String                symbolicName,
+                    Date                  date,
+                    String                author,
+                    AbstractList<String>  branchRevisions,
+                    AbstractList<String>  commitMessage
+                   )
     {
-      this.revision        = revision;
+      super(revision,symbolicName,date,author,commitMessage);
+
       this.revisionNumbers = new int[revisionNumbers.size()];
       for (int z = 0; z < revisionNumbers.size(); z++)
       {
         this.revisionNumbers[z] = revisionNumbers.get(z).intValue();
       }
-      this.symbolicName    = symbolicName;
-      this.date            = date;
-      this.author          = author;
       this.branchRevisions = branchRevisions.toArray(new String[branchRevisions.size()]);
-      this.commitMessage   = commitMessage.toArray(new String[commitMessage.size()]);
+    }
+
+    /** create CVS revision data
+     * @param revision revision string
+     * @param symbolicName symbolic name of revision
+     * @param date date
+     * @param author author name
+     * @param commitMessage commit message lines
+     */
+    RevisionDataCVS(String   revision,
+                    int[]    revisionNumbers,
+                    String   symbolicName,
+                    Date     date,
+                    String   author,
+                    String[] commitMessage
+                   )
+    {
+      super(revision,symbolicName,date,author,commitMessage);
+      this.revisionNumbers = revisionNumbers;
+      this.branchRevisions = null;
     }
 
     /** convert data to string
@@ -99,7 +111,7 @@ class RepositoryCVS extends Repository
      */
     public String toString()
     {
-      return "Revision info {revision: "+revision+", name: "+symbolicName+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
+      return "CVS revision info {revision: "+revision+", name: "+symbolicName+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
     }
   }
 
@@ -143,13 +155,14 @@ class RepositoryCVS extends Repository
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, boolean addNewFlag)
   {
-    final Pattern PATTERN_COMPLETE1           = Pattern.compile("^\\s*File:.*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_COMPLETE2           = Pattern.compile("^\\?\\s*(\\S*).*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_UNKNOWN             = Pattern.compile("^\\?\\s+.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_COMPLETE            = Pattern.compile("^\\s*File:.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_FILE_STATUS1        = Pattern.compile("^\\s*File:\\s*no\\s+file\\s+(.*?)\\s+Status:\\s*(.*?)\\s*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_FILE_STATUS2        = Pattern.compile("^\\s*File:\\s*(.*?)\\s+Status:\\s*(.*?)\\s*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_WORKING_REVISION1   = Pattern.compile("^.*Working revision:\\s*no.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_WORKING_REVISION2   = Pattern.compile("^.*Working revision:\\s*(\\S*).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_REPOSITORY_REVISION = Pattern.compile("^.*Repository revision:\\s*(\\S*).*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_COMMIT_IDENTIFIER   = Pattern.compile("^.*Commit Identifier:.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STICKY_TAG          = Pattern.compile("^.*Sticky Tag:\\s*(\\S*).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STICKY_DATE1        = Pattern.compile("^.*Sticky Date:\\s*(\\S*).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STICKY_DATE2        = Pattern.compile("^.*(\\d*\\.\\d*\\.\\d*)\\.(\\d*\\.\\d*\\.\\d*).*",Pattern.CASE_INSENSITIVE);
@@ -174,7 +187,7 @@ class RepositoryCVS extends Repository
       {
         // get status
         command.clear();
-        command.append(CVS_COMMAND,"status");
+        command.append(CVS_COMMAND,"status","-l");
         command.append("--");
         if (directory != null) command.append(directory);
         exec = new Exec(rootPath,command);
@@ -184,40 +197,38 @@ class RepositoryCVS extends Repository
         {
 //Dprintf.dprintf("line=%s",line);
           // check if one entry is complete
-          if (   (   PATTERN_COMPLETE1.matcher(line).matches()
-                  || PATTERN_COMPLETE2.matcher(line).matches()
-//                  || exec.eof()
-                 )
-              && (baseName != null)
-             )
+          if (PATTERN_COMPLETE.matcher(line).matches())
           {
-            fileData = findFileData(fileDataSet,directory,baseName);
-            if      (fileData != null)
+            if (baseName != null)
             {
-              fileData.state              = state;
-              fileData.mode               = mode;
-              fileData.workingRevision    = workingRevision;
-              fileData.repositoryRevision = repositoryRevision;
-              fileData.branch             = branch;
-            }
-            else if (addNewFlag)
-            {
-              // get file type, size, date/time
-              File file = new File(rootPath,baseName);
-              FileData.Types type     = getFileType(file);
-              long           size     = file.length();
-              long           datetime = file.lastModified();
+              fileData = findFileData(fileDataSet,directory,baseName);
+              if      (fileData != null)
+              {
+                fileData.state              = state;
+                fileData.mode               = mode;
+                fileData.workingRevision    = workingRevision;
+                fileData.repositoryRevision = repositoryRevision;
+                fileData.branch             = branch;
+              }
+              else if (addNewFlag)
+              {
+                // get file type, size, date/time
+                File file = new File(rootPath,baseName);
+                FileData.Types type     = getFileType(file);
+                long           size     = file.length();
+                long           datetime = file.lastModified();
 
-              // create file data
-              fileData = new FileData(directory+File.separator+baseName,
-                                      type,
-                                      state,
-                                      mode,
-                                      size,
-                                      datetime
-                                     );
+                // create file data
+                fileData = new FileData(directory+File.separator+baseName,
+                                        type,
+                                        state,
+                                        mode,
+                                        size,
+                                        datetime
+                                       );
 //???
 //Dprintf.dprintf("");
+              }
             }
 
             baseName           = null;
@@ -228,8 +239,14 @@ class RepositoryCVS extends Repository
             branch             = "";
           }
 
+          // unknown file
+          if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
+          {
+            // ignored
+          }
+
           // match name, state
-          if      ((matcher = PATTERN_FILE_STATUS1.matcher(line)).matches())
+          else if ((matcher = PATTERN_FILE_STATUS1.matcher(line)).matches())
           {
             state = parseState(matcher.group(1));
           }
@@ -240,7 +257,7 @@ class RepositoryCVS extends Repository
           }
 
           // match working revision
-          if      ((matcher = PATTERN_WORKING_REVISION1.matcher(line)).matches())
+          else if ((matcher = PATTERN_WORKING_REVISION1.matcher(line)).matches())
           {
             workingRevision = "";
           }
@@ -250,13 +267,19 @@ class RepositoryCVS extends Repository
           }
 
           // match repository revision
-          if ((matcher = PATTERN_REPOSITORY_REVISION.matcher(line)).matches())
+          else if ((matcher = PATTERN_REPOSITORY_REVISION.matcher(line)).matches())
           {
             repositoryRevision = matcher.group(1);
           }
 
+          // commit idenitifier
+          else if ((matcher = PATTERN_COMMIT_IDENTIFIER.matcher(line)).matches())
+          {
+            // ignored
+          }
+
           // match sticky tag/date (branch)
-          if      ((matcher = PATTERN_STICKY_TAG.matcher(line)).matches())
+          else if ((matcher = PATTERN_STICKY_TAG.matcher(line)).matches())
           {
             branch = (!matcher.group(1).equals("(none)")) ? matcher.group(1) : "";
           }
@@ -277,7 +300,7 @@ class RepositoryCVS extends Repository
           }
 
           // match sticky options
-          if ((matcher = PATTERN_STICKY_OPTIONS.matcher(line)).matches())
+          else if ((matcher = PATTERN_STICKY_OPTIONS.matcher(line)).matches())
           {
             if      (matcher.group(1).equals("-kb" )) mode = FileData.Modes.BINARY;
             else if (matcher.group(1).equals("-ko" )) mode = FileData.Modes.BINARY;
@@ -286,11 +309,27 @@ class RepositoryCVS extends Repository
           }
 
           // match tags
-          if ((matcher = PATTERN_EXISTING_TAGS.matcher(line)).matches())
+          else if ((matcher = PATTERN_EXISTING_TAGS.matcher(line)).matches())
           {
             tags.clear();
           }
+
+          else if (line.isEmpty())
+          {
+            // ignored
+          }
+          else if (line.startsWith("====="))
+          {
+            // ignored
+          }
+
+          else
+          {
+            // unknown line
+            Onzen.printWarning("No match for line '%s'",line);
+          }
         }
+//while ((line = exec.getStderr()) != null) Dprintf.dprintf("err %s",line);
 
         // done
         exec.done();
@@ -381,8 +420,8 @@ Dprintf.dprintf("file=%s",fileData);
     ArrayList<String> revisionList = new ArrayList<String>();
 
     // get revision info list
-    HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
-    Command                command          = new Command(); 
+    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+    Command                command        = new Command(); 
     Exec                   exec;                    
     try
     {
@@ -394,14 +433,14 @@ Dprintf.dprintf("file=%s",fileData);
       exec = new Exec(rootPath,command);
 
       // parse header
-      if (parseLogHeader(exec,symbolicNamesMap))
+      if (parseLogHeader(exec,branchNamesMap))
       {
         // parse data
-        RevisionInfo revisionInfo;
-        while ((revisionInfo = parseLogData(exec,symbolicNamesMap)) != null)
+        RevisionDataCVS revisionData;
+        while ((revisionData = parseLogData(exec,branchNamesMap)) != null)
         {
           // add log info entry
-          revisionList.add(revisionInfo.revision);
+          revisionList.add(revisionData.revision);
         }
       }
 
@@ -412,7 +451,7 @@ Dprintf.dprintf("file=%s",fileData);
     {
       throw new RepositoryException(exception);
     }
-//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
     // convert to array and sort
     String[] revisions = revisionList.toArray(new String[revisionList.size()]);
@@ -459,12 +498,12 @@ Dprintf.dprintf("file=%s",fileData);
   public RevisionData getRevisionData(FileData fileData, String revision)
     throws RepositoryException
   {
-    RevisionData revisionData = null;
+    RevisionDataCVS revisionDataCVS = null;
 
     // get revision data
-    Command                command = new Command(); 
+    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+    Command                command        = new Command(); 
     Exec                   exec;                    
-    HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
     try
     {
       // get single log entry
@@ -475,20 +514,10 @@ Dprintf.dprintf("file=%s",fileData);
       exec = new Exec(rootPath,command);
 
       // parse header
-      if (parseLogHeader(exec,symbolicNamesMap))
+      if (parseLogHeader(exec,branchNamesMap))
       {
         // parse data
-        RevisionInfo revisionInfo = parseLogData(exec,symbolicNamesMap);
-        if (revisionInfo != null)
-        {
-          revisionData = new RevisionData(revisionInfo.revision,
-                                          symbolicNamesMap.get(revisionInfo.revision),
-                                          revisionInfo.date,
-                                          revisionInfo.author,
-                                          revisionInfo.commitMessage
-                                         );
-                                          
-        }
+        revisionDataCVS = parseLogData(exec,branchNamesMap);
       }
 
       // done
@@ -499,7 +528,7 @@ Dprintf.dprintf("file=%s",fileData);
       throw new RepositoryException(exception);
     }
 
-    return revisionData;
+    return revisionDataCVS;
   }
 
   /** get revision data tree
@@ -509,11 +538,11 @@ Dprintf.dprintf("file=%s",fileData);
   public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException
   {
-    LinkedList<RevisionInfo> revisionInfoList = new LinkedList<RevisionInfo>();
+    LinkedList<RevisionDataCVS> revisionDataList = new LinkedList<RevisionDataCVS>();
 
     // get revision info list
-    HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
-    Command                command = new Command(); 
+    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+    Command                command        = new Command(); 
     Exec                   exec;                    
     try
     {
@@ -525,14 +554,14 @@ Dprintf.dprintf("file=%s",fileData);
       exec = new Exec(rootPath,command);
 
       // parse header
-      if (parseLogHeader(exec,symbolicNamesMap))
+      if (parseLogHeader(exec,branchNamesMap))
       {
         // parse data
-        RevisionInfo revisionInfo;
-        while ((revisionInfo = parseLogData(exec,symbolicNamesMap)) != null)
+        RevisionDataCVS revisionData;
+        while ((revisionData = parseLogData(exec,branchNamesMap)) != null)
         {
           // add log info entry
-          revisionInfoList.add(revisionInfo);
+          revisionDataList.add(revisionData);
         }
       }
 
@@ -543,10 +572,10 @@ Dprintf.dprintf("file=%s",fileData);
     {
       throw new RepositoryException(exception);
     }
-//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
-    // create revision tree
-    return createRevisionTree(revisionInfoList,symbolicNamesMap);
+    // create revision data tree
+    return createRevisionDataTree(revisionDataList,branchNamesMap);
   }
 
   /** get file data (text lines)
@@ -984,8 +1013,8 @@ else {
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
     // get revision info list
-    HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
-    Command                command          = new Command(); 
+    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+    Command                command        = new Command(); 
     Exec                   exec;                    
     try
     {
@@ -997,17 +1026,17 @@ else {
       exec = new Exec(rootPath,command);
 
       // parse header
-      if (parseLogHeader(exec,symbolicNamesMap))
+      if (parseLogHeader(exec,branchNamesMap))
       {
         // parse data
-        RevisionInfo revisionInfo;
-        while ((revisionInfo = parseLogData(exec,symbolicNamesMap)) != null)
+        RevisionDataCVS revisionData;
+        while ((revisionData = parseLogData(exec,branchNamesMap)) != null)
         {
           // add log info entry
-          logDataList.add(new LogData(revisionInfo.revision,
-                                      revisionInfo.date,
-                                      revisionInfo.author,
-                                      revisionInfo.commitMessage
+          logDataList.add(new LogData(revisionData.revision,
+                                      revisionData.date,
+                                      revisionData.author,
+                                      revisionData.commitMessage
                                      )
                          );
         }
@@ -1020,7 +1049,7 @@ else {
     {
       throw new RepositoryException(exception);
     }
-//for (RevisionInfo revisionInfo : revisionInfoList) Dprintf.dprintf("revisionInfo=%s",revisionInfo);
+//for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
@@ -1407,15 +1436,17 @@ Dprintf.dprintf("unknown %s",line);
 
   /** parse log header
    * @param exec exec command
-   * @param symbolicNamesMap symbolic names map to fill
+   * @param branchNamesMap branch names map to fill or null (map revision -> name)
+   * @param tagNamesMap tag names map to fill or null (map name -> revision)
    * @return true iff header parsed
    */
-  private boolean parseLogHeader(Exec exec, HashMap<String,String> symbolicNamesMap)
+  private boolean parseLogHeader(Exec exec, HashMap<String,String> branchNamesMap, HashMap<String,String> tagNamesMap)
     throws IOException
   {
     final Pattern PATTERN_HEAD           = Pattern.compile("^\\s*head:\\s*(.*)\\s*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_SYMBOLIC_NAMES = Pattern.compile("^\\s*symbolic names:.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_SYMBOLIC_NAME  = Pattern.compile("^\\s+(.*)\\s*:\\s*(.*)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_BRANCH_NAME    = Pattern.compile("^\\s+(.*)\\s*:\\s*([\\d\\.]+)\\.0\\.(\\d+)\\s*",Pattern.CASE_INSENSITIVE);
 
     // parse header
     boolean headerDone = false;
@@ -1431,39 +1462,66 @@ Dprintf.dprintf("unknown %s",line);
       }
       else if ((matcher = PATTERN_HEAD.matcher(line)).matches())
       {
-        // get head revision
-        symbolicNamesMap.put(matcher.group(1),LAST_REVISION_NAME);
+        // get head revision tag
+        if (tagNamesMap != null) tagNamesMap.put(LAST_REVISION_NAME,matcher.group(1));
       }
       else if (PATTERN_SYMBOLIC_NAMES.matcher(line).matches())
       {
         // get symbolic tag/branch names
+        boolean symbolicNamesDone = false;
         while (   ((line = exec.getStdout()) != null)
-               && (matcher = PATTERN_SYMBOLIC_NAME.matcher(line)).matches()
+               && !symbolicNamesDone
               )
         {
-          symbolicNamesMap.put(matcher.group(2),matcher.group(1));
+          if      ((matcher = PATTERN_BRANCH_NAME.matcher(line)).matches())
+          {
+            // branch name
+            if (branchNamesMap != null) branchNamesMap.put(matcher.group(2)+"."+matcher.group(3),matcher.group(1));
+            if (tagNamesMap != null) tagNamesMap.put(LAST_REVISION_NAME,matcher.group(1));
+          }
+          else if ((matcher = PATTERN_SYMBOLIC_NAME.matcher(line)).matches())
+          {
+            // tag name
+            if (tagNamesMap != null) tagNamesMap.put(matcher.group(1),matcher.group(2));
+          }
+          else
+          {
+            symbolicNamesDone = true;
+          }
         }
         exec.ungetStdout(line);
-//for (String s : symbolicNamesMap.keySet()) Dprintf.dprintf("symbol %s=%s",s,symbolicNamesMap.get(s));
+//for (String s : branchNamesMap.keySet()) Dprintf.dprintf("symbol %s=%s",s,branchNamesMap.get(s));
       }
     }
 
     return headerDone;
   }
 
+  /** parse log header
+   * @param exec exec command
+   * @param branchNamesMap branch names map to fill or null (map revision -> name)
+   * @return true iff header parsed
+   */
+  private boolean parseLogHeader(Exec exec, HashMap<String,String> branchNamesMap)
+    throws IOException
+  {
+    return parseLogHeader(exec,branchNamesMap,null);
+  }
+
   /** parse log data
    * @param exec exec command
-   * @param symbolicNamesMap symbolic names map
-   * @return revision info or null
+   * @param branchNamesMap branch names map or null (map revision -> name)
+   * @param tagNamesMap tag names map or null (map name -> revision)
+   * @return revision data or null
    */
-  private RevisionInfo parseLogData(Exec exec, HashMap<String,String> symbolicNamesMap)
+  private RevisionDataCVS parseLogData(Exec exec, HashMap<String,String> branchNamesMap, HashMap<String,String> tagNamesMap)
     throws IOException
   {
     final Pattern PATTERN_REVISION       = Pattern.compile("^\\s*revision\\s+(\\S+).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_DATE_AUTHOR    = Pattern.compile("^\\s*date:\\s+([-\\d/]*\\s+[\\d: +]*);\\s*author:\\s*(\\S*);.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_BRANCES        = Pattern.compile("^\\s*branches:\\s*(.*).*",Pattern.CASE_INSENSITIVE);
 
-    RevisionInfo       revisionInfo = null;
+    RevisionDataCVS    revisionData = null;
 
     boolean            dataDone        = false;
     Matcher            matcher;
@@ -1540,19 +1598,30 @@ Dprintf.dprintf("unknown %s",line);
         }
 
         // add log info entry
-        revisionInfo = new RevisionInfo(revision,
-                                        revisionNumbers,
-                                        symbolicNamesMap.get(revision),
-                                        date,
-                                        author,
-                                        branchRevisions,
-                                        commitMessage
-                                       );
+        revisionData = new RevisionDataCVS(revision,
+                                           revisionNumbers,
+                                           (branchNamesMap != null) ? branchNamesMap.get(revision) : "",
+                                           date,
+                                           author,
+                                           branchRevisions,
+                                           commitMessage
+                                          );
         dataDone = true;
       }
     }
 
-    return revisionInfo;
+    return revisionData;
+  }
+
+  /** parse log data
+   * @param exec exec command
+   * @param branchNamesMap branch names map or null (map revision -> name)
+   * @return revision data or null
+   */
+  private RevisionDataCVS parseLogData(Exec exec, HashMap<String,String> branchNamesMap)
+    throws IOException
+  {
+    return parseLogData(exec,branchNamesMap,null);
   }
 
   /** get sub-numbers from numbers
@@ -1595,95 +1664,131 @@ Dprintf.dprintf("unknown %s",line);
     return getId(numbers,0);
   }
 
+  /** compare revision numbers
+   * @param numbers1,numbers2 numbers to compare
+   * @param delta1,delta2 numbers to ignore at end (<= 0!)
+   * @return true iff revision numbers are equal
+   */
+  private boolean equalsRevisionNumbers(int[] numbers1, int delta1, int[] numbers2, int delta2)
+  {
+    boolean equal = true;
+
+    assert numbers1.length+delta1 >= 0;
+    assert numbers2.length+delta2 >= 0;
+
+    if ((numbers1.length+delta1) == (numbers2.length+delta2))
+    {
+      for (int z = 0; z < numbers1.length+delta1; z++)
+      {
+        if (numbers1[z] != numbers2[z])
+        {
+          equal = false;
+          break;
+        }
+      }
+    }
+    else
+    {
+      equal = false;
+    }
+
+    return equal;
+  }
+
+  /** 
+   * @param 
+   * @return 
+   */
+  private boolean equalsRevisionNumbers(int[] numbers1, int delta1, int[] numbers2)
+  {
+    return equalsRevisionNumbers(numbers1,delta1,numbers2,0);
+  }
+
   /** create revision tree
-   * @param revisionInfoList revision info list
-   * @param symbolicNamesMap symbolic tag/branch names
+   * @param revisionDataList revision info list
+   * @param branchNamesMap branch names map (map revision -> name)
    * @param branchesMap branches
    * @param branchRevisionNumbers branch revision numbers
    * @return revision tree
    */
-  private RevisionData[] createRevisionTree(LinkedList<RevisionInfo>     revisionInfoList,
-                                            HashMap<String,String>       symbolicNamesMap,
-                                            HashMap<String,RevisionData> branchesMap,
-                                            int[]                        branchRevisionNumbers
-                                           )
+  private RevisionDataCVS[] createRevisionDataTree(LinkedList<RevisionDataCVS>     revisionDataList,
+                                                   HashMap<String,String>          branchNamesMap,
+                                                   HashMap<String,RevisionDataCVS> branchesMap,
+                                                   int[]                           branchRevisionNumbers
+                                                  )
   {
-    LinkedList<RevisionData> revisionDataList = new LinkedList<RevisionData>();
+    LinkedList<RevisionDataCVS> revisionDataTreeList = new LinkedList<RevisionDataCVS>();
 
     boolean  branchDone = false;  
-    while (!revisionInfoList.isEmpty() && !branchDone)
+    while (!revisionDataList.isEmpty() && !branchDone)
     {
-      RevisionInfo revisionInfo = revisionInfoList.getFirst();
-//Dprintf.dprintf("revisionInfo=%s -- %d %d",revisionInfo,revisionInfo.revisionNumbers.length,branchRevisionNumbers.length);
+      RevisionDataCVS revisionData = revisionDataList.getFirst();
+//Dprintf.dprintf("revisionData=%s -- %d %d",revisionData,revisionData.revisionNumbers.length,branchRevisionNumbers.length);
 
-      // get branch id this revision belongs to
-      String branchId = getId(revisionInfo.revisionNumbers,-1);
+      // get branch id this revision belongs to (n-1 numbers of revision)
+      String branchId = getId(revisionData.revisionNumbers,-1);
 
       // add revision
-      if      (revisionInfo.revisionNumbers.length-2 > branchRevisionNumbers.length)
+      if      (revisionData.revisionNumbers.length-2 > branchRevisionNumbers.length)
       {
         // create branch sub-tree
-        RevisionData[] subRevisionTree = createRevisionTree(revisionInfoList,
-                                                            symbolicNamesMap,
-                                                            branchesMap,
-                                                            getSubNumbers(revisionInfo.revisionNumbers,-2)
-                                                           );
+        RevisionDataCVS[] subRevisionTree = createRevisionDataTree(revisionDataList,
+                                                                   branchNamesMap,
+                                                                   branchesMap,
+                                                                   getSubNumbers(revisionData.revisionNumbers,-2)
+                                                                  );
 
         // find revision data to add/create revision data
-        RevisionData branchRevisionData = branchesMap.get(branchId);
+        RevisionDataCVS branchRevisionData = branchesMap.get(branchId);
         if (branchRevisionData == null)
         {
 Dprintf.dprintf("xxxxxxxxxxxxxxxxx %s",branchId);
-          branchRevisionData = new RevisionData(revisionInfo.revision,
-                                                symbolicNamesMap.get(revisionInfo.revision),
-                                                revisionInfo.date,
-                                                revisionInfo.author,
-                                                revisionInfo.commitMessage
-                                               );
-          revisionDataList.add(branchRevisionData);
+          // still not known branch -> add to revision tree and create branch
+          revisionDataTreeList.addFirst(revisionData);
 
           // store branches of this revision
-          branchesMap.put(branchId,branchRevisionData);
-          if (revisionInfo.branchRevisions != null)
+          branchesMap.put(branchId,revisionData);
+          if (revisionData.branchRevisions != null)
           {
-            for (String branchRevision : revisionInfo.branchRevisions)
+            for (String branchRevision : revisionData.branchRevisions)
             {
-              branchesMap.put(branchRevision,branchRevisionData);
+              branchesMap.put(branchRevision,revisionData);
             }
           }
+
+          branchRevisionData = revisionData;
         }
 
+        // get branch name
+        String branchName = branchNamesMap.get(branchId);
+        if (branchName == null) branchName = branchId;
+
         // add branch
-        String branchName = symbolicNamesMap.get(branchId);
-        branchRevisionData.addBranch((branchName != null) ? branchName : branchId,
-                                     revisionInfo.date,
-                                     revisionInfo.author,
-                                     revisionInfo.commitMessage,
+        branchRevisionData.addBranch(branchName,
+                                     revisionData.date,
+                                     revisionData.author,
+                                     revisionData.commitMessage,
                                      subRevisionTree
                                     );
       }
-      else if (revisionInfo.revisionNumbers.length-2 == branchRevisionNumbers.length)
+      else if (   (revisionData.revisionNumbers.length-2 == branchRevisionNumbers.length)
+               && equalsRevisionNumbers(revisionData.revisionNumbers,-2,branchRevisionNumbers)
+              )
       {
-        // add revision
-        RevisionData revisionData = new RevisionData(revisionInfo.revision,
-                                                     symbolicNamesMap.get(revisionInfo.revision),
-                                                     revisionInfo.date,
-                                                     revisionInfo.author,
-                                                     revisionInfo.commitMessage
-                                                    );
-        revisionDataList.addLast(revisionData);
+        // add revision to tree
+        revisionDataTreeList.addFirst(revisionData);
 
         // store branches of this revision
-        if (revisionInfo.branchRevisions != null)
+        if (revisionData.branchRevisions != null)
         {
-          for (String branchRevision : revisionInfo.branchRevisions)
+          for (String branchRevision : revisionData.branchRevisions)
           {
             branchesMap.put(branchRevision,revisionData);
           }
         }
 
         // done this revision
-        revisionInfoList.removeFirst();
+        revisionDataList.removeFirst();
       }
       else
       {
@@ -1692,23 +1797,23 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxx %s",branchId);
       }
     }
 
-    return revisionDataList.toArray(new RevisionData[revisionDataList.size()]);
+    return revisionDataTreeList.toArray(new RevisionDataCVS[revisionDataTreeList.size()]);
   }
 
   /** create revision tree
-   * @param revisionInfoList revision info list
-   * @param symbolicNamesMap symbolic tag/branch names
+   * @param revisionDataList revision info list
+   * @param branchNamesMap branch names map (map revision -> name)
    * @return revision tree
    */
-  private RevisionData[] createRevisionTree(LinkedList<RevisionInfo> revisionInfoList,
-                                            HashMap<String,String>   symbolicNamesMap
-                                           )
+  private RevisionData[] createRevisionDataTree(LinkedList<RevisionDataCVS> revisionDataList,
+                                                HashMap<String,String>      branchNamesMap
+                                               )
   {
-    return createRevisionTree(revisionInfoList,
-                              symbolicNamesMap,
-                              new HashMap<String,RevisionData>(),
-                              new int[]{}
-                             );
+    return createRevisionDataTree(revisionDataList,
+                                  branchNamesMap,
+                                  new HashMap<String,RevisionDataCVS>(),
+                                  new int[]{}
+                                 );
   }
 }
 
