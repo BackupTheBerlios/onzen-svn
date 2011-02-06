@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Exec.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: execute external command
 * Systems: all
@@ -135,7 +135,7 @@ class Exec
     String[] commandArray = command.getCommandArray();
     if (Settings.debugFlag)
     {
-      System.err.println("DEBUG execute: "+StringUtils.join(commandArray));
+      System.err.println("DEBUG execute "+path+": "+StringUtils.join(commandArray));
     }
 
     // start process
@@ -175,10 +175,11 @@ class Exec
   }
 
   /** done execute command
+   * @return exit value or -1
    */
-  public void done()
+  public int done()
   {
-    waitFor();
+    return waitFor();
   }
 
   /** get next line from stdout
