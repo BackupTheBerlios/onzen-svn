@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -10,11 +10,10 @@
 
 /****************************** Imports ********************************/
 // base
-import java.io.Serializable;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
-//import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -539,45 +538,99 @@ class DiffData
 
   /** diff block types
    */
-  enum BlockTypes
+  enum Types
   {
     NONE,
 
     KEEP,
-    ADD,
-    DELETE,
-    CHANGE,
+    ADDED,
+    DELETED,
+    CHANGED,
+    CHANGED_WHITESPACES,
 
-    UNKNOWN
+    UNKNOWN;
+
+    /** parse type string
+     * @param string state string
+     * @return state
+     */
+    static Types parse(String string)
+    {
+      Types type;
+
+      if      (string.equalsIgnoreCase("keep"))
+      {
+        type = Types.KEEP;
+      }
+      else if (string.equalsIgnoreCase("added"))
+      {
+        type = Types.ADDED;
+      }
+      else if (string.equalsIgnoreCase("deleted"))
+      {
+        type = Types.DELETED;
+      }
+      else if (string.equalsIgnoreCase("changed"))
+      {
+        type = Types.CHANGED;
+      }
+      else if (string.equalsIgnoreCase("changedWhitespaces"))
+      {
+        type = Types.CHANGED_WHITESPACES;
+      }
+      else
+      {
+        type = Types.UNKNOWN;
+      }
+
+      return type;
+    }
+
+    /** convert to string
+     * @return string
+     */
+    public String toString()
+    {
+      switch (this)
+      {
+        case KEEP:                return "ok";
+        case ADDED:               return "added";
+        case DELETED:             return "deleted";
+        case CHANGED:             return "changed";
+        case CHANGED_WHITESPACES: return "changedWhitespaces";
+        default:                  return null;
+      }
+    }
   };
 
   // --------------------------- variables --------------------------------
-  public final BlockTypes blockType;          // diff block type
-  public final String[]   keepLines;          // lines not changed
-  public final String[]   addedLines;         // add lines
-  public final String[]   deletedLines;       // deleted lines
+  public final Types    type;               // diff block type
+  public final String[] keepLines;          // lines not changed
+  public final String[] addedLines;         // add lines
+  public final String[] deletedLines;       // deleted lines
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** create diff data
-   * @param blockType block type
+   * @param type block type
    * @param addedLines lines to add
    * @param deletedLines lines to delete
    */
-  public DiffData(BlockTypes blockType, String[] addedLines, String[] deletedLines)
+  public DiffData(Types type, String[] addedLines, String[] deletedLines)
   {
-    this.blockType    = blockType;
-    switch (blockType)
+    this.type = type;
+    switch (type)
     {
       case KEEP:
         throw new Error("INTERNAL ERROR: invalid block type!");
-      case ADD:
+      case ADDED:
         throw new Error("INTERNAL ERROR: invalid block type!");
-      case DELETE:
+      case DELETED:
         throw new Error("INTERNAL ERROR: invalid block type!");
-      case CHANGE:
+      case CHANGED:
+      case CHANGED_WHITESPACES:
         this.keepLines    = null;
         this.addedLines   = addedLines;
         this.deletedLines = deletedLines;
@@ -588,38 +641,38 @@ class DiffData
   }
 
   /** create diff data
-   * @param blockType block type
+   * @param type block type
    * @param addedLines lines to add
    * @param deletedLines lines to delete
    */
-  public DiffData(BlockTypes blockType, AbstractList<String> addedLinesList, AbstractList<String> deletedLinesList)
+  public DiffData(Types type, AbstractList<String> addedLinesList, AbstractList<String> deletedLinesList)
   {
-    this(blockType,
+    this(type,
          addedLinesList.toArray(new String[addedLinesList.size()]),
          deletedLinesList.toArray(new String[deletedLinesList.size()])
         );
   }
 
   /** create diff data
-   * @param blockType block type
+   * @param type block type
    * @param addedLines lines to add
    * @param deletedLinesList lines to delete
    */
-  public DiffData(BlockTypes blockType, String[] addedLines, AbstractList<String> deletedLinesList)
+  public DiffData(Types type, String[] addedLines, AbstractList<String> deletedLinesList)
   {
-    this(blockType,
+    this(type,
          addedLines,
          deletedLinesList.toArray(new String[deletedLinesList.size()])
         );
   }
   /** create diff data
-   * @param blockType block type
+   * @param type block type
    * @param addedLines lines to add
    * @param deletedLines lines to delete
    */
-  public DiffData(BlockTypes blockType, AbstractList<String> addedLinesList, String[] deletedLines)
+  public DiffData(Types type, AbstractList<String> addedLinesList, String[] deletedLines)
   {
-    this(blockType,
+    this(type,
          addedLinesList.toArray(new String[addedLinesList.size()]),
          deletedLines
         );
@@ -627,30 +680,31 @@ class DiffData
 
 
   /** create diff data
-   * @param blockType block type
+   * @param type block type
    * @param lines lines to keep/add/delete
    */
-  public DiffData(BlockTypes blockType, String[] lines)
+  public DiffData(Types type, String[] lines)
   {
-    this.blockType = blockType;
-    switch (blockType)
+    this.type = type;
+    switch (type)
     {
       case KEEP:
         this.keepLines    = lines;
         this.addedLines   = null;
         this.deletedLines = null;
         break;
-      case ADD:
+      case ADDED:
         this.keepLines    = null;
         this.addedLines   = lines;
         this.deletedLines = null;
         break;
-      case DELETE:
+      case DELETED:
         this.keepLines    = null;
         this.addedLines   = null;
         this.deletedLines = lines;
         break;
-      case CHANGE:
+      case CHANGED:
+      case CHANGED_WHITESPACES:
         throw new Error("INTERNAL ERROR: invalid block type!");
       default:
         throw new Error("INTERNAL ERROR: invalid block type!");
@@ -658,12 +712,12 @@ class DiffData
   }
 
   /** create diff data
-   * @param blockType block type
+   * @param type block type
    * @param lines lines to keep/add/delete
    */
-  public DiffData(BlockTypes blockType, AbstractList<String> linesList)
+  public DiffData(Types type, AbstractList<String> linesList)
   {
-    this(blockType,
+    this(type,
          linesList.toArray(new String[linesList.size()])
         );
   }
@@ -673,7 +727,7 @@ class DiffData
    */
   public String toString()
   {
-    return "DiffData {"+blockType+", keep "+((keepLines != null) ? keepLines.length : 0)+": '"+StringUtils.join(keepLines,"\\n")+"', added "+((addedLines != null) ? addedLines.length : 0)+": '"+StringUtils.join(addedLines,"\\n")+"' deleted "+((deletedLines != null) ? deletedLines.length : 0)+": '"+StringUtils.join(deletedLines,"\\n")+"'}";
+    return "DiffData {"+type+", keep "+((keepLines != null) ? keepLines.length : 0)+": '"+StringUtils.join(keepLines,"\\n")+"', added "+((addedLines != null) ? addedLines.length : 0)+": '"+StringUtils.join(addedLines,"\\n")+"' deleted "+((deletedLines != null) ? deletedLines.length : 0)+": '"+StringUtils.join(deletedLines,"\\n")+"'}";
   }
 }
 
@@ -967,6 +1021,14 @@ abstract class Repository implements Serializable
     this(null);
   }
 
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.UNKNOWN;
+  }
+
   /** check if repository support patch queues
    * @return true iff patch queues are supported
    */
@@ -1152,7 +1214,8 @@ abstract class Repository implements Serializable
     for (FileData fileData : fileDataSet)
     {
       String directory = fileData.getDirectoryName();
-      fileDirectoryHashSet.add(!directory.isEmpty() ? directory : null);
+//      fileDirectoryHashSet.add(!directory.isEmpty() ? directory : null);
+      fileDirectoryHashSet.add(directory);
     }
 
     updateStates(fileDataSet,fileDirectoryHashSet,addNewFlag);
@@ -1315,14 +1378,14 @@ abstract class Repository implements Serializable
 
   /** commit files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   abstract public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException;
 
   /** commit file
    * @param fileData file data
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void commit(FileData fileData, Message commitMessage)
     throws RepositoryException
@@ -1335,7 +1398,7 @@ abstract class Repository implements Serializable
 
   /** add files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
   abstract public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
@@ -1343,7 +1406,7 @@ abstract class Repository implements Serializable
 
   /** add file
    * @param fileData file data
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    * @param binaryFlag true to add file as binary file, false otherwise
    */
   public void add(FileData fileData, Message commitMessage, boolean binaryFlag)
@@ -1357,14 +1420,14 @@ abstract class Repository implements Serializable
 
   /** remove files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   abstract public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException;
 
   /** remove file
    * @param fileData file data
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void remove(FileData fileData, Message commitMessage)
     throws RepositoryException
@@ -1398,7 +1461,7 @@ abstract class Repository implements Serializable
   /** rename file
    * @param fileData file data to rename
    * @param newName new name
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   abstract public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException;
@@ -1417,9 +1480,11 @@ abstract class Repository implements Serializable
   {
     final String[] FORMATS = new String[]
     {
-      "dd-MMM-yy",              // 25-Jan-11
-      "yyyy-MM-dd HH:mm:ss Z",  // 2011-01-25 15:19:06 +0900
-      "yyyy/MM/dd HH:mm:ss",    // 2010/05/13 07:09:36
+      "dd-MMM-yy",                   // 25-Jan-11
+      "yyyy-MM-dd HH:mm:ss Z",       // 2011-01-25 15:19:06 +0900
+      "yyyy-MM-dd HH:mm Z",          // 2011-01-25 15:19 +0900
+      "yyyy/MM/dd HH:mm:ss",         // 2010/05/13 07:09:36
+      "EEE MMM dd HH:mm:ss yyyy Z",  // Wed Dec 17 15:41:19 2008 +0100
     };
 
     Date date;

@@ -1,19 +1,19 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
-* Contents: repository
+* Contents: Apache Subversion (SVN) repository
 * Systems: all
 *
 \***********************************************************************/
 
 /****************************** Imports ********************************/
 // base
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.BufferedReader;
 import java.io.IOException;
 
 import java.util.AbstractList;
@@ -100,6 +100,14 @@ class RepositorySVN extends Repository
   RepositorySVN()
   {
     this(null);
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.SVN;
   }
 
   /** update file states
@@ -719,7 +727,7 @@ Dprintf.dprintf("file=%s",fileData);
               lineNb++;
             }
             exec.ungetStdout(line);
-            diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+            diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
             diffDataList.add(diffData);
 
             // get deleted lines
@@ -755,7 +763,7 @@ Dprintf.dprintf("file=%s",fileData);
                 {
                   lines[z] = addedLinesList.get(z);
                 }
-                diffData = new DiffData(DiffData.BlockTypes.CHANGE,lines,deletedLinesList);
+                diffData = new DiffData(DiffData.Types.CHANGED,lines,deletedLinesList);
                 diffDataList.add(diffData);
 //Dprintf.dprintf("c %d %d",lines.length,deletedLinesCount);
               }
@@ -766,7 +774,7 @@ Dprintf.dprintf("file=%s",fileData);
               {
                  lines[z] = addedLinesList.get(deletedLinesCount+z);
               }
-              diffData = new DiffData(DiffData.BlockTypes.ADD,lines);
+              diffData = new DiffData(DiffData.Types.ADDED,lines);
               diffDataList.add(diffData);
 //Dprintf.dprintf("a %d",lines.length);
             }
@@ -780,7 +788,7 @@ Dprintf.dprintf("file=%s",fileData);
                 {
                   lines[z] = deletedLinesList.get(z);
                 }
-                diffData = new DiffData(DiffData.BlockTypes.CHANGE,addedLinesList,lines);
+                diffData = new DiffData(DiffData.Types.CHANGED,addedLinesList,lines);
                 diffDataList.add(diffData);
 //Dprintf.dprintf("c %d %d",addedLinesCount,lines.length);
               }
@@ -791,14 +799,14 @@ Dprintf.dprintf("file=%s",fileData);
               {
                  lines[z] = deletedLinesList.get(addedLinesCount+z);
               }
-              diffData = new DiffData(DiffData.BlockTypes.DELETE,lines);
+              diffData = new DiffData(DiffData.Types.DELETED,lines);
               diffDataList.add(diffData);
 //Dprintf.dprintf("d %d",lines.length);
             }
             else if ((deletedLinesCount > 0) && (addedLinesCount > 0))
             {
               // changed
-              diffData = new DiffData(DiffData.BlockTypes.CHANGE,addedLinesList,deletedLinesList);
+              diffData = new DiffData(DiffData.Types.CHANGED,addedLinesList,deletedLinesList);
               diffDataList.add(diffData);
 //Dprintf.dprintf("c %d %d",addedLinesCount,deletedLinesCount);
             }
@@ -821,7 +829,7 @@ Dprintf.dprintf("file=%s",fileData);
           keepLinesList.add(newFileLines[lineNb-1]);
           lineNb++;
         }
-        diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+        diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
         diffDataList.add(diffData);
       }
 //Dprintf.dprintf("diffData=%s",diffData);
@@ -843,9 +851,9 @@ lineNb,
 (d.addedLines!=null)?d.addedLines.length:0,
 (d.deletedLines!=null)?d.deletedLines.length:0
 );
-if (d.blockType==DiffData.BlockTypes.CHANGE) for (int z = 0; z < d.deletedLines.length; z++) Dprintf.dprintf("%s -----> %s",d.deletedLines[z],d.addedLines[z]);
-if (d.blockType==DiffData.BlockTypes.KEEP) lineNb += d.keepLines.length;
-if (d.blockType==DiffData.BlockTypes.ADD) lineNb += d.addedLines.length;
+if (d.blockType==DiffData.Types.CHANGED) for (int z = 0; z < d.deletedLines.length; z++) Dprintf.dprintf("%s -----> %s",d.deletedLines[z],d.addedLines[z]);
+if (d.blockType==DiffData.Types.KEEP) lineNb += d.keepLines.length;
+if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 }
 */
 
@@ -962,7 +970,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
         else
         {
           // unknown line
-Dprintf.dprintf("unknown %s",line);
+          Onzen.printWarning("No match for line '%s'",line);
         }
       }
 
@@ -973,7 +981,6 @@ Dprintf.dprintf("unknown %s",line);
     {
       throw new RepositoryException(exception);
     }
-Dprintf.dprintf("");
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
   }
@@ -1008,7 +1015,7 @@ Dprintf.dprintf("");
 
   /** commit files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
@@ -1037,7 +1044,7 @@ Dprintf.dprintf("");
 
   /** add files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
   public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
@@ -1081,7 +1088,7 @@ Dprintf.dprintf("");
 
   /** remove files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
@@ -1161,7 +1168,7 @@ Dprintf.dprintf("");
   /** rename file
    * @param fileData file data to rename
    * @param newName new name
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException
@@ -1295,7 +1302,7 @@ Dprintf.dprintf("");
            && ((line = exec.getStdout()) != null)
           )
     {
-      if      (line.startsWith("-----"))
+      if (line.startsWith("-----"))
       {
         headerDone = true;
       }
@@ -1360,6 +1367,12 @@ Dprintf.dprintf("");
               )
         {
           commitMessage.add(line);
+        }
+        while (   (commitMessage.peekFirst() != null)
+               && commitMessage.peekFirst().trim().isEmpty()
+              )
+        {
+          commitMessage.removeFirst();
         }
         while (   (commitMessage.peekLast() != null)
                && commitMessage.peekLast().trim().isEmpty()

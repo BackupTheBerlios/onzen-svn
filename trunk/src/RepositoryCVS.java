@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: CVS repository functions
 * Systems: all
@@ -126,6 +126,14 @@ class RepositoryCVS extends Repository
   RepositoryCVS()
   {
     this(null);
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.CVS;
   }
 
   /** update file states
@@ -728,10 +736,10 @@ Dprintf.dprintf("unknown %s",line);
   public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
-    final Pattern PATTERN_DIFF_START  = Pattern.compile("^diff.*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF_ADD    = Pattern.compile("^([\\d,]+)a([\\d,]+)",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF_DELETE = Pattern.compile("^([\\d,]+)d([\\d,]+)",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF_CHANGE = Pattern.compile("^([\\d,]+)c([\\d,]+)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_START   = Pattern.compile("^diff.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_ADDED   = Pattern.compile("^([\\d,]+)a([\\d,]+)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_DELETED = Pattern.compile("^([\\d,]+)d([\\d,]+)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_CHANGED = Pattern.compile("^([\\d,]+)c([\\d,]+)",Pattern.CASE_INSENSITIVE);
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
@@ -820,7 +828,7 @@ Dprintf.dprintf("unknown %s",line);
       while ((line = exec.getStdout()) != null)
       {
 //Dprintf.dprintf("line=%s",line);
-        if      ((matcher = PATTERN_DIFF_ADD.matcher(line)).matches())
+        if      ((matcher = PATTERN_DIFF_ADDED.matcher(line)).matches())
         {
           // add lines
           int[] oldIndex = parseDiffIndex(matcher.group(1));
@@ -835,7 +843,7 @@ Dprintf.dprintf("unknown %s",line);
             keepLinesList.add(newFileLines[lineNb-1]);
             lineNb++;
           }
-          diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+          diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
 
@@ -848,11 +856,11 @@ Dprintf.dprintf("unknown %s",line);
             addedLinesList.add(line.substring(2));
             lineNb++;
           }
-          diffData = new DiffData(DiffData.BlockTypes.ADD,addedLinesList);
+          diffData = new DiffData(DiffData.Types.ADDED,addedLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
         }        
-        else if ((matcher = PATTERN_DIFF_DELETE.matcher(line)).matches())
+        else if ((matcher = PATTERN_DIFF_DELETED.matcher(line)).matches())
         {
           // delete lines
           int[] oldIndex = parseDiffIndex(matcher.group(1));
@@ -865,7 +873,7 @@ Dprintf.dprintf("unknown %s",line);
             keepLinesList.add(newFileLines[lineNb-1]);
             lineNb++;
           }
-          diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+          diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
 
@@ -877,11 +885,11 @@ Dprintf.dprintf("unknown %s",line);
             if (!line.startsWith("<")) throw new RepositoryException("Invalid delete diff output: '"+line+"'");
             deletedLinesList.add(line.substring(2));
           }
-          diffData = new DiffData(DiffData.BlockTypes.DELETE,deletedLinesList);
+          diffData = new DiffData(DiffData.Types.DELETED,deletedLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
         }        
-        else if ((matcher = PATTERN_DIFF_CHANGE.matcher(line)).matches())
+        else if ((matcher = PATTERN_DIFF_CHANGED.matcher(line)).matches())
         {
           // change lines
           int[] oldIndex = parseDiffIndex(matcher.group(1));
@@ -896,7 +904,7 @@ Dprintf.dprintf("unknown %s",line);
             keepLinesList.add(newFileLines[lineNb-1]);
             lineNb++;
           }
-          diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+          diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
 
@@ -923,7 +931,7 @@ Dprintf.dprintf("unknown %s",line);
             lineNb++;
           }
 
-          diffData = new DiffData(DiffData.BlockTypes.CHANGE,addedLinesList,deletedLinesList);
+          diffData = new DiffData(DiffData.Types.CHANGED,addedLinesList,deletedLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
         }
@@ -941,7 +949,7 @@ else {
           keepLinesList.add(newFileLines[lineNb-1]);
           lineNb++;
         }
-        diffData = new DiffData(DiffData.BlockTypes.KEEP,keepLinesList);
+        diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
         diffDataList.add(diffData);
       }
 //Dprintf.dprintf("diffData=%s",diffData);
@@ -1112,7 +1120,7 @@ Dprintf.dprintf("unknown %s",line);
 
   /** commit files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
@@ -1141,7 +1149,7 @@ Dprintf.dprintf("unknown %s",line);
 
   /** add files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
   public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
@@ -1186,7 +1194,7 @@ Dprintf.dprintf("unknown %s",line);
 
   /** remove files
    * @param fileDataSet file data set
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
     throws RepositoryException
@@ -1266,7 +1274,7 @@ Dprintf.dprintf("unknown %s",line);
   /** rename file
    * @param fileData file data to rename
    * @param newName new name
-   * @param commitMessagec commit message
+   * @param commitMessage commit message
    */
   public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException
@@ -1517,6 +1525,12 @@ Dprintf.dprintf("unknown %s",line);
           {
             commitMessage.add(line);
           }
+        }
+        while (   (commitMessage.peekFirst() != null)
+               && commitMessage.peekFirst().trim().isEmpty()
+              )
+        {
+          commitMessage.removeFirst();
         }
         while (   (commitMessage.peekLast() != null)
                && commitMessage.peekLast().trim().isEmpty()
