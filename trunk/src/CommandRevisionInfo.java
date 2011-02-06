@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevisionInfo.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: command show file revision
 * Systems: all
@@ -15,8 +15,6 @@
 //import java.io.BufferedReader;
 //import java.io.IOException;
 
-//import java.text.SimpleDateFormat;
-
 //import java.util.ArrayList;
 //import java.util.Arrays;
 //import java.util.BitSet;
@@ -28,7 +26,6 @@
 //import java.util.LinkedHashSet;
 //import java.util.ListIterator;
 //import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -413,7 +410,7 @@ class CommandRevisionInfo
               buffer.append(line); buffer.append('\n');
             }
 
-            if (!widgetRevision.isDisposed()) widgetRevision.setText(data.revisionData.revision);
+            if (!widgetRevision.isDisposed()) widgetRevision.setText(data.revisionData.getRevisionText());
             if (!widgetAuthor.isDisposed()) widgetAuthor.setText(data.revisionData.author);
             if (!widgetCommitMessage.isDisposed()) widgetCommitMessage.setText(buffer.toString());
 
