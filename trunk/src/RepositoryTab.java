@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: repository tab
 * Systems: all
@@ -343,7 +343,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Commit");
+        menuItem = Widgets.addMenuItem(menu,"Commit...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -355,7 +355,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Patch");
+        menuItem = Widgets.addMenuItem(menu,"Patch...");
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -369,7 +369,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Add");
+        menuItem = Widgets.addMenuItem(menu,"Add...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -381,7 +381,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Remove");
+        menuItem = Widgets.addMenuItem(menu,"Remove...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -393,7 +393,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revert");
+        menuItem = Widgets.addMenuItem(menu,"Revert...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -405,7 +405,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Diff");
+        menuItem = Widgets.addMenuItem(menu,"Diff...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -417,7 +417,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revisions");
+        menuItem = Widgets.addMenuItem(menu,"Revisions...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -429,7 +429,19 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Solve");
+        menuItem = Widgets.addMenuItem(menu,"Revision info...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            revisionInfo();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Solve...");
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -443,7 +455,23 @@ Dprintf.dprintf("");
           }
         });
 
-//        menuItem = Widgets.addMenuSeparator(menu);
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Edit...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+            if (fileData != null)
+            {
+              openFile(fileData);
+            }
+          }
+        });
       }
       widgetFileTree.setMenu(menu);
       widgetFileTree.setToolTipText("Tree representation of files.\nDouble-click to open sub-directories, right-click to open context menu.");
@@ -500,11 +528,17 @@ Dprintf.dprintf("");
     return openSubDirectory(widgetFileTree.getItems(),directory);
   }
 
+  /** set status text
+   * @param format format string
+   * @param arguments optional arguments
+   */
   public void setStatusText(String format, Object... arguments)
   {
     onzen.setStatusText(format,arguments);
   }
 
+  /** clear status text
+   */
   public void clearStatusText()
   {
     onzen.clearStatusText();
@@ -1362,7 +1396,7 @@ Dprintf.dprintf("");
               break;
             case FILE:
             case LINK:
-              openFile(treeItem);
+              openFile(fileData);
               break;
             default:
               break;
@@ -1410,7 +1444,7 @@ Dprintf.dprintf("");
                 break;
               case FILE:
               case LINK:
-                openFile(treeItems[0]);
+                openFile(fileData);
                 break;
               default:
                 break;
@@ -1562,12 +1596,10 @@ Dprintf.dprintf("");
   }
 
   /** open file (with external command)
-   * @param treeItem tree item
+   * @param fileData file to open
    */
-  private void openFile(TreeItem treeItem)
+  private void openFile(FileData fileData)
   {
-    FileData fileData = (FileData)treeItem.getData();
-
     // find editor command with file mime-type
     String command = null;
     String mimeType = fileData.getMimeType(repository.rootPath);
