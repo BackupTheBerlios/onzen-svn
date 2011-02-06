@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Message.java,v $
-* $Revision: 1.1 $
+* $Revision: 1.2 $
 * $Author: torsten $
 * Contents: message broadcasting functions
 * Systems: all
@@ -34,9 +34,9 @@ import java.util.LinkedList;
 
 /****************************** Classes ********************************/
 
-/** message broadcast handler
+/** message broadcast receive thread
  */
-class MessageBroadcast extends Thread
+class MessageReceiveBroadcast extends Thread
 {
   // --------------------------- constants --------------------------------
 
@@ -55,7 +55,7 @@ class MessageBroadcast extends Thread
    * @param address UDP broadcasting address
    * @param port UDP broadcasting port
    */
-  MessageBroadcast(LinkedList<String> history, InetAddress address, int port)
+  MessageReceiveBroadcast(LinkedList<String> history, InetAddress address, int port)
     throws UnknownHostException,SocketException,IOException
   {
     this.history  = history;
@@ -69,7 +69,7 @@ class MessageBroadcast extends Thread
   {
     String   line;
     Object[] data = new Object[3];
-    String   userName,id,message;
+    String   userName,id,string,message;
 
     for (;;)
     {
@@ -78,7 +78,7 @@ class MessageBroadcast extends Thread
         // wait for UDP message
         socket.receive(packet);
         line = new String(packet.getData(),0,packet.getLength()).trim();
-//Dprintf.dprintf("line=#%s#",line);
+Dprintf.dprintf("line=#%s#",line);
 
         // parse
         if (!StringParser.parse(line,"%s %s % s",data))
@@ -87,7 +87,7 @@ class MessageBroadcast extends Thread
         }
         userName = (String)data[0];
         id       = (String)data[1];
-        message  = (String)data[2];
+        string   = (String)data[2];
 
         // filter out own messages
         if (userName.equals(Message.USER_NAME) && id.equals(Message.ID))
@@ -95,18 +95,22 @@ class MessageBroadcast extends Thread
           continue;
         }
 
+        // convert message
+        message  = string.replace("\\n","\n").
+                          replace("\\\\","\\");
+
         // add to history
         synchronized(history)
         {
-          if (!history.peekFirst().equals(message))
+          if (!history.peekLast().equals(message))
           {
             // add to history
-            history.addFirst(message);
+            history.addLast(message);
 
             // shorten history
             while (history.size() > Settings.maxMessageHistory)
             {
-              history.removeLast();
+              history.removeFirst();
             }
           }
         }
@@ -162,7 +166,7 @@ class Message
         history.clear();
         while (resultSet.next())
         {
-          history.addFirst(resultSet.getString("message"));
+          history.addLast(resultSet.getString("message").trim()+"\n");
         }
 
         resultSet.close();
@@ -170,7 +174,7 @@ class Message
         // shorten history
         while (history.size() > Settings.maxMessageHistory)
         {
-          history.removeLast();
+          history.removeFirst();
         }
       }
 
@@ -184,7 +188,7 @@ class Message
     }
   }
 
-  /** start message broadcasting
+  /** start message broadcasting receiver
    */
   public static void startBroadcast()
   {
@@ -193,15 +197,13 @@ class Message
       // create UDP broadcasting socket
       InetAddress address = InetAddress.getByName(Settings.messageBroadcastAddress);
       socket = new DatagramSocket();
-// NYI ??? address, netmask
-//      InetAddress address = InetAddress.getByName("localhost");
       socket.connect(address,Settings.messageBroadcastPort);
       socket.setBroadcast(true);
 
-      // start broadcast thread
-      MessageBroadcast messageBroadcast = new MessageBroadcast(history,address,Settings.messageBroadcastPort);
-      messageBroadcast.setDaemon(true);
-      messageBroadcast.start();
+      // start broadcast receive thread
+      MessageReceiveBroadcast messageReceiveBroadcast = new MessageReceiveBroadcast(history,address,Settings.messageBroadcastPort);
+      messageReceiveBroadcast.setDaemon(true);
+      messageReceiveBroadcast.start();
     }
     catch (UnknownHostException exception)
     {
@@ -236,8 +238,12 @@ class Message
     // broadcast message
     try
     {
+      // convert message
+      String string = message.replace("\\","\\\\").
+                              replace("\n","\\n");
+
       // broadcast message to other running instances of Onzen
-      byte[] data = String.format("%s %s %s\n",USER_NAME,ID,message).getBytes();
+      byte[] data = String.format("%s %s %s\n",USER_NAME,ID,string).getBytes();
 
       DatagramPacket datagramPacket = new DatagramPacket(data,data.length);
       socket.send(datagramPacket);
@@ -256,7 +262,7 @@ class Message
    */
   Message(String message)
   {
-    this.message = message;
+    this.message = message.trim();
     try
     {
       tmpFile = File.createTempFile("msg",".tmp",new File(Settings.tmpDirectory));
@@ -279,12 +285,20 @@ Dprintf.dprintf("");
     tmpFile.delete();
   }
 
+  /** check if message if empty
+   * @return true iff message empty
+   */
+  public boolean isEmpty()
+  {
+    return message.isEmpty();
+  }
+
   /** get message text
    * @return text
    */
   public String getMessage()
   {
-    return message;
+    return message+"\n";
   }
 
   /** get message file name
@@ -337,22 +351,20 @@ Dprintf.dprintf("");
   }
 
   /** store message into history database
-   * @param message message to store
-   * @return 
    */
   private void storeHistory()
   {
     synchronized(history)
     {
-      if (!history.peekFirst().equals(message))
+      if (!history.peekLast().equals(message))
       {
         // add to history
-        history.addFirst(message);
+        history.addLast(message);
 
         // shorten history
         while (history.size() > Settings.maxMessageHistory)
         {
-          history.removeLast();
+          history.removeFirst();
         }
 
         // store in database
