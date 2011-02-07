@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command show changed files
 * Systems: all
@@ -467,12 +467,13 @@ class CommandChangedFiles
           Widgets.sortTableColumn(widgetFiles,tableColumn,data.fileDataComparator);
         }
       };
-
-      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",SWT.LEFT,250,true);
+      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",  SWT.LEFT);
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT,100,false);
+      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT);
       tableColumn.addSelectionListener(selectionListener);
       Widgets.sortTableColumn(widgetFiles,0,data.fileDataComparator);
+      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryChangedFilesColumn.width);
+      widgetFiles.setToolTipText("Changed files.");
 
       menu = Widgets.newPopupMenu(dialog);
       {
@@ -890,8 +891,9 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Settings.geometryChangedFiles   = dialog.getSize();
-          Settings.changedFilesShowStates = data.showStates;
+          Settings.geometryChangedFiles       = dialog.getSize();
+          Settings.geometryChangedFilesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
+          Settings.changedFilesShowStates     = data.showStates;
 
           Dialogs.close(dialog,false);
         }

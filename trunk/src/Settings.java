@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -653,6 +653,8 @@ public class Settings
   public static Point                    geometryDeleteLocalFiles      = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryChangedFiles          = new Point(600,500); 
+  @ConfigValue(type=ConfigValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryChangedFilesColumn    = new ColumnSizes(600,100);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryAnnotations           = new Point(800,500); 
   @ConfigValue(type=ConfigValueAdapterWidthArray.class)
