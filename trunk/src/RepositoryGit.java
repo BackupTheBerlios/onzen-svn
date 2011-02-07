@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -63,10 +63,10 @@ class RepositoryGit extends Repository
 
   /** update file states
    * @param fileDataSet file data set to update
-   * @param fileDirectoryHashSet directory set to check for new/missing files
-   * @param addNewFlag add missing files
+   * @param fileDirectorySet directory set to check for new/missing files
+   * @param newFileDataSet new file data set or null
    */
-  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, boolean addNewFlag)
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
   }
 
