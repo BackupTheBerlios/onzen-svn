@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -563,7 +563,7 @@ public class Settings
   }
 
   // --------------------------- constants --------------------------------
-  public static final String ONZEN_DIRECTORY                = System.getProperty("user.home")+File.separator+".onzen2";
+  public static final String ONZEN_DIRECTORY                = System.getProperty("user.home")+File.separator+".onzen";
 
   /** host system
    */
