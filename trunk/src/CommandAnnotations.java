@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAnnotations.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command view file annotations
 * Systems: all
@@ -267,7 +267,7 @@ class CommandAnnotations
         {
           Button widget = (Button)selectionEvent.widget;
 
-          Settings.geometryAnnotations = dialog.getSize();
+          Settings.geometryAnnotations       = dialog.getSize();
           Settings.geometryAnnotationsColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetAnnotations));
 
           Dialogs.close(dialog,false);
