@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 * $Author: torsten $
 * Contents: CVS repository functions
 * Systems: all
@@ -150,10 +150,10 @@ class RepositoryCVS extends Repository
 
   /** update file states
    * @param fileDataSet file data set to update
-   * @param fileDirectoryHashSet directory set to check for new/missing files
-   * @param addNewFlag add missing files
+   * @param fileDirectorySet directory set to check for new/missing files
+   * @param newFileDataSet new file data set or null
    */
-  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, boolean addNewFlag)
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
     final Pattern PATTERN_UNKNOWN             = Pattern.compile("^\\?\\s+.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_COMPLETE            = Pattern.compile("^\\s*File:.*",Pattern.CASE_INSENSITIVE);
@@ -210,24 +210,26 @@ class RepositoryCVS extends Repository
                 fileData.repositoryRevision = repositoryRevision;
                 fileData.branch             = branch;
               }
-              else if (addNewFlag)
+              else if ((newFileDataSet != null) && !isHiddenFile(directory,baseName))
               {
                 // get file type, size, date/time
                 File file = new File(rootPath,baseName);
                 FileData.Types type     = getFileType(file);
                 long           size     = file.length();
-                long           datetime = file.lastModified();
+                Date           datetime = new Date(file.lastModified());
 
                 // create file data
-                fileData = new FileData(directory+File.separator+baseName,
-                                        type,
-                                        state,
-                                        mode,
-                                        size,
-                                        datetime
-                                       );
-//???
-//Dprintf.dprintf("");
+                newFileDataSet.add(new FileData(directory+File.separator+baseName,
+                                                type,
+                                                state,
+                                                mode,
+                                                size,
+                                                datetime,
+                                                workingRevision,
+                                                repositoryRevision,
+                                                branch
+                                               )
+                                  );
               }
             }
 
@@ -345,24 +347,26 @@ class RepositoryCVS extends Repository
             fileData.repositoryRevision = repositoryRevision;
             fileData.branch             = branch;
           }
-          else if (addNewFlag)
+          else if ((newFileDataSet != null) && !isHiddenFile(directory,baseName))
           {
             // get file type, size, date/time
             File file = new File(rootPath,baseName);
             FileData.Types type     = getFileType(file);
             long           size     = file.length();
-            long           datetime = file.lastModified();
+            Date           datetime = new Date(file.lastModified());
 
             // create file data
-            fileData = new FileData(directory+File.separator+baseName,
-                                    type,
-                                    state,
-                                    mode,
-                                    size,
-                                    datetime
-                                   );
-//???
-Dprintf.dprintf("");
+            newFileDataSet.add(new FileData(directory+File.separator+baseName,
+                                            type,
+                                            state,
+                                            mode,
+                                            size,
+                                            datetime,
+                                            workingRevision,
+                                            repositoryRevision,
+                                            branch
+                                           )
+                              );
           }
         }
       }
@@ -371,35 +375,6 @@ Dprintf.dprintf("");
         // ignored
       }
     } 
-
-/*
-    for (FileData fileData : fileDataSet)
-    {
-      try
-      {
-        Exec exec = new Exec(rootPath,"cvs status "+fileData.name);
-        while ((line = exec.getNextLineStdout()) != null)
-        {
-Dprintf.dprintf("line=%s",line);
-          if      ((matcher = filePattern1.matcher(line)).matches())
-          {
-Dprintf.dprintf("file 1");
-            fileData.state = parseState(matcher.group(1));
-          }
-          else if ((matcher = filePattern2.matcher(line)).matches())
-          {
-Dprintf.dprintf("file 2 %s",matcher.group(2));
-            fileData.state = parseState(matcher.group(2));
-          }
-        }
-      }
-      catch (IOException exception)
-      {
-        fileData.state = FileData.States.ERROR;
-      }
-Dprintf.dprintf("file=%s",fileData);
-    }
-    */
   }
 
   /** get last revision name

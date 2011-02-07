@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -205,7 +205,7 @@ class FileData
   public       String name;
   public final Types  type;
   public       long   size;
-  public       long   datetime;
+  public       Date   datetime;
   public       States state;
   public       Modes  mode;
   public       String workingRevision;
@@ -222,9 +222,12 @@ class FileData
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
    * @param size file size [bytes]
-   * @param datetime file date/time [s]
+   * @param datetime file date/time
+   * @param workingRevision working revsion
+   * @param repositoryRevision repository revision
+   * @param branch branch
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, long datetime)
+  public FileData(String name, Types type, States state, Modes mode, long size, Date datetime, String workingRevision, String repositoryRevision, String branch)
   {
     this.name               = name;
     this.type               = type;
@@ -232,18 +235,46 @@ class FileData
     this.datetime           = datetime;
     this.state              = state;
     this.mode               = mode;
-    this.workingRevision    = "";
-    this.repositoryRevision = "";
-    this.branch             = "";
+    this.workingRevision    = workingRevision;
+    this.repositoryRevision = repositoryRevision;
+    this.branch             = branch;
+  }
+
+  /** create file data
+   * @param name file name
+   * @param type file type (see FileData.Types)
+   * @param state state (see FileData.States)
+   * @param mode mode (see FileData.Modes)
+   * @param size file size [bytes]
+   * @param datetime file date/time
+   * @param workingRevision working revsion
+   * @param repositoryRevision repository revision
+   */
+  public FileData(String name, Types type, States state, Modes mode, long size, Date datetime, String workingRevision, String repositoryRevision)
+  {
+    this(name,type,state,mode,size,datetime,workingRevision,repositoryRevision,"");
+  }
+
+  /** create file data
+   * @param name file name
+   * @param type file type (see FileData.Types)
+   * @param state state (see FileData.States)
+   * @param mode mode (see FileData.Modes)
+   * @param size file size [bytes]
+   * @param datetime file date/time
+   */
+  public FileData(String name, Types type, States state, Modes mode, long size, Date datetime)
+  {
+    this(name,type,state,mode,size,datetime,"","","");
   }
 
   /** create file data
    * @param name file name
    * @param type file type (see FileData.Types)
    * @param size file size [bytes]
-   * @param datetime file date/time [s]
+   * @param datetime file date/time
    */
-  public FileData(String name, Types type, long size, long datetime)
+  public FileData(String name, Types type, long size, Date datetime)
   {
     this(name,type,States.UNKNOWN,Modes.UNKNOWN,size,datetime);
   }
@@ -254,7 +285,7 @@ class FileData
    */
   public FileData(String name, Types type)
   {
-    this(name,type,0L,0L);
+    this(name,type,0L,null);
   }
 
   /** create file data
@@ -264,7 +295,7 @@ class FileData
    */
   public FileData(String name, States state, Modes mode)
   {
-    this(name,Types.FILE,state,mode,0L,0L);
+    this(name,Types.FILE,state,mode,0L,null);
   }
 
   /** create file data
@@ -454,9 +485,9 @@ class FileDataComparator implements Comparator<FileData>
         else if (fileData0.size > fileData1.size) return  1;
         else                                      return  0;
       case DATETIME:
-        if      (fileData0.datetime < fileData1.datetime) return -1;
-        else if (fileData0.datetime > fileData1.datetime) return  1;
-        else                                              return  0;
+        if      (fileData0.datetime.before(fileData1.datetime)) return -1;
+        else if (fileData0.datetime.after(fileData1.datetime))  return  1;
+        else                                                    return  0;
       case STATE:
         return fileData0.state.compareTo(fileData1.state);
       case MODE:
@@ -1092,37 +1123,6 @@ abstract class Repository implements Serializable
     return false;
   }
 
-  /** get file type
-   * @param file file
-   * @return file type
-   */
-  public FileData.Types getFileType(File file)
-  {
-    FileData.Types type = FileData.Types.UNKNOWN;
-
-    try
-    {
-      if      (file.exists() && !file.getCanonicalFile().equals(file.getAbsoluteFile())) type = FileData.Types.LINK;
-      else if (file.isDirectory())                                                       type = FileData.Types.DIRECTORY;
-      else                                                                               type = FileData.Types.FILE;
-    }
-    catch (IOException exception)
-    {
-      // ignored
-    }
-
-    return type;
-  }
-
-  /** get file type
-   * @param name file name
-   * @return file type
-   */
-  public FileData.Types getFileType(String name)
-  {
-    return getFileType(new File(rootPath,name));
-  }
-
   /** get open directories
    * @return open directories array
    */
@@ -1136,7 +1136,7 @@ abstract class Repository implements Serializable
 
   /** open sub-directory
    * @param directory sub-directory to open
-   * @return file data set
+   * @return file data set of sub-directory
    */
   public HashSet<FileData> openDirectory(String directory)
   {
@@ -1171,7 +1171,105 @@ abstract class Repository implements Serializable
     }
   }
 
-  /** get list of files
+  /** get file type
+   * @param file file
+   * @return file type
+   */
+  public FileData.Types getFileType(File file)
+  {
+    FileData.Types type = FileData.Types.UNKNOWN;
+    try
+    {
+      if      (file.exists() && !file.getCanonicalFile().equals(file.getAbsoluteFile())) type = FileData.Types.LINK;
+      else if (file.isDirectory())                                                       type = FileData.Types.DIRECTORY;
+      else                                                                               type = FileData.Types.FILE;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+
+    return type;
+  }
+
+  /** get file type
+   * @param name file name
+   * @return file type
+   */
+  public FileData.Types getFileType(String name)
+  {
+    return getFileType(new File(rootPath,name));
+  }
+
+  /** check if file is hidden
+   * @param fileName file name
+   * @param type file type; see FileData.Types
+   * @return true iff hidden
+   */
+  public boolean isHiddenFile(String fileName, FileData.Types type)
+  {
+    boolean hiddenFlag = false;
+    switch (type)
+    {
+      case DIRECTORY:
+        for (Settings.FilePattern filePattern : Settings.hiddenDirectoryPatterns)
+        {
+          if (filePattern.pattern.matcher(fileName).matches())
+          {
+            hiddenFlag = true;
+            break;
+          }
+        }
+        break;
+      case FILE:
+      case LINK:
+        for (Settings.FilePattern filePattern : Settings.hiddenFilePatterns)
+        {
+          if (filePattern.pattern.matcher(fileName).matches())
+          {
+            hiddenFlag = true;
+            break;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+
+    return hiddenFlag;
+  }
+
+  /** check if file is hidden
+   * @param file file
+   * @param type file type; see FileData.Types
+   * @return true iff hidden
+   */
+  public boolean isHiddenFile(File file, FileData.Types type)
+  {
+    return isHiddenFile(file.getName(),type);
+  }
+
+  /** check if file is hidden
+  * @param directory directory
+   * @param baseName file base name
+   * @return true iff hidden
+   */
+  public boolean isHiddenFile(String directory, String baseName)
+  {
+    String fileName = ((directory != null) && !directory.isEmpty()) ? directory+File.separator+baseName : baseName;
+    return isHiddenFile(fileName,getFileType(fileName));
+  }
+
+  /** check if file is hidden
+   * @param fileName file name
+   * @return true iff hidden
+   */
+  public boolean isHiddenFile(String fileName)
+  {
+    return isHiddenFile(fileName,getFileType(fileName));
+  }
+
+  /** get list of files (exclude hidden files)
    * @return subDirectory sub-directory
    * @return hash with file data
    */
@@ -1186,54 +1284,15 @@ abstract class Repository implements Serializable
       for (File file : files)
       {
         // detect file type
-        FileData.Types type = FileData.Types.UNKNOWN;
-        try
-        {
-          if      (file.exists() && !file.getCanonicalFile().equals(file.getAbsoluteFile())) type = FileData.Types.LINK;
-          else if (file.isDirectory())                                                       type = FileData.Types.DIRECTORY;
-          else                                                                               type = FileData.Types.FILE;
-        }
-        catch (IOException exception)
-        {
-          // ignored
-        }
-
-        // filter
-        boolean filterFlag = false;
-        switch (type)
-        {
-          case DIRECTORY:
-            for (Settings.FilePattern filePattern : Settings.hiddenDirectoryPatterns)
-            {
-              if (filePattern.pattern.matcher(file.getName()).matches())
-              {
-                filterFlag = true;
-                break;
-              }
-            }
-            break;
-          case FILE:
-          case LINK:
-            for (Settings.FilePattern filePattern : Settings.hiddenFilePatterns)
-            {
-              if (filePattern.pattern.matcher(file.getName()).matches())
-              {
-                filterFlag = true;
-                break;
-              }
-            }
-            break;
-          default:
-            break;
-        }
+        FileData.Types type = getFileType(file);
 
         // add file data
-        if (!filterFlag)
+        if (!isHiddenFile(file,type))
         {
           FileData fileData = new FileData((!subDirectory.equals("")?subDirectory+File.separator:"")+file.getName(),
                                            type,
                                            file.length(),
-                                           file.lastModified()
+                                           new Date(file.lastModified())
                                           );
           fileDataSet.add(fileData);
         }
@@ -1245,25 +1304,16 @@ abstract class Repository implements Serializable
 
   /** update file states
    * @param fileDataSet file data set to update
-   * @param fileDirectoryHashSet directory set to check for new/missing files
-   * @param addNewFlag add missing files
+   * @param fileDirectorySet directory set to check for new/missing files
+   * @param newFileDataSet new file data set or null
    */
-  abstract public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectoryHashSet, boolean addNewFlag);
+  abstract public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet);
 
   /** update file states
    * @param fileDataSet file data set to update
-   * @param fileDirectoryHashSet directory set to check for new/missing files
+   * @param newFileDataSet new file data set or null
    */
-  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectoryHashSet)
-  {
-    updateStates(fileDataSet,fileDirectoryHashSet,false);
-  }
-
-  /** update file states
-   * @param fileDataSet file data set to update
-   * @param addNewFlag add missing file
-   */
-  public void updateStates(HashSet<FileData> fileDataSet, boolean addNewFlag)
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<FileData> newFileDataSet)
   {
     HashSet<String> fileDirectoryHashSet = new HashSet<String>();
     for (FileData fileData : fileDataSet)
@@ -1272,7 +1322,7 @@ abstract class Repository implements Serializable
       fileDirectoryHashSet.add(!directory.isEmpty() ? directory : null);
     }
 
-    updateStates(fileDataSet,fileDirectoryHashSet,addNewFlag);
+    updateStates(fileDataSet,fileDirectoryHashSet,newFileDataSet);
   }
 
   /** update files states
@@ -1280,7 +1330,7 @@ abstract class Repository implements Serializable
    */
   public void updateStates(HashSet<FileData> fileDataSet)
   {
-    updateStates(fileDataSet,false);
+    updateStates(fileDataSet,(HashSet<FileData>)null);
   }
 
   /** update file state

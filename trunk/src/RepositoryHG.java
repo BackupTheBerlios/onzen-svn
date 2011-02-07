@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryHG.java,v $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 * $Author: torsten $
 * Contents: Mecurial repository functions
 * Systems: all
@@ -107,10 +107,9 @@ class RepositoryHG extends Repository
 
   /** update file states
    * @param fileDataSet file data set to update
-   * @param fileDirectoryHashSet directory set to check for new/missing files
-   * @param addNewFlag add missing files
+   * @param fileDirectorySet directory set to check for new/missing files
    */
-  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, boolean addNewFlag)
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
     final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(.)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
 
@@ -154,7 +153,7 @@ class RepositoryHG extends Repository
               fileData.workingRevision    = workingRevision;
               fileData.repositoryRevision = repositoryRevision;
             }
-            else if (addNewFlag)
+            else if ((newFileDataSet != null) && !isHiddenFile(name))
             {           
               // check if file not in sub-directory (hg list all files :-()
               String parentDirectory = new File(name).getParent();
@@ -166,18 +165,19 @@ class RepositoryHG extends Repository
                 File file = new File(rootPath,name);
                 FileData.Types type     = getFileType(file);
                 long           size     = file.length();
-                long           datetime = file.lastModified();
+                Date           datetime = new Date(file.lastModified());
 
                 // create file data
-                fileData = new FileData(name,
-                                        type,
-                                        state,
-                                        mode,
-                                        size,
-                                        datetime
-                                       );
-//???
-Dprintf.dprintf("new name=%s",name);
+                newFileDataSet.add(new FileData(name,
+                                                type,
+                                                state,
+                                                mode,
+                                                size,
+                                                datetime,
+                                                workingRevision,
+                                                repositoryRevision
+                                               )
+                                  );
               }
             }
           }

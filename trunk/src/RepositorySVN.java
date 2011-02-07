@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 * $Author: torsten $
 * Contents: Apache Subversion (SVN) repository
 * Systems: all
@@ -105,10 +105,10 @@ class RepositorySVN extends Repository
 
   /** update file states
    * @param fileDataSet file data set to update
-   * @param fileDirectoryHashSet directory set to check for new/missing files
-   * @param addNewFlag add missing files
+   * @param fileDirectorySet directory set to check for new/missing files
+   * @param newFileDataSet new file data set or null
    */
-  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, boolean addNewFlag)
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
     final Pattern PATTERN_STATUS         = Pattern.compile("^(.)......(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
@@ -156,48 +156,48 @@ class RepositorySVN extends Repository
               fileData.workingRevision    = workingRevision;
               fileData.repositoryRevision = repositoryRevision;
             }
-            else if (addNewFlag)
+            else if ((newFileDataSet != null) && !isHiddenFile(name))
             {
               // get file type, size, date/time
               File file = new File(rootPath,name);
               FileData.Types type     = getFileType(file);
               long           size     = file.length();
-              long           datetime = file.lastModified();
+              Date           datetime = new Date(file.lastModified());
 
               // create file data
-              fileData = new FileData(name,
-                                      FileData.Types.FILE,
-                                      state,
-                                      FileData.Modes.BINARY,
-                                      size,
-                                      datetime
-                                     );
-//???
-Dprintf.dprintf("");
+              newFileDataSet.add(new FileData(name,
+                                              FileData.Types.FILE,
+                                              state,
+                                              FileData.Modes.BINARY,
+                                              size,
+                                              datetime,
+                                              workingRevision,
+                                              repositoryRevision
+                                             )
+                                );
             }
           }
           else if ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
           {
             name = matcher.group(1);
 
-            if (addNewFlag)
+            if (newFileDataSet != null)
             {
               // get file type, size, date/time
               File file = new File(rootPath,name);
               FileData.Types type     = getFileType(file);
               long           size     = file.length();
-              long           datetime = file.lastModified();
+              Date           datetime = new Date(file.lastModified());
 
               // create file data
-              fileData = new FileData(name,
-                                      FileData.Types.FILE,
-                                      state,
-                                      FileData.Modes.BINARY,
-                                      size,
-                                      datetime
-                                     );
-//???
-Dprintf.dprintf("");
+              newFileDataSet.add(new FileData(name,
+                                              FileData.Types.FILE,
+                                              state,
+                                              FileData.Modes.BINARY,
+                                              size,
+                                              datetime
+                                             )
+                                );
             }
           }
           else if (PATTERN_STATUS_AGAINST.matcher(line).matches())
@@ -220,35 +220,6 @@ Dprintf.dprintf("");
 Dprintf.dprintf("exception=%s",exception);
       }
     } 
-
-/*
-    for (FileData fileData : fileDataSet)
-    {
-      try
-      {
-        Exec exec = new Exec(rootPath,"svn status "+fileData.name);
-        while ((line = exec.getNextLineStdout()) != null)
-        {
-Dprintf.dprintf("line=%s",line);
-          if      ((matcher = filePattern1.matcher(line)).matches())
-          {
-Dprintf.dprintf("file 1");
-            fileData.state = parseState(matcher.group(1));
-          }
-          else if ((matcher = filePattern2.matcher(line)).matches())
-          {
-Dprintf.dprintf("file 2 %s",matcher.group(2));
-            fileData.state = parseState(matcher.group(2));
-          }
-        }
-      }
-      catch (IOException exception)
-      {
-        fileData.state = FileData.States.ERROR;
-      }
-Dprintf.dprintf("file=%s",fileData);
-    }
-    */
   }
 
   /** get last revision name
