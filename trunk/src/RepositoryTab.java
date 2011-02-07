@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: repository tab
 * Systems: all
@@ -161,9 +161,9 @@ class RepositoryTab
           else if (fileData1.size > fileData2.size) return  1;
           else                                      return  0;
         case SORTMODE_DATETIME:
-          if      (fileData1.datetime < fileData2.datetime) return -1;
-          else if (fileData1.datetime > fileData2.datetime) return  1;
-          else                                              return  0;
+          if      (fileData1.datetime.before(fileData2.datetime)) return -1;
+          else if (fileData1.datetime.after(fileData2.datetime))  return  1;
+          else                                                    return  0;
         default:
           return 0;
       }
@@ -1946,7 +1946,11 @@ Dprintf.dprintf("");
    */
   protected void updateFileStatus(FileData fileData)
   {
-    updateFileStatus(fileDataMap.get(fileData),fileData);
+    TreeItem treeItem = fileDataMap.get(fileData);
+    if (treeItem != null)
+    {
+      updateFileStatus(treeItem,fileData);
+    }
   }
 
   /** update file tree items
@@ -1967,27 +1971,55 @@ Dprintf.dprintf("");
   {
     Background.run(new BackgroundRunnable(repository,fileDataSet,fileDataMap,title)
     {
-      public void run(Repository repository, HashSet<FileData> fileDataSet, WeakHashMap<FileData,TreeItem> fileDataMap, String title)
+      public void run(Repository repository, HashSet<FileData> fileDataSet, final WeakHashMap<FileData,TreeItem> fileDataMap, String title)
       {
+        // remove not existing entries
+Dprintf.dprintf("");
+        FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);
+        for (FileData fileData : fileDataArray)
+        {
+          if (!(new File(fileData.getFileName(repository.rootPath)).exists()))
+          {
+Dprintf.dprintf("fileData=%s",fileData);
+            fileDataSet.remove(fileData);
+
+            final TreeItem treeItem = fileDataMap.get(fileData);
+            if (treeItem != null)
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+                }
+              });
+            }
+          }
+        }
+
         // update tree items: status update in progress
         for (final FileData fileData : fileDataSet)
         {
-          final TreeItem treeItem = fileDataMap.get(fileData);
 //Dprintf.dprintf("fileData=%s",fileData);
-          display.syncExec(new Runnable()
+          final TreeItem treeItem = fileDataMap.get(fileData);
+          if (treeItem != null)
           {
-            public void run()
+            display.syncExec(new Runnable()
             {
-              if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-            }
-          });
+              public void run()
+              {
+                if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+              }
+            });
+          }
         }
 
         // update states
+        HashSet<FileData> newFileDataSet = new HashSet<FileData>();
         try
         {
           onzen.setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
-          repository.updateStates(fileDataSet,true);
+          repository.updateStates(fileDataSet,newFileDataSet);
         }
         finally
         {
@@ -1997,13 +2029,54 @@ Dprintf.dprintf("");
         // update tree items: set status color
         for (final FileData fileData : fileDataSet)
         {
-          final TreeItem treeItem = fileDataMap.get(fileData);
 //Dprintf.dprintf("fileData=%s",fileData);
+          final TreeItem treeItem = fileDataMap.get(fileData);
+          if (treeItem != null)
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (!treeItem.isDisposed()) updateFileStatus(treeItem,fileData);
+              }
+            });
+          }
+        }
+
+        // add new entries
+        for (final FileData newFileData : newFileDataSet)
+        {
+Dprintf.dprintf("new newFileData =%s",newFileData);
+          // add new tree item
           display.syncExec(new Runnable()
           {
             public void run()
             {
-              if (!treeItem.isDisposed()) updateFileStatus(treeItem,fileData);
+              // find parent tree item
+              TreeItem treeItem = null;
+              for (FileData fileData : fileDataMap.keySet())
+              {
+                if (fileData.getFileName().equals(newFileData.getDirectoryName()))
+                {
+                  treeItem = fileDataMap.get(fileData);
+                  break;
+                }
+              }
+
+              if (treeItem != null)
+              {
+                // create tree item
+                TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
+                newTreeItem.setText(0,newFileData.getBaseName());
+                newTreeItem.setImage(getFileDataImage(newFileData));
+                updateFileStatus(newTreeItem,newFileData);
+
+                // store tree item reference
+                fileDataMap.put(newFileData,newTreeItem);
+              }
+else {
+//for (TreeItem i : fileDataMap.values()) Dprintf.dprintf("i=%s",i);
+}
             }
           });
         }
@@ -2028,17 +2101,20 @@ Dprintf.dprintf("");
     {
       public void run(Repository repository, final FileData fileData, WeakHashMap<FileData,TreeItem> fileDataMap)
       {
-        final TreeItem treeItem = fileDataMap.get(fileData);
+//Dprintf.dprintf("fileData=%s",fileData);
 
         // update tree items: status update in progress
-//Dprintf.dprintf("fileData=%s",fileData);
-        display.syncExec(new Runnable()
+        final TreeItem treeItem = fileDataMap.get(fileData);
+        if (treeItem != null)
         {
-          public void run()
+          display.syncExec(new Runnable()
           {
-            if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-          }
-        });
+            public void run()
+            {
+              if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+            }
+          });
+        }
 
         // update states: set status color
         HashSet<FileData> fileDataSet = new HashSet<FileData>();
@@ -2046,7 +2122,7 @@ Dprintf.dprintf("");
         try
         {
           onzen.setStatusText("Update states of '%s'...",fileData.getFileName(repository.rootPath));
-          repository.updateStates(fileDataSet,true);
+          repository.updateStates(fileDataSet);
         }
         finally
         {
