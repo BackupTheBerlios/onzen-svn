@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 #
 # $Source: /tmp/cvs/onzen/Makefile,v $
-# $Revision: 1.3 $
+# $Revision: 1.4 $
 # $Author: torsten $
 # Contents: Makefile for Onzen
 # Systems: all
@@ -81,6 +81,7 @@ ECHO       = echo
 ECHO_NO_LF = echo -n
 GREP       = grep
 INSTALL    = /usr/bin/install -c
+MD5SUM     = md5sum
 MKDIR      = mkdir
 PERL       = /usr/bin/perl
 RMDIR      = rmdir
@@ -95,7 +96,7 @@ UNZIP      = unzip
 VERSION_MAJOR := $(shell $(CAT) version|$(GREP) MAJOR|$(SED) 's/MAJOR=//g')
 VERSION_MINOR := $(shell $(CAT) version|$(GREP) MINOR|$(SED) 's/MINOR=//g')
 
-Version = 0.03
+DISTRIBUTION_NAME = onzen-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 #---------------------------------- rules ------------------------------------
 
@@ -127,7 +128,6 @@ SOURCES        = src/Onzen.java \
                  src/TableLayoutData.java \
                  src/Pane.java \
                  src/ProgressBar.java \
-                 src/BusyDialog.java \
                  src/Widgets.java \
                  src/Dialogs.java \
                  src/StringParser.java \
@@ -139,24 +139,6 @@ SOURCES        = src/Onzen.java \
                  src/Dprintf.java \
                  \
                  src/DataModel.java \
-
-Sources = onzen.tcl \
-          onzen_conflict.tcl \
-          onzen_repository.tcl \
-          onzen_view.tcl \
-          onzen_busyindicator.tcl \
-          onzen_file.tcl \
-          onzen_tag.tcl \
-          onzen_config.tcl \
-          onzen_preferences.tcl \
-          onzen_update.tcl \
-          \
-          pkgIndex.tcl \
-          tools.tcl \
-          dialogs.tcl \
-          localize.tcl \
-          mclistbox.tcl \
-
 
 OTHER_SOURCES  = onzen.in \
                  onzen.bat.in \
@@ -175,9 +157,10 @@ JARS           = onzen.jar \
                  onzen-macosx.jar \
                  onzen-macosx_64.jar \
 
+OTHER_JARS     = $(SQLITE_JAR) \
+
 TARGETS        = onzen \
                  $(if $(LAUNCH4J),onzen.exe,onzen.bat) \
-                 onzen2 \
 
 #------------------------------ dependencies ---------------------------------
 
@@ -188,16 +171,11 @@ clean: \
   clean_jars
 	$(RMF) $(OBJECTS)
 	$(RMF) classes/*.class
-	$(RMF) $(JARS)
 	$(RMF) $(TARGETS)
 	$(RMRF) tmp
 
 distclean: \
   clean
-	$(RMF) Makefile
-	$(RMF) src/Config.java
-	$(RMF) barcontrol
-	$(RMF) barcontrol.bat
 
 # JARs
 .PHONY: jars clean_jars
@@ -209,7 +187,7 @@ clean_jars:
 # create JARs
 onzen.jar: jar.txt $(OBJECTS) images/*.png
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	$(CP) classes/*.class tmp/jar
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -221,7 +199,7 @@ endif
 
 onzen-linux.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_LINUX)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -240,7 +218,7 @@ endif
 
 onzen-linux_64.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_LINUX_64)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -260,7 +238,7 @@ endif
 
 onzen-windows.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_WINDOWS)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -280,7 +258,7 @@ endif
 
 onzen-windows_64.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_WINDOWS_64)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -300,7 +278,7 @@ endif
 
 onzen-solaris.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_SOLARIS)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -320,7 +298,7 @@ endif
 
 onzen-macosx.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_MACOSX)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -340,7 +318,7 @@ endif
 
 onzen-macosx_64.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_MACOSX_64)
 ifneq ($(JAR),)
-	$(INSTALL) -d tmp/jar
+	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
 	$(CP) classes/*.class tmp/jar
 	# add SWT JAR
@@ -359,8 +337,8 @@ else
 endif
 
 # create Unix start script
-xonzen: onzen.in onzen-linux.jar onzen-linux_64.jar
-	$(CAT) barcontrol.in | \
+onzen: onzen.in onzen-linux.jar onzen-linux_64.jar
+	$(CAT) onzen.in | \
         ( \
           while IFS="" read line; do \
             line=`$(ECHO) "$$line"|$(SED) 's|\@JAVA\@|$(JAVA)|g'`; \
@@ -372,11 +350,11 @@ xonzen: onzen.in onzen-linux.jar onzen-linux_64.jar
 
 ifneq ($(LAUNCH4J),)
 # create Windows executable
-xonzen.exe: onzen-windows.jar
+onzen.exe: onzen-windows.jar
 	$(LAUNCH4J) onzen.xml
 else
 # create Windows start script
-xonzen.bat: onzen.bat.in onzen-windows.jar
+onzen.bat: onzen.bat.in onzen-windows.jar
 	$(CAT) onzen.bat.in | \
         ( \
           while IFS="" read line; do \
@@ -411,71 +389,103 @@ endif
 # run with JAR file
 ifneq ($(JAVA),)
 runjar: onzen
-	./onzen2
+	./onzen
 else
 	@$(ECHO) "ERROR: no 'java' commadn - cannot execute Onzen"
 endif
 
 .PHONY: install
-#install: $(JARS) onzen2
-install: onzen-linux.jar onzen2
-	$(INSTALL) -d /home/torsten/bin
-	$(INSTALL) -d /home/torsten/bin
+#install: $(JARS) onzen
+install: onzen-linux.jar onzen
+	$(INSTALL) -d $(HOME)/bin
 	$(INSTALL) -m 664 \
                    onzen-linux.jar \
-                   /home/torsten/bin
+                   $(HOME)/bin
 	$(INSTALL) -m 775 \
-                   onzen2 \
-                   /home/torsten/bin
+                   onzen \
+                   $(HOME)/bin
+
+# --- distribution
+.PHONY: dist clean_dist $(DISTRIBUTION_NAME).tar.bz2
+
+dist: \
+  $(DISTRIBUTION_NAME).tar.bz2
+
+clean_dist:
+	$(RMF) $(DISTRIBUTION_NAME).tar.bz2
 
 # create distribution
-.PHONY: dist
-dist:
-ifneq ($(DIRECTORY),)
-	$(INSTALL) -d $(DIRECTORY)/onzen
-	$(INSTALL) -d $(DIRECTORY)/onzen/src
+$(DISTRIBUTION_NAME).tar.bz2: \
+  $(TARGETS) \
+  \
+  Makefile \
+  version \
+  ToDo \
+  ChangeLog \
+  \
+  $(OTHER_SOURCES) \
+  $(OTHER_JARS) \
+  \
+  $(SCRIPTS) \
+  \
+  doc/README \
+  doc/COPYING \
+  $(MAN)
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)
+	$(INSTALL) -m 775 \
+                   $(OTHER_SOURCES) \
+                   tmp/$(DISTRIBUTION_NAME)
 	$(INSTALL) -m 664 \
-                   Makefile.in \
-                   onzen.cfg \
-                   $(DIRECTORY)/onzen
+                   Makefile \
+                   version \
+                   ToDo \
+                   ChangeLog \
+                   tmp/$(DISTRIBUTION_NAME)
+	#
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/src
 	$(INSTALL) -m 664 \
                    $(sort $(SOURCES)) \
-                   src/Config.java.in \
-                   $(DIRECTORY)/onzen/src
-	$(INSTALL) -d $(DIRECTORY)/onzen/classes
+                   tmp/$(DISTRIBUTION_NAME)/src
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/classes
 	$(INSTALL) -m 664 \
                    $(sort $(OTHER_SOURCES)) \
-                   $(DIRECTORY)/onzen
-	$(INSTALL) -d $(DIRECTORY)/onzen/images
+                   tmp/$(DISTRIBUTION_NAME)
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/images
 	$(INSTALL) -m 664 \
                    images/*.png \
-                   $(DIRECTORY)/onzen/images
-	$(INSTALL) -d $(DIRECTORY)/onzen/jars
+                   tmp/$(DISTRIBUTION_NAME)/images
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars
 	$(INSTALL) -m 664 \
-                   jars/*.jar \
-                   $(DIRECTORY)/onzen/jars
-	$(INSTALL) -d $(DIRECTORY)/onzen/jars/linux
+                   $(OTHER_JARS) \
+                   tmp/$(DISTRIBUTION_NAME)/jars
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/linux
 	$(INSTALL) -m 664 \
                    jars/linux/*.jar \
-                   $(DIRECTORY)/onzen/jars/linux
-	$(INSTALL) -d $(DIRECTORY)/onzen/jars/solaris
+                   tmp/$(DISTRIBUTION_NAME)/jars/linux
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/solaris
 	$(INSTALL) -m 664 \
                    jars/solaris/*.jar \
-                   $(DIRECTORY)/onzen/jars/solaris
-	$(INSTALL) -d $(DIRECTORY)/onzen/jars/windows
-	$(INSTALL) -m 664 \
-                   jars/windows/*.jar \
-                   $(DIRECTORY)/onzen/jars/windows
-	$(INSTALL) -d $(DIRECTORY)/onzen/jars/macosx
+                   tmp/$(DISTRIBUTION_NAME)/jars/solaris
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/macosx
 	$(INSTALL) -m 664 \
                    jars/macosx/*.jar \
-                   $(DIRECTORY)/onzen/jars/macosx
-else
-	$(ECHO) Please call 'make dist' from top-level directory to create a distribution.
+                   tmp/$(DISTRIBUTION_NAME)/jars/macosx
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/windows
+	$(INSTALL) -m 664 \
+                   jars/windows/*.jar \
+                   tmp/$(DISTRIBUTION_NAME)/jars/windows
+	#
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/doc
+	$(INSTALL) -m 664 \
+                   doc/README \
+                   doc/COPYING \
+                   tmp/$(DISTRIBUTION_NAME)/doc
+	#
+	($(CD) tmp; $(TAR) cjf ../$@ $(DISTRIBUTION_NAME))
+	$(RMRF) tmp/$(DISTRIBUTION_NAME)
+	#
+ifneq ($(MD5SUM),)
+	$(MD5SUM) $@
 endif
 
 # end of file
-
-source-dist:
-	tar czf onzen-$(Version).tgz $(Sources)
-
