@@ -1,0 +1,14 @@
+ToDo
+
+- improve speed of revision tree drawing
+- page up/down in revision tree view
+- hg: save push
+- view/edit tag names
+- preferences dialogs
+- create patches
+- patch database
+- set file type
+- checkout module
+- create branch
+- use text widget separator instead of \n
+- set file type
