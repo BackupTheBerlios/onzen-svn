@@ -7,8 +7,7 @@ ToDo
 - preferences dialogs
 - create patches
 - patch database
-- set file type
 - checkout module
 - create branch
 - use text widget separator instead of \n
-- set file type
+- use file watch service from Java 7 to detect files changes outside
