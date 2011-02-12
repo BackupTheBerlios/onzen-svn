@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryList.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: repository lists
 * Systems: all
@@ -118,7 +118,6 @@ Dprintf.dprintf("");
     try 
     {
       String fileName = Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+name;
-Dprintf.dprintf("fileName=%s",fileName);
 
       if (new File(fileName).exists())
       {
