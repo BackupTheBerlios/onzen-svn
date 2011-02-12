@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevert.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command revert files
 * Systems: all
@@ -106,13 +106,13 @@ class CommandRevert
    */
   class Data
   {
-    HashSet<FileData> fileDataSet;
-    String[]          revisionNames;
-    String            revision;
+//    HashSet<FileData> fileDataSet;
+    String[] revisionNames;
+    String   revision;
 
     Data()
     {
-      this.fileDataSet   = new HashSet<FileData>();
+//      this.fileDataSet   = new HashSet<FileData>();
       this.revisionNames = null;
       this.revision      = null;
     }
@@ -123,28 +123,30 @@ class CommandRevert
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final RepositoryTab repositoryTab;
-  private final Display       display;
+  private final RepositoryTab     repositoryTab;
+  private final HashSet<FileData> fileDataSet;
+  private final Shell             shell;
+  private final Display           display;
 
   // dialog
-  private final Data          data = new Data();
-  private final Shell         dialog;        
+  private final Data              data = new Data();
+  private final Shell             dialog;        
 
   // widgets
-  private final List          widgetFiles;   
-  private final Combo         widgetRevision; 
-  private final Button        widgetRevert;  
+  private final List              widgetFiles;   
+  private final Combo             widgetRevision; 
+  private final Button            widgetRevert;  
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** revert command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
+   * @param fileDataSet files to revert
    */
-  CommandRevert(final RepositoryTab repositoryTab, final Shell shell, final Repository repository)
+  CommandRevert(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet)
   {
     Composite composite,subComposite;
     Label     label;
@@ -152,12 +154,14 @@ class CommandRevert
 
     // initialize variables
     this.repositoryTab = repositoryTab;
+    this.fileDataSet   = fileDataSet;
+    this.shell         = shell;
 
     // get display
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Revert files",Settings.geometryRevert.x,Settings.geometryRevert.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Revert files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,0.0},1.0,4));
@@ -191,7 +195,7 @@ class CommandRevert
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetRevert = Widgets.newButton(composite,"Revert");
-      Widgets.layout(widgetRevert,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetRevert,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetRevert.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -211,7 +215,7 @@ class CommandRevert
       widgetRevert.setToolTipText("Revert files.");
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -229,28 +233,15 @@ class CommandRevert
     // listeners
 
     // show dialog
-    Dialogs.show(dialog);
-
-    // update
-    widgetRevision.add(repositoryTab.repository.getLastRevision());
-    widgetRevision.select(0);
-  }
-
-  /** revert command
-   * @param repositoryTab repository tab
-   * @param shell shell
-   * @param repository repository
-   * @param fileDataSet files to revert
-   */
-  CommandRevert(final RepositoryTab repositoryTab, final Shell shell, final Repository repository, HashSet<FileData> fileDataSet)
-  {
-    this(repositoryTab,shell,repository);
+    Dialogs.show(dialog,Settings.geometryRevert);
 
     // add files
-    for (FileData fileData : fileDataSet)
+    if (!widgetFiles.isDisposed())
     {
-      data.fileDataSet.add(fileData);
-      widgetFiles.add(fileData.name);
+      for (FileData fileData : fileDataSet)
+      {
+        widgetFiles.add(fileData.getFileName());
+      }
     }
 
     if (fileDataSet.size() == 1)
@@ -313,75 +304,20 @@ class CommandRevert
         }
       });
     }
+
+    // update
+    widgetRevision.add(repositoryTab.repository.getLastRevision());
+    widgetRevision.select(0);
   }
 
   /** revert command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to revert
    */
-  CommandRevert(final RepositoryTab repositoryTab, final Shell shell, final Repository repository, FileData fileData)
+  CommandRevert(final Shell shell, final RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository);
-
-    // add file
-    data.fileDataSet.add(fileData);
-    widgetFiles.add(fileData.name);
-
-    // start add revisions (only if single file is seleccted)
-    Background.run(new BackgroundRunnable(fileData)
-    {
-      public void run(FileData fileData)
-      {
-        // get revisions
-        repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
-        try
-        {
-          data.revisionNames = repositoryTab.repository.getRevisionNames(fileData);
-        }
-        catch (RepositoryException exception)
-        {
-          final String exceptionMessage = exception.getMessage();
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              Dialogs.error(dialog,String.format("Getting revisions fail: %s",exceptionMessage));
-            }
-          });
-        }
-        finally
-        {
-          repositoryTab.clearStatusText();
-        }
-
-        if (data.revisionNames.length > 0)
-        {
-          // add revisions
-          if (!display.isDisposed())
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                if (!widgetRevision.isDisposed())
-                {
-                  widgetRevision.removeAll();
-                  for (String revisionName : data.revisionNames)
-                  {
-                    widgetRevision.add(revisionName);
-                  }
-                  widgetRevision.add(repositoryTab.repository.getLastRevision());
-                  widgetRevision.select(data.revisionNames.length);
-                  widgetRevision.setEnabled(true);
-                }
-              }
-            });
-          }
-        }
-      }
-    });
+    this(shell,repositoryTab,fileData.toSet());
   }
 
   /** run dialog
@@ -436,26 +372,26 @@ class CommandRevert
     try
     {
       // revert files
-      repositoryTab.repository.revert(data.fileDataSet,data.revision);
+      repositoryTab.repository.revert(fileDataSet,data.revision);
 
       // update file states
-      repositoryTab.repository.updateStates(data.fileDataSet);
+      repositoryTab.repository.updateStates(fileDataSet);
       display.syncExec(new Runnable()
       {
         public void run()
         {
-          repositoryTab.updateFileStatus(data.fileDataSet);
+          repositoryTab.updateTreeItems(fileDataSet);
         }
       });
     }
     catch (RepositoryException exception)
     {
-      final String message = exception.getMessage();
+      final String exceptionMessage = exception.getMessage();
       display.syncExec(new Runnable()
       {
         public void run()
         {
-          Dialogs.error(dialog,"Cannot revert files (error: %s)",message);
+          Dialogs.error(shell,"Cannot revert files (error: %s)",exceptionMessage);
         }
       });
       return;

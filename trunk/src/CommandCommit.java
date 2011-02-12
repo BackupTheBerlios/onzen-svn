@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandCommit.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command commit files/directories
 * Systems: all
@@ -15,11 +15,8 @@
 //import java.io.BufferedReader;
 //import java.io.IOException;
 
-//import java.text.SimpleDateFormat;
-
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.BitSet;
 //import java.util.Comparator;
 //import java.util.Date;
 //import java.util.HashMap;
@@ -27,8 +24,6 @@ import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
 //import java.util.ListIterator;
-//import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -106,15 +101,13 @@ class CommandCommit
    */
   class Data
   {
-    HashSet<FileData> fileDataSet;
-    String            message;
-    boolean           binaryFlag;
+    String  message;
+    boolean binaryFlag;
 
     Data()
     {
-      this.fileDataSet = new HashSet<FileData>();
-      this.message     = "";
-      this.binaryFlag  = false;
+      this.message    = "";
+      this.binaryFlag = false;
     }
   };
 
@@ -123,30 +116,32 @@ class CommandCommit
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final RepositoryTab repositoryTab;
-  private final Display       display;
+  private final RepositoryTab     repositoryTab;
+  private final HashSet<FileData> fileDataSet;
+  private final Shell             shell;
+  private final Display           display;
+  private final String[]          history;       
 
   // dialog
-  private final Data          data = new Data();
-  private final String[]      history;       
-  private final Shell         dialog;        
+  private final Data              data = new Data();
+  private final Shell             dialog;        
 
   // widgets
-  private final List          widgetFiles;   
-  private final List          widgetHistory; 
-  private final Text          widgetMessage; 
-  private final Button        widgetCommit;     
+  private final List              widgetFiles;   
+  private final List              widgetHistory; 
+  private final Text              widgetMessage; 
+  private final Button            widgetCommit;     
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** commit command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
+   * @param fileDataSet files to commit
    */
-  CommandCommit(RepositoryTab repositoryTab, final Shell shell, final Repository repository)
+  CommandCommit(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet)
   {
     Composite composite;
     Label     label;
@@ -154,6 +149,8 @@ class CommandCommit
 
     // initialize variables
     this.repositoryTab = repositoryTab;
+    this.fileDataSet   = fileDataSet;
+    this.shell         = shell;
 
     // get display
     display = shell.getDisplay();
@@ -162,7 +159,7 @@ class CommandCommit
     history = Message.getHistory();
 
     // commit files dialog
-    dialog = Dialogs.open(shell,"Commit files",Settings.geometryCommit.x,Settings.geometryCommit.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Commit files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0},1.0,4));
@@ -198,7 +195,7 @@ class CommandCommit
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetCommit = Widgets.newButton(composite,"Commit");
-      Widgets.layout(widgetCommit,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetCommit,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetCommit.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -218,7 +215,7 @@ class CommandCommit
       widgetCommit.setToolTipText("Commit files.");
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -320,7 +317,7 @@ class CommandCommit
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryCommit);
 
     // add history
     if (!widgetHistory.isDisposed())
@@ -338,36 +335,13 @@ class CommandCommit
   }
 
   /** commit command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
-   * @param fileDataSet files to commit
-   */
-  CommandCommit(RepositoryTab repositoryTab, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
-  {
-    this(repositoryTab,shell,repository);
-
-    // add files
-    for (FileData fileData : fileDataSet)
-    {
-      data.fileDataSet.add(fileData);
-      widgetFiles.add(fileData.name);
-    }
-  }
-
-  /** commit command
    * @param repositoryTab repository tab
-   * @param shell shell
-   * @param repository repository
    * @param fileData file to commit
    */
-  CommandCommit(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  CommandCommit(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository);
-
-    // add file
-    data.fileDataSet.add(fileData);
-    widgetFiles.add(fileData.name);
+    this(shell,repositoryTab,fileData.toSet());
   }
 
   /** run dialog
@@ -426,18 +400,18 @@ class CommandCommit
     {
       // commit files
       message = new Message(data.message);
-      repositoryTab.repository.commit(data.fileDataSet,message);
+      repositoryTab.repository.commit(fileDataSet,message);
 
       // add message to history
       message.addToHistory();
 
       // update file states
-      repositoryTab.repository.updateStates(data.fileDataSet);
+      repositoryTab.repository.updateStates(fileDataSet);
       display.syncExec(new Runnable()
       {
         public void run()
         {
-          repositoryTab.updateFileStatus(data.fileDataSet);
+          repositoryTab.updateTreeItems(fileDataSet);
         }
       });
     }
@@ -448,7 +422,7 @@ class CommandCommit
       {
         public void run()
         {
-          Dialogs.error(dialog,"Cannot commit files (error: %s)",exceptionMessage);
+          Dialogs.error(shell,"Cannot commit files (error: %s)",exceptionMessage);
         }
       });
       return;
