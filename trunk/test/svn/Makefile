@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 #
 # $Source: /tmp/cvs/onzen/test/svn/Makefile,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 # $Author: torsten $
 # Contents: Makefile for SVN test data
 # Systems: all
@@ -61,6 +61,8 @@ create:
           $(ECHO) "Hello World" > conflict; \
           $(DD) if=/dev/random bs=1024 count=1 1>binary 2>/dev/null; \
           $(ECHO) "Hello World" > "name with space"; \
+          $(INSTALL) -d subdirectory; \
+          $(ECHO) "Hello Underworld" > subdirectory/sub-file; \
         )
 	($(CD) tmp; $(SVN) import . file://$(SVNROOT)/test -m "test")
 	$(RMRF) tmp

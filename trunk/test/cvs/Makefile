@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 #
 # $Source: /tmp/cvs/onzen/test/cvs/Makefile,v $
-# $Revision: 1.2 $
+# $Revision: 1.3 $
 # $Author: torsten $
 # Contents: Makefile for CVS test data
 # Systems: all
@@ -60,6 +60,8 @@ create:
           $(ECHO) "Hello World" > conflict; \
           $(DD) if=/dev/random bs=1024 count=1 1>binary 2>/dev/null; \
           $(ECHO) "Hello World" > "name with space"; \
+          $(INSTALL) -d subdirectory; \
+          $(ECHO) "Hello Underworld" > subdirectory/sub-file; \
         )
 	($(CD) tmp; $(CVS) -d $(CVSROOT) import -m "test" test test-vendor test-release)
 	$(RMRF) tmp
