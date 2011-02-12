@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: command remove files/directories
 * Systems: all
@@ -106,13 +106,11 @@ class CommandRemove
    */
   class Data
   {
-    HashSet<FileData> fileDataSet;
-    String            message;
-    boolean           immediateCommitFlag;
+    String  message;
+    boolean immediateCommitFlag;
 
     Data()
     {
-      this.fileDataSet         = new HashSet<FileData>();
       this.message             = "";
       this.immediateCommitFlag = false;
     }
@@ -125,31 +123,33 @@ class CommandRemove
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final RepositoryTab repositoryTab;
-  private final Display       display;
+  private final RepositoryTab     repositoryTab;
+  private final HashSet<FileData> fileDataSet;
+  private final Shell             shell;
+  private final Display           display;
+  private final String[]          history;       
 
   // dialog
-  private final Data          data = new Data();
-  private final String[]      history;       
-  private final Shell         dialog;        
+  private final Data              data = new Data();
+  private final Shell             dialog;        
 
   // widgets
-  private final List          widgetFiles;   
-  private final List          widgetHistory; 
-  private final Text          widgetMessage; 
-  private final Button        widgetImmediateCommit;  
-  private final Button        widgetRemove;     
+  private final List              widgetFiles;   
+  private final List              widgetHistory; 
+  private final Text              widgetMessage; 
+  private final Button            widgetImmediateCommit;  
+  private final Button            widgetRemove;     
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** remove command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
+   * @param fileDataSet files to remove
    */
-  CommandRemove(RepositoryTab repositoryTab, final Shell shell, final Repository repository)
+  CommandRemove(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet)
   {
     Composite composite,subComposite;
     Label     label;
@@ -157,6 +157,8 @@ class CommandRemove
 
     // initialize variables
     this.repositoryTab = repositoryTab;
+    this.fileDataSet   = fileDataSet;
+    this.shell         = shell;
 
     // get display
     display = shell.getDisplay();
@@ -165,7 +167,7 @@ class CommandRemove
     history = Message.getHistory();
 
     // remove files dialog
-    dialog = Dialogs.open(shell,"Remove files",Settings.geometryRemove.x,Settings.geometryRemove.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Remove files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0},1.0,4));
@@ -203,12 +205,12 @@ class CommandRemove
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to remove files.");
 
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      subComposite.setLayout(new TableLayout(null,1.0));
       Widgets.layout(subComposite,6,0,TableLayoutData.WE);
       {
         widgetImmediateCommit = Widgets.newCheckbox(subComposite,"immediate commit");
         widgetImmediateCommit.setSelection(Settings.immediateCommit);
-        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.W);
+        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.E);
         widgetImmediateCommit.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -230,7 +232,7 @@ class CommandRemove
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetRemove = Widgets.newButton(composite,"Remove");
-      Widgets.layout(widgetRemove,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetRemove,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetRemove.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -252,7 +254,7 @@ class CommandRemove
       widgetRemove.setToolTipText("Remove files.");
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -354,7 +356,16 @@ class CommandRemove
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryRemove);
+
+    // add files
+    if (!widgetFiles.isDisposed())
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        widgetFiles.add(fileData.getFileName());
+      }
+    }
 
     // add history
     if (!widgetHistory.isDisposed())
@@ -373,36 +384,13 @@ class CommandRemove
   }
 
   /** remove command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
-   * @param fileDataSet files remove
-   */
-  CommandRemove(RepositoryTab repositoryTab, Shell shell, Repository repository, HashSet<FileData> fileDataSet)
-  {
-    this(repositoryTab,shell,repository);
-
-    // add files
-    for (FileData fileData : fileDataSet)
-    {
-      data.fileDataSet.add(fileData);
-      widgetFiles.add(fileData.name);
-    }
-  }
-
-  /** remove command
    * @param repositoryTab repository tab
-   * @param shell shell
-   * @param repository repository
    * @param fileData file remove
    */
-  CommandRemove(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  CommandRemove(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository);
-
-    // add file
-    data.fileDataSet.add(fileData);
-    widgetFiles.add(fileData.name);
+    this(shell,repositoryTab,fileData.toSet());
   }
 
   /** run dialog
@@ -459,20 +447,13 @@ class CommandRemove
     {
       // remove files
       if (data.immediateCommitFlag) message = new Message(data.message);
-      repositoryTab.repository.remove(data.fileDataSet,message);
+      repositoryTab.repository.remove(fileDataSet,message);
 
       // add message to history
       message.addToHistory();
 
       // update file states
-      repositoryTab.repository.updateStates(data.fileDataSet);
-      display.syncExec(new Runnable()
-      {
-        public void run()
-        {
-          repositoryTab.updateFileStatus(data.fileDataSet);
-        }
-      });
+      repositoryTab.updateFileStates(fileDataSet);
     }
     catch (RepositoryException exception)
     {
@@ -481,7 +462,7 @@ class CommandRemove
       {
         public void run()
         {
-          Dialogs.error(dialog,"Cannot remove files (error: %s)",exceptionMessage);
+          Dialogs.error(shell,"Cannot remove files (error: %s)",exceptionMessage);
         }
       });
       return;

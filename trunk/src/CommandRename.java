@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRename.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command rename file/directory
 * Systems: all
@@ -15,20 +15,16 @@
 //import java.io.BufferedReader;
 //import java.io.IOException;
 
-//import java.text.SimpleDateFormat;
-
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.BitSet;
 //import java.util.Comparator;
 //import java.util.Date;
 //import java.util.HashMap;
-//import java.util.HashSet;
+import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
 //import java.util.ListIterator;
 //import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -106,10 +102,9 @@ class CommandRename
    */
   class Data
   {
-    FileData fileData;
-    String   newFileName;
-    String   message;
-    boolean  immediateCommitFlag;
+    String  newFileName;
+    String  message;
+    boolean immediateCommitFlag;
 
     Data()
     {
@@ -127,11 +122,13 @@ class CommandRename
 
   // global variable references
   private final RepositoryTab repositoryTab;
+  private final FileData      fileData;
+  private final Shell         shell;
   private final Display       display;
+  private final String[]      history;
 
   // dialog
   private final Data          data = new Data();
-  private final String[]      history;       
   private final Shell         dialog;        
 
   // widgets
@@ -146,12 +143,11 @@ class CommandRename
   // ---------------------------- methods ---------------------------------
 
   /** rename command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to rename
    */
-  CommandRename(RepositoryTab repositoryTab, final Shell shell, final Repository repository, final FileData fileData)
+  CommandRename(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData)
   {
     Composite composite,subComposite;
     Label     label;
@@ -159,6 +155,8 @@ class CommandRename
 
     // initialize variables
     this.repositoryTab = repositoryTab;
+    this.fileData      = fileData;
+    this.shell         = shell;
 
     // get display
     display = shell.getDisplay();
@@ -167,7 +165,7 @@ class CommandRename
     history = Message.getHistory();
 
     // rename files dialog
-    dialog = Dialogs.open(shell,"Rename file",Settings.geometryRename.x,Settings.geometryRename.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Rename file",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,0.0,1.0},1.0,4));
@@ -215,12 +213,12 @@ class CommandRename
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to rename file.");
 
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      subComposite.setLayout(new TableLayout(null,1.0));
       Widgets.layout(subComposite,6,0,TableLayoutData.WE);
       {
         widgetImmediateCommit = Widgets.newCheckbox(subComposite,"immediate commit");
         widgetImmediateCommit.setSelection(Settings.immediateCommit);
-        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.W);
+        Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.E);
         widgetImmediateCommit.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -281,6 +279,15 @@ class CommandRename
     }
 
     // listeners
+    widgetNewFileName.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        widgetRename.setEnabled(!widget.getText().equals(fileData.getFileName()));
+      }
+    });
     widgetNewFileName.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -377,7 +384,7 @@ class CommandRename
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryRename);
 
     // add history
     if (!widgetHistory.isDisposed())
@@ -392,7 +399,7 @@ class CommandRename
     }
 
     // update
-    data.fileData            = fileData;
+//    data.fileData            = fileData;
     data.newFileName         = fileData.getFileName();
     data.immediateCommitFlag = Settings.immediateCommit;
     widgetNewFileName.setText(data.newFileName);
@@ -448,26 +455,28 @@ class CommandRename
    */
   private void rename()
   {
-    repositoryTab.setStatusText("Rename file '%s' -> '%s'...",data.fileData.getFileName(),data.newFileName);
+    repositoryTab.setStatusText("Rename file '%s' -> '%s'...",fileData.getFileName(),data.newFileName);
     Message message = null;
     try
     {
       // rename file
       if (data.immediateCommitFlag) message = new Message(data.message);
-      repositoryTab.repository.rename(data.fileData,data.newFileName,message);
+      repositoryTab.repository.rename(fileData,data.newFileName,message);
 
       // add message to history
       message.addToHistory();
 
       // update file states
-      repositoryTab.repository.updateStates(data.fileData);
-      display.syncExec(new Runnable()
-      {
-        public void run()
-        {
-          repositoryTab.updateFileStatus(data.fileData);
-        }
-      });
+      HashSet<FileData> fileDataSet = fileData.toSet();
+      fileDataSet.add(new FileData(data.newFileName,
+                                   fileData.type,
+                                   fileData.state,
+                                   fileData.mode,
+                                   fileData.size,
+                                   fileData.datetime
+                                  )
+                     );
+      repositoryTab.updateFileStates(fileData.toSet());
     }
     catch (RepositoryException exception)
     {
@@ -476,9 +485,9 @@ class CommandRename
       {
         public void run()
         {
-          Dialogs.error(dialog,
+          Dialogs.error(shell,
                         "Cannot rename file\n\n'%s'\n\ninto\n\n'%s'\n\n(error: %s)",
-                        data.fileData.getFileName(),
+                        fileData.getFileName(),
                         data.newFileName,
                         exceptionMessage
                        );
