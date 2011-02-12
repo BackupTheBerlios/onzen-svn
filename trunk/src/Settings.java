@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 * $Author: torsten $
 * Contents: load/save program settings
 * Systems: all
@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.util.EnumSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.StringTokenizer;
 import java.util.LinkedHashSet;
 
@@ -423,6 +424,7 @@ public class Settings
 
   /** config value adapter String <-> file data state set
    */
+/* obsolete, replaced by generic EnumSet type
   class ConfigValueAdapterDiffTypes extends ConfigValueAdapter<String,EnumSet<DiffData.Types>>
   {
     public EnumSet<DiffData.Types> toValue(String string) throws Exception
@@ -455,9 +457,11 @@ public class Settings
       return buffer.toString();
     }
   }
+*/
 
   /** config value adapter String <-> file data state set
    */
+/* obsolete, replaced by generic EnumSet type
   class ConfigValueAdapterFileDataStates extends ConfigValueAdapter<String,EnumSet<FileData.States>>
   {
     public EnumSet<FileData.States> toValue(String string) throws Exception
@@ -490,6 +494,7 @@ public class Settings
       return buffer.toString();
     }
   }
+*/
 
   /** config value adapter String <-> font data
    */
@@ -609,7 +614,7 @@ public class Settings
 
   @ConfigComment(text={"","Hidden files in file tree: <pattern>"})
   @ConfigValue(name="hiddenFilePattern", type=ConfigValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenFilePatterns            = new FilePattern[]{};
+  public static FilePattern[]            hiddenFilePatterns            = new FilePattern[]{new FilePattern(".*")};
   @ConfigComment(text={"","Hidden directories in file tree: <pattern>"})
   @ConfigValue(name="hiddenDirectoryPattern", type=ConfigValueAdapterFilePattern.class)
   public static FilePattern[]            hiddenDirectoryPatterns       = new FilePattern[]
@@ -622,17 +627,19 @@ public class Settings
 
   @ConfigComment(text={"","Geometry: <width>x<height>"})
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryMain                  = new Point(800,600);
+  public static Point                    geometryMain                  = new Point(900,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryCommit                = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryAdd                   = new Point(500,300);
+  public static Point                    geometryAdd                   = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRemove                = new Point(500,300);
+  public static Point                    geometryRename                = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRevert                = new Point(500,300);
+  public static Point                    geometryRemove                = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRename                = new Point(500,300);
+  public static Point                    geometryRevert                = new Point(500,400);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometrySetFileMode           = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryDiff                  = new Point(800,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
@@ -648,7 +655,7 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryNewDirectory          = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRenameLocalFile       = new Point(300,200);
+  public static Point                    geometryRenameLocalFile       = new Point(400,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryDeleteLocalFiles      = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
@@ -659,6 +666,14 @@ public class Settings
   public static Point                    geometryAnnotations           = new Point(800,500); 
   @ConfigValue(type=ConfigValueAdapterWidthArray.class)
   public static ColumnSizes              geometryAnnotationsColumn     = new ColumnSizes(60,60,80,60,100);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometryPatches               = new Point(500,600);
+  @ConfigValue(type=ConfigValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryPatchesColumn         = new ColumnSizes(100,300);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometryCreatePatch           = new Point(500,600);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometryMailPatch             = new Point(500,600);
 
   @ConfigComment(text={"","Colors: <rgb foreground>:<rgb background> or <rgb foreground>"})
   @ConfigValue(type=ConfigValueAdapterColor.class)
@@ -707,19 +722,24 @@ public class Settings
   public static FontData                fontDiffLine                   = null;
 
   @ConfigComment(text={"","shown diff types"})
-  @ConfigValue(type=ConfigValueAdapterDiffTypes.class)
+//  @ConfigValue(type=ConfigValueAdapterDiffTypes.class)
+  @ConfigValue(type=DiffData.Types.class)
   public static EnumSet<DiffData.Types> diffShowTypes                  = EnumSet.allOf(DiffData.Types.class);
 
   @ConfigComment(text={"","shown file states in changed file list"})
-  @ConfigValue(type=ConfigValueAdapterFileDataStates.class)
+//  @ConfigValue(type=ConfigValueAdapterFileDataStates.class)
+  @ConfigValue(type=FileData.States.class)
   public static EnumSet<FileData.States> changedFilesShowStates        = EnumSet.allOf(FileData.States.class);
 
+  @ConfigComment(text={"","shown patch states in patch list"})
+  @ConfigValue(type=Patch.States.class)
+  public static EnumSet<Patch.States>    patchShowStates               = EnumSet.allOf(Patch.States.class);
 
   @ConfigComment(text={"","Accelerator keys"})
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyOpenRepository             = SWT.CTRL+'O';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyEditRepository             = SWT.CTRL+'E';
+  public static int                      keyEditRepository             = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyCloseRepository            = SWT.CTRL+'W';
   @ConfigValue(type=ConfigValueAdapterKey.class)
@@ -729,9 +749,9 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyCommit                     = '#';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyCommitPatch                = SWT.CTRL+'E';
+  public static int                      keyCreatePatch                = SWT.CTRL+'P';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyPatch                      = SWT.CTRL+'P';
+  public static int                      keyPatches                    = SWT.CTRL+'E';
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyAdd                        = '+';
   @ConfigValue(type=ConfigValueAdapterKey.class)
@@ -739,11 +759,17 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyRename                     = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
+  public static int                      keySetFileMode                = SWT.NONE;
+  @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyRevert                     = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyApplyPatches               = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyUnapplyPatches             = SWT.NONE;
+  @ConfigValue(type=ConfigValueAdapterKey.class)
+  public static int                      keyPullChanges                = SWT.NONE;
+  @ConfigValue(type=ConfigValueAdapterKey.class)
+  public static int                      keyPushChanges                = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyDiff                       = SWT.CTRL+'D';
   @ConfigValue(type=ConfigValueAdapterKey.class)
@@ -810,6 +836,12 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterEditor.class)
   public static Editor[]         editors                        = new Editor[0];
 
+  @ConfigComment(text={"","Mail commands","Macros:","  %to% - to mail address","  %cc% - CC mail address","  %subjectPrefix% - subject prefix text","  %subject% - subject text","  %file% attachment file name"})
+  @ConfigValue
+  public static String           commandMail                    = "mail -s '%subject%' %to% %cc%";
+  @ConfigValue
+  public static String           commandMailAttachment          = "mail -s '%subjectPrefix%%subject%' -a %file% %to% %cc%";
+
   // general flags
   @ConfigComment(text={"","flags"})
   @ConfigValue
@@ -827,6 +859,8 @@ public class Settings
   // HG
   @ConfigComment(text={"","HG specific settings"})
   @ConfigValue
+  public static boolean          hgForest                       = false;
+  @ConfigValue
   public static boolean          hgImmediatePush                = false;
 
   // Git
@@ -837,6 +871,7 @@ public class Settings
 
   // help
   public static boolean          helpFlag                       = false;
+
 
   // ------------------------ native functions ----------------------------
 
@@ -938,6 +973,15 @@ public class Settings
                           {
                             field.set(null,addArrayUniq((String[])field.get(null),StringUtils.unescape(string)));
                           }
+                          else if (type.isEnum())
+                          {
+                            field.set(null,addArrayUniq((Enum[])field.get(null),StringUtils.parseEnum(type,string)));
+                          }
+                          else if (type == EnumSet.class)
+                          {
+Dprintf.dprintf("");
+                            field.set(null,addArrayUniq((EnumSet[])field.get(null),StringUtils.parseEnumSet(type,string)));
+                          }
                           else
                           {
 Dprintf.dprintf("field.getType()=%s",type);
@@ -982,6 +1026,19 @@ Dprintf.dprintf("field.getType()=%s",type);
                           else if (type == String.class)
                           {
                             field.set(null,StringUtils.unescape(string));
+                          }
+                          else if (type.isEnum())
+                          {                            
+                            field.set(null,StringUtils.parseEnum(type,string));
+                          }
+                          else if (type == EnumSet.class)
+                          {
+                            Class enumClass = configValue.type();
+                            if (!enumClass.isEnum())
+                            {
+                              throw new Error(enumClass+" is not an enum class!");
+                            }
+                            field.set(null,StringUtils.parseEnumSet(enumClass,string));
                           }
                           else
                           {
@@ -1134,6 +1191,20 @@ exception.printStackTrace();
                       output.printf("%s = %s\n",name,StringUtils.escape(value));
                     }
                   }
+                  else if (type.isEnum())
+                  {
+                    for (Enum value : (Enum[])field.get(null))
+                    {
+                      output.printf("%s = %s\n",name,value.toString());
+                    }
+                  }
+                  else if (type == EnumSet.class)
+                  {
+                    for (EnumSet enumSet : (EnumSet[])field.get(null))
+                    {
+                      output.printf("%s = %s\n",name,StringUtils.join(enumSet,","));
+                    }
+                  }
                   else
                   {
 Dprintf.dprintf("field.getType()=%s",type);
@@ -1179,6 +1250,16 @@ Dprintf.dprintf("field.getType()=%s",type);
                   {
                     String value = (type != null) ? (String)field.get(null) : configValue.defaultValue();
                     output.printf("%s = %s\n",name,StringUtils.escape(value));
+                  }
+                  else if (type.isEnum())
+                  {
+                    Enum value = (Enum)field.get(null);
+                    output.printf("%s = %s\n",name,value.toString());
+                  }
+                  else if (type == EnumSet.class)
+                  {
+                    EnumSet enumSet = (EnumSet)field.get(null);
+                    output.printf("%s = %s\n",name,StringUtils.join(enumSet,","));
                   }
                   else
                   {
@@ -1334,6 +1415,48 @@ exception.printStackTrace();
     {
       array = Arrays.copyOf(array,array.length+1);
       array[array.length-1] = string;
+    }
+
+    return array;
+  }
+
+  /** unique add element to enum array
+   * @param array array
+   * @param string element
+   * @return extended array or array
+   */
+  private static Enum[] addArrayUniq(Enum[] array, Enum n)
+  {
+    int z = 0;
+    while ((z < array.length) && (array[z] != n))
+    {
+      z++;
+    }
+    if (z >= array.length)
+    {
+      array = Arrays.copyOf(array,array.length+1);
+      array[array.length-1] = n;
+    }
+
+    return array;
+  }
+
+  /** unique add element to enum set array
+   * @param array array
+   * @param string element
+   * @return extended array or array
+   */
+  private static EnumSet[] addArrayUniq(EnumSet[] array, EnumSet n)
+  {
+    int z = 0;
+    while ((z < array.length) && (array[z].equals(n)))
+    {
+      z++;
+    }
+    if (z >= array.length)
+    {
+      array = Arrays.copyOf(array,array.length+1);
+      array[array.length-1] = n;
     }
 
     return array;
