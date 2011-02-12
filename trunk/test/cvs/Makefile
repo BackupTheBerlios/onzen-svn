@@ -1,10 +1,10 @@
 # ----------------------------------------------------------------------------
 #
 # $Source: /tmp/cvs/onzen/test/cvs/Makefile,v $
-# $Revision: 1.1 $
+# $Revision: 1.2 $
 # $Author: torsten $
 # Contents: Makefile for CVS test data
-# Systems:
+# Systems: all
 #			   
 # ----------------------------------------------------------------------------
 
@@ -45,6 +45,7 @@ clean:
 
 .PHONY: create
 create:
+	# create test repository
 	$(INSTALL) -d repository
 	$(CVS) -d $(CVSROOT) init
 	#
@@ -57,12 +58,13 @@ create:
           $(ECHO) "Hello World" > merge; \
           $(ECHO) "Hello World" > removed; \
           $(ECHO) "Hello World" > conflict; \
-          $(DD) if=/dev/random bs=1024 count=1 > binary; \
+          $(DD) if=/dev/random bs=1024 count=1 1>binary 2>/dev/null; \
           $(ECHO) "Hello World" > "name with space"; \
         )
 	($(CD) tmp; $(CVS) -d $(CVSROOT) import -m "test" test test-vendor test-release)
 	$(RMRF) tmp
 	#
+	# create test check-out
 	$(INSTALL) -d test
 	$(CVS) -d $(CVSROOT) get -d test test
 	( \
@@ -79,14 +81,14 @@ create:
           $(CD) tmp; \
           \
           ($(ECHO) "Hello World"; $(ECHO) "The middle"; $(ECHO) "";) > merge; \
-          $(CVS) -d $(CVSROOT) commit -m "merge" merge; \
+          $(CVS) -d $(CVSROOT) commit -m "merge test" merge; \
           \
           $(RMF) removed; \
           $(CVS) -d $(CVSROOT) remove removed; \
-          $(CVS) -d $(CVSROOT) commit -m "removed" removed; \
+          $(CVS) -d $(CVSROOT) commit -m "removed test" removed; \
           \
           $(ECHO) "conflict" >> conflict; \
-          $(CVS) -d $(CVSROOT) commit -m "conflict" conflict; \
+          $(CVS) -d $(CVSROOT) commit -m "conflict test" conflict; \
         )
 	$(RMRF) tmp
 	#
@@ -95,6 +97,5 @@ create:
           \
           $(CVS) -d $(CVSROOT) update conflict; \
         )
-	
 
 # end of file
