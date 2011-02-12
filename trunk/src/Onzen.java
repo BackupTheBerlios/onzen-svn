@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Onzen.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: Onzen
 * Systems: all
@@ -339,6 +339,9 @@ public class Onzen
 
   private MenuItem                  menuItemApplyPatches;
   private MenuItem                  menuItemUnapplyPatches;
+  private MenuItem                  menuItemPullChanges;
+  private MenuItem                  menuItemPushChanges;
+  private MenuItem                  menuSetFileMode;
 
   private Menu                      menuRepositories;
 
@@ -457,6 +460,8 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     }
     catch (org.eclipse.swt.SWTException exception)
     {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
       System.err.println("ERROR graphics: "+exception.getCause());
       if (Settings.debugFlag)
       {
@@ -730,9 +735,7 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
             repositoryList.move(data.dragTabRepositoryTab.repository,newTabIndex);
 
             // set selected repository
-            if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
-            selectedRepositoryTab = data.dragTabRepositoryTab;
-            selectedRepositoryTab.repository.selected = true;
+            selectRepository(data.dragTabRepositoryTab);
           }
 
           // stop dragging tab
@@ -809,17 +812,9 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
       public void widgetSelected(SelectionEvent selectionEvent)
       {
         TabFolder tabFolder = (TabFolder)selectionEvent.widget;
-        TabItem   tabItem = (TabItem)selectionEvent.item;
+        TabItem   tabItem   = (TabItem)selectionEvent.item;
 
-        // deselect previous repository
-        if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
-
-        // select new repository
-        selectedRepositoryTab = (RepositoryTab)tabItem.getData();
-        if (selectedRepositoryTab != null)
-        {
-          selectedRepositoryTab.repository.selected = true;
-        }
+        selectRepository((RepositoryTab)tabItem.getData());
       }
     });
     addRepositoryTabEmpty();
@@ -827,10 +822,10 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
     // create buttons
     composite = Widgets.newComposite(shell);
     composite.setLayout(new TableLayout(0.0,1.0,2));
-    Widgets.layout(composite,1,0,TableLayoutData.W);
+    Widgets.layout(composite,1,0,TableLayoutData.WE);
     {
       widgetButtonUpdate = Widgets.newButton(composite,"Update");
-      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonUpdate.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -846,7 +841,7 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
       });
 
       widgetButtonCommit = Widgets.newButton(composite,"Commit");
-      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonCommit.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -861,9 +856,8 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
         }
       });
 
-      widgetButtonPatch = Widgets.newButton(composite,"Patch");
-widgetButtonPatch.setEnabled(false);
-      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetButtonPatch = Widgets.newButton(composite,"Create patch");
+      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonPatch.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -873,14 +867,29 @@ widgetButtonPatch.setEnabled(false);
         {
           if (selectedRepositoryTab != null)
           {
-//            selectedRepositoryTab.patch();
-Dprintf.dprintf("");
+            selectedRepositoryTab.createPatch();
+          }
+        }
+      });
+
+      widgetButtonPatch = Widgets.newButton(composite,"Patches");
+      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetButtonPatch.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.patches();
           }
         }
       });
 
       widgetButtonAdd = Widgets.newButton(composite,"Add");
-      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonAdd.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -896,7 +905,7 @@ Dprintf.dprintf("");
       });
 
       widgetButtonRemove = Widgets.newButton(composite,"Remove");
-      Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonRemove.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -913,7 +922,7 @@ Dprintf.dprintf("");
       });
 
       widgetButtonRevert = Widgets.newButton(composite,"Revert");
-      Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonRevert.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -929,7 +938,7 @@ Dprintf.dprintf("");
       });
 
       widgetButtonDiff = Widgets.newButton(composite,"Diff");
-      Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonDiff.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -945,7 +954,7 @@ Dprintf.dprintf("");
       });
 
       widgetButtonRevisions = Widgets.newButton(composite,"Revisions");
-      Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT);
       widgetButtonRevisions.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -962,7 +971,7 @@ Dprintf.dprintf("");
 
       widgetButtonSolve = Widgets.newButton(composite,"Solve");
 widgetButtonSolve.setEnabled(false);
-      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonSolve.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1173,7 +1182,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Create patch...",Settings.keyPatch);
+      menuItem = Widgets.addMenuItem(menu,"Create patch...",Settings.keyCreatePatch);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1181,11 +1190,14 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.createPatch();
+          }
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Commit patch...",Settings.keyCommitPatch);
+      menuItem = Widgets.addMenuItem(menu,"Patches...",Settings.keyPatches);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1193,7 +1205,10 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.patches();
+          }
         }
       });
 
@@ -1218,7 +1233,10 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.applyPatches();
+          }
         }
       });
 
@@ -1231,7 +1249,42 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.unapplyPatches();
+          }
+        }
+      });
+
+      menuItemPullChanges = Widgets.addMenuItem(menu,"Pull changes",Settings.keyPullChanges);
+      menuItemPullChanges.setEnabled(false);
+      menuItemPullChanges.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.pullChanges();
+          }
+        }
+      });
+
+      menuItemPushChanges = Widgets.addMenuItem(menu,"Push changes",Settings.keyPushChanges);
+      menuItemPushChanges.setEnabled(false);
+      menuItemPushChanges.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.pushChanges();
+          }
         }
       });
 
@@ -1272,6 +1325,22 @@ Dprintf.dprintf("");
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.rename();
+          }
+        }
+      });
+
+      menuSetFileMode = Widgets.addMenuItem(menu,"Set file mode...",Settings.keySetFileMode);
+      menuSetFileMode.setEnabled(false);
+      menuSetFileMode.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.setFileMode();
           }
         }
       });
@@ -1699,28 +1768,29 @@ new Message("Und nun?").addToHistory();
 
   /** add a repository tab to the repository tab list
    * @param repository repository to add
+   * @return added repository tab
    */
-  private void addRepositoryTab(Repository repository)
+  private RepositoryTab addRepositoryTab(Repository repository)
   {
+    RepositoryTab repositoryTab;
+
     // add to list
     repositoryList.add(repository);
     repositoryList.save();
 
     // add tab, set default selected tab
-    RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
+    repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
     repositoryTabList.add(repositoryTab);
     if (repositoryTabList.size() == 1)
     {
-      // deselect previous repository
-      if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
-
-      // select new repository
-      selectedRepositoryTab = repositoryTab;
-      selectedRepositoryTab.repository.selected = true;
+      // select repository tab
+      selectRepository(repositoryTab);
     }
 
     // remove empty tab, set default selected tab
     removeRepositoryTabEmpty();
+
+    return repositoryTab;
   }
 
   /** remove a repository tab fro9m the repository tab list
@@ -2167,13 +2237,19 @@ new Message("Und nun?").addToHistory();
         repository = new RepositoryGit(rootPath);
         break;
       default:
-        return;
+        break;
     }
 
     if (repository != null)
     {
-      // add repository
-      addRepositoryTab(repository);
+      // add and select new repository
+      selectRepository(addRepositoryTab(repository));
+    }
+    else
+    {
+// NYI: add git
+      Dialogs.error(shell,"'%s' does not contain a known repository (CVS,SVN,HG)",rootPath);
+      return;
     }
   }
 
@@ -2189,11 +2265,21 @@ new Message("Und nun?").addToHistory();
       {
         String title;
         String rootPath;
+        String masterRepository;
+        String patchMailTo;
+        String patchMailCC;
+        String patchMailSubject;
+        String patchMailText;
 
         Data()
         {
-          this.title    = null;
-          this.rootPath = null;
+          this.title            = null;
+          this.rootPath         = null;
+          this.masterRepository = null;
+          this.patchMailTo      = null;
+          this.patchMailCC      = null;
+          this.patchMailSubject = null;
+          this.patchMailSubject = null;
         }
       };
 
@@ -2208,33 +2294,76 @@ new Message("Und nun?").addToHistory();
 
       final Text   widgetTitle;
       final Text   widgetRootPath;
-      final Text   widgetMasterRepository;
+//      final Text   widgetMasterRepository;
+      final Text   widgetPatchMailTo;
+      final Text   widgetPatchMailCC;
+      final Text   widgetPatchMailSubject;
+      final Text   widgetPatchMailText;
       final Button widgetSave;
       composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0,4));
       Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
       {
-        label = Widgets.newLabel(composite,"Type:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,0,0,TableLayoutData.WE);
+        {
+          label = Widgets.newLabel(subComposite,"Type:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
 
-        label = Widgets.newLabel(composite);
-        label.setText(repositoryTab.repository.getType().toString());
-        Widgets.layout(label,0,1,TableLayoutData.W);
+          label = Widgets.newLabel(subComposite);
+          label.setText(repositoryTab.repository.getType().toString());
+          Widgets.layout(label,0,1,TableLayoutData.W);
 
-        label = Widgets.newLabel(composite,"Title:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+          label = Widgets.newLabel(subComposite,"Title:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
 
-        widgetTitle = Widgets.newText(composite);
-        widgetTitle.setText(repositoryTab.repository.title);
-        Widgets.layout(widgetTitle,1,1,TableLayoutData.WE);
-        widgetTitle.setToolTipText("Repository title.");
+          widgetTitle = Widgets.newText(subComposite);
+          widgetTitle.setText(repositoryTab.repository.title);
+          Widgets.layout(widgetTitle,1,1,TableLayoutData.WE);
+          widgetTitle.setToolTipText("Repository title.");
 
-        label = Widgets.newLabel(composite,"Root path:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
+          label = Widgets.newLabel(subComposite,"Root path:");
+          Widgets.layout(label,2,0,TableLayoutData.W);
 
-        widgetRootPath = Widgets.newText(composite);
-        widgetRootPath.setText(repositoryTab.repository.rootPath);
-        Widgets.layout(widgetRootPath,2,1,TableLayoutData.WE);
+          widgetRootPath = Widgets.newText(subComposite);
+          widgetRootPath.setText(repositoryTab.repository.rootPath);
+          Widgets.layout(widgetRootPath,2,1,TableLayoutData.WE);
+        }
+
+        subComposite = Widgets.newGroup(composite,"Patch mail");
+        subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subComposite,"To:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          widgetPatchMailTo = Widgets.newText(subComposite);
+          if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
+          Widgets.layout(widgetPatchMailTo,0,1,TableLayoutData.WE);
+
+          label = Widgets.newLabel(subComposite,"CC:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
+
+          widgetPatchMailCC = Widgets.newText(subComposite);
+          if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
+          Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE);
+
+          label = Widgets.newLabel(subComposite,"Subject:");
+          Widgets.layout(label,2,0,TableLayoutData.W);
+
+          widgetPatchMailSubject = Widgets.newText(subComposite);
+          if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
+          Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE);
+
+          label = Widgets.newLabel(subComposite,"Text:");
+          Widgets.layout(label,3,0,TableLayoutData.NW);
+
+          widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
+          Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE);
+          widgetPatchMailText.setToolTipText("Patch mail template.\n\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
+        }
       }
 
       // buttons
@@ -2253,8 +2382,13 @@ new Message("Und nun?").addToHistory();
           {
             Button widget = (Button)selectionEvent.widget;
 
-            data.title    = widgetTitle.getText();
-            data.rootPath = widgetRootPath.getText();
+            data.title            = widgetTitle.getText();
+            data.rootPath         = widgetRootPath.getText();
+//            data.masterRepository = widgetMasterRepository.getText();
+            data.patchMailTo      = widgetPatchMailTo.getText();
+            data.patchMailCC      = widgetPatchMailCC.getText();
+            data.patchMailSubject = widgetPatchMailSubject.getText();
+            data.patchMailText    = widgetPatchMailText.getText();
 
             Dialogs.close(dialog,true);
           }
@@ -2306,12 +2440,15 @@ new Message("Und nun?").addToHistory();
       widgetTitle.setText(selectedRepositoryTab.repository.title);
 
       // run
-      widgetTitle.setFocus();
+      Widgets.setFocus(widgetTitle);
       if ((Boolean)Dialogs.run(dialog,false))
       {
         repositoryTab.setTitle(data.title);
-        repositoryTab.repository.rootPath = data.rootPath;
-
+        repositoryTab.repository.rootPath         = data.rootPath;
+        repositoryTab.repository.patchMailTo      = data.patchMailTo;
+        repositoryTab.repository.patchMailCC      = data.patchMailCC;
+        repositoryTab.repository.patchMailSubject = data.patchMailSubject;
+        repositoryTab.repository.patchMailText    = data.patchMailText;
         repositoryList.save();
       }
     }
@@ -2354,12 +2491,27 @@ new Message("Und nun?").addToHistory();
 
     // select new repository
     selectedRepositoryTab = repositoryTab;
-    selectedRepositoryTab.repository.selected = true;
+    if (repositoryTab != null)
+    {
+      // select
+      selectedRepositoryTab.repository.selected = true;
 
-    // show tab
-    selectedRepositoryTab.show();
-    menuItemApplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
-    menuItemUnapplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
+      // show tab
+      selectedRepositoryTab.show();
+      menuItemApplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
+      menuItemUnapplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
+      menuItemPullChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
+      menuItemPushChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
+      menuSetFileMode.setEnabled(selectedRepositoryTab.repository.supportSetFileMode());
+    }
+    else
+    {
+      menuItemApplyPatches.setEnabled(false);
+      menuItemUnapplyPatches.setEnabled(false);
+      menuItemPullChanges.setEnabled(false);
+      menuItemPushChanges.setEnabled(false);
+      menuSetFileMode.setEnabled(false);
+    }
   }
 }
 
