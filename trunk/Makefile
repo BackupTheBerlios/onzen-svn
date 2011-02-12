@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 #
 # $Source: /tmp/cvs/onzen/Makefile,v $
-# $Revision: 1.4 $
+# $Revision: 1.5 $
 # $Author: torsten $
 # Contents: Makefile for Onzen
 # Systems: all
@@ -121,6 +121,7 @@ SOURCES        = src/Onzen.java \
                  src/RepositoryTab.java \
                  src/Exec.java \
                  src/Message.java \
+                 src/Patch.java \
                  src/Background.java \
                  $(wildcard src/Command*.java) \
                  \
