@@ -11,3 +11,4 @@ ToDo
 - create branch
 - use text widget separator instead of \n
 - use file watch service from Java 7 to detect files changes outside
+- fix moving tabs: arrow appear at wrong time+wrong place
