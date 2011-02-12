@@ -1,0 +1,82 @@
+Onzen
+
+Onzen is a graphical front end for the revision control systems CVS,
+SVN, and HG. It represent the files managed by the RCS in a tree-view
+with detailed information and offers functions to e. g. update,
+commit, add, remove, rename, revert, diff, view files.
+
+--- Features
+
+* update, commit, add, remove, rename revert files managed in a RCS
+* support the RCS: Concurrent Version System (CVS), Apache Subversion (SVN),
+  Mercurial (HG) (Note: planned also Git support)
+* can show diff in two-columns, view file revisions tree, view files content
+* edit files with external program; select external program by MimeTypes
+* fast even with a slow remote connection: many operations are done
+  asynchronous in background
+* support multiple repositories in separated tabs
+* keep history with commit messages; broadcast commit messages to other
+  Onzen instances via UDP message
+* written in Java with SWT: available for Linux, Solaris, MacOS, Windows
+
+--- Requirements
+
+* Java for graphical frontend (see below)
+* external tools to open files, e. g. an text editor
+
+--- Installation
+
+There are pre-compiled binary packages available for several
+system. You can download them from
+
+  http://www.kigen.de/projects/onzen/index.html
+
+If there is no binary package available for your system, you
+can compile bar by yourself.
+
+Install Java, SWT, launch4j:
+
+* Download Java JRE V1.6 (JRE6) from http://www.sun.com
+* Install Java
+
+In case you do not want to use the included SWT 3.6
+in barcontrol-linux.jar or barcontrol-windows.jar and
+use instead barcontrol.jar (which does not include the
+SWT files) SWT have to be installed:
+
+* Download SWT from http://www.eclipse.org/swt
+* Install SWT to some directory
+
+Then do:
+
+  ./configure
+  make
+  make install
+
+--- Start
+
+On Linux, Solaris, MacOSX:
+
+  onzen.sh
+ 
+On Windows:
+
+  onzen.bat
+
+--- License
+
+BAR and all files are under the GPL version 2. The full GPL
+version 2 license text can be found here:
+
+  http://www.gnu.org/licenses/gpl-2.0.html
+
+BARControl is using SWT. SWT is under the "Eclipse Public License"
+which can be found here:
+
+  http://www.eclipse.org/org/documents/epl-v10.php
+
+--- Contact
+
+Send an email to
+
+torsten.rupp@gmx.net
