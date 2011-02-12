@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.6 $
+* $Revision: 1.7 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -22,12 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
 
 import javax.activation.MimetypesFileTypeMap;
 
@@ -88,69 +83,69 @@ class FileData
     WAITING,
     ERROR;
 
-  /** parse type string
-   * @param string state string
-   * @return state
-   */
-  static States parse(String string)
-  {
-    States state;
+    /** parse type string
+     * @param string state string
+     * @return state
+     */
+    static States parse(String string)
+    {
+      States state;
 
-    if      (string.equalsIgnoreCase("ok"))
-    {
-      state = States.OK;
-    }
-    else if (string.equalsIgnoreCase("unknown"))
-    {
-      state = States.UNKNOWN;
-    }
-    else if (string.equalsIgnoreCase("modified"))
-    {
-      state = States.MODIFIED;
-    }
-    else if (string.equalsIgnoreCase("checkout"))
-    {
-      state = States.CHECKOUT;
-    }
-    else if (string.equalsIgnoreCase("update"))
-    {
-      state = States.UPDATE;
-    }
-    else if (string.equalsIgnoreCase("merge"))
-    {
-      state = States.MERGE;
-    }
-    else if (string.equalsIgnoreCase("conflict"))
-    {
-      state = States.CONFLICT;
-    }
-    else if (string.equalsIgnoreCase("added"))
-    {
-      state = States.ADDED;
-    }
-    else if (string.equalsIgnoreCase("removed"))
-    {
-      state = States.REMOVED;
-    }
-    else if (string.equalsIgnoreCase("not exists"))
-    {
-      state = States.NOT_EXISTS;
-    }
-    else if (string.equalsIgnoreCase("waiting"))
-    {
-      state = States.WAITING;
-    }
-    else if (string.equalsIgnoreCase("error"))
-    {
-      state = States.ERROR;
-    }
-    else
-    {
-      state = States.OK;
-    }
+      if      (string.equalsIgnoreCase("ok"))
+      {
+        state = States.OK;
+      }
+      else if (string.equalsIgnoreCase("unknown"))
+      {
+        state = States.UNKNOWN;
+      }
+      else if (string.equalsIgnoreCase("modified"))
+      {
+        state = States.MODIFIED;
+      }
+      else if (string.equalsIgnoreCase("checkout"))
+      {
+        state = States.CHECKOUT;
+      }
+      else if (string.equalsIgnoreCase("update"))
+      {
+        state = States.UPDATE;
+      }
+      else if (string.equalsIgnoreCase("merge"))
+      {
+        state = States.MERGE;
+      }
+      else if (string.equalsIgnoreCase("conflict"))
+      {
+        state = States.CONFLICT;
+      }
+      else if (string.equalsIgnoreCase("added"))
+      {
+        state = States.ADDED;
+      }
+      else if (string.equalsIgnoreCase("removed"))
+      {
+        state = States.REMOVED;
+      }
+      else if (string.equalsIgnoreCase("not exists"))
+      {
+        state = States.NOT_EXISTS;
+      }
+      else if (string.equalsIgnoreCase("waiting"))
+      {
+        state = States.WAITING;
+      }
+      else if (string.equalsIgnoreCase("error"))
+      {
+        state = States.ERROR;
+      }
+      else
+      {
+        state = States.OK;
+      }
 
-    return state;
-  }
+      return state;
+    }
 
     /** convert to string
      * @return string
@@ -399,6 +394,17 @@ class FileData
   public String getMimeType(Repository repository)
   {
     return getMimeType(repository.rootPath);
+  }
+
+  /** convert to set
+   * @return file data set
+   */
+  public HashSet<FileData> toSet()
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(this);
+
+    return fileDataSet;
   }
 
   /** convert data to string
@@ -1021,7 +1027,7 @@ class RepositoryException extends Exception
 
 /** repository
  */
-@XmlType(propOrder={"title","rootPath","openDirectories"})
+@XmlType(propOrder={"title","rootPath","openDirectories","patchMailTo","patchMailCC","patchMailSubject","patchMailText"})
 @XmlSeeAlso({RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
@@ -1051,6 +1057,15 @@ abstract class Repository implements Serializable
   @XmlElementWrapper(name = "openDirectories")
   @XmlElement(name = "path")
   private HashSet<String> openDirectories;
+
+  @XmlElement(name = "patchMailTo")
+  public String patchMailTo;
+  @XmlElement(name = "patchMailCC")
+  public String patchMailCC;
+  @XmlElement(name = "patchMailSubject")
+  public String patchMailSubject;
+  @XmlElement(name = "patchMailText")
+  public String patchMailText;
 
   // ------------------------ native functions ----------------------------
 
@@ -1113,6 +1128,22 @@ abstract class Repository implements Serializable
   public Types getType()
   {
     return Types.UNKNOWN;
+  }
+
+  /** check if repository support setting file mode
+   * @return true iff file modes are supported
+   */
+  public boolean supportSetFileMode()
+  {
+    return false;
+  }
+
+  /** check if repository support pull/push commands
+   * @return true iff pull/push commands are supported
+   */
+  public boolean supportPullPush()
+  {
+    return false;
   }
 
   /** check if repository support patch queues
@@ -1256,7 +1287,7 @@ abstract class Repository implements Serializable
    */
   public boolean isHiddenFile(String directory, String baseName)
   {
-    String fileName = ((directory != null) && !directory.isEmpty()) ? directory+File.separator+baseName : baseName;
+    String fileName = !directory.isEmpty() ? directory+File.separator+baseName : baseName;
     return isHiddenFile(fileName,getFileType(fileName));
   }
 
@@ -1277,7 +1308,7 @@ abstract class Repository implements Serializable
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
 
-    File directory = new File(rootPath,subDirectory);
+    File directory = !subDirectory.isEmpty() ? new File(rootPath,subDirectory) : new File(rootPath);
     File[] files = directory.listFiles();
     if (files != null)
     {
@@ -1289,7 +1320,7 @@ abstract class Repository implements Serializable
         // add file data
         if (!isHiddenFile(file,type))
         {
-          FileData fileData = new FileData((!subDirectory.equals("")?subDirectory+File.separator:"")+file.getName(),
+          FileData fileData = new FileData((!subDirectory.isEmpty()?subDirectory+File.separator:"")+file.getName(),
                                            type,
                                            file.length(),
                                            new Date(file.lastModified())
@@ -1315,13 +1346,15 @@ abstract class Repository implements Serializable
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<FileData> newFileDataSet)
   {
+    // get directories
     HashSet<String> fileDirectoryHashSet = new HashSet<String>();
     for (FileData fileData : fileDataSet)
     {
       String directory = fileData.getDirectoryName();
-      fileDirectoryHashSet.add(!directory.isEmpty() ? directory : null);
+      fileDirectoryHashSet.add(directory);
     }
 
+    // udpate states
     updateStates(fileDataSet,fileDirectoryHashSet,newFileDataSet);
   }
 
@@ -1443,11 +1476,55 @@ abstract class Repository implements Serializable
   }
 
   /** get patch for file
-   * @param fileData file data
-   * @return patch data
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
    */
-  abstract public void getPatch(FileData fileData)
+  abstract public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException;
+
+  /** get patch for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2)
+    throws RepositoryException
+  {
+    return getPatch(fileDataSet,revision1,revision2,false);
+  }
+
+  /** get patch for file
+   * @param fileData file data
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatch(FileData fileData, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(fileData);
+
+    return getPatch(fileDataSet,revision1,revision2,false);
+  }
+
+  /** get patch for file
+   * @param fileData file data
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatch(FileData fileData, String revision1, String revision2)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(fileData);
+
+    return getPatch(fileDataSet,revision1,revision2,false);
+  }
 
   /** get log to file
    * @param fileData file data
@@ -1549,7 +1626,7 @@ abstract class Repository implements Serializable
   abstract public void revert(HashSet<FileData> fileDataSet, String revision)
     throws RepositoryException;
 
-  /** revert file
+  /** revert files
    * @param fileData file data
    * @param revision revision to revert to
    */
@@ -1570,6 +1647,48 @@ abstract class Repository implements Serializable
   abstract public void rename(FileData fileData, String newName, Message commitMessage)
     throws RepositoryException;
 
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  abstract public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, Message commitMessage)
+    throws RepositoryException;
+
+  /** set files mode
+   * @param fileData file data
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(FileData fileData, FileData.Modes mode, Message commitMessage)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(fileData);
+
+    setFileMode(fileDataSet,mode,commitMessage);
+  }
+
+  /** pull changes
+   */
+  abstract public void pullChanges()
+    throws RepositoryException;
+
+  /** push changes
+   */
+  abstract public void pushChanges()
+    throws RepositoryException;
+
+  /** apply patches
+   */
+  abstract public void applyPatches()
+    throws RepositoryException;
+
+  /** unapply patches
+   */
+  abstract public void unapplyPatches()
+    throws RepositoryException;
+
   /** convert data to string
    * @return string
    */
@@ -1580,6 +1699,10 @@ abstract class Repository implements Serializable
 
   //-----------------------------------------------------------------------
 
+  /** 
+   * @param 
+   * @return 
+   */
   protected Date parseDate(String string)
   {
     final String[] FORMATS = new String[]
@@ -1621,7 +1744,7 @@ abstract class Repository implements Serializable
    */
   protected FileData findFileData(HashSet<FileData> fileDataSet, String directory, String baseName)
   {
-    return findFileData(fileDataSet,(directory != null) ? directory+File.separator+baseName : baseName);
+    return findFileData(fileDataSet,!directory.isEmpty() ? directory+File.separator+baseName : baseName);
   }
 
   /** find file data
@@ -1636,6 +1759,16 @@ abstract class Repository implements Serializable
       if (name.equals(fileData.name)) return fileData;
     }
     return null;
+  }
+
+  /** check if file data set contain file data
+   * @param fileDataSet file data set
+   * @param file data
+   * @return true iff found
+   */
+  protected boolean containFileData(HashSet<FileData> fileDataSet, FileData fileData)
+  {
+    return findFileData(fileDataSet,fileData.getFileName()) != null;
   }
 
   /** get file names from file data set
