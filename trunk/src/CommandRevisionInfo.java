@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevisionInfo.java,v $
-* $Revision: 1.3 $
+* $Revision: 1.4 $
 * $Author: torsten $
 * Contents: command show file revision
 * Systems: all
@@ -139,13 +139,12 @@ class CommandRevisionInfo
   // ---------------------------- methods ---------------------------------
 
   /** show revision command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to show revision information
    * @param revision revision to show or null
    */
-  CommandRevisionInfo(final RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revision)
+  CommandRevisionInfo(Shell shell, final RepositoryTab repositoryTab, FileData fileData, String revision)
   {
     Composite         composite,subComposite;
     Label             label;
@@ -160,7 +159,7 @@ class CommandRevisionInfo
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"File revision: "+fileData.getFileName(),Settings.geometryRevisionInfo.x,Settings.geometryRevisionInfo.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"File revision: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0}));
@@ -227,7 +226,7 @@ class CommandRevisionInfo
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetButtonClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -247,7 +246,7 @@ class CommandRevisionInfo
     // listeners
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryRevisionInfo);
 
     if (revision != null)
     {
@@ -347,28 +346,26 @@ class CommandRevisionInfo
   }
 
   /** show revision command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to show revision information
    * @param revisionData revision to show
    */
-  CommandRevisionInfo(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
+  CommandRevisionInfo(Shell shell, RepositoryTab repositoryTab, FileData fileData, RevisionData revisionData)
   {
-    this(repositoryTab,shell,repository,fileData,(String)null);
+    this(shell,repositoryTab,fileData,(String)null);
     data.revisionData = revisionData;
     show();
   }
 
   /** show revision command of last revision
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to show revision information
    */
-  CommandRevisionInfo(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  CommandRevisionInfo(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository,fileData,repository.getLastRevision());
+    this(shell,repositoryTab,fileData,repositoryTab.repository.getLastRevision());
   }
 
   /** run dialog

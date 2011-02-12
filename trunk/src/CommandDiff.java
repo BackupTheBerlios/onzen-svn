@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandDiff.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command show file diff
 * Systems: all
@@ -188,14 +188,13 @@ class CommandDiff
   // ---------------------------- methods ---------------------------------
 
   /** diff command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to show diff for
    * @param revisionLeft left revision or null
    * @param revisionRight right revision or null
    */
-  CommandDiff(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revisionLeft, String revisionRight)
+  CommandDiff(Shell shell, final RepositoryTab repositoryTab, FileData fileData, String revisionLeft, String revisionRight)
   {
     Composite composite,subComposite;
     Label     label;
@@ -219,7 +218,7 @@ class CommandDiff
     COLOR_DIFF_SEARCH_TEXT         = new Color(display,Settings.colorDiffSearchText.foreground        );
 
     // show diff dialog
-    dialog = Dialogs.open(shell,"Diff: "+fileData.getFileName(),Settings.geometryDiff.x,Settings.geometryDiff.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Diff: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,0.0},new double[]{1.0,0.0,1.0},4));
@@ -256,7 +255,7 @@ class CommandDiff
         widgetLineNumbersLeft = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
         widgetLineNumbersLeft.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersLeft.setForeground(Onzen.COLOR_GRAY);
-        Widgets.layout(widgetLineNumbersLeft,0,0,TableLayoutData.NS,0,0,0,0,60,SWT.DEFAULT);
+        Widgets.layout(widgetLineNumbersLeft,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbersLeft,data)
         {
           public void modified(Control control)
@@ -290,7 +289,7 @@ class CommandDiff
         widgetLineNumbersRight = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
         widgetLineNumbersRight.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersRight.setForeground(Onzen.COLOR_GRAY);
-        Widgets.layout(widgetLineNumbersRight,0,0,TableLayoutData.NS,0,0,0,0,60,SWT.DEFAULT);
+        Widgets.layout(widgetLineNumbersRight,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbersRight,data)
         {
           public void modified(Control control)
@@ -609,7 +608,7 @@ class CommandDiff
       });
 
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,11,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,11,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1297,7 +1296,7 @@ Dprintf.dprintf("");
     display.addFilter(SWT.KeyDown,filterListener);
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryDiff);
 //    widgetClose.setFocus();
 //widgetTextLeft.forceFocus();
 Dprintf.dprintf("");
@@ -1387,25 +1386,23 @@ Dprintf.dprintf("");
   }
 
   /** diff command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to show diff for
    */
-  CommandDiff(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revision)
+  CommandDiff(Shell shell, RepositoryTab repositoryTab, FileData fileData, String revision)
   {
-    this(repositoryTab,shell,repository,fileData,revision,null);
+    this(shell,repositoryTab,fileData,revision,null);
   }
 
   /** diff command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to show diff for
    */
-  CommandDiff(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  CommandDiff(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository,fileData,null);
+    this(shell,repositoryTab,fileData,null);
   }
 
   /** run dialog

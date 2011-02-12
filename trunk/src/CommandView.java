@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandView.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command view file
 * Systems: all
@@ -134,31 +134,30 @@ class CommandView
   private final FileData      fileData;
 
   // dialog
-  private final Data       data = new Data();
-  private final Shell      dialog;
+  private final Data          data = new Data();
+  private final Shell         dialog;
 
   // widgets
-  private final Combo      widgetRevision;
-  private final Text       widgetLineNumbers;
-  private final StyledText widgetText;
-  private final ScrollBar  widgetHorizontalScrollBar,widgetVerticalScrollBar;
-  private final Text       widgetFind;
-  private final Button     widgetFindPrev;
-  private final Button     widgetFindNext;
-  private final Button     widgetButtonClose;
+  private final Combo         widgetRevision;
+  private final Text          widgetLineNumbers;
+  private final StyledText    widgetText;
+  private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
+  private final Text          widgetFind;
+  private final Button        widgetFindPrev;
+  private final Button        widgetFindNext;
+  private final Button        widgetButtonClose;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
   /** view command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to view
    * @param revision revision to view
    */
-  CommandView(final RepositoryTab repositoryTab, final Shell shell, final Repository repository, final FileData fileData, final String revision)
+  CommandView(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData, final String revision)
   {
     Composite composite,subComposite;
     Label     label;
@@ -173,7 +172,7 @@ class CommandView
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"View: "+fileData.getFileName(),Settings.geometryView.x,Settings.geometryView.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"View: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0},1.0,4));
@@ -269,7 +268,7 @@ class CommandView
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetButtonClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -435,7 +434,7 @@ class CommandView
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryView);
 
     // start show file
     show(revision);
@@ -449,7 +448,7 @@ class CommandView
         repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
         try
         {
-          data.revisionNames = repository.getRevisionNames(fileData);
+          data.revisionNames = repositoryTab.repository.getRevisionNames(fileData);
         }
         catch (RepositoryException exception)
         {
@@ -487,8 +486,8 @@ class CommandView
                     widgetRevision.add(data.revisionNames[z]);
                     if ((revision != null) && revision.equals(data.revisionNames[z])) selectIndex = z;
                   }
-                  widgetRevision.add(repository.getLastRevision());
-                  if ((revision != null) && revision.equals(repository.getLastRevision())) selectIndex = data.revisionNames.length;
+                  widgetRevision.add(repositoryTab.repository.getLastRevision());
+                  if ((revision != null) && revision.equals(repositoryTab.repository.getLastRevision())) selectIndex = data.revisionNames.length;
                   if (selectIndex < 0) selectIndex = data.revisionNames.length;
 
                   widgetRevision.select(selectIndex);
@@ -503,14 +502,13 @@ class CommandView
   }
 
   /** view command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to view
    */
-  CommandView(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  CommandView(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository,fileData,null);
+    this(shell,repositoryTab,fileData,null);
   }
 
   /** run dialog

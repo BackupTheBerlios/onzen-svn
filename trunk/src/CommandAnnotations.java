@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandAnnotations.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command view file annotations
 * Systems: all
@@ -144,13 +144,12 @@ class CommandAnnotations
   // ---------------------------- methods ---------------------------------
 
   /** view annotations
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to view annotions
    * @param revision to view annotions
    */
-  CommandAnnotations(final RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, String revision)
+  CommandAnnotations(Shell shell, final RepositoryTab repositoryTab, FileData fileData, String revision)
   {
     Composite composite,subComposite;
     Label     label;
@@ -165,7 +164,7 @@ class CommandAnnotations
     clipboard = new Clipboard(display);
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Annotations: "+fileData.getFileName(),Settings.geometryAnnotations.x,Settings.geometryAnnotations.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Annotations: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0},1.0,4));
@@ -257,7 +256,7 @@ class CommandAnnotations
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       button = Widgets.newButton(composite,"Close");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -376,7 +375,7 @@ class CommandAnnotations
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryAnnotations);
 
     // start get annotations of revision
     show(revision);
@@ -441,26 +440,24 @@ class CommandAnnotations
   }
 
   /** view annotations
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to view annotions
    * @param revisionData revision data
    */
-  CommandAnnotations(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData, RevisionData revisionData)
+  CommandAnnotations(Shell shell, RepositoryTab repositoryTab, FileData fileData, RevisionData revisionData)
   {
-    this(repositoryTab,shell,repository,fileData,revisionData.revision);
+    this(shell,repositoryTab,fileData,revisionData.revision);
   }
 
   /** view annotations of last revision
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file to view annotions
    */
-  CommandAnnotations(RepositoryTab repositoryTab, Shell shell, Repository repository, FileData fileData)
+  CommandAnnotations(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(repositoryTab,shell,repository,fileData,repositoryTab.repository.getLastRevision());
+    this(shell,repositoryTab,fileData,repositoryTab.repository.getLastRevision());
   }
 
   /** run dialog
