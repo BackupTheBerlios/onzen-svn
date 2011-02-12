@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.9 $
+* $Revision: 1.10 $
 * $Author: torsten $
 * Contents: CVS repository functions
 * Systems: all
@@ -148,6 +148,14 @@ class RepositoryCVS extends Repository
     return Types.CVS;
   }
 
+  /** check if repository support setting file mode
+   * @return true iff file modes are supported
+   */
+  public boolean supportSetFileMode()
+  {
+    return true;
+  }
+
   /** update file states
    * @param fileDataSet file data set to update
    * @param fileDirectorySet directory set to check for new/missing files
@@ -189,7 +197,7 @@ class RepositoryCVS extends Repository
         command.clear();
         command.append(CVS_COMMAND,"status","-l");
         command.append("--");
-        if (directory != null) command.append(directory);
+        if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,command);
 
         // parse status data
@@ -210,7 +218,9 @@ class RepositoryCVS extends Repository
                 fileData.repositoryRevision = repositoryRevision;
                 fileData.branch             = branch;
               }
-              else if ((newFileDataSet != null) && !isHiddenFile(directory,baseName))
+              else if (   (newFileDataSet != null)
+                       && !isHiddenFile(directory,baseName)
+                      )
               {
                 // get file type, size, date/time
                 File file = new File(rootPath,baseName);
@@ -219,7 +229,7 @@ class RepositoryCVS extends Repository
                 Date           datetime = new Date(file.lastModified());
 
                 // create file data
-                newFileDataSet.add(new FileData(directory+File.separator+baseName,
+                newFileDataSet.add(new FileData((!directory.isEmpty()?directory+File.separator:"")+baseName,
                                                 type,
                                                 state,
                                                 mode,
@@ -347,7 +357,9 @@ class RepositoryCVS extends Repository
             fileData.repositoryRevision = repositoryRevision;
             fileData.branch             = branch;
           }
-          else if ((newFileDataSet != null) && !isHiddenFile(directory,baseName))
+          else if (   (newFileDataSet != null)
+                   && !isHiddenFile(directory,baseName)
+                  )
           {
             // get file type, size, date/time
             File file = new File(rootPath,baseName);
@@ -356,7 +368,7 @@ class RepositoryCVS extends Repository
             Date           datetime = new Date(file.lastModified());
 
             // create file data
-            newFileDataSet.add(new FileData(directory+File.separator+baseName,
+            newFileDataSet.add(new FileData((!directory.isEmpty()?directory+File.separator:"")+baseName,
                                             type,
                                             state,
                                             mode,
@@ -367,6 +379,22 @@ class RepositoryCVS extends Repository
                                             branch
                                            )
                               );
+          }
+        }
+
+        if (newFileDataSet != null)
+        {
+          // find new files
+          for (FileData newFileData : listFiles(directory))
+          {
+                   
+            if (   !isHiddenFile(newFileData.getFileName())
+                && !containFileData(fileDataSet,newFileData)
+                && !containFileData(newFileDataSet,newFileData)
+               )
+            {
+              newFileDataSet.add(newFileData);
+            }
           }
         }
       }
@@ -404,7 +432,7 @@ class RepositoryCVS extends Repository
       command.clear();
       command.append(CVS_COMMAND,"log");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -485,7 +513,7 @@ class RepositoryCVS extends Repository
       command.clear();
       command.append(CVS_COMMAND,"log","-r",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -525,7 +553,7 @@ class RepositoryCVS extends Repository
       command.clear();
       command.append(CVS_COMMAND,"log");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -573,7 +601,7 @@ class RepositoryCVS extends Repository
       command.append(CVS_COMMAND,"up","-p");
       if (revision != null) command.append("-r",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // read file data
@@ -614,7 +642,7 @@ class RepositoryCVS extends Repository
       command.append(CVS_COMMAND,"up","-p");
       if (revision != null) command.append("-r",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command,true);
 
       // read file bytes into byte array stream
@@ -761,7 +789,7 @@ Dprintf.dprintf("unknown %s",line);
         command.clear();
         command.append(CVS_COMMAND,"up","-p","-r",newRevision);
         command.append("--");
-        command.append(fileData.getFileName());
+        command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content
@@ -809,7 +837,7 @@ Dprintf.dprintf("unknown %s",line);
       if (oldRevision != null) command.append("-r",oldRevision);
       if (newRevision != null) command.append("-r",newRevision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // skip diff header
@@ -969,13 +997,53 @@ else {
     return diffDataList.toArray(new DiffData[diffDataList.size()]);
   }
 
-  /** 
-   * @param 
-   * @return 
+  /** get patch for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
    */
-  public void getPatch(FileData fileData)
+  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
+    ArrayList<String> patchLineList = new ArrayList<String>();
+    try
+    {
+      Command command = new Command();
+      Exec    exec;
+      String  line;
+
+      // get file
+      command.clear();
+      if (ignoreWhitespaces)
+      {
+        command.append(CVS_COMMAND,"diff","-u","-w","-b","-B");
+      }
+      else
+      {
+        command.append(CVS_COMMAND,"diff","-u");
+      }
+      if (revision1 != null) command.append("-r",revision1);
+      if (revision2 != null) command.append("-r",revision2);
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+
+      // read patch data
+      while ((line = exec.getStdout()) != null)
+      {
+        patchLineList.add(line);
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return patchLineList.toArray(new String[patchLineList.size()]);
   }
 
   /** get log to file
@@ -997,7 +1065,7 @@ else {
       command.clear();
       command.append(CVS_COMMAND,"log");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -1054,7 +1122,7 @@ else {
       command.append(CVS_COMMAND,"annotate");
       if (revision != null) command.append("-r",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       /* parse annotation output
@@ -1113,7 +1181,7 @@ Dprintf.dprintf("unknown %s",line);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1142,7 +1210,7 @@ Dprintf.dprintf("unknown %s",line);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1173,7 +1241,7 @@ Dprintf.dprintf("unknown %s",line);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       if (commitMessage != null)
@@ -1186,7 +1254,7 @@ Dprintf.dprintf("unknown %s",line);
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
     }
@@ -1223,7 +1291,7 @@ Dprintf.dprintf("unknown %s",line);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       if (commitMessage != null)
@@ -1236,7 +1304,7 @@ Dprintf.dprintf("unknown %s",line);
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
     }
@@ -1266,7 +1334,7 @@ Dprintf.dprintf("unknown %s",line);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1295,7 +1363,7 @@ Dprintf.dprintf("unknown %s",line);
       {
         if (!oldFile.renameTo(newFile))
         {
-          throw new RepositoryException("Cannot rename file '%s' to '%s'",oldFile.getName(),newFile.getName());
+          throw new RepositoryException("Rename file '%s' to '%s' fail",oldFile.getName(),newFile.getName());
         }
       }
       else
@@ -1317,22 +1385,24 @@ Dprintf.dprintf("unknown %s",line);
           break;
       }
       command.append("--");
-      command.append(getFileDataName(fileData));
+      command.append(newFile.getName());
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        newFile.renameTo(oldFile);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       // remove old file
       command.clear();
       command.append(CVS_COMMAND,"remove");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      command.append(oldFile.getName());
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        newFile.renameTo(oldFile);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       // commit
@@ -1342,12 +1412,14 @@ Dprintf.dprintf("unknown %s",line);
         command.clear();
         command.append(CVS_COMMAND,"commit","-F",commitMessage.getFileName());
         command.append("--");
-        command.append(getFileDataName(fileData));
+        command.append(oldFile.getName());
+        command.append(newFile.getName());
         command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+          newFile.renameTo(oldFile);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
     }
@@ -1355,6 +1427,86 @@ Dprintf.dprintf("unknown %s",line);
     {
       throw new RepositoryException(exception);
     }
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, Message commitMessage)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // set files modes
+      command.clear();
+      command.append(CVS_COMMAND,"admin");
+      switch (mode)
+      {
+        case TEXT:
+          command.append("-kkv");
+          break;
+        case BINARY:
+          command.append("-kb");
+          break;
+        default:
+          break;
+      }
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+
+      // update files
+      command.clear();
+      command.append(CVS_COMMAND,"update","-d","-A");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
+  /** pull changes
+   */
+  public void pullChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
+    throws RepositoryException
+  {
   }
 
   /** convert data to string
@@ -1373,19 +1525,20 @@ Dprintf.dprintf("unknown %s",line);
    */
   private FileData.States parseState(String string)
   {
-    if      (string.equalsIgnoreCase("Up-to-date"      )) return FileData.States.OK;
-    else if (string.equalsIgnoreCase("Unknown"         )) return FileData.States.UNKNOWN;
-    else if (string.equalsIgnoreCase("Update"          )) return FileData.States.UPDATE;
-    else if (string.equalsIgnoreCase("Needs patch"     )) return FileData.States.UPDATE;
-    else if (string.equalsIgnoreCase("Needs update"    )) return FileData.States.UPDATE;
-    else if (string.equalsIgnoreCase("Needs Checkout"  )) return FileData.States.CHECKOUT;
-    else if (string.equalsIgnoreCase("Locally Modified")) return FileData.States.MODIFIED;
-    else if (string.equalsIgnoreCase("Needs Merge"     )) return FileData.States.MERGE;
-    else if (string.equalsIgnoreCase("Conflict"        )) return FileData.States.CONFLICT;
-    else if (string.equalsIgnoreCase("Locally Added"   )) return FileData.States.ADDED;
-    else if (string.equalsIgnoreCase("Entry invalid"   )) return FileData.States.REMOVED;
-    else if (string.equalsIgnoreCase("Removed"         )) return FileData.States.REMOVED;
-    else                                                  return FileData.States.UNKNOWN;
+    if      (string.equalsIgnoreCase("Up-to-date"         )) return FileData.States.OK;
+    else if (string.equalsIgnoreCase("Unknown"            )) return FileData.States.UNKNOWN;
+    else if (string.equalsIgnoreCase("Update"             )) return FileData.States.UPDATE;
+    else if (string.equalsIgnoreCase("Needs patch"        )) return FileData.States.UPDATE;
+    else if (string.equalsIgnoreCase("Needs update"       )) return FileData.States.UPDATE;
+    else if (string.equalsIgnoreCase("Needs Checkout"     )) return FileData.States.CHECKOUT;
+    else if (string.equalsIgnoreCase("Locally Modified"   )) return FileData.States.MODIFIED;
+    else if (string.equalsIgnoreCase("Needs Merge"        )) return FileData.States.MERGE;
+    else if (string.equalsIgnoreCase("Unresolved Conflict")) return FileData.States.CONFLICT;
+    else if (string.equalsIgnoreCase("Conflict"           )) return FileData.States.CONFLICT;
+    else if (string.equalsIgnoreCase("Locally Added"      )) return FileData.States.ADDED;
+    else if (string.equalsIgnoreCase("Entry invalid"      )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("Removed"            )) return FileData.States.REMOVED;
+    else                                                     return FileData.States.UNKNOWN;
   }
 
   /** parse CVS diff index

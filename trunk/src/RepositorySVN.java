@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.9 $
+* $Revision: 1.10 $
 * $Author: torsten $
 * Contents: Apache Subversion (SVN) repository
 * Systems: all
@@ -110,7 +110,7 @@ class RepositorySVN extends Repository
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
-    final Pattern PATTERN_STATUS         = Pattern.compile("^(.)......(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_STATUS         = Pattern.compile("^(.)......\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
@@ -132,7 +132,7 @@ class RepositorySVN extends Repository
         command.clear();
         command.append(SVN_COMMAND,"status","-uvN");
         command.append("--");
-        if (directory != null) command.append(directory);
+        if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,command);
 
         // parse status data
@@ -140,7 +140,39 @@ class RepositorySVN extends Repository
         {
 //Dprintf.dprintf("line=%s",line);
           // match name, state
-          if      ((matcher = PATTERN_STATUS.matcher(line)).matches())
+          if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
+          {
+            name = matcher.group(1);
+
+            fileData = findFileData(fileDataSet,name);
+            if      (fileData != null)
+            {
+              fileData.state = FileData.States.UNKNOWN;
+              fileData.mode  = FileData.Modes.BINARY;
+            }
+            else if (   (newFileDataSet != null)
+                     && !name.equals(".")
+                     && !isHiddenFile(name)
+                    )
+            {
+              // get file type, size, date/time
+              File file = new File(rootPath,name);
+              FileData.Types type     = getFileType(file);
+              long           size     = file.length();
+              Date           datetime = new Date(file.lastModified());
+
+              // create file data
+              newFileDataSet.add(new FileData(name,
+                                              FileData.Types.FILE,
+                                              state,
+                                              FileData.Modes.BINARY,
+                                              size,
+                                              datetime
+                                             )
+                                );
+            }
+          }
+          else if ((matcher = PATTERN_STATUS.matcher(line)).matches())
           {
             state              = parseState(matcher.group(1),matcher.group(2));
             workingRevision    = matcher.group(3);
@@ -156,7 +188,10 @@ class RepositorySVN extends Repository
               fileData.workingRevision    = workingRevision;
               fileData.repositoryRevision = repositoryRevision;
             }
-            else if ((newFileDataSet != null) && !isHiddenFile(name))
+            else if (   (newFileDataSet != null)
+                     && !name.equals(".")
+                     && !isHiddenFile(name)
+                    )
             {
               // get file type, size, date/time
               File file = new File(rootPath,name);
@@ -173,29 +208,6 @@ class RepositorySVN extends Repository
                                               datetime,
                                               workingRevision,
                                               repositoryRevision
-                                             )
-                                );
-            }
-          }
-          else if ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
-          {
-            name = matcher.group(1);
-
-            if (newFileDataSet != null)
-            {
-              // get file type, size, date/time
-              File file = new File(rootPath,name);
-              FileData.Types type     = getFileType(file);
-              long           size     = file.length();
-              Date           datetime = new Date(file.lastModified());
-
-              // create file data
-              newFileDataSet.add(new FileData(name,
-                                              FileData.Types.FILE,
-                                              state,
-                                              FileData.Modes.BINARY,
-                                              size,
-                                              datetime
                                              )
                                 );
             }
@@ -252,7 +264,7 @@ Dprintf.dprintf("exception=%s",exception);
       command.clear();
       command.append(SVN_COMMAND,"log","-r","HEAD:0","--verbose");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse revisions in log output
@@ -281,8 +293,8 @@ Dprintf.dprintf("exception=%s",exception);
     {
       public int compare(String revision1, String revision2)
       {
-        int number1 = Integer.parseInt(revision1.substring(1));
-        int number2 = Integer.parseInt(revision2.substring(1));
+        int number1 = Integer.parseInt(revision1);
+        int number2 = Integer.parseInt(revision2);
         if      (number1 < number2)
         {
           return -1;
@@ -320,7 +332,7 @@ Dprintf.dprintf("exception=%s",exception);
       command.clear();
       command.append(SVN_COMMAND,"log","-r",revision+":PREV","--verbose");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -359,7 +371,7 @@ Dprintf.dprintf("exception=%s",exception);
       command.clear();
       command.append(SVN_COMMAND,"log","-r","HEAD:0","--verbose");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -407,7 +419,7 @@ Dprintf.dprintf("exception=%s",exception);
       command.append(SVN_COMMAND,"cat");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // read file data
@@ -448,7 +460,7 @@ Dprintf.dprintf("exception=%s",exception);
       command.append(SVN_COMMAND,"cat");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command,true);
 
       // read file bytes into byte array stream
@@ -573,7 +585,7 @@ Dprintf.dprintf("exception=%s",exception);
         command.clear();
         command.append(SVN_COMMAND,"cat","--revision",newRevision);
         command.append("--");
-        command.append(fileData.getFileName());
+        command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content
@@ -619,7 +631,7 @@ Dprintf.dprintf("exception=%s",exception);
       command.clear();
       command.append(SVN_COMMAND,"diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // skip diff header
@@ -803,12 +815,52 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** get patch for file
-   * @param fileData file data
-   * @return patch data
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
    */
-  public void getPatch(FileData fileData)
+  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
+    ArrayList<String> patchLineList = new ArrayList<String>();
+    try
+    {
+      Command command = new Command();
+      Exec    exec;
+      String  line;
+
+      // get file
+      command.clear();
+      command.append(SVN_COMMAND,"diff","-x");
+      if (ignoreWhitespaces)
+      {
+        command.append("-wbBEdu");
+      }
+      else
+      {
+        command.append("-u");
+      }
+      command.append("--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+
+      // read patch data
+      while ((line = exec.getStdout()) != null)
+      {
+        patchLineList.add(line);
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return patchLineList.toArray(new String[patchLineList.size()]);
   }
 
   /** get log to file
@@ -830,7 +882,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(SVN_COMMAND,"log","-r","HEAD:0","--verbose");
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
@@ -888,7 +940,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       command.append(SVN_COMMAND,"blame","-v");
       if (revision != null) command.append("-r",revision);
       command.append("--");
-      command.append(fileData.getFileName());
+      command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       /* parse annotation output
@@ -940,13 +992,13 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // update files
       command.clear();
-      command.append(SVN_COMMAND,"update","-N");
+      command.append(SVN_COMMAND,"update","-N","--non-interactive");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -975,7 +1027,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1005,7 +1057,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       if (commitMessage != null)
@@ -1018,7 +1070,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
     }
@@ -1055,7 +1107,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       if (commitMessage != null)
@@ -1068,7 +1120,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
     }
@@ -1098,7 +1150,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1122,19 +1174,20 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // copy file
       command.clear();
-      command.append(SVN_COMMAND,"copy");
+      command.append(SVN_COMMAND,"rename");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      command.append(fileData.getFileName());
+      command.append(newName);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
       // commit
       if (commitMessage != null)
       {
-        // commit remove/add (=rename) file
+        // commit rename
         command.clear();
         command.append(SVN_COMMAND,"commit","-F",commitMessage.getFileName());
         command.append("--");
@@ -1143,25 +1196,52 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
-      }
-
-      // remove old file
-      command.clear();
-      command.append(SVN_COMMAND,"delete");
-      command.append("--");
-      command.append(getFileDataName(fileData));
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("Command fail:\n\n%s\n\n(exit code: %d)",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
     }
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, Message commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** pull changes
+   */
+  public void pullChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
+    throws RepositoryException
+  {
   }
 
   /** convert data to string

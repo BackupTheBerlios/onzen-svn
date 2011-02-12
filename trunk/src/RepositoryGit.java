@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.8 $
+* $Revision: 1.9 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -152,12 +152,15 @@ class RepositoryGit extends Repository
   }
 
   /** get patch for file
-   * @param fileData file data
-   * @return patch data
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
    */
-  public void getPatch(FileData fileData)
+  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
+    return null;
   }
 
   /** get log to file
@@ -231,6 +234,44 @@ class RepositoryGit extends Repository
    * @param commitMessage commit message
    */
   public void rename(FileData fileData, String newName, Message commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, Message commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** pull changes
+   */
+  public void pullChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
     throws RepositoryException
   {
   }
