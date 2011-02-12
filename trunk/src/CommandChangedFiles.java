@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
-* $Revision: 1.5 $
+* $Revision: 1.6 $
 * $Author: torsten $
 * Contents: command show changed files
 * Systems: all
@@ -146,7 +146,7 @@ class CommandChangedFiles
   private final Table         widgetFiles;
   private final Button        widgetButtonUpdate;
   private final Button        widgetButtonCommit;
-  private final Button        widgetButtonPatch;
+  private final Button        widgetButtonCreatePatch;
   private final Button        widgetButtonAdd;
   private final Button        widgetButtonRemove;
   private final Button        widgetButtonRevert;
@@ -161,11 +161,10 @@ class CommandChangedFiles
   // ---------------------------- methods ---------------------------------
 
   /** changed files command
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    */
-  CommandChangedFiles(final RepositoryTab repositoryTab, final Shell shell, final Repository repository)
+  CommandChangedFiles(final Shell shell, final RepositoryTab repositoryTab)
   {
     Composite   composite,subComposite;
     Label       label;
@@ -192,7 +191,7 @@ class CommandChangedFiles
     COLOR_REMOVED  = new Color(display,Settings.colorStatusRemoved.background );
 
     // changed files dialog
-    dialog = Dialogs.open(shell,"Changed files",Settings.geometryChangedFiles.x,Settings.geometryChangedFiles.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Changed files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0},1.0,4));
@@ -206,7 +205,6 @@ class CommandChangedFiles
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFilter = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFilter.setText("*");
         Widgets.layout(widgetFilter,0,1,TableLayoutData.WE);
         widgetFilter.addSelectionListener(new SelectionListener()
         {
@@ -225,6 +223,7 @@ class CommandChangedFiles
             Widgets.notify(dialog,USER_EVENT_FILTER);
           }
         });
+        widgetFilter.setToolTipText("Filter name list. Enter multiple words which entires must contain to become listed.");
       }
 
       subComposite = Widgets.newComposite(composite);
@@ -501,7 +500,7 @@ class CommandChangedFiles
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Patch",Settings.keyPatch);
+        menuItem = Widgets.addMenuItem(menu,"Create patch",Settings.keyCreatePatch);
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -510,7 +509,7 @@ menuItem.setEnabled(false);
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Widgets.invoke(widgetButtonPatch);
+            Widgets.invoke(widgetButtonCreatePatch);
           }
         });
 
@@ -613,7 +612,7 @@ menuItem.setEnabled(false);
     {
       widgetButtonUpdate = Widgets.newButton(composite,"Update");
       widgetButtonUpdate.setEnabled(false);
-      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonUpdate,data)
       {
         public void modified(Control control)
@@ -647,7 +646,7 @@ menuItem.setEnabled(false);
 
       widgetButtonCommit = Widgets.newButton(composite,"Commit");
       widgetButtonCommit.setEnabled(false);
-      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonCommit,data)
       {
         public void modified(Control control)
@@ -665,7 +664,7 @@ menuItem.setEnabled(false);
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandCommit commandCommit = new CommandCommit(repositoryTab,shell,repository,fileDataSet);
+            CommandCommit commandCommit = new CommandCommit(shell,repositoryTab,fileDataSet);
             if (commandCommit.execute())
             {
               repositoryTab.repository.updateStates(fileDataSet);
@@ -675,17 +674,16 @@ menuItem.setEnabled(false);
         }
       });
 
-      widgetButtonPatch = Widgets.newButton(composite,"Patch");
-widgetButtonPatch.setEnabled(false);
-      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonPatch,data)
+      widgetButtonCreatePatch = Widgets.newButton(composite,"Create patch");
+      Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetListener(widgetButtonCreatePatch,data)
       {
         public void modified(Control control)
         {
-//          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          control.setEnabled(widgetFiles.getSelectionCount() > 0);
         }
       });
-      widgetButtonPatch.addSelectionListener(new SelectionListener()
+      widgetButtonCreatePatch.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -698,7 +696,7 @@ Dprintf.dprintf("");
 
       widgetButtonAdd = Widgets.newButton(composite,"Add");
       widgetButtonAdd.setEnabled(false);
-      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonAdd,data)
       {
         public void modified(Control control)
@@ -716,7 +714,7 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandAdd commandAdd = new CommandAdd(repositoryTab,shell,repository,fileDataSet);
+            CommandAdd commandAdd = new CommandAdd(shell,repositoryTab,fileDataSet);
             if (commandAdd.execute())
             {
               repositoryTab.repository.updateStates(fileDataSet);
@@ -728,7 +726,7 @@ Dprintf.dprintf("");
 
       widgetButtonRemove = Widgets.newButton(composite,"Remove");
       widgetButtonRemove.setEnabled(false);
-      Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonRemove,data)
       {
         public void modified(Control control)
@@ -746,7 +744,7 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandRemove commandRemove = new CommandRemove(repositoryTab,shell,repository,fileDataSet);
+            CommandRemove commandRemove = new CommandRemove(shell,repositoryTab,fileDataSet);
             if (commandRemove.execute())
             {
               repositoryTab.repository.updateStates(fileDataSet);
@@ -758,7 +756,7 @@ Dprintf.dprintf("");
 
       widgetButtonRevert = Widgets.newButton(composite,"Revert");
       widgetButtonRevert.setEnabled(false);
-      Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonRevert,data)
       {
         public void modified(Control control)
@@ -776,7 +774,7 @@ Dprintf.dprintf("");
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
           if (fileDataSet != null)
           {
-            CommandRevert commandRevert = new CommandRevert(repositoryTab,shell,repository,fileDataSet);
+            CommandRevert commandRevert = new CommandRevert(shell,repositoryTab,fileDataSet);
             if (commandRevert.execute())
             {
               repositoryTab.repository.updateStates(fileDataSet);
@@ -788,7 +786,7 @@ Dprintf.dprintf("");
 
       widgetButtonDiff = Widgets.newButton(composite,"Diff");
       widgetButtonDiff.setEnabled(false);
-      Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonDiff,data)
       {
         public void modified(Control control)
@@ -806,7 +804,7 @@ Dprintf.dprintf("");
           FileData fileData = getSelectedFileData();
           if (fileData != null)
           {
-            CommandDiff commandDiff = new CommandDiff(repositoryTab,shell,repository,fileData);
+            CommandDiff commandDiff = new CommandDiff(shell,repositoryTab,fileData);
             commandDiff.run();
           }
         }
@@ -814,7 +812,7 @@ Dprintf.dprintf("");
 
       widgetButtonRevisions = Widgets.newButton(composite,"Revisions");
       widgetButtonRevisions.setEnabled(false);
-      Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonRevisions,data)
       {
         public void modified(Control control)
@@ -832,7 +830,7 @@ Dprintf.dprintf("");
           FileData fileData = getSelectedFileData();
           if (fileData != null)
           {
-            CommandRevisions commandRevisions = new CommandRevisions(repositoryTab,shell,repository,fileData);
+            CommandRevisions commandRevisions = new CommandRevisions(shell,repositoryTab,fileData);
             commandRevisions.run();
           }
         }
@@ -840,7 +838,7 @@ Dprintf.dprintf("");
 
       widgetButtonSolve = Widgets.newButton(composite,"Solve");
 widgetButtonSolve.setEnabled(false);
-      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonSolve,data)
       {
         public void modified(Control control)
@@ -860,7 +858,7 @@ Dprintf.dprintf("");
       });
 
       widgetButtonReread = Widgets.newButton(composite,"Reread");
-      Widgets.layout(widgetButtonReread,0,9,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonReread,0,9,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonReread.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -883,7 +881,7 @@ Dprintf.dprintf("");
       });
 
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,10,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,10,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -918,14 +916,14 @@ Dprintf.dprintf("");
       public void keyPressed(KeyEvent keyEvent)
       {
 //Dprintf.dprintf("keyEvent=%s %x %x",keyEvent,keyEvent.stateMask & SWT.KEY_MASK,keyEvent.stateMask & SWT.MODIFIER_MASK);
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyUpdate   )) Widgets.invoke(widgetButtonUpdate   );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommit   )) Widgets.invoke(widgetButtonCommit   );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyPatch    )) Widgets.invoke(widgetButtonPatch    );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyAdd      )) Widgets.invoke(widgetButtonAdd      );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRemove   )) Widgets.invoke(widgetButtonRemove   );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert   )) Widgets.invoke(widgetButtonRevert   );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff     )) Widgets.invoke(widgetButtonDiff     );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevisions)) Widgets.invoke(widgetButtonRevisions);
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyUpdate     )) Widgets.invoke(widgetButtonUpdate     );
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommit     )) Widgets.invoke(widgetButtonCommit     );
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCreatePatch)) Widgets.invoke(widgetButtonCreatePatch);
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyAdd        )) Widgets.invoke(widgetButtonAdd        );
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRemove     )) Widgets.invoke(widgetButtonRemove     );
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert     )) Widgets.invoke(widgetButtonRevert     );
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff       )) Widgets.invoke(widgetButtonDiff       );
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevisions  )) Widgets.invoke(widgetButtonRevisions  );
 //        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommit)) Wiggets.invoke(widgetButtonReread);
       }
       public void keyReleased(KeyEvent keyEvent)
@@ -937,8 +935,8 @@ Dprintf.dprintf("");
     {
       public void handleEvent(Event event)
       {
-        // get pattern
-        Pattern filterPattern = Pattern.compile(StringUtils.globToRegex(widgetFilter.getText()),Pattern.CASE_INSENSITIVE);
+        // get filter words
+        String[] filterWords = widgetFilter.getText().toLowerCase().split("\\s");
 
         // update table
         widgetFiles.removeAll();
@@ -946,17 +944,32 @@ Dprintf.dprintf("");
         {
           for (FileData fileData : data.fileDataSet)
           {
-            if (   data.showStates.contains(fileData.state)
-                && filterPattern.matcher(fileData.getFileName()).matches()
-               )
+            // check state filter
+            if (data.showStates.contains(fileData.state))
             {
-              TableItem tableItem = Widgets.insertTableEntry(widgetFiles,
-                                                             data.fileDataComparator,
-                                                             fileData,
-                                                             fileData.name,
-                                                             fileData.state.toString()
-                                                            );
-              tableItem.setBackground(getFileDataBackground(fileData));
+              String fileName = fileData.getFileName().toLowerCase();
+
+              // match name
+              boolean match = true;
+              for (String filterWord : filterWords)
+              {
+                if (!fileName.contains(filterWord))
+                {
+                  match = false;
+                  break;
+                }
+              }
+
+              if (match)
+              {
+                TableItem tableItem = Widgets.insertTableEntry(widgetFiles,
+                                                               data.fileDataComparator,
+                                                               fileData,
+                                                               fileData.name,
+                                                               fileData.state.toString()
+                                                              );
+                tableItem.setBackground(getFileDataBackground(fileData));
+              }
             }
           }
         }
@@ -964,19 +977,50 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryChangedFiles);
 
-    // get changed files
-    try
+    // start getting changed files
+    Background.run(new BackgroundRunnable()
     {
-      data.fileDataSet = repositoryTab.repository.getChangedFiles();
-Dprintf.dprintf("");
-}
-catch (RepositoryException exception)
-{
-Dprintf.dprintf("");
-}
-    Widgets.notify(dialog,USER_EVENT_FILTER);
+      public void run()
+      {
+        // get changed files
+        repositoryTab.setStatusText("Get changed files for '%s'...",repositoryTab.repository.title);
+        try
+        {
+          data.fileDataSet = repositoryTab.repository.getChangedFiles();
+        }
+        catch (RepositoryException exception)
+        {
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,"Getting file revisions fail: %s",exceptionMessage);
+            }
+          });
+          return;
+        }
+        finally
+        {
+          repositoryTab.clearStatusText();
+        }
+
+        // notity changed data
+        // show
+        if (!display.isDisposed())
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Widgets.notify(dialog,USER_EVENT_FILTER);
+            }
+          });
+        }
+      }
+    });
   }
 
   /** run dialog
@@ -985,7 +1029,7 @@ Dprintf.dprintf("");
   {
     if (!dialog.isDisposed())
     {
-      widgetFiles.setFocus();
+      widgetFilter.setFocus();
       if ((Boolean)Dialogs.run(dialog,false))
       {
         return true;
