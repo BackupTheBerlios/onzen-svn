@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Message.java,v $
-* $Revision: 1.2 $
+* $Revision: 1.3 $
 * $Author: torsten $
 * Contents: message broadcasting functions
 * Systems: all
@@ -78,7 +78,7 @@ class MessageReceiveBroadcast extends Thread
         // wait for UDP message
         socket.receive(packet);
         line = new String(packet.getData(),0,packet.getLength()).trim();
-Dprintf.dprintf("line=#%s#",line);
+//Dprintf.dprintf("line=#%s#",line);
 
         // parse
         if (!StringParser.parse(line,"%s %s % s",data))
@@ -132,6 +132,7 @@ class Message
   protected final static String  ID        = String.format("%08x",System.currentTimeMillis());
 
   private static final String ONZEN_HISTORY_DATABASE_FILE_NAME = Settings.ONZEN_DIRECTORY+File.separator+"history.db";
+  private static final int    ONZEN_HISTORY_DATABASE_VERSION   = 1;
 
   // --------------------------- variables --------------------------------
   private static                LinkedList<String> history = new LinkedList<String>();
@@ -151,7 +152,7 @@ class Message
     try
     {
       Connection        connection;
-      PreparedStatement statement;
+      PreparedStatement preparedStatement;
       ResultSet         resultSet;
 
       // open database
@@ -160,15 +161,13 @@ class Message
       synchronized(history)
       {
         // load history
-        statement = connection.prepareStatement("SELECT message FROM messages ORDER BY datetime ASC;");
-        resultSet = statement.executeQuery();
-
+        preparedStatement = connection.prepareStatement("SELECT message FROM messages ORDER BY datetime ASC;");
+        resultSet = preparedStatement.executeQuery();
         history.clear();
         while (resultSet.next())
         {
           history.addLast(resultSet.getString("message").trim()+"\n");
         }
-
         resultSet.close();
 
         // shorten history
@@ -235,26 +234,29 @@ class Message
    */
   public void addToHistory()
   {
-    // broadcast message
-    try
+    if (!message.isEmpty())
     {
-      // convert message
-      String string = message.replace("\\","\\\\").
-                              replace("\n","\\n");
+      // broadcast message
+      try
+      {
+        // convert message
+        String string = message.replace("\\","\\\\").
+                                replace("\n","\\n");
 
-      // broadcast message to other running instances of Onzen
-      byte[] data = String.format("%s %s %s\n",USER_NAME,ID,string).getBytes();
+        // broadcast message to other running instances of Onzen
+        byte[] data = String.format("%s %s %s\n",USER_NAME,ID,string).getBytes();
 
-      DatagramPacket datagramPacket = new DatagramPacket(data,data.length);
-      socket.send(datagramPacket);
+        DatagramPacket datagramPacket = new DatagramPacket(data,data.length);
+        socket.send(datagramPacket);
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+
+      // store in history
+      storeHistory();
     }
-    catch (IOException exception)
-    {
-      // ignored
-    }
-
-    // store in history
-    storeHistory();
   }
 
   /** create message
@@ -321,14 +323,41 @@ Dprintf.dprintf("");
 
     try
     {
+      Statement         statement;
+      ResultSet         resultSet;
+      PreparedStatement preparedStatement;
+
       // load SQLite driver class
       Class.forName("org.sqlite.JDBC");
 
-      // lock database
-//???
-
       // open database
       connection = DriverManager.getConnection("jdbc:sqlite:"+ONZEN_HISTORY_DATABASE_FILE_NAME);
+
+      // create tables if needed
+      statement = connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
+                              "  name  TEXT, "+
+                              "  value TEXT "+
+                              ");"
+                             );
+      statement = connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS messages ( "+
+                              "  id       INTEGER PRIMARY KEY, "+
+                              "  datetime INTEGER DEFAULT (DATETIME('now')), "+
+                              "  message  TEXT "+
+                              ");"
+                             );
+
+      // init meta data (if not already initialized)
+      statement = connection.createStatement();
+      resultSet = statement.executeQuery("SELECT name,value FROM meta");
+      if (!resultSet.next())
+      {
+        preparedStatement = connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+        preparedStatement.setString(1,Integer.toString(ONZEN_HISTORY_DATABASE_VERSION));
+        preparedStatement.executeUpdate();
+      }
+      resultSet.close();
     }
     catch (ClassNotFoundException exception)
     {
@@ -371,48 +400,29 @@ Dprintf.dprintf("");
         try
         {
           Connection        connection;
-          PreparedStatement statement;
+          PreparedStatement preparedStatement;
           ResultSet         resultSet;
 
           // open database
           connection = openHistoryDatabase();
-          connection.setAutoCommit(false);
-
-          // create tables if needed
-          statement = connection.prepareStatement(
-            "CREATE TABLE IF NOT EXISTS meta ("+
-            "  name  TEXT,"+
-            "  value TEXT"+
-            ");"
-          );
-          statement.addBatch();
-          statement = connection.prepareStatement(
-            "CREATE TABLE IF NOT EXISTS messages ("+
-            "  id       INTEGER PRIMARY KEY,"+
-            "  datetime INTEGER DEFAULT (DATETIME('now')),"+
-            "  message  TEXT"+
-            ");"
-          );
-          statement.addBatch();
-          statement.executeBatch();
 
           // add to database
-          statement = connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
-          statement.setString(1,message);
-          statement.execute();
+          preparedStatement = connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
+          preparedStatement.setString(1,message);
+          preparedStatement.execute();
 
           // shorten message table size
           boolean done = false;
           do
           {
-            statement = connection.prepareStatement("SELECT id FROM messages ORDER BY datetime DESC LIMIT ?,1;");
-            statement.setInt(1,Settings.maxMessageHistory);
-            resultSet = statement.executeQuery();
+            preparedStatement = connection.prepareStatement("SELECT id FROM messages ORDER BY datetime DESC LIMIT ?,1;");
+            preparedStatement.setInt(1,Settings.maxMessageHistory);
+            resultSet = preparedStatement.executeQuery();
             if (resultSet.next())
             {
-              statement = connection.prepareStatement("DELETE FROM messages WHERE id=?;");
-              statement.setString(1,resultSet.getString("id"));
-              statement.execute();
+              preparedStatement = connection.prepareStatement("DELETE FROM messages WHERE id=?;");
+              preparedStatement.setLong(1,resultSet.getLong("id"));
+              preparedStatement.execute();
             }
             else
             {
@@ -421,9 +431,6 @@ Dprintf.dprintf("");
             resultSet.close();
           }
           while (!done);
-
-          // commit changes
-          connection.commit();
 
           // close database
           closeHistoryDatabase(connection);
