@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: repository tab
 * Systems: all
@@ -241,13 +241,8 @@ class RepositoryTab
   public  final Composite     widgetTab;
   private Tree                widgetFileTree;
 
-  // widget variables
-//  private WidgetVariable  archiveType             = new WidgetVariable(new String[]{"normal","full","incremental","differential"});
-//  private WidgetVariable  archivePartSizeFlag     = new WidgetVariable(false);
-//  private WidgetVariable  archivePartSize         = new WidgetVariable(0);
-
-  // misc
-  private WeakHashMap<FileData,TreeItem> fileDataMap = new WeakHashMap<FileData,TreeItem>();
+  // map file name -> tree item
+  private WeakHashMap<String,TreeItem> fileNameMap = new WeakHashMap<String,TreeItem>();
 
   // ------------------------ native functions ----------------------------
 
@@ -355,8 +350,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Patch...");
-menuItem.setEnabled(false);
+        menuItem = Widgets.addMenuItem(menu,"Create patch...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -364,8 +358,19 @@ menuItem.setEnabled(false);
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-Dprintf.dprintf("");
-//            patch();
+            createPatch();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Patches...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            patches();
           }
         });
 
@@ -378,6 +383,18 @@ Dprintf.dprintf("");
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             add();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Rename...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            rename();
           }
         });
 
@@ -472,6 +489,42 @@ Dprintf.dprintf("");
             }
           }
         });
+
+        menuItem = Widgets.addMenuItem(menu,"New directory...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            newDirectory();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Rename local...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            renameLocalFile();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Delete local...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            deleteLocalFiles();
+          }
+        });
       }
       widgetFileTree.setMenu(menu);
       widgetFileTree.setToolTipText("Tree representation of files.\nDouble-click to open sub-directories, right-click to open context menu.");
@@ -550,26 +603,38 @@ Dprintf.dprintf("");
    */
   public void updateStates()
   {
-    TreeItem[] selectedTreeItems = widgetFileTree.getSelection();
-
-    // get file data (selected and all in same directory)
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
-    for (TreeItem selectedTreeItem : selectedTreeItems)
-    {
-      fileDataSet.add((FileData)selectedTreeItem.getData());
 
-      TreeItem parentTreeItem = selectedTreeItem.getParentItem();
-      if (parentTreeItem != null)
+    TreeItem[] selectedTreeItems = widgetFileTree.getSelection();
+    if (selectedTreeItems.length > 0)
+    {
+      // get file data (selected and all in same directory)
+      for (TreeItem selectedTreeItem : selectedTreeItems)
       {
-        for (TreeItem treeItem : parentTreeItem.getItems())
+        fileDataSet.add((FileData)selectedTreeItem.getData());
+
+        TreeItem parentTreeItem = selectedTreeItem.getParentItem();
+        if (parentTreeItem != null)
         {
-          fileDataSet.add((FileData)treeItem.getData());
+          for (TreeItem treeItem : parentTreeItem.getItems())
+          {
+            fileDataSet.add((FileData)treeItem.getData());
+          }
         }
+      }
+    }
+    else
+    {
+      // get file data of all open directories
+      for (TreeItem treeItem : Widgets.getTreeItems(widgetFileTree))
+      {
+Dprintf.dprintf("treeItem=%s",treeItem);
+        fileDataSet.add((FileData)treeItem.getData());
       }
     }
 
     // start update file data
-    asyncUpdateFileStatus(fileDataSet);
+    asyncUpdateFileStates(fileDataSet);
   }
 
   /** update selected entries
@@ -580,11 +645,11 @@ Dprintf.dprintf("");
     try
     {
       repository.update(fileDataSet);
-      updateFileStatus(fileDataSet);
+      asyncUpdateFileStates(fileDataSet);
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Update fail: %s",exception.getMessage());
+      Dialogs.error(shell,"Update fail (error: %s)",exception.getMessage());
       return;
     }
   }
@@ -596,8 +661,32 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandCommit commandCommit = new CommandCommit(this,shell,repository,fileDataSet);
+      CommandCommit commandCommit = new CommandCommit(shell,this,fileDataSet);
       commandCommit.run();
+    }
+  }
+
+  /** create patch for selected entries
+   */
+  public void createPatch()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandCreatePatch commandCreatePatch = new CommandCreatePatch(shell,this,fileDataSet);
+      commandCreatePatch.run();
+    }
+  }
+
+  /** show/edit patches
+   */
+  public void patches()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandPatches commandPatches = new CommandPatches(shell,this);
+      commandPatches.run();
     }
   }
 
@@ -608,7 +697,7 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandAdd commandAdd = new CommandAdd(this,shell,repository,fileDataSet);
+      CommandAdd commandAdd = new CommandAdd(shell,this,fileDataSet);
       commandAdd.run();
     }
   }
@@ -620,7 +709,7 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandRemove commandRemove = new CommandRemove(this,shell,repository,fileDataSet);
+      CommandRemove commandRemove = new CommandRemove(shell,this,fileDataSet);
       commandRemove.run();
     }
   }
@@ -632,7 +721,7 @@ Dprintf.dprintf("");
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     if (fileDataSet != null)
     {
-      CommandRevert commandRevert = new CommandRevert(this,shell,repository,fileDataSet);
+      CommandRevert commandRevert = new CommandRevert(shell,this,fileDataSet);
       commandRevert.run();
     }
   }
@@ -644,8 +733,100 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandRename commandRename = new CommandRename(this,shell,repository,fileData);
+      CommandRename commandRename = new CommandRename(shell,this,fileData);
       commandRename.run();
+    }
+  }
+
+  /** pull changes
+   */
+  public void pullChanges()
+  {
+    setStatusText("Pull changes...");
+    try
+    {
+      repository.pullChanges();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,"Pulling changes fail: %s",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      clearStatusText();
+    }
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+  {
+    setStatusText("Push changes...");
+    try
+    {
+      repository.pushChanges();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,"Pushing changes fail: %s",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      clearStatusText();
+    }
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+  {
+    setStatusText("Apply patches...");
+    try
+    {
+      repository.applyPatches();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,"Apply patches fail: %s",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      clearStatusText();
+    }
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
+  {
+    setStatusText("Unapply patches...");
+    try
+    {
+      repository.unapplyPatches();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,"Unapply patches fail: %s",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      clearStatusText();
+    }
+  }
+
+  /** set file mode of selected entries
+   */
+  public void setFileMode()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandSetFileMode commandSetFileMode = new CommandSetFileMode(shell,this,fileDataSet);
+      commandSetFileMode.run();
     }
   }
 
@@ -656,7 +837,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandView commandView = new CommandView(this,shell,repository,fileData);
+      CommandView commandView = new CommandView(shell,this,fileData);
       commandView.run();
     }
   }
@@ -668,7 +849,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandDiff commandDiff = new CommandDiff(this,shell,repository,fileData);
+      CommandDiff commandDiff = new CommandDiff(shell,this,fileData);
       commandDiff.run();
     }
   }
@@ -680,7 +861,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(this,shell,repository,fileData);
+      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,this,fileData);
       commandRevisionInfo.run();
     }
   }
@@ -692,7 +873,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandRevisions commandRevisions = new CommandRevisions(this,shell,repository,fileData);
+      CommandRevisions commandRevisions = new CommandRevisions(shell,this,fileData);
       commandRevisions.run();
     }
   }
@@ -701,7 +882,7 @@ Dprintf.dprintf("");
    */
   public void changedFiles()
   {
-    CommandChangedFiles commandChangedFiles = new CommandChangedFiles(this,shell,repository);
+    CommandChangedFiles commandChangedFiles = new CommandChangedFiles(shell,this);
     commandChangedFiles.run();
   }
 
@@ -712,7 +893,7 @@ Dprintf.dprintf("");
     FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
-      CommandAnnotations commandAnnotations = new CommandAnnotations(this,shell,repository,fileData);
+      CommandAnnotations commandAnnotations = new CommandAnnotations(shell,this,fileData);
       commandAnnotations.run();
     }
   }
@@ -1096,7 +1277,7 @@ Dprintf.dprintf("");
    */
   public void renameLocalFile()
   {
-    FileData fileData = getSelectedFileData();
+    final FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
       /** dialog data
@@ -1118,13 +1299,13 @@ Dprintf.dprintf("");
       Button      button;
 
       // rename file/directory dialog
-      dialog = Dialogs.open(shell,"Rename file/directory",Settings.geometryDeleteLocalFiles.x,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+      dialog = Dialogs.open(shell,"Rename file/directory",new double[]{1.0,0.0},1.0);
 
       final Text   widgetNewFileName;
       final Button widgetRename;
       composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+      composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
+      Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
       {
         label = Widgets.newLabel(composite,"Old file name:");
         Widgets.layout(label,0,0,TableLayoutData.W);
@@ -1146,6 +1327,7 @@ Dprintf.dprintf("");
       Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
       {
         widgetRename = Widgets.newButton(composite,"Rename");
+        widgetRename.setEnabled(false);
         Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
         widgetRename.addSelectionListener(new SelectionListener()
         {
@@ -1156,12 +1338,13 @@ Dprintf.dprintf("");
           {
             Button widget = (Button)selectionEvent.widget;
 
-            data.newFileName = widgetNewFileName.getText();
+            data.newFileName                 = widgetNewFileName.getText();
+            Settings.geometryRenameLocalFile = dialog.getSize();
 
             Dialogs.close(dialog,true);
           }
         });
-        widgetRename.setToolTipText("Create new directory.");
+        widgetRename.setToolTipText("Rename file.");
 
         button = Widgets.newButton(composite,"Cancel");
         Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
@@ -1180,6 +1363,15 @@ Dprintf.dprintf("");
       }
 
       // listeners
+      widgetNewFileName.addModifyListener(new ModifyListener()
+      {
+        public void modifyText(ModifyEvent modifyEvent)
+        {
+          Text widget = (Text)modifyEvent.widget;
+
+          widgetRename.setEnabled(!widget.getText().equals(fileData.getFileName()));
+        }
+      });
       widgetNewFileName.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1192,15 +1384,14 @@ Dprintf.dprintf("");
       });
 
       // show dialog
-      Dialogs.show(dialog);
+      Dialogs.show(dialog,Settings.geometryRenameLocalFile.x,SWT.DEFAULT);
 
       // update
       data.newFileName = fileData.getFileName();
       widgetNewFileName.setText(data.newFileName);
 
       // run
-      widgetNewFileName.setFocus();
-      widgetNewFileName.setSelection(data.newFileName.length(),data.newFileName.length());
+      Widgets.setFocus(widgetNewFileName);
       if ((Boolean)Dialogs.run(dialog,false))
       {
         // create directory
@@ -1213,8 +1404,8 @@ Dprintf.dprintf("");
         }
         fileData.setFileName(data.newFileName);
 
-        // update file list
-Dprintf.dprintf("");
+        // start update file data
+        asyncUpdateFileStates(fileData);
       }
     }
   }
@@ -1232,7 +1423,7 @@ Dprintf.dprintf("");
       Button      button;
 
       // delete dialog
-      dialog = Dialogs.open(shell,"Delete files/directories",Settings.geometryDeleteLocalFiles.x,Settings.geometryDeleteLocalFiles.y,new double[]{1.0,0.0},1.0);
+      dialog = Dialogs.open(shell,"Delete files/directories",new double[]{1.0,0.0},1.0);
 
       final List   widgetFiles;   
       final Button widgetDelete;
@@ -1263,6 +1454,8 @@ Dprintf.dprintf("");
           {
             Button widget = (Button)selectionEvent.widget;
 
+            Settings.geometryDeleteLocalFiles = dialog.getSize();
+
             Dialogs.close(dialog,true);
           }
         });
@@ -1287,7 +1480,7 @@ Dprintf.dprintf("");
       // listeners
 
       // show dialog
-      Dialogs.show(dialog);
+      Dialogs.show(dialog,Settings.geometryDeleteLocalFiles);
 
       // add files
       for (FileData fileData : fileDataSet)
@@ -1300,11 +1493,45 @@ Dprintf.dprintf("");
       if ((Boolean)Dialogs.run(dialog,false))
       {
         // delete files/directories
-        boolean skipAll = false;
+        boolean deleteAll  = false;
+        boolean skipErrors = false;
         for (FileData fileData : fileDataSet)
         {
           File file = new File(fileData.getFileName(repository));
-          if (!file.delete() && !skipAll)
+
+          // delete file/directory
+          boolean deleted = false;
+          if (file.isDirectory())
+          {
+            // confirm deleting directory
+            if (!deleteAll)
+            {
+              switch (Dialogs.select(shell,
+                                     "Error",
+                                     String.format("'%s' is a directory.\n\nDelete directory?",file.getPath()),
+                                     new String[]{"Yes","Yes, always","No"},
+                                     2
+                                    )
+                     )
+              {
+                case 0:
+                  break;
+                case 1:
+                  deleteAll = true;
+                  break;
+                case 2:
+                  continue;
+              }
+            }
+            deleted = deleteDirectory(file);
+          }
+          else
+          {
+            deleted = file.delete();
+          }
+
+          // check if deleted
+          if (!deleted && !skipErrors)
           {
             switch (Dialogs.select(shell,
                                    "Error",
@@ -1317,7 +1544,7 @@ Dprintf.dprintf("");
               case 0:
                 break;
               case 1:
-                skipAll = true;
+                skipErrors = true;
                 break;
               case 2:
                 return;
@@ -1325,8 +1552,8 @@ Dprintf.dprintf("");
           }
         }
 
-        // update file list
-Dprintf.dprintf("");
+        // start update file data
+        asyncUpdateFileStates(fileDataSet);
       }
     }
   }
@@ -1538,12 +1765,12 @@ Dprintf.dprintf("");
         subTreeItem.setImage(getFileDataImage(fileData));
 
         // store tree item reference
-        fileDataMap.put(fileData,subTreeItem);
+        fileNameMap.put(fileData.getFileName(),subTreeItem);
       }
       treeItem.setExpanded(true);
 
       // start update states
-      asyncUpdateFileStatus(fileDataSet,directoryData.getFileName(repository));
+      asyncUpdateFileStates(fileDataSet,directoryData.getFileName(repository));
     }
   }
 
@@ -1913,172 +2140,217 @@ Dprintf.dprintf("");
    * @param treeItem tree item to update
    * @param fileData file data
    */
-  private void updateFileStatus(TreeItem treeItem, FileData fileData)
-  {    
-    treeItem.setText(1,getFileDataStateString(fileData));
-    treeItem.setText(2,fileData.workingRevision);
-    treeItem.setText(3,fileData.branch);
-    treeItem.setForeground(Onzen.COLOR_BLACK);
-    treeItem.setBackground(getFileDataBackground(fileData));
+  private void updateTreeItem(TreeItem treeItem, FileData fileData)
+  {
+    if (!treeItem.isDisposed())
+    {
+      treeItem.setText(1,getFileDataStateString(fileData));
+      treeItem.setText(2,fileData.workingRevision);
+      treeItem.setText(3,fileData.branch);
+      treeItem.setForeground(Onzen.COLOR_BLACK);
+      treeItem.setBackground(getFileDataBackground(fileData));
+    }
   }
 
   /** update file tree item
    * @param treeItem tree item to update
    */
-  private void updateFileStatus(TreeItem treeItem)
+  private void updateTreeItem(TreeItem treeItem)
   {
-    updateFileStatus(treeItem,(FileData)treeItem.getData());
+    updateTreeItem(treeItem,(FileData)treeItem.getData());
   }
 
   /** update file tree items
    * @param treeItems tree items to update
    */
-  private void updateFileStatus(TreeItem[] treeItems)
+  private void updateTreeItems(TreeItem[] treeItems)
   {
     for (TreeItem treeItem : treeItems)
     {
-      updateFileStatus(treeItem,(FileData)treeItem.getData());
+      updateTreeItem(treeItem,(FileData)treeItem.getData());
     }
   }
 
   /** update file tree item
    * @param fileData file data
    */
-  protected void updateFileStatus(FileData fileData)
+  protected void updateTreeItem(FileData fileData)
   {
-    TreeItem treeItem = fileDataMap.get(fileData);
+    TreeItem treeItem = fileNameMap.get(fileData.getFileName());
     if (treeItem != null)
     {
-      updateFileStatus(treeItem,fileData);
+      updateTreeItem(treeItem,fileData);
     }
   }
 
   /** update file tree items
    * @param fileDataSet file data set
    */
-  protected void updateFileStatus(HashSet<FileData> fileDataSet)
+  protected void updateTreeItems(HashSet<FileData> fileDataSet)
   {
     for (FileData fileData : fileDataSet)
     {
-      updateFileStatus(fileData);
+      updateTreeItem(fileData);
     }
   }
 
   /** asyncronous update file state
    * @param fileDataSet file data set to update states
    */
-  protected void asyncUpdateFileStatus(HashSet<FileData> fileDataSet, String title)
+  protected void updateFileStates(HashSet<FileData> fileDataSet)
   {
-    Background.run(new BackgroundRunnable(repository,fileDataSet,fileDataMap,title)
+    // update tree items: status update in progress
+    for (final FileData fileData : fileDataSet)
     {
-      public void run(Repository repository, HashSet<FileData> fileDataSet, final WeakHashMap<FileData,TreeItem> fileDataMap, String title)
+//Dprintf.dprintf("fileData=%s",fileData);
+      final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+      if (treeItem != null)
       {
-        // remove not existing entries
-Dprintf.dprintf("");
-        FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);
-        for (FileData fileData : fileDataArray)
+        display.syncExec(new Runnable()
         {
-          if (!(new File(fileData.getFileName(repository.rootPath)).exists()))
+          public void run()
           {
-Dprintf.dprintf("fileData=%s",fileData);
-            fileDataSet.remove(fileData);
-
-            final TreeItem treeItem = fileDataMap.get(fileData);
-            if (treeItem != null)
-            {
-              display.syncExec(new Runnable()
-              {
-                public void run()
-                {
-                  if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-                }
-              });
-            }
+            if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
           }
-        }
+        });
+      }
+    }
 
-        // update tree items: status update in progress
-        for (final FileData fileData : fileDataSet)
-        {
-//Dprintf.dprintf("fileData=%s",fileData);
-          final TreeItem treeItem = fileDataMap.get(fileData);
-          if (treeItem != null)
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-              }
-            });
-          }
-        }
+    // update states
+    HashSet<FileData> newFileDataSet = new HashSet<FileData>();
+    repository.updateStates(fileDataSet,newFileDataSet);
 
-        // update states
-        HashSet<FileData> newFileDataSet = new HashSet<FileData>();
-        try
+    // update tree items: set status color, remove not existing entries
+    FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);
+    for (final FileData fileData : fileDataArray)
+    {
+      if ((new File(fileData.getFileName(repository.rootPath)).exists()))
+      {
+        final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+        if (treeItem != null)
         {
-          onzen.setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
-          repository.updateStates(fileDataSet,newFileDataSet);
-        }
-        finally
-        {
-          onzen.clearStatusText();
-        }
-
-        // update tree items: set status color
-        for (final FileData fileData : fileDataSet)
-        {
-//Dprintf.dprintf("fileData=%s",fileData);
-          final TreeItem treeItem = fileDataMap.get(fileData);
-          if (treeItem != null)
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                if (!treeItem.isDisposed()) updateFileStatus(treeItem,fileData);
-              }
-            });
-          }
-        }
-
-        // add new entries
-        for (final FileData newFileData : newFileDataSet)
-        {
-Dprintf.dprintf("new newFileData =%s",newFileData);
-          // add new tree item
           display.syncExec(new Runnable()
           {
             public void run()
             {
-              // find parent tree item
-              TreeItem treeItem = null;
-              for (FileData fileData : fileDataMap.keySet())
-              {
-                if (fileData.getFileName().equals(newFileData.getDirectoryName()))
-                {
-                  treeItem = fileDataMap.get(fileData);
-                  break;
-                }
-              }
-
-              if (treeItem != null)
-              {
-                // create tree item
-                TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
-                newTreeItem.setText(0,newFileData.getBaseName());
-                newTreeItem.setImage(getFileDataImage(newFileData));
-                updateFileStatus(newTreeItem,newFileData);
-
-                // store tree item reference
-                fileDataMap.put(newFileData,newTreeItem);
-              }
-else {
-//for (TreeItem i : fileDataMap.values()) Dprintf.dprintf("i=%s",i);
-}
+              if (!treeItem.isDisposed()) updateTreeItem(treeItem,fileData);
             }
           });
+        }
+      }
+      else
+      {
+        fileDataSet.remove(fileData);
+//Dprintf.dprintf("removed %s",fileData);
+
+        final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+        if (treeItem != null)
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              if (!treeItem.isDisposed()) treeItem.dispose();
+            }
+          });
+        }
+      }
+    }
+
+    // add new tree items
+    for (final FileData newFileData : newFileDataSet)
+    {
+      TreeItem treeItem = fileNameMap.get(newFileData.getFileName());
+      if ((treeItem == null) || treeItem.isDisposed())
+      {
+//Dprintf.dprintf("newFileData=%s",newFileData);
+        // add new tree item
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            // find parent tree item to insert new tree item
+            TreeItem treeItem = null;
+            for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
+            {
+              FileData fileData = (FileData)rootTreeItem.getData();
+//Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
+              if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
+              {
+                treeItem = rootTreeItem;
+                break;
+              }
+            }
+
+            if (treeItem != null)
+            {
+              // create tree item
+              TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
+              newTreeItem.setText(0,newFileData.getBaseName());
+              newTreeItem.setImage(getFileDataImage(newFileData));
+              updateTreeItem(newTreeItem,newFileData);
+
+              // store tree item reference
+              fileNameMap.put(newFileData.getFileName(),newTreeItem);
+            }
+  //else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
+          }
+        });
+      }
+    }
+  }
+
+  /** asyncronous update file state
+   * @param fileData file data
+   */
+  protected void updateFileStates(final FileData fileData)
+  {
+    // update tree items: status update in progress
+    final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+    if (treeItem != null)
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+        }
+      });
+    }
+
+    // update states: set status color
+    HashSet<FileData> newFileDataSet = new HashSet<FileData>();
+    repository.updateStates(fileData.toSet());
+
+    // update tree items
+//Dprintf.dprintf("fileData=%s",fileData);
+    display.syncExec(new Runnable()
+    {
+      public void run()
+      {
+        if (!treeItem.isDisposed()) updateTreeItem(treeItem,fileData);
+      }
+    });
+  }
+
+  /** asyncronous update file state
+   * @param fileDataSet file data set to update states
+   * @param title title to show in status line or null
+   */
+  protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet, String title)
+  {
+    Background.run(new BackgroundRunnable(repository,fileDataSet,title)
+    {
+      public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
+      {
+        try
+        {
+          onzen.setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
+          updateFileStates(fileDataSet);
+        }
+        finally
+        {
+          onzen.clearStatusText();
         }
       }
     });
@@ -2087,59 +2359,57 @@ else {
   /** asyncronous update file state
    * @param fileDataSet file data set to update states
    */
-  protected void asyncUpdateFileStatus(HashSet<FileData> fileDataSet)
+  protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet)
   {
-    asyncUpdateFileStatus(fileDataSet,null);
+    asyncUpdateFileStates(fileDataSet,null);
   }
 
   /** asyncronous update file state
    * @param fileData file data
    */
-  protected void asyncUpdateFileStatus(FileData fileData)
+  protected void asyncUpdateFileStates(FileData fileData)
   {
-    Background.run(new BackgroundRunnable(repository,fileData,fileDataMap)
+    Background.run(new BackgroundRunnable(repository,fileData)
     {
-      public void run(Repository repository, final FileData fileData, WeakHashMap<FileData,TreeItem> fileDataMap)
+      public void run(Repository repository, final FileData fileData)
       {
 //Dprintf.dprintf("fileData=%s",fileData);
-
-        // update tree items: status update in progress
-        final TreeItem treeItem = fileDataMap.get(fileData);
-        if (treeItem != null)
-        {
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-            }
-          });
-        }
-
-        // update states: set status color
-        HashSet<FileData> fileDataSet = new HashSet<FileData>();
-        fileDataSet.add(fileData);
         try
         {
           onzen.setStatusText("Update states of '%s'...",fileData.getFileName(repository.rootPath));
-          repository.updateStates(fileDataSet);
+          updateFileStates(fileData);
         }
         finally
         {
           onzen.clearStatusText();
         }
-
-        // update tree items
-//Dprintf.dprintf("fileData=%s",fileData);
-        display.syncExec(new Runnable()
-        {
-          public void run()
-          {
-            if (!treeItem.isDisposed()) updateFileStatus(treeItem,fileData);
-          }
-        });
       }
     });
+  }
+
+  /** delete directory tree
+   * @param directory directory to delete
+   * @return true if deleted, false otherwise
+   */
+  private boolean deleteDirectory(File directory)
+  {
+    File[] files = directory.listFiles();
+    if (files != null)
+    {
+      for (File file : files)
+      {
+        if (file.isDirectory())
+        {
+          if (!deleteDirectory(file)) return false;
+        }
+        else
+        {
+          if (!file.delete()) return false;
+        }
+      }
+    }
+
+    return directory.delete();
   }
 }
 
