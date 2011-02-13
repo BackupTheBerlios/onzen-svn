@@ -474,7 +474,7 @@ Dprintf.dprintf("");
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Edit...");
+        menuItem = Widgets.addMenuItem(menu,"Open...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -486,6 +486,22 @@ Dprintf.dprintf("");
             if (fileData != null)
             {
               openFile(fileData);
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Open with...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+            if (fileData != null)
+            {
+              openFileWith(fileData);
             }
           }
         });
@@ -899,18 +915,19 @@ Dprintf.dprintf("treeItem=%s",treeItem);
   }
 
   /** open file with external program
+   * @param fileData file data
    */
-  public void openFileWith()
+  public void openFileWith(FileData fileData)
   {
     /** dialog data
      */
     class Data
     {
-      String path;
+      String command;
 
       Data()
       {
-        this.path = null;
+        this.command = null;
       }
     };
 
@@ -923,18 +940,18 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     // new directory dialog
     dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Text   widgetPath;
-    final Button widgetCreate;
+    final Text   widgetCommand;
+    final Button widgetOpen;
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Path:");
+      label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
-      widgetPath = Widgets.newText(composite);
-      widgetPath.setText(data.path);
-      Widgets.layout(widgetPath,1,1,TableLayoutData.WE);
+      widgetCommand = Widgets.newText(composite);
+      Widgets.layout(widgetCommand,0,1,TableLayoutData.WE);
+      widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%f - file name");
     }
 
     // buttons
@@ -942,9 +959,9 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetCreate = Widgets.newButton(composite,"Create");
-      Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-      widgetCreate.addSelectionListener(new SelectionListener()
+      widgetOpen = Widgets.newButton(composite,"Open");
+      Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetOpen.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -953,25 +970,12 @@ Dprintf.dprintf("treeItem=%s",treeItem);
         {
           Button widget = (Button)selectionEvent.widget;
 
-          File file = new File(widgetPath.getText());
-          if      (file.exists())
-          {
-            Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
-            return;
-          }
-          else if (!file.getParentFile().canWrite())
-          {
-            Dialogs.error(shell,"Permission denied for parent directory '%s'!",file.getParentFile().getPath());
-            return;
-          }
-          else
-          {
-            data.path = widgetPath.getText();
-            Dialogs.close(dialog,true);
-          }
+          data.command = widgetCommand.getText();
+
+          Dialogs.close(dialog,true);
         }
       });
-      widgetCreate.setToolTipText("Create new directory.");
+      widgetOpen.setToolTipText("Open file with command.");
 
       button = Widgets.newButton(composite,"Cancel");
       Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
@@ -990,11 +994,20 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     }
 
     // listeners
-    widgetPath.addSelectionListener(new SelectionListener()
+    widgetCommand.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
+      }
+    });
+    widgetCommand.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        widgetCreate.setFocus();
+        widgetOpen.setFocus();
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
@@ -1005,20 +1018,36 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     Dialogs.show(dialog);
 
     // run
-    widgetPath.setFocus();
+    widgetCommand.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      // create directory
-      File file = new File(data.path);
-      if (!file.mkdirs())
+      // expand command
+      String command = data.command;
+      command = (command.indexOf("%f")>=0)
+                  ?command.replace("%f",fileData.getFileName(repository.rootPath))
+                  :command+" "+fileData.getFileName(repository.rootPath);
+
+      // run command
+      try
       {
-        Dialogs.error(shell,"Cannot create new directory '%s'",data.path);
+        Runtime.getRuntime().exec(command);
+      }
+      catch (IOException exception)
+      {
+        Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",command,exception.getMessage());
         return;
       }
-      
-Dprintf.dprintf("");
+    }
+  }
 
-      // update file list
+  /** open file with external program
+   */
+  public void openFileWith()
+  {
+    final FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      openFileWith(fileData);
     }
   }
 
