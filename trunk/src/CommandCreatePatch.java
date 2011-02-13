@@ -15,17 +15,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-//import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.Comparator;
-//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -104,18 +98,18 @@ class CommandCreatePatch
    */
   class Data
   {
-    String[]      revisionNames;      // revision names
-    Patch         patch;
-    String[]      lines;              // patch lines
-    String[]      linesNoWhitespaces; // patch lines (without whitespaces)
-    String        message;
+    String[] revisionNames;        // revision names
+    Patch    patch;
+    String[] linesNoWhitespaces;   // patch lines (without whitespace changes)
+    String[] lines;                // patch lines
+    String   message;
 
     Data()
     {
       this.revisionNames      = null;
       this.patch              = null;
-      this.lines              = null;
       this.linesNoWhitespaces = null;
+      this.lines              = null;
       this.message            = null;
     }
   };
@@ -193,7 +187,7 @@ class CommandCreatePatch
         {
           public void modified(Control control)
           {
-            if (!control.isDisposed()) control.setForeground(((data.lines != null) || (data.linesNoWhitespaces != null)) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : Onzen.COLOR_GRAY);
           }
         });
 
@@ -204,7 +198,7 @@ class CommandCreatePatch
         {
           public void modified(Control control)
           {
-            if (!control.isDisposed()) control.setForeground(((data.lines != null) || (data.linesNoWhitespaces != null)) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : Onzen.COLOR_GRAY);
           }
         });
       }
@@ -255,6 +249,13 @@ class CommandCreatePatch
       widgetIgnoreWhitespaces = Widgets.newCheckbox(composite,"Ignore whitespace changes");
       widgetIgnoreWhitespaces.setSelection(true);
       Widgets.layout(widgetIgnoreWhitespaces,2,0,TableLayoutData.W);
+      Widgets.addModifyListener(new WidgetListener(widgetIgnoreWhitespaces,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(data.linesNoWhitespaces != null) && (data.lines != null));
+        }
+      });
       widgetIgnoreWhitespaces.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -778,7 +779,7 @@ Dprintf.dprintf("");
   private void show(String revision1, String revision2)
   {
     // clear
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {
@@ -795,12 +796,72 @@ Dprintf.dprintf("");
     {
       public void run(HashSet<FileData> fileDataSet, String revision1, String revision2)
       {
-        // get patch
-        repositoryTab.setStatusText("Get patche...");
+        repositoryTab.setStatusText("Get patch...");
         try
         {
-          data.lines              = repositoryTab.repository.getPatch(fileDataSet,revision1,revision2,false);
-          data.linesNoWhitespaces = repositoryTab.repository.getPatch(fileDataSet,revision1,revision2,true );
+          // get patch without whitespace change
+          data.linesNoWhitespaces = repositoryTab.repository.getPatch(fileDataSet,revision1,revision2,true);
+
+          // show
+          if (!dialog.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (   (data.linesNoWhitespaces != null)
+                    && widgetIgnoreWhitespaces.getSelection()
+                   )
+                {
+                  // set new text
+                  setText(data.linesNoWhitespaces,
+                          widgetLineNumbers,
+                          widgetText,
+                          widgetHorizontalScrollBar,
+                          widgetVerticalScrollBar
+                         );
+
+                  // notify modification
+                  Widgets.modified(data);
+
+                  // focus find
+                  if (!widgetFind.isDisposed()) widgetFind.setFocus();
+                }
+              }
+            });
+          }
+
+          // get patch
+          data.lines = repositoryTab.repository.getPatch(fileDataSet,revision1,revision2,false);
+
+          // show
+          if (!dialog.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (   (data.lines != null)
+                    && !widgetIgnoreWhitespaces.getSelection()
+                   )
+                {
+                  // set new text
+                  setText(data.lines,
+                          widgetLineNumbers,
+                          widgetText,
+                          widgetHorizontalScrollBar,
+                          widgetVerticalScrollBar
+                         );
+
+                  // notify modification
+                  Widgets.modified(data);
+
+                  // focus find
+                  if (!widgetFind.isDisposed()) widgetFind.setFocus();
+                }
+              }
+            });
+          }
         }
         catch (RepositoryException exception)
         {
@@ -817,34 +878,6 @@ Dprintf.dprintf("");
         finally
         {
           repositoryTab.clearStatusText();
-        }
-
-        // show
-        if (!display.isDisposed())
-        {
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              String[] lines = widgetIgnoreWhitespaces.getSelection() ? data.linesNoWhitespaces : data.lines;
-              if (lines != null)
-              {
-                // set new text
-                setText(lines,
-                        widgetLineNumbers,
-                        widgetText,
-                        widgetHorizontalScrollBar,
-                        widgetVerticalScrollBar
-                       );
-
-                // notify modification
-                Widgets.modified(data);
-
-                // focus find
-                if (!widgetFind.isDisposed()) widgetFind.setFocus();
-              }
-            }
-          });
         }
       }
     });
