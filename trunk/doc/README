@@ -5,6 +5,12 @@ SVN, and HG. It represent the files managed by the RCS in a tree-view
 with detailed information and offers functions to e. g. update,
 commit, add, remove, rename, revert, diff, view files.
 
+Note:
+
+Onzen has a long history. The first (never published) version was
+written in TclTk and I used it for many years for my daily work. Now
+Onzen is reimplemented from scratch in Java SWT.
+
 --- Features
 
 * update, commit, add, remove, rename revert files managed in a RCS
