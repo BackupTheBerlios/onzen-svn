@@ -28,11 +28,11 @@ import java.util.HashSet;
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
 import org.eclipse.swt.custom.CaretListener;
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.LineStyleEvent;
-import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
@@ -78,6 +78,7 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
@@ -101,13 +102,15 @@ class CommandCommit
    */
   class Data
   {
-    String  message;
-    boolean binaryFlag;
+    String[] patchLinesNoWhitespaces;   // changed lines (without whitespace changes)
+    String[] patchLines;                // changed lines
+    String   message;                   // commit message
 
     Data()
     {
-      this.message    = "";
-      this.binaryFlag = false;
+      this.patchLinesNoWhitespaces = null;
+      this.patchLines              = null;
+      this.message                 = "";
     }
   };
 
@@ -127,7 +130,10 @@ class CommandCommit
   private final Shell             dialog;        
 
   // widgets
-  private final List              widgetFiles;   
+  private final StyledText        widgetChanges;
+  private final ScrollBar         widgetHorizontalScrollBar,widgetVerticalScrollBar;
+  private final Button            widgetIgnoreWhitespaces;
+  private final List              widgetFiles;
   private final List              widgetHistory; 
   private final Text              widgetMessage; 
   private final Button            widgetCommit;     
@@ -143,7 +149,8 @@ class CommandCommit
    */
   CommandCommit(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet)
   {
-    Composite composite;
+    Composite composite,subComposite,subSubComposite;
+    TabFolder tabFolder;
     Label     label;
     Button    button;
 
@@ -162,31 +169,83 @@ class CommandCommit
     dialog = Dialogs.open(shell,"Commit files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(new double[]{0.5,0.0,0.15,0.0,0.35},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Files:");
-      Widgets.layout(label,0,0,TableLayoutData.W);
+      tabFolder = Widgets.newTabFolder(composite);
+      Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
+      {
+        subComposite = Widgets.addTab(tabFolder,"Changes");
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+        {
+          widgetChanges = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetChanges.setBackground(Onzen.COLOR_GRAY);
+          Widgets.layout(widgetChanges,0,0,TableLayoutData.NSWE);
+          widgetChanges.setToolTipText("Changes to commit.");
 
-      widgetFiles = Widgets.newList(composite);
-      widgetFiles.setBackground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetFiles,1,0,TableLayoutData.NSWE);
-      widgetFiles.setToolTipText("Files to commit.");
+          widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
+          widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
+
+          widgetIgnoreWhitespaces = Widgets.newCheckbox(subComposite,"Ignore whitespace changes");
+          widgetIgnoreWhitespaces.setSelection(true);
+          Widgets.layout(widgetIgnoreWhitespaces,1,0,TableLayoutData.W);
+          Widgets.addModifyListener(new WidgetListener(widgetIgnoreWhitespaces,data)
+          {
+            public void modified(Control control)
+            {
+              Widgets.setEnabled(control,(data.patchLinesNoWhitespaces != null) && (data.patchLines != null));
+            }
+          });
+          widgetIgnoreWhitespaces.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              Button widget = (Button)selectionEvent.widget;
+
+              String[] patchLines = widget.getSelection() ? data.patchLinesNoWhitespaces : data.patchLines;
+              if (patchLines != null)
+              {
+                // set new text
+                setPatchText(patchLines,
+                             widgetChanges,
+                             widgetHorizontalScrollBar,
+                             widgetVerticalScrollBar
+                            );
+              }
+            }
+          });
+
+        }
+
+        subComposite = Widgets.addTab(tabFolder,"Files");
+        subComposite.setLayout(new TableLayout(1.0,1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+        {
+          widgetFiles = Widgets.newList(subComposite);
+          widgetFiles.setBackground(Onzen.COLOR_GRAY);
+          Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
+          widgetFiles.setToolTipText("Files to commit.");
+        }
+      }
 
       label = Widgets.newLabel(composite,"History:");
-      Widgets.layout(label,2,0,TableLayoutData.W);
+      Widgets.layout(label,1,0,TableLayoutData.W);
 
       widgetHistory = Widgets.newList(composite);
       widgetHistory.setBackground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetHistory,3,0,TableLayoutData.NSWE);
+      Widgets.layout(widgetHistory,2,0,TableLayoutData.NSWE);
       widgetHistory.setToolTipText("Commit message history.");
 
       label = Widgets.newLabel(composite,"Message:");
-      Widgets.layout(label,4,0,TableLayoutData.W);
+      Widgets.layout(label,3,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-      Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to commit files.");
+      Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
+      widgetMessage.setToolTipText("Commit message.\nCtrl-Up/Down/Home/End to select message from history.\nCtrl-Return to commit changed files.");
     }
 
     // buttons
@@ -319,6 +378,15 @@ class CommandCommit
     // show dialog
     Dialogs.show(dialog,Settings.geometryCommit);
 
+    // add files
+    if (!widgetFiles.isDisposed())
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        widgetFiles.add(fileData.getFileName());
+      }
+    }
+
     // add history
     if (!widgetHistory.isDisposed())
     {
@@ -330,6 +398,96 @@ class CommandCommit
       widgetHistory.showSelection();
       widgetHistory.deselectAll();
     }
+
+    // start getting changes
+    Background.run(new BackgroundRunnable(fileDataSet)
+    {
+      public void run(HashSet<FileData> fileDataSet)
+      {
+        repositoryTab.setStatusText("Get patch...");
+        try
+        {
+          // get patch without whitespace change
+          data.patchLinesNoWhitespaces = repositoryTab.repository.getPatch(fileDataSet,true);
+
+          // show
+          if (!dialog.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (   (data.patchLinesNoWhitespaces != null)
+                    && widgetIgnoreWhitespaces.getSelection()
+                   )
+                {
+                  // set new text
+                  setPatchText(data.patchLinesNoWhitespaces,
+                               widgetChanges,
+                               widgetHorizontalScrollBar,
+                               widgetVerticalScrollBar
+                              );
+                }
+              }
+            });
+          }
+
+          // get patch
+          data.patchLines = repositoryTab.repository.getPatch(fileDataSet,false);
+
+          // show
+          if (!dialog.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (   (data.patchLines != null)
+                    && !widgetIgnoreWhitespaces.getSelection()
+                   )
+                {
+                  // set new text
+                  setPatchText(data.patchLines,
+                               widgetChanges,
+                               widgetHorizontalScrollBar,
+                               widgetVerticalScrollBar
+                              );
+
+                }
+              }
+            });
+          }
+
+          // notify modification
+          if (!dialog.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Widgets.modified(data);
+              }
+            });
+          }
+        }
+        catch (RepositoryException exception)
+        {
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(shell,"Getting file patch fail: %s",exceptionMessage);
+            }
+          });
+          return;
+        }
+        finally
+        {
+          repositoryTab.clearStatusText();
+        }
+      }
+    });
 
     // update
   }
@@ -387,6 +545,57 @@ class CommandCommit
   }
 
   //-----------------------------------------------------------------------
+
+  /** set patch text
+   * @param lines lines
+   * @param widgetText text widget
+   * @param widgetHorizontalScrollBar horizontal scrollbar widget
+   * @param widgetVerticalScrollBar horizontal scrollbar widget
+   */
+  private void setPatchText(String[]   lines,
+                            StyledText widgetText,
+                            ScrollBar  widgetHorizontalScrollBar,
+                            ScrollBar  widgetVerticalScrollBar
+                           )
+  {
+    if (   !widgetText.isDisposed()
+        && !widgetVerticalScrollBar.isDisposed()
+        && !widgetHorizontalScrollBar.isDisposed()
+       )
+    {
+      StringBuilder text     = new StringBuilder();
+      int           lineNb   = 1;
+      int           maxWidth = 0;
+
+      // get text
+      for (String line : lines)
+      {
+        text.append(line); text.append('\n');
+
+        maxWidth = Math.max(maxWidth,line.length());
+      }
+
+      // set text
+      widgetText.setText(text.toString());
+
+/*
+      // set scrollbars
+      widgetHorizontalScrollBar.setMinimum(0);
+      widgetHorizontalScrollBar.setMaximum(maxWidth);
+      widgetVerticalScrollBar.setMinimum(0);
+      widgetVerticalScrollBar.setMaximum(lineNb-1);
+*/
+
+      // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
+      widgetText.redraw();
+      widgetText.update();
+
+      // show top
+      widgetText.setTopIndex(0);
+      widgetText.setCaretOffset(0);
+      widgetVerticalScrollBar.setSelection(0);
+    }
+  }
 
   /** do commit
    * @param data data
