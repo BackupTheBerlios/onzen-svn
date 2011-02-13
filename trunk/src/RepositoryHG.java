@@ -929,7 +929,45 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
-    return null;
+    ArrayList<String> patchLineList = new ArrayList<String>();
+    try
+    {
+      Command command = new Command();
+      Exec    exec;
+      String  line;
+
+      // get file
+      command.clear();
+      command.append(Settings.hgCommand,"diff");
+      if (ignoreWhitespaces)
+      {
+        command.append("-w","-b","-B","--git");
+      }
+      else
+      {
+        command.append("--git");
+      }
+      if (revision1 != null) command.append("-r",revision1);
+      if (revision2 != null) command.append("-r",revision2);
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+
+      // read patch data
+      while ((line = exec.getStdout()) != null)
+      {
+        patchLineList.add(line);
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return patchLineList.toArray(new String[patchLineList.size()]);
   }
 
   /** get log to file
