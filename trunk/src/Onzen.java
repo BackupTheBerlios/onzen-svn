@@ -698,15 +698,17 @@ exception.printStackTrace();
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
-        assert selectedRepositoryTab != null;
+        TabFolder tabFolder = (TabFolder)mouseEvent.widget;
+        TabItem   tabItem = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
 
-        editRepository(selectedRepositoryTab);
+        if (tabItem != null)
+        {
+          editRepository((RepositoryTab)tabItem.getData());
+        }
       }
 
       public void mouseDown(final MouseEvent mouseEvent)
       {
-        assert selectedRepositoryTab != null;
-
         TabFolder tabFolder = (TabFolder)mouseEvent.widget;
         TabItem   tabItem = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
 
@@ -723,8 +725,6 @@ exception.printStackTrace();
 
       public void mouseUp(final MouseEvent mouseEvent)
       {
-        assert selectedRepositoryTab != null;
-
         if (data.dragTab)
         {
           TabFolder tabFolder = (TabFolder)mouseEvent.widget;
@@ -827,6 +827,7 @@ exception.printStackTrace();
         selectRepository((RepositoryTab)tabItem.getData());
       }
     });
+    widgetTabFolder.setToolTipText("Repository tab.\nClick-drag&&drop to move tab to left or right.\nDouble-click to edit settings of repository.");
 
     // create buttons
     composite = Widgets.newComposite(shell);
