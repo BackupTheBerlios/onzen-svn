@@ -7,10 +7,12 @@ goto error
 
 :64
   java.exe @JAVA_FLAGS@ -jar onzen-windows_64.jar %*
+  if errorlevel 64 goto 64
 goto end
 
 :32
   java.exe @JAVA_FLAGS@ -jar onzen-windows.jar %*
+  if errorlevel 64 goto 32
 goto end
 
 :error
