@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.7 $
+* $Revision: 1.8 $
 * $Author: torsten $
 * Contents: repository
 * Systems: all
@@ -777,12 +777,13 @@ class RevisionData
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  public final String       revision;
-  public final String       symbolicName;
-  public final Date         date;
-  public final String       author;
-  public final String[]     commitMessage;
-  public       BranchData[] branches;
+  public String         revision;
+  public RevisionData[] parents;
+  public String[]       tags;
+  public Date           date;
+  public String         author;
+  public String[]       commitMessage;
+  public BranchData[]   branches;
 
   // ------------------------ native functions ----------------------------
 
@@ -790,16 +791,18 @@ class RevisionData
 
   /** create revision data
    * @param revision revision
-   * @param symbolicName symbolic name of this revision or null
+   * @param parents list with parents of this revision
+   * @param tags tag names of this revision or null
    * @param date date
    * @param author author name
    * @param commitMessage commit message
    * @param branches branches
    */
-  public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage, BranchData[] branches)
+  public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
   {
     this.revision      = revision;
-    this.symbolicName  = symbolicName;
+    this.parents       = parents;
+    this.tags          = tags;
     this.date          = date;
     this.author        = author;
     this.commitMessage = commitMessage;
@@ -808,63 +811,139 @@ class RevisionData
 
   /** create revision data
    * @param revision revision
-   * @param symbolicName symbolic name of this revision or null
+   * @param parent parent of this revision
+   * @param tags tag names of this revision or null
    * @param date date
    * @param author author name
    * @param commitMessage commit message
    * @param branches branches
    */
-  public RevisionData(String revision, String symbolicName, Date date, String author, AbstractList<String> commitMessageList, BranchData[] branches)
+  public RevisionData(String revision, RevisionData parent, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
   {
-    this(revision,symbolicName,date,author,commitMessageList.toArray(new String[commitMessageList.size()]),branches);
+    this(revision,
+         new RevisionData[]{parent},
+         tags,
+         date,
+         author,
+         commitMessage,
+         branches
+        );
   }
 
   /** create revision data
    * @param revision revision
-   * @param symbolicName symbolic name of this revision or null
+   * @param parents list with parents of this revision
+   * @param tagList tag names of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessageList commit message
+   * @param branches branches
+   */
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, BranchData[] branches)
+  {
+    this(revision,
+         (parentList != null)?parentList.toArray(new RevisionData[parentList.size()]):(RevisionData[])null,
+         (tagList != null)?tagList.toArray(new String[tagList.size()]):(String[])null,
+         date,
+         author,
+         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         branches
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param tags tag names of this revision or null
    * @param date date
    * @param author author name
    * @param commitMessage commit message
    * @param branch branch
    */
-  public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage, BranchData branchData)
+  public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, BranchData branchData)
   {
-    this(revision,symbolicName,date,author,commitMessage,new BranchData[]{branchData});
+    this(revision,
+         parents,
+         tags,
+         date,
+         author,
+         commitMessage,
+         new BranchData[]{branchData}
+        );
   }
 
   /** create revision data
    * @param revision revision
-   * @param symbolicName symbolic name of this revision or null
+   * @param parents list with parents of this revision
+   * @param tagList tag names of this revision or null
    * @param date date
    * @param author author name
-   * @param commitMessage commit message
+   * @param commitMessageList commit message
    * @param branch branch
    */
-  public RevisionData(String revision, String symbolicName, Date date, String author, AbstractList<String> commitMessageList, BranchData branchData)
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, BranchData branchData)
   {
-    this(revision,symbolicName,date,author,commitMessageList,new BranchData[]{branchData});
+    this(revision,
+         parentList,
+         tagList,
+         date,
+         author,
+         commitMessageList,
+         new BranchData[]{branchData}
+        );
   }
 
   /** create revision data
    * @param revision revision
-   * @param date date
-   * @param author author name
-   * @param commitMessage commit message
-   */
-  public RevisionData(String revision, String symbolicName, Date date, String author, String[] commitMessage)
-  {
-    this(revision,symbolicName,date,author,commitMessage,new BranchData[]{});
-  }
-
-  /** create revision data
-   * @param revision revision
+   * @param parents list with parents of this revision
+   * @param tag tag name or null
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
    */
-  public RevisionData(String revision, String symbolicName, Date date, String author, AbstractList<String> commitMessageList)
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, String tag, Date date, String author, AbstractList<String> commitMessageList)
   {
-    this(revision,symbolicName,date,author,commitMessageList,new BranchData[]{});
+    this(revision,
+         (parentList != null)?parentList.toArray(new RevisionData[parentList.size()]):(RevisionData[])null,
+         (tag != null)?new String[]{tag}:(String[])null,
+         date,
+         author,
+         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         new BranchData[]{}
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param parents list with parents of this revision
+   * @param tagList tag names of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessageList commit message
+   */
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
+  {
+    this(revision,
+         parentList,
+         tagList,
+         date,
+         author,
+         commitMessageList,
+         new BranchData[]{}
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
+   */
+  public RevisionData(String revision)
+  {
+    this(revision,
+         (AbstractList<RevisionData>)null,
+         (AbstractList<String>)null,
+         null,
+         null,
+         null
+        );
   }
 
   /** get revision text for display
@@ -875,10 +954,10 @@ class RevisionData
     StringBuilder buffer = new StringBuilder();
 
     buffer.append(revision);
-    if (symbolicName != null)
+    if (tags != null)
     {
       buffer.append(" (");
-      buffer.append(symbolicName);
+      buffer.append(StringUtils.join(tags));
       buffer.append(")");
     }
 
