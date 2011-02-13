@@ -1450,7 +1450,6 @@ menuItem.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.openFileWith();
