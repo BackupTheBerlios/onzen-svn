@@ -964,7 +964,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append("diff");
         if (ignoreWhitespaces)
         {
-          command.append("diff","-w","-b","-B","--git");
+          command.append("-w","-b","-B","--git");
         }
         else
         {
