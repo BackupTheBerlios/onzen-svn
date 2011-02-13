@@ -2314,7 +2314,7 @@ new Message("Und nun?").addToHistory();
 
       final Data  data = new Data();
       final Shell dialog;
-      Composite   composite,subComposite;
+      Composite   composite,subComposite,subSubComposite;
       Label       label;
       Button      button;
 
@@ -2355,9 +2355,34 @@ new Message("Und nun?").addToHistory();
           label = Widgets.newLabel(subComposite,"Root path:");
           Widgets.layout(label,2,0,TableLayoutData.W);
 
-          widgetRootPath = Widgets.newText(subComposite);
-          widgetRootPath.setText(repositoryTab.repository.rootPath);
-          Widgets.layout(widgetRootPath,2,1,TableLayoutData.WE);
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+          Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
+          {
+            widgetRootPath = Widgets.newText(subSubComposite);
+            widgetRootPath.setText(repositoryTab.repository.rootPath);
+            Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
+
+            button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
+            Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String directoryPath = Dialogs.directory(shell,
+                                                         "Select directory",
+                                                         widgetRootPath.getText()
+                                                        );
+                if (directoryPath != null)
+                {
+                  widgetRootPath.setText(directoryPath);
+                }
+              }
+            });
+          }
         }
 
         subComposite = Widgets.newGroup(composite,"Patch mail");
