@@ -983,7 +983,7 @@ throw new RepositoryException("NYI");
 //printRevisionDataTree(data.revisionDataTree);
 
         // show
-        if (!display.isDisposed())
+        if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {
