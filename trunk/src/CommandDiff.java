@@ -306,7 +306,7 @@ class CommandDiff
         {
           public void modified(Control control)
           {
-            control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground((data.diffData != null) ? null : Onzen.COLOR_GRAY);
           }
         });
       }
@@ -1673,111 +1673,114 @@ Dprintf.dprintf("");
     int index = 0;
     int n,m;
 
-    for (DiffData diffData : diffData_)
+    if (data.diffData != null)
     {
-//Dprintf.dprintf("diffData=%s",diffData);
-      switch (diffData.type)
+      for (DiffData diffData : diffData_)
       {
-        case KEEP:
-          assert(diffData.keepLines != null);
+  //Dprintf.dprintf("diffData=%s",diffData);
+        switch (diffData.type)
+        {
+          case KEEP:
+            assert(diffData.keepLines != null);
 
-          n = diffData.keepLines.length;
+            n = diffData.keepLines.length;
 
-          widgetTextRight.setLineBackground(index,n,backgroundDiffNone);
-
-          index += n;
-          break;
-        case ADDED:
-          assert(diffData.addedLines != null);
-
-          n = diffData.addedLines.length;
-
-          if (showAdded)
-          {
-            widgetTextRight.setLineBackground(index,n,backgroundDiffAdd);
-          }
-          else
-          {
             widgetTextRight.setLineBackground(index,n,backgroundDiffNone);
-          }
 
-          index += n;
-          break;
-        case DELETED:
-          assert(diffData.deletedLines != null);
+            index += n;
+            break;
+          case ADDED:
+            assert(diffData.addedLines != null);
 
-          n = diffData.deletedLines.length;
+            n = diffData.addedLines.length;
 
-          if (showDeleted)
-          {
-            widgetTextLeft.setLineBackground(index,n,backgroundDiffDelete);
-          }
-          else
-          {
-            widgetTextLeft.setLineBackground(index,n,backgroundDiffNone);
-          }
-
-          index += n;
-          break;
-        case CHANGED:
-        case CHANGED_WHITESPACES:
-          assert(diffData.addedLines != null);
-          assert(diffData.deletedLines != null);
-
-          n = Math.max(diffData.deletedLines.length,diffData.addedLines.length);
-          m = Math.min(diffData.deletedLines.length,diffData.addedLines.length);
-
-          if (showChanged || showChangedWhitespaces)
-          {
-            for (int z = 0; z < m; z++)
+            if (showAdded)
             {
-              if (!equalsIgnoreWhitespaces(diffData.deletedLines[z],diffData.addedLines[z]))
-              {
-                // non-whitespace changes
-                if (showChanged)
-                {
-                  // show changes
-                  widgetTextLeft.setLineBackground(index+z,1,backgroundDiffChange);
-                  widgetTextRight.setLineBackground(index+z,1,backgroundDiffChange);
-                }
-                else
-                {
-                  // do not show changes
-                  widgetTextLeft.setLineBackground(index+z,1,backgroundDiffNone);
-                  widgetTextRight.setLineBackground(index+z,1,backgroundDiffNone);
-                }
-              }
-              else
-              {
-                // whitespace changes
-                if (showChangedWhitespaces)
-                {
-                  // show whitespace changes
-                  widgetTextLeft.setLineBackground(index+z,1,backgroundDiffChangedWhitespaces);
-                  widgetTextRight.setLineBackground(index+z,1,backgroundDiffChangedWhitespaces);
-                }
-                else
-                {
-                  // do not show whitespace changes
-                  widgetTextLeft.setLineBackground(index+z,1,backgroundDiffNone);
-                  widgetTextRight.setLineBackground(index+z,1,backgroundDiffNone);
-                }
-              }
+              widgetTextRight.setLineBackground(index,n,backgroundDiffAdd);
             }
-            widgetTextLeft.setLineBackground(index+m,n-m,backgroundDiffChange);
-            widgetTextRight.setLineBackground(index+m,n-m,backgroundDiffChange);
-          }
-          else
-          {
-            // do not show any changes
-            widgetTextLeft.setLineBackground(index,n,backgroundDiffNone);
-            widgetTextRight.setLineBackground(index,n,backgroundDiffNone);
-          }
+            else
+            {
+              widgetTextRight.setLineBackground(index,n,backgroundDiffNone);
+            }
 
-          index += n;
-          break;
-        default:
-          break;
+            index += n;
+            break;
+          case DELETED:
+            assert(diffData.deletedLines != null);
+
+            n = diffData.deletedLines.length;
+
+            if (showDeleted)
+            {
+              widgetTextLeft.setLineBackground(index,n,backgroundDiffDelete);
+            }
+            else
+            {
+              widgetTextLeft.setLineBackground(index,n,backgroundDiffNone);
+            }
+
+            index += n;
+            break;
+          case CHANGED:
+          case CHANGED_WHITESPACES:
+            assert(diffData.addedLines != null);
+            assert(diffData.deletedLines != null);
+
+            n = Math.max(diffData.deletedLines.length,diffData.addedLines.length);
+            m = Math.min(diffData.deletedLines.length,diffData.addedLines.length);
+
+            if (showChanged || showChangedWhitespaces)
+            {
+              for (int z = 0; z < m; z++)
+              {
+                if (!equalsIgnoreWhitespaces(diffData.deletedLines[z],diffData.addedLines[z]))
+                {
+                  // non-whitespace changes
+                  if (showChanged)
+                  {
+                    // show changes
+                    widgetTextLeft.setLineBackground(index+z,1,backgroundDiffChange);
+                    widgetTextRight.setLineBackground(index+z,1,backgroundDiffChange);
+                  }
+                  else
+                  {
+                    // do not show changes
+                    widgetTextLeft.setLineBackground(index+z,1,backgroundDiffNone);
+                    widgetTextRight.setLineBackground(index+z,1,backgroundDiffNone);
+                  }
+                }
+                else
+                {
+                  // whitespace changes
+                  if (showChangedWhitespaces)
+                  {
+                    // show whitespace changes
+                    widgetTextLeft.setLineBackground(index+z,1,backgroundDiffChangedWhitespaces);
+                    widgetTextRight.setLineBackground(index+z,1,backgroundDiffChangedWhitespaces);
+                  }
+                  else
+                  {
+                    // do not show whitespace changes
+                    widgetTextLeft.setLineBackground(index+z,1,backgroundDiffNone);
+                    widgetTextRight.setLineBackground(index+z,1,backgroundDiffNone);
+                  }
+                }
+              }
+              widgetTextLeft.setLineBackground(index+m,n-m,backgroundDiffChange);
+              widgetTextRight.setLineBackground(index+m,n-m,backgroundDiffChange);
+            }
+            else
+            {
+              // do not show any changes
+              widgetTextLeft.setLineBackground(index,n,backgroundDiffNone);
+              widgetTextRight.setLineBackground(index,n,backgroundDiffNone);
+            }
+
+            index += n;
+            break;
+          default:
+            break;
+        }
       }
     }
   }
@@ -2151,7 +2154,7 @@ Dprintf.dprintf("");
           {
             public void run()
             {
-              Dialogs.error(dialog,"Getting file differences fail: %s",exceptionMessage);
+                Dialogs.error(dialog,"Getting file differences fail: %s",exceptionMessage);
             }
           });
           return;
@@ -2162,7 +2165,7 @@ Dprintf.dprintf("");
         }
 
         // show
-        if (!display.isDisposed())
+        if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {
