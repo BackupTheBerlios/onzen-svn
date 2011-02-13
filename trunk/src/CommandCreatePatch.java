@@ -176,7 +176,7 @@ class CommandCreatePatch
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Patch",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Create patch",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
@@ -252,7 +252,7 @@ class CommandCreatePatch
         });
       }
 
-      widgetIgnoreWhitespaces = Widgets.newCheckbox(composite,"Ignore whitespaces");
+      widgetIgnoreWhitespaces = Widgets.newCheckbox(composite,"Ignore whitespace changes");
       widgetIgnoreWhitespaces.setSelection(true);
       Widgets.layout(widgetIgnoreWhitespaces,2,0,TableLayoutData.W);
       widgetIgnoreWhitespaces.addSelectionListener(new SelectionListener()
