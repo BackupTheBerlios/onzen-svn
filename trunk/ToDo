@@ -13,3 +13,4 @@ ToDo
 - use file watch service from Java 7 to detect files changes outside
 - fix moving tabs: arrow appear at wrong time+wrong place
 - menu entry to show/hidden hidden files
+- check-out functions
