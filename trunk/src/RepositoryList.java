@@ -34,6 +34,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlList;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.PropertyException;
+import javax.xml.bind.JAXBException;
 
 /****************************** Classes ********************************/
 
@@ -78,13 +80,17 @@ public class RepositoryList implements Iterable<Repository>
   {
     ArrayList<String> nameList = new ArrayList<String>();
 
-    // get names
+    // read file names
     File directory = new File(Settings.ONZEN_DIRECTORY,LISTS_SUB_DIRECOTRY);
-    for (File file : directory.listFiles())
+    File[] files = directory.listFiles();
+    if (files != null)
     {
-      if (file.isFile())
+      for (File file : files)
       {
-        nameList.add(file.getName());
+        if (file.isFile())
+        {
+          nameList.add(file.getName());
+        }
       }
     }
 
@@ -111,7 +117,7 @@ Dprintf.dprintf("");
 
   /** load repository list from file (XML)
    * @param name name of repository list
-   * @return true iff control config read, false otherwise
+   * @return true iff repository list loaded, false otherwise
    */
   public boolean load(String name)
   {
@@ -145,21 +151,11 @@ Dprintf.dprintf("repository=%s",repository);
     }
     catch (FileNotFoundException exception)
     {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-      return false;
+      return false;      
     }
-    catch (IOException exception)
+    catch (JAXBException exception)
     {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-      return false;
-    }
-    catch (Exception exception)
-    {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-      return false;
+      return false;      
     }
 
     return true;
@@ -169,10 +165,25 @@ exception.printStackTrace();
    * @param name name of repository list
    */
   public void save(String name)
+    throws IOException
   {
     try
     {
       String fileName = Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+name;
+
+      // create directory if necessary
+      File directory = new File(fileName).getParentFile();
+      if      (!directory.exists())
+      {
+        if (!directory.mkdirs())
+        {
+          throw new IOException("create directory '"+directory.getName()+"' fail");
+        }
+      }
+      else if (!directory.isDirectory())
+      {
+        throw new IOException("'"+directory.getName()+"' is not a directory");
+      }
 
       // create JAXB context and instantiate marshaller
       JAXBContext jaxbContext = JAXBContext.newInstance(RepositoryList.class);
@@ -209,16 +220,20 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
       // store name
       this.name = name;
     }
-    catch (Exception exception)
+    catch (PropertyException exception)
     {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
+      throw new IOException(exception);
+    }
+    catch (JAXBException exception)
+    {
+      throw new IOException(exception);
     }
   }
 
   /** save repository list to file (XML)
    */
   public void save()
+    throws IOException
   {
     save(name);
   }
