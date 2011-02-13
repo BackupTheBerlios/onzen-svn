@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.10 $
+* $Revision: 1.11 $
 * $Author: torsten $
 * Contents: Apache Subversion (SVN) repository
 * Systems: all
@@ -57,7 +57,7 @@ class RepositorySVN extends Repository
                     AbstractList<String> fileNameList
                    )
     {
-      super(revision,"",date,author,commitMessage);
+      super(revision,(AbstractList<RevisionData>)null,(AbstractList<String>)null,date,author,commitMessage);
       this.fileNames = fileNameList.toArray(new String[fileNameList.size()]);
     }
 
@@ -1346,16 +1346,16 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     final Pattern PATTERN_REVISION = Pattern.compile("^r(\\d+)\\s*\\|\\s*(\\S*)\\s*\\|\\s*(\\S*\\s+\\S*\\s+\\S*).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_FILE     = Pattern.compile("^\\s*?\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
 
-    RevisionDataSVN    revisionData = null;
+    RevisionDataSVN    revisionData      = null;
 
-    boolean            dataDone      = false;
+    boolean            dataDone          = false;
     Matcher            matcher;
-    String             line;                  
-    String             revision      = null;
-    Date               date          = null;
-    String             author        = null;
-    ArrayList<String>  fileNameList  = new ArrayList<String>();
-    LinkedList<String> commitMessage = new LinkedList<String>();
+    String             line;                      
+    String             revision          = null;
+    Date               date              = null;
+    String             author            = null;
+    ArrayList<String>  fileNameList      = new ArrayList<String>();
+    LinkedList<String> commitMessageList = new LinkedList<String>();
     while (   !dataDone
            && ((line = exec.getStdout()) != null)
           )
@@ -1388,26 +1388,26 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
                && !line.startsWith("-----")
               )
         {
-          commitMessage.add(line);
+          commitMessageList.add(line);
         }
-        while (   (commitMessage.peekFirst() != null)
-               && commitMessage.peekFirst().trim().isEmpty()
+        while (   (commitMessageList.peekFirst() != null)
+               && commitMessageList.peekFirst().trim().isEmpty()
               )
         {
-          commitMessage.removeFirst();
+          commitMessageList.removeFirst();
         }
-        while (   (commitMessage.peekLast() != null)
-               && commitMessage.peekLast().trim().isEmpty()
+        while (   (commitMessageList.peekLast() != null)
+               && commitMessageList.peekLast().trim().isEmpty()
               )
         {
-          commitMessage.removeLast();
+          commitMessageList.removeLast();
         }
 
         // add log info entry
         revisionData = new RevisionDataSVN(revision,
                                            date,
                                            author,
-                                           commitMessage,
+                                           commitMessageList,
                                            fileNameList
                                           );
         dataDone = true;
