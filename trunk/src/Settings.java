@@ -850,14 +850,19 @@ public class Settings
   // CVS
   @ConfigComment(text={"","CVS specific settings"})
   @ConfigValue
+  public static String           cvsCommand                     = "cvs";
+  @ConfigValue
   public static boolean          cvsPruneEmtpyDirectories       = false;
 
   // SVN
-//  @ConfigComment(text={"","SVN specific settings"})
-//  @ConfigValue()
+  @ConfigComment(text={"","SVN specific settings"})
+  @ConfigValue
+  public static String           svnCommand                     = "svn";
 
   // HG
   @ConfigComment(text={"","HG specific settings"})
+  @ConfigValue
+  public static String           hgCommand                      = "hg";
   @ConfigValue
   public static boolean          hgForest                       = false;
   @ConfigValue
@@ -865,6 +870,8 @@ public class Settings
 
   // Git
 //  @ConfigComment(text={"","Git specific settings"})
+//  @ConfigValue
+//  public static String           gitCommand                     = "git";
 
   // debug
   public static boolean          debugFlag                      = false;

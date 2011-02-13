@@ -71,7 +71,6 @@ class RepositorySVN extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String SVN_COMMAND        = "svn";
   private final String LAST_REVISION_NAME = "HEAD";
 
   // --------------------------- variables --------------------------------
@@ -130,7 +129,7 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-        command.append(SVN_COMMAND,"status","-uvN");
+        command.append(Settings.svnCommand,"status","-uvN");
         command.append("--");
         if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,command);
@@ -262,7 +261,7 @@ Dprintf.dprintf("exception=%s",exception);
     {
       // get log
       command.clear();
-      command.append(SVN_COMMAND,"log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand,"log","-r","HEAD:0","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -330,7 +329,7 @@ Dprintf.dprintf("exception=%s",exception);
     {
       // get single log entry
       command.clear();
-      command.append(SVN_COMMAND,"log","-r",revision+":PREV","--verbose");
+      command.append(Settings.svnCommand,"log","-r",revision+":PREV","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -369,7 +368,7 @@ Dprintf.dprintf("exception=%s",exception);
     {
       // get log
       command.clear();
-      command.append(SVN_COMMAND,"log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand,"log","-r","HEAD:0","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -416,7 +415,7 @@ Dprintf.dprintf("exception=%s",exception);
 
       // get file
       command.clear();
-      command.append(SVN_COMMAND,"cat");
+      command.append(Settings.svnCommand,"cat");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -457,7 +456,7 @@ Dprintf.dprintf("exception=%s",exception);
 
       // get file data
       command.clear();
-      command.append(SVN_COMMAND,"cat");
+      command.append(Settings.svnCommand,"cat");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -507,7 +506,7 @@ Dprintf.dprintf("exception=%s",exception);
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(SVN_COMMAND,"status","-uv");
+      command.append(Settings.svnCommand,"status","-uv");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -583,7 +582,7 @@ Dprintf.dprintf("exception=%s",exception);
       {
         // check out new revision
         command.clear();
-        command.append(SVN_COMMAND,"cat","--revision",newRevision);
+        command.append(Settings.svnCommand,"cat","--revision",newRevision);
         command.append("--");
         command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
@@ -629,7 +628,7 @@ Dprintf.dprintf("exception=%s",exception);
 
       // diff file
       command.clear();
-      command.append(SVN_COMMAND,"diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
+      command.append(Settings.svnCommand,"diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -832,7 +831,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get file
       command.clear();
-      command.append(SVN_COMMAND,"diff","-x");
+      command.append(Settings.svnCommand,"diff","-x");
       if (ignoreWhitespaces)
       {
         command.append("-wbBEdu");
@@ -880,7 +879,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       // get log
       command.clear();
-      command.append(SVN_COMMAND,"log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand,"log","-r","HEAD:0","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -937,7 +936,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // get annotations
       command.clear();
-      command.append(SVN_COMMAND,"blame","-v");
+      command.append(Settings.svnCommand,"blame","-v");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -992,7 +991,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // update files
       command.clear();
-      command.append(SVN_COMMAND,"update","-N","--non-interactive");
+      command.append(Settings.svnCommand,"update","-N","--non-interactive");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1021,7 +1020,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // commit files
       command.clear();
-      command.append(SVN_COMMAND,"commit","-F",commitMessage.getFileName());
+      command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1051,7 +1050,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // add files
       command.clear();
-      command.append(SVN_COMMAND,"add");
+      command.append(Settings.svnCommand,"add");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1064,7 +1063,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       {
         // commit added files
         command.clear();
-        command.append(SVN_COMMAND,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(getFileDataNames(fileDataSet));
         exitCode = new Exec(rootPath,command).waitFor();
@@ -1101,7 +1100,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // remove files
       command.clear();
-      command.append(SVN_COMMAND,"remove");
+      command.append(Settings.svnCommand,"remove");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1114,7 +1113,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       {
         // commit removed files
         command.clear();
-        command.append(SVN_COMMAND,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(getFileDataNames(fileDataSet));
         exitCode = new Exec(rootPath,command).waitFor();
@@ -1144,7 +1143,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // revert files
       command.clear();
-      command.append(SVN_COMMAND,"update","-r",revision);
+      command.append(Settings.svnCommand,"update","-r",revision);
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1174,7 +1173,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
       // copy file
       command.clear();
-      command.append(SVN_COMMAND,"rename");
+      command.append(Settings.svnCommand,"rename");
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
@@ -1189,7 +1188,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       {
         // commit rename
         command.clear();
-        command.append(SVN_COMMAND,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(getFileDataName(fileData));
         command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);

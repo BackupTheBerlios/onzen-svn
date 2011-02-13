@@ -114,7 +114,6 @@ class RepositoryHG extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String HG_COMMAND         = "hg";
   private final String LAST_REVISION_NAME = "tip";
 
   /* log format template:
@@ -211,7 +210,7 @@ class RepositoryHG extends Repository
       {
         // get status
         command.clear();
-        command.append(HG_COMMAND,"-y","status","-mardcu");
+        command.append(Settings.hgCommand,"-y","status","-mardcu");
         command.append("--");
         if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,command);
@@ -278,7 +277,7 @@ class RepositoryHG extends Repository
 
         // get revision (identity)
         command.clear();
-        command.append(HG_COMMAND,"identify","-t");
+        command.append(Settings.hgCommand,"identify","-t");
         command.append("--");
         exec = new Exec(rootPath,command);
         if ((line = exec.getStdout()) != null)
@@ -294,7 +293,7 @@ class RepositoryHG extends Repository
 
         // get branch
         command.clear();
-        command.append(HG_COMMAND,"branch");
+        command.append(Settings.hgCommand,"branch");
         command.append("--");
         exec = new Exec(rootPath,command);
         if ((line = exec.getStdout()) != null)
@@ -343,7 +342,7 @@ class RepositoryHG extends Repository
     {
       // get log
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","--template","{rev} {node|short}\\n");
+      command.append(Settings.hgCommand,"-y","-v","log","--template","{rev} {node|short}\\n");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -411,7 +410,7 @@ class RepositoryHG extends Repository
     {
       // get single log entry
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","-l","1","--template",LOG_TEMPLATE);
+      command.append(Settings.hgCommand,"-y","-v","log","-l","1","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -450,7 +449,7 @@ class RepositoryHG extends Repository
     {
       // get log
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","--template",LOG_TEMPLATE);
+      command.append(Settings.hgCommand,"-y","-v","log","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -530,7 +529,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
       // get file
       command.clear();
-      command.append(HG_COMMAND,"-y","cat");
+      command.append(Settings.hgCommand,"-y","cat");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -571,7 +570,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
       // get file data
       command.clear();
-      command.append(HG_COMMAND,"-y","cat");
+      command.append(Settings.hgCommand,"-y","cat");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -619,7 +618,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(HG_COMMAND,"-y","status","-mardu");
+      command.append(Settings.hgCommand,"-y","status","-mardu");
       command.append("--");
       command.append("glob:**");
       exec = new Exec(rootPath,command);
@@ -684,7 +683,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       {
         // check out new revision
         command.clear();
-        command.append(HG_COMMAND,"-y","cat","-r",newRevision);
+        command.append(Settings.hgCommand,"-y","cat","-r",newRevision);
         command.append("--");
         command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
@@ -730,7 +729,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
       // diff file
       command.clear();
-      command.append(HG_COMMAND,"-y","diff");
+      command.append(Settings.hgCommand,"-y","diff");
       if (oldRevision != null) command.append("-r",oldRevision);
       if (newRevision != null) command.append("-r",newRevision);
       command.append("--");
@@ -949,7 +948,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       // get log
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","--template",LOG_TEMPLATE);
+      command.append(Settings.hgCommand,"-y","-v","log","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -1005,7 +1004,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get annotations
       command.clear();
-      command.append(HG_COMMAND,"blame","-n","-u","-d");
+      command.append(Settings.hgCommand,"blame","-n","-u","-d");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -1062,7 +1061,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       for (String tree : getTrees())
       {
         command.clear();
-        command.append(HG_COMMAND,"qpop","-a");
+        command.append(Settings.hgCommand,"qpop","-a");
         command.append("--");
         exitCode = new Exec(tree,command).waitFor();
         if (exitCode != 0)
@@ -1075,7 +1074,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files (Note: hg does not allow to update single files, thus update all files)
       command.clear();
-      command.append(HG_COMMAND,Settings.hgForest?"fupdate":"update");
+      command.append(Settings.hgCommand,Settings.hgForest?"fupdate":"update");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -1103,7 +1102,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // commit files
       command.clear();
-      command.append(HG_COMMAND,"commit");
+      command.append(Settings.hgCommand,"commit");
       if (!commitMessage.isEmpty())
       {
         command.append("-F",commitMessage.getFileName());
@@ -1143,7 +1142,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // add files
       command.clear();
-      command.append(HG_COMMAND,"add");
+      command.append(Settings.hgCommand,"add");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1156,7 +1155,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         // commit added files
         command.clear();
-        command.append(HG_COMMAND,"commit");
+        command.append(Settings.hgCommand,"commit");
         if (!commitMessage.isEmpty())
         {
           command.append("-F",commitMessage.getFileName());
@@ -1201,7 +1200,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // remove files
       command.clear();
-      command.append(HG_COMMAND,"remove");
+      command.append(Settings.hgCommand,"remove");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1214,7 +1213,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         // commit removed files
         command.clear();
-        command.append(HG_COMMAND,"commit");
+        command.append(Settings.hgCommand,"commit");
         if (!commitMessage.isEmpty())
         {
           command.append("-F",commitMessage.getFileName());
@@ -1252,7 +1251,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // revert files
       command.clear();
-      command.append(HG_COMMAND,"revert","-r",revision);
+      command.append(Settings.hgCommand,"revert","-r",revision);
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1282,7 +1281,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // rename file
       command.clear();
-      command.append(HG_COMMAND,"rename");
+      command.append(Settings.hgCommand,"rename");
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
@@ -1297,7 +1296,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         // commit remove/add (=rename) file
         command.clear();
-        command.append(HG_COMMAND,"commit");
+        command.append(Settings.hgCommand,"commit");
         if (!commitMessage.isEmpty())
         {
           command.append("-F",commitMessage.getFileName());
@@ -1343,7 +1342,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       int     exitCode;
 
       command.clear();
-      command.append(HG_COMMAND,Settings.hgForest?"fpull":"pull");
+      command.append(Settings.hgCommand,Settings.hgForest?"fpull":"pull");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -1368,7 +1367,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       int     exitCode;
 
       command.clear();
-      command.append(HG_COMMAND,Settings.hgForest?"fpush":"push");
+      command.append(Settings.hgCommand,Settings.hgForest?"fpush":"push");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -1396,7 +1395,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       for (String tree : getTrees())
       {
         command.clear();
-        command.append(HG_COMMAND,"qpush","-a");
+        command.append(Settings.hgCommand,"qpush","-a");
         command.append("--");
         exitCode = new Exec(tree,command).waitFor();
         if (exitCode != 0)
@@ -1425,7 +1424,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       for (String tree : getTrees())
       {
         command.clear();
-        command.append(HG_COMMAND,"qpop","-a");
+        command.append(Settings.hgCommand,"qpop","-a");
         command.append("--");
         exitCode = new Exec(tree,command).waitFor();
         if (exitCode != 0)
@@ -1481,7 +1480,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     // get forest trees
     command.clear();
-    command.append(HG_COMMAND,"ftree");
+    command.append(Settings.hgCommand,"ftree");
     command.append("--");
     exec = new Exec(rootPath,command);
 
@@ -1510,7 +1509,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get parents
       command.clear();
-      command.append(HG_COMMAND,"-y","log","--template","{rev} {parents}\\n");
+      command.append(Settings.hgCommand,"-y","log","--template","{rev} {parents}\\n");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -1758,7 +1757,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // push changes to master repository
       command.clear();
-      command.append(HG_COMMAND,Settings.hgForest?"fpush":"push");
+      command.append(Settings.hgCommand,Settings.hgForest?"fpush":"push");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)

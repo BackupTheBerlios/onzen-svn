@@ -97,7 +97,6 @@ class RepositoryCVS extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String CVS_COMMAND        = "cvs";
   private final String LAST_REVISION_NAME = "HEAD";
 
   // --------------------------- variables --------------------------------
@@ -176,7 +175,7 @@ class RepositoryCVS extends Repository
       {
         // get status
         command.clear();
-        command.append(CVS_COMMAND,"status","-l");
+        command.append(Settings.cvsCommand,"status","-l");
         command.append("--");
         if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,command);
@@ -411,7 +410,7 @@ class RepositoryCVS extends Repository
     {
       // get log
       command.clear();
-      command.append(CVS_COMMAND,"log");
+      command.append(Settings.cvsCommand,"log");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -492,7 +491,7 @@ class RepositoryCVS extends Repository
     {
       // get single log entry
       command.clear();
-      command.append(CVS_COMMAND,"log","-r",revision);
+      command.append(Settings.cvsCommand,"log","-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -532,7 +531,7 @@ class RepositoryCVS extends Repository
     {
       // get log
       command.clear();
-      command.append(CVS_COMMAND,"log");
+      command.append(Settings.cvsCommand,"log");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -579,7 +578,7 @@ class RepositoryCVS extends Repository
 
       // get file
       command.clear();
-      command.append(CVS_COMMAND,"up","-p");
+      command.append(Settings.cvsCommand,"up","-p");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -620,7 +619,7 @@ class RepositoryCVS extends Repository
 
       // get file data
       command.clear();
-      command.append(CVS_COMMAND,"up","-p");
+      command.append(Settings.cvsCommand,"up","-p");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -670,7 +669,7 @@ class RepositoryCVS extends Repository
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(CVS_COMMAND,"-n","-q","update","-d");
+      command.append(Settings.cvsCommand,"-n","-q","update","-d");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -768,7 +767,7 @@ Dprintf.dprintf("unknown %s",line);
       {
         // check out new revision
         command.clear();
-        command.append(CVS_COMMAND,"up","-p","-r",newRevision);
+        command.append(Settings.cvsCommand,"up","-p","-r",newRevision);
         command.append("--");
         command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
@@ -814,7 +813,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // diff file
       command.clear();
-      command.append(CVS_COMMAND,"diff");
+      command.append(Settings.cvsCommand,"diff");
       if (oldRevision != null) command.append("-r",oldRevision);
       if (newRevision != null) command.append("-r",newRevision);
       command.append("--");
@@ -998,11 +997,11 @@ else {
       command.clear();
       if (ignoreWhitespaces)
       {
-        command.append(CVS_COMMAND,"diff","-u","-w","-b","-B");
+        command.append(Settings.cvsCommand,"diff","-u","-w","-b","-B");
       }
       else
       {
-        command.append(CVS_COMMAND,"diff","-u");
+        command.append(Settings.cvsCommand,"diff","-u");
       }
       if (revision1 != null) command.append("-r",revision1);
       if (revision2 != null) command.append("-r",revision2);
@@ -1044,7 +1043,7 @@ else {
     {
       // get log
       command.clear();
-      command.append(CVS_COMMAND,"log");
+      command.append(Settings.cvsCommand,"log");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -1100,7 +1099,7 @@ else {
 
       // get annotations
       command.clear();
-      command.append(CVS_COMMAND,"annotate");
+      command.append(Settings.cvsCommand,"annotate");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -1155,7 +1154,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // update files
       command.clear();
-      command.append(CVS_COMMAND,"update","-d");
+      command.append(Settings.cvsCommand,"update","-d");
       if (Settings.cvsPruneEmtpyDirectories) command.append("-P");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
@@ -1185,7 +1184,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // commit files
       command.clear();
-      command.append(CVS_COMMAND,"commit","-F",commitMessage.getFileName());
+      command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1215,7 +1214,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // add files
       command.clear();
-      command.append(CVS_COMMAND,"add");
+      command.append(Settings.cvsCommand,"add");
       if (binaryFlag) command.append("-k","b");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
@@ -1229,7 +1228,7 @@ Dprintf.dprintf("unknown %s",line);
       {
         // commit added files
         command.clear();
-        command.append(CVS_COMMAND,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(getFileDataNames(fileDataSet));
         exitCode = new Exec(rootPath,command).waitFor();
@@ -1266,7 +1265,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // remove files
       command.clear();
-      command.append(CVS_COMMAND,"remove");
+      command.append(Settings.cvsCommand,"remove");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1279,7 +1278,7 @@ Dprintf.dprintf("unknown %s",line);
       {
         // commit removed files
         command.clear();
-        command.append(CVS_COMMAND,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(getFileDataNames(fileDataSet));
         exitCode = new Exec(rootPath,command).waitFor();
@@ -1309,7 +1308,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // revert files
       command.clear();
-      command.append(CVS_COMMAND,"update","-r",revision);
+      command.append(Settings.cvsCommand,"update","-r",revision);
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1354,7 +1353,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // add new file
       command.clear();
-      command.append(CVS_COMMAND,"add");
+      command.append(Settings.cvsCommand,"add");
       switch (fileData.mode)
       {
         case TEXT:
@@ -1376,7 +1375,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // remove old file
       command.clear();
-      command.append(CVS_COMMAND,"remove");
+      command.append(Settings.cvsCommand,"remove");
       command.append("--");
       command.append(oldFile.getName());
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1391,7 +1390,7 @@ Dprintf.dprintf("unknown %s",line);
       {
         // commit remove/add (=rename) file
         command.clear();
-        command.append(CVS_COMMAND,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(oldFile.getName());
         command.append(newFile.getName());
@@ -1425,7 +1424,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // set files modes
       command.clear();
-      command.append(CVS_COMMAND,"admin");
+      command.append(Settings.cvsCommand,"admin");
       switch (mode)
       {
         case TEXT:
@@ -1447,7 +1446,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // update files
       command.clear();
-      command.append(CVS_COMMAND,"update","-d","-A");
+      command.append(Settings.cvsCommand,"update","-d","-A");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
