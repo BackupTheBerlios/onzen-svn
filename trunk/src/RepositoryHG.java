@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryHG.java,v $
-* $Revision: 1.11 $
+* $Revision: 1.12 $
 * $Author: torsten $
 * Contents: Mecurial repository functions
 * Systems: all
@@ -24,11 +24,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
-//import java.util.HashMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-//import java.util.ListIterator;
+import java.util.Stack;
 //import java.util.StringTokenizer;
 
 /****************************** Classes ********************************/
@@ -45,14 +45,25 @@ class RepositoryHG extends Repository
 
     /** create HG revision data
      * @param revision revision
+     * @param changeSet change-set id
+     * @param parents list with parents of this revision
+     * @param tagList list with tags
      * @param date date
      * @param author author name
      * @param commitMessageList commit message
      */
-    public RevisionDataHG(String revision, String changeSet, String symbolicName, Date date, String author, AbstractList<String> commitMessageList)
+    public RevisionDataHG(String revision, String changeSet, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
     {
-      super(revision,symbolicName,date,author,commitMessageList);
+      super(revision,(ArrayList<RevisionData>)null,tagList,date,author,commitMessageList);
       this.changeSet = changeSet;
+    }
+
+    /** create HG revision data
+     * @param revision revision
+     */
+    public RevisionDataHG(String revision)
+    {
+      super(revision);
     }
 
     /** get revision text for display
@@ -72,11 +83,53 @@ class RepositoryHG extends Repository
     }
   }
 
+  /** parent data
+   */
+  class ParentData
+  {
+    private int revision1,revision2;
+
+    ParentData(int revision1, int revision2)
+    {
+      this.revision1 = revision1;
+      this.revision2 = revision2;
+    }
+
+    ParentData(int revision1)
+    {
+      this(revision1,0);
+    }
+
+    public String toString()
+    {
+      if (revision2 != 0)
+      {
+        return Integer.toString(revision1)+","+Integer.toString(revision2);
+      }
+      else
+      {
+        return Integer.toString(revision1);
+      }
+    }
+  }
+
   // --------------------------- constants --------------------------------
   private final String HG_COMMAND         = "hg";
   private final String LAST_REVISION_NAME = "tip";
 
+  /* log format template:
+    <rev> <changeset> <date> <time> <timezone> <author>
+    <parents>
+    <branches>
+    <tags>
+    <description>
+    -----
+    ...
+  */
+  private final String LOG_TEMPLATE       = "{rev} {node|short} {date|isodate} {author|user}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
+
   // --------------------------- variables --------------------------------
+  private HashMap<Integer,ParentData> parentMap = null;
 
   // ------------------------ native functions ----------------------------
 
@@ -88,6 +141,20 @@ class RepositoryHG extends Repository
   RepositoryHG(String rootPath)
   {
     super(rootPath);
+
+    // start getting parent map
+    Background.run(new BackgroundRunnable()
+    {
+      public void run()
+      {
+// NYI: is the global parent map needed?
+//        synchronized(parentMap)
+//        {
+          parentMap = getParentMap();
+//for (int i : parentMap.keySet()) Dprintf.dprintf("%d -> %s",i,parentMap.get(i));
+//        }
+      }
+    });
   }
 
   /** create repository
@@ -307,8 +374,8 @@ class RepositoryHG extends Repository
     {
       public int compare(String revision1, String revision2)
       {
-        int number1 = Integer.parseInt(revision1.substring(1));
-        int number2 = Integer.parseInt(revision2.substring(1));
+        int number1 = Integer.parseInt(revision1);
+        int number2 = Integer.parseInt(revision2);
         if      (number1 < number2)
         {
           return -1;
@@ -344,7 +411,7 @@ class RepositoryHG extends Repository
     {
       // get single log entry
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","-l","1","--template","{rev} {node|short} {date|isodate} {author|user} {branches}\\n{desc}\\n-----\\n");
+      command.append(HG_COMMAND,"-y","-v","log","-l","1","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -383,7 +450,7 @@ class RepositoryHG extends Repository
     {
       // get log
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","--template","{rev} {node|short} {date|isodate} {author|user} {branches}\\n{desc}\\n-----\\n");
+      command.append(HG_COMMAND,"-y","-v","log","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -392,11 +459,43 @@ class RepositoryHG extends Repository
       if (parseLogHeader(exec))
       {
         // parse data
+        HashMap<Integer,RevisionData> revisionDataMap = new HashMap<Integer,RevisionData>();
+        HashMap<RevisionData,ParentData> fileParentMap = new HashMap<RevisionData,ParentData>();
         RevisionDataHG revisionData;
-        while ((revisionData = parseLogData(exec)) != null)
+        while ((revisionData = parseLogData(exec,revisionDataMap,fileParentMap)) != null)
         {
           // add revision info entry
           revisionDataList.add(revisionData);
+        }
+
+        // set parents
+        for (RevisionData parentRevisionData : fileParentMap.keySet())
+        {
+          ParentData parentData = fileParentMap.get(parentRevisionData);
+
+          RevisionData parentRevisionData1 = getParentRevisionData(parentData.revision1,revisionDataMap,fileParentMap);
+          RevisionData parentRevisionData2 = getParentRevisionData(parentData.revision2,revisionDataMap,fileParentMap);        
+
+/*
+if ((parentData.revision1 != 0) && (parentRevisionData1==null))
+{
+Dprintf.dprintf("parent not found %s",parentData.revision1);
+//System.exit(1);
+}
+if ((parentData.revision2 != 0) && (parentRevisionData2==null))
+{
+Dprintf.dprintf("parent not found %s",parentData.revision2);
+//System.exit(1);
+}
+*/
+          if      ((parentRevisionData1 != null) && (parentRevisionData2 != null))
+          {
+            parentRevisionData.parents = new RevisionData[]{parentRevisionData1,parentRevisionData2};
+          }
+          else if (parentRevisionData1 != null)
+          {
+            parentRevisionData.parents = new RevisionData[]{parentRevisionData1};
+          }
         }
       }
 
@@ -850,7 +949,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       // get log
       command.clear();
-      command.append(HG_COMMAND,"-y","-v","log","--template","{rev} {node|short} {date|isodate} {author|user} {branches}\\n{desc}\\n-----\\n");
+      command.append(HG_COMMAND,"-y","-v","log","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -974,11 +1073,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // push ???
 
-      // update files
+      // update files (Note: hg does not allow to update single files, thus update all files)
       command.clear();
       command.append(HG_COMMAND,Settings.hgForest?"fupdate":"update");
       command.append("--");
-      command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
@@ -1373,9 +1471,36 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    * @return tree names
    */
   private String[] getTrees()
-    throws RepositoryException
+    throws IOException,RepositoryException
   {
     ArrayList<String> treeList = new ArrayList<String>();
+
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+
+    // get forest trees
+    command.clear();
+    command.append(HG_COMMAND,"ftree");
+    command.append("--");
+    exec = new Exec(rootPath,command);
+
+    // parse
+    while ((line = exec.getStdout()) != null)
+    {
+      treeList.add(line);
+    }
+
+    // done
+    exec.done();
+
+    return treeList.toArray(new String[treeList.size()]);
+  }
+
+// NYI: is the global parent map needed?
+  private HashMap<Integer,ParentData> getParentMap()
+  {
+    HashMap<Integer,ParentData> parentMap = new HashMap<Integer,ParentData>();
 
     try
     {
@@ -1383,16 +1508,38 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       Exec    exec;
       String  line;
 
-      // get forest trees
+      // get parents
       command.clear();
-      command.append(HG_COMMAND,"ftree");
+      command.append(HG_COMMAND,"-y","log","--template","{rev} {parents}\\n");
       command.append("--");
       exec = new Exec(rootPath,command);
 
       // parse
+      Object[] data = new Object[5];
       while ((line = exec.getStdout()) != null)
       {
-        treeList.add(line);
+        if      (StringParser.parse(line,"%d %d:%s %d:%s",data))
+        {
+          // node with two parents: merge
+          int revision        = (Integer)data[0];
+          int parentRevision1 = (Integer)data[1];
+          int parentRevision2 = (Integer)data[3];
+
+          parentMap.put(revision,new ParentData(parentRevision1,parentRevision2));
+        }
+        else if (StringParser.parse(line,"%d %d:%s",data))
+        {
+// NYI: what is a single parent? a commit?
+          // node with single parent: commit?
+          int revision        = (Integer)data[0];
+          int parentRevision1 = (Integer)data[1];
+
+          parentMap.put(revision,new ParentData(parentRevision1));
+        }
+        else
+        {
+          // nodes with no parents are ignored
+        }
       }
 
       // done
@@ -1400,10 +1547,49 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      // ignored
     }
 
-    return treeList.toArray(new String[treeList.size()]);
+    return parentMap;
+  }
+
+// get parent revision data
+  private RevisionData getParentRevisionData(int revision, HashMap<Integer,RevisionData> revisionDataMap, HashMap<RevisionData,ParentData> fileParentMap)
+  {
+    RevisionData revisionData = null;
+
+    if (revision != 0)
+    {
+      synchronized(parentMap)
+      {
+      Stack<Integer> revisionStack = new Stack<Integer>();
+      do
+      {
+        // check if revision exists
+        revisionData = revisionDataMap.get(revision);
+
+        if (revisionData == null)
+        {
+          // push parents for check
+          ParentData parentData = fileParentMap.get(revision);
+          if (parentData != null)
+          {
+            if (parentData.revision2 != 0) revisionStack.push(parentData.revision2);
+
+            // get next revision to check
+            revision = parentData.revision1;
+          }
+          else
+          {
+            revision = revision-1;
+          }
+        }
+      }
+      while ((revisionData == null) && (revision != 0));
+      }
+    }
+
+    return revisionData;
   }
 
   /** parse HG diff index
@@ -1427,9 +1613,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
-  /** parse log header
+  /** parse log header (currently nothing to do)
    * @param exec exec command
-   * @param symbolicNamesMap symbolic names map to fill
    * @return true iff header parsed
    */
   private boolean parseLogHeader(Exec exec)
@@ -1440,25 +1625,28 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
   /** parse log data
    * @param exec exec command
-   * @param symbolicNamesMap symbolic names map
    * @return revision info or null
    */
-  private RevisionDataHG parseLogData(Exec exec)
+  private RevisionDataHG parseLogData(Exec exec, HashMap<Integer,RevisionData> revisionDataMap, HashMap<RevisionData,ParentData> fileParentMap)
     throws IOException
   {
-    final Pattern PATTERN_REVISION = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(\\S+)\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_REVISION = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(\\S+).*",Pattern.CASE_INSENSITIVE);
 
-    RevisionDataHG     revisionData = null;
+    RevisionDataHG          revisionData      = null;
 
-    boolean            dataDone      = false;
-    Matcher            matcher;
-    String             line;                  
-    String             revision      = null;
-    String             changeSet     = null;
-    Date               date          = null;
-    String             author        = null;
-    String             branches      = null;
-    LinkedList<String> commitMessage = new LinkedList<String>();
+    boolean                 dataDone          = false;
+    Matcher                 matcher;
+    String                  line;                      
+    String                  revision          = null;
+    String                  changeSet         = null;
+    Date                    date              = null;
+    String                  author            = null;
+    ArrayList<RevisionData> parentList        = new ArrayList<RevisionData>();
+    int                     parentRevision1   = 0;
+    int                     parentRevision2   = 0;
+    ArrayList<String>       tagList           = new ArrayList<String>();
+    String                  branches          = null;
+    LinkedList<String>      commitMessageList = new LinkedList<String>();
     while (   !dataDone
            && ((line = exec.getStdout()) != null)
           )
@@ -1475,36 +1663,71 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         changeSet = matcher.group(2);
         date      = parseDate(matcher.group(3));
         author    = matcher.group(4);
-        branches  = matcher.group(4);
+
+        // get parents
+        if ((line = exec.getStdout()) != null)
+        {
+          Object[] data = new Object[4];
+          if      (StringParser.parse(line,"%d:%s %d:%s",data))
+          {
+            // node with two parents: merge
+            parentRevision1 = (Integer)data[0];
+            parentRevision2 = (Integer)data[2];
+          }
+          else if (StringParser.parse(line,"%d:%s",data))
+          {
+// NYI: what is a single parent? a commit?
+            // node with single parent: commit?
+            parentRevision1 = (Integer)data[0];
+          }
+        }
+
+        // get branches
+        if ((line = exec.getStdout()) != null)
+        {
+          branches = line;
+        }
+
+        // get tags
+        if ((line = exec.getStdout()) != null)
+        {
+          for (String tag : StringUtils.split(line,StringUtils.WHITE_SPACES,false))
+          {
+            tagList.add(tag);
+          }
+        }
 
         // get commit message lines
         while (  ((line = exec.getStdout()) != null)
                && !line.startsWith("-----")
               )
         {
-          commitMessage.add(line);
+          commitMessageList.add(line);
         }
-        while (   (commitMessage.peekFirst() != null)
-               && commitMessage.peekFirst().trim().isEmpty()
+        while (   (commitMessageList.peekFirst() != null)
+               && commitMessageList.peekFirst().trim().isEmpty()
               )
         {
-          commitMessage.removeFirst();
+          commitMessageList.removeFirst();
         }
-        while (   (commitMessage.peekLast() != null)
-               && commitMessage.peekLast().trim().isEmpty()
+        while (   (commitMessageList.peekLast() != null)
+               && commitMessageList.peekLast().trim().isEmpty()
               )
         {
-          commitMessage.removeLast();
+          commitMessageList.removeLast();
         }
 
         // add log info entry
         revisionData = new RevisionDataHG(revision,
                                           changeSet,
-                                          "",
+                                          tagList,
                                           date,
                                           author,
-                                          commitMessage
+                                          commitMessageList
                                          );
+        if (revisionDataMap != null) revisionDataMap.put(Integer.parseInt(revision),revisionData);
+        if (fileParentMap != null) fileParentMap.put(revisionData,new ParentData(parentRevision1,parentRevision2));
+
         dataDone = true;
       }
     }
@@ -1513,6 +1736,18 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     return revisionData;
   }
 
+  /** parse log data
+   * @param exec exec command
+   * @return revision info or null
+   */
+  private RevisionDataHG parseLogData(Exec exec)
+    throws IOException
+  {
+    return parseLogData(exec,null,null);
+  }
+
+  /** do immediate push if enabled in settings
+   */
   private void immediatePush()
     throws IOException,RepositoryException
   {
