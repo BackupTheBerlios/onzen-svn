@@ -450,7 +450,17 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
       exitcode = run();
 
       // save repository list
-      if (repositoryList != null) repositoryList.save();
+      if (repositoryList != null)
+      {
+        try
+        {
+          repositoryList.save();
+        }
+        catch (IOException exception)
+        {
+          Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+        }
+      }
 
       // done
       doneAll();
@@ -817,7 +827,6 @@ exception.printStackTrace();
         selectRepository((RepositoryTab)tabItem.getData());
       }
     });
-    addRepositoryTabEmpty();
 
     // create buttons
     composite = Widgets.newComposite(shell);
@@ -1596,6 +1605,9 @@ new Message("Und nun?").addToHistory();
     createWindow();
     createMenu();
     createEventHandlers();
+
+    // add empty repository tab
+    addRepositoryTabEmpty();
   }
 
   /** done all
@@ -1772,11 +1784,10 @@ new Message("Und nun?").addToHistory();
    */
   private RepositoryTab addRepositoryTab(Repository repository)
   {
-    RepositoryTab repositoryTab;
+    RepositoryTab repositoryTab = null;
 
     // add to list
     repositoryList.add(repository);
-    repositoryList.save();
 
     // add tab, set default selected tab
     repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
@@ -1790,6 +1801,16 @@ new Message("Und nun?").addToHistory();
     // remove empty tab, set default selected tab
     removeRepositoryTabEmpty();
 
+    // save list
+    try
+    {
+      repositoryList.save();
+    }
+    catch (IOException exception)
+    {
+      Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+    }
+
     return repositoryTab;
   }
 
@@ -1800,7 +1821,6 @@ new Message("Und nun?").addToHistory();
   {
     // remove from list
     repositoryList.remove(repositoryTab.repository);
-    repositoryList.save();
 
     // add empty tab if list will become empty
     if (repositoryTabList.size() <= 1)
@@ -1811,6 +1831,16 @@ new Message("Und nun?").addToHistory();
     // close tab, remove from repository list
     repositoryTab.close();
     repositoryTabList.remove(repositoryTab);
+
+    // save list
+    try
+    {
+      repositoryList.save();
+    }
+    catch (IOException exception)
+    {
+      Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+    }
   }
 
   private void newRepositoryList()
@@ -2443,13 +2473,23 @@ new Message("Und nun?").addToHistory();
       Widgets.setFocus(widgetTitle);
       if ((Boolean)Dialogs.run(dialog,false))
       {
+        // set data
         repositoryTab.setTitle(data.title);
         repositoryTab.repository.rootPath         = data.rootPath;
         repositoryTab.repository.patchMailTo      = data.patchMailTo;
         repositoryTab.repository.patchMailCC      = data.patchMailCC;
         repositoryTab.repository.patchMailSubject = data.patchMailSubject;
         repositoryTab.repository.patchMailText    = data.patchMailText;
-        repositoryList.save();
+
+        // save list
+        try
+        {
+          repositoryList.save();
+        }
+        catch (IOException exception)
+        {
+          Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+        }
       }
     }
   }
