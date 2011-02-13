@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/CommandRevisions.java,v $
-* $Revision: 1.4 $
+* $Revision: 1.5 $
 * $Author: torsten $
 * Contents: command show file revisions tree
 * Systems: all
@@ -10,11 +10,9 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.BufferedReader;
 import java.io.DataOutputStream;
 //import java.io.File;
 import java.io.FileOutputStream;
-//import java.io.FileReader;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -28,17 +26,16 @@ import java.util.HashSet;
 //import java.util.LinkedHashSet;
 //import java.util.ListIterator;
 //import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
 import org.eclipse.swt.custom.CaretListener;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
@@ -85,6 +82,7 @@ import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 import org.eclipse.swt.widgets.TabFolder;
@@ -125,6 +123,8 @@ class CommandRevisions
   class Data
   {
     RevisionData[] revisionDataTree;
+    Rectangle      view;
+    Point          size;
     DrawInfo[]     drawInfos;
     boolean        containerResizeFlag;
     Point          containerResizeStart;
@@ -136,6 +136,8 @@ class CommandRevisions
     Data()
     {
       this.revisionDataTree         = null;
+      this.view                     = new Rectangle(0,0,0,0);
+      this.size                     = new Point(0,0);
       this.drawInfos                = null;
       this.containerResizeFlag      = false;
       this.containerResizeStart     = new Point(0,0);
@@ -177,6 +179,8 @@ class CommandRevisions
   private final Label         widgetSelectedRevision0;
   private final Label         widgetSelectedRevision1;
   private final Canvas        widgetRevisions;
+  private final ScrollBar     widgetHorizontalScrollBar;
+  private final ScrollBar     widgetVerticalScrollBar;
   private final Button        widgetDiff;
   private final Button        widgetPatch;
   private final Label         widgetSelectedRevision;
@@ -190,14 +194,13 @@ class CommandRevisions
   // ---------------------------- methods ---------------------------------
 
   /** create revision view
-   * @param repositoryTab repository tab
    * @param shell shell
-   * @param repository repository
+   * @param repositoryTab repository tab
    * @param fileData file data
    */
-  CommandRevisions(final RepositoryTab repositoryTab, final Shell shell, final Repository repository, final FileData fileData)
+  CommandRevisions(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData)
   {
-    Composite         composite,subComposite;
+    Composite         composite;
     ScrolledComposite scrolledComposite;
     Label             label;
     Button            button;
@@ -211,24 +214,13 @@ class CommandRevisions
     clipboard = new Clipboard(display);
 
     // create dialog
-    dialog = Dialogs.open(shell,"Revisions: "+fileData.getFileName(),Settings.geometryRevisions.x,Settings.geometryRevisions.y,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Revisions: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
-    composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(1.0,1.0,4));
-    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
-    {
-      // create scrolled canvas
-      scrolledComposite = Widgets.newScrolledComposite(composite,SWT.BORDER|SWT.H_SCROLL|SWT.V_SCROLL);
-      scrolledComposite.setBackground(Onzen.COLOR_WHITE);
-      scrolledComposite.setLayout(new TableLayout(1.0,1.0,4));
-      Widgets.layout(scrolledComposite,0,0,TableLayoutData.NSWE); //,0,0,4);
-      {
-        // Note: do not set canvas size here; it will increase the widget to the size of the tree!
-        widgetRevisions = Widgets.newCanvas(scrolledComposite);
-        widgetRevisions.setBackground(Onzen.COLOR_WHITE);
-        Widgets.layout(widgetRevisions,0,0,TableLayoutData.NONE);
-      }
-    }
+    widgetRevisions = Widgets.newCanvas(dialog,SWT.H_SCROLL|SWT.V_SCROLL);
+    widgetRevisions.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(widgetRevisions,0,0,TableLayoutData.NSWE,0,0,4);
+    widgetHorizontalScrollBar = widgetRevisions.getHorizontalBar();
+    widgetVerticalScrollBar = widgetRevisions.getVerticalBar();
 
     // buttons
     composite = Widgets.newComposite(dialog);
@@ -266,7 +258,7 @@ class CommandRevisions
 
       widgetDiff = Widgets.newButton(composite,"Diff");
       widgetDiff.setEnabled(false);
-      Widgets.layout(widgetDiff,0,5,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetDiff,0,5,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetDiff,data)
       {
         public void modified(Control control)
@@ -278,9 +270,8 @@ class CommandRevisions
       {
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          CommandDiff commandDiff = new CommandDiff(repositoryTab,
-                                                    dialog,
-                                                    repository,
+          CommandDiff commandDiff = new CommandDiff(dialog,
+                                                    repositoryTab,
                                                     fileData,
                                                     data.selectedRevisionData0.revision,
                                                     (data.selectedRevisionData1 != null) ? data.selectedRevisionData1.revision : null
@@ -294,7 +285,7 @@ class CommandRevisions
 
       widgetPatch = Widgets.newButton(composite,"Patch");
       widgetPatch.setEnabled(false);
-      Widgets.layout(widgetPatch,0,6,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetPatch,0,6,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetPatch,data)
       {
         public void modified(Control control)
@@ -344,7 +335,7 @@ throw new RepositoryException("NYI");
 
       widgetView = Widgets.newButton(composite,"View");
       widgetView.setEnabled(false);
-      Widgets.layout(widgetView,0,10,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetView,0,10,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetView,data)
       {
         public void modified(Control control)
@@ -363,7 +354,7 @@ throw new RepositoryException("NYI");
 
           if (data.selectedRevisionData != null)
           {
-            CommandView commandView = new CommandView(repositoryTab,dialog,repository,fileData,data.selectedRevisionData.revision);
+            CommandView commandView = new CommandView(dialog,repositoryTab,fileData,data.selectedRevisionData.revision);
             commandView.run();
           }
         }
@@ -371,7 +362,7 @@ throw new RepositoryException("NYI");
 
       widgetSave = Widgets.newButton(composite,"Save");
       widgetSave.setEnabled(false);
-      Widgets.layout(widgetSave,0,11,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetSave,0,11,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetSave,data)
       {
         public void modified(Control control)
@@ -421,7 +412,7 @@ throw new RepositoryException("NYI");
 
       widgetRevert = Widgets.newButton(composite,"Revert");
       widgetRevert.setEnabled(false);
-      Widgets.layout(widgetRevert,0,12,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetRevert,0,12,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetRevert,data)
       {
         public void modified(Control control)
@@ -453,7 +444,7 @@ throw new RepositoryException("NYI");
                 {
                   public void run()
                   {
-                    repositoryTab.updateFileStatus(fileData);
+                    repositoryTab.updateTreeItem(fileData);
                   }
                 });
               }
@@ -467,7 +458,7 @@ throw new RepositoryException("NYI");
       });
 
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,13,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,13,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -492,6 +483,62 @@ throw new RepositoryException("NYI");
         redraw();
       }
     });
+    widgetHorizontalScrollBar.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        ScrollBar widget = (ScrollBar)selectionEvent.widget;
+
+        // scroll
+        int n = widget.getSelection();
+        int dx = -n-data.view.x;
+        widgetRevisions.scroll(dx,0,0,0,data.size.x,data.size.y,false);
+
+        // save origin
+        data.view.x = -n;
+
+        // redraw
+        redraw();
+      }
+    });
+    widgetVerticalScrollBar.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        ScrollBar widget = (ScrollBar)selectionEvent.widget;
+
+        // scroll
+        int n = widget.getSelection();
+        int dy = -n-data.view.y;
+        widgetRevisions.scroll(0,dy,0,0,data.size.x,data.size.y,false);
+
+        // save origin
+        data.view.y = -n;
+
+        // redraw
+        redraw();
+      }
+    });
+    widgetRevisions.addListener(SWT.Resize,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        Rectangle clientArea = widgetRevisions.getClientArea ();
+
+        data.view.width  = clientArea.width;
+        data.view.height = clientArea.height;
+
+        widgetHorizontalScrollBar.setThumb(Math.min(data.view.width,data.size.x));
+        widgetVerticalScrollBar.setThumb(Math.min(data.view.height,data.size.y));
+        redraw ();
+      }
+    });
     widgetRevisions.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -500,8 +547,7 @@ throw new RepositoryException("NYI");
         {
           if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
           {
-Dprintf.dprintf("");
-            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(repositoryTab,dialog,repository,fileData,drawInfo.revisionData);
+            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData);
             rommandRevisionInfo.run();
             break;
           }
@@ -573,7 +619,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.geometryRevisions);
 
     // show
     show();
@@ -648,12 +694,20 @@ Dprintf.dprintf("");
   }
 
   /** redraw revision data tree
+   * @param view draw bounds
+   * @param gc graphics context
+   * @param image image object
+   * @param imageGC image graphics context
    * @param revisionDataTree revision data tree
    * @param x,y base position
-   * @param rectanglesList rectangle coordinates list
-   * @param handles handles coordinates list
+   * @param containerDeltaWidth,containerDeltaHeight container delta for resize containers or 0,0
+   * @param drawInfoList draw info list
    */
-  private void redraw(RevisionData[]      revisionDataTree,
+  private void redraw(Rectangle           view,
+                      GC                  gc,
+                      Image               image,
+                      GC                  imageGC,
+                      RevisionData[]      revisionDataTree,
                       int                 x,
                       int                 y,
                       int                 containerDeltaWidth,
@@ -665,11 +719,10 @@ Dprintf.dprintf("");
     final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y+containerDeltaHeight,CONTAINER_MIN_HEIGHT);
     final int FONT_HEIGHT  = Widgets.getTextHeight(widgetRevisions);
 
+//    Rectangle bounds = new Rectangle(x,y,0,0);
+    
     boolean firstFlag    = true;
     int     widthColumn0 = Widgets.getTextWidth(widgetRevisions,new String[]{"Revision:","Date:","Autor:"});
-    Image   image        = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
-    GC      imageGC      = new GC(image);
-    GC      gc           = new GC(widgetRevisions);
     int     prevY        = y;
     int     dx,dy;
     for (RevisionData revisionData : revisionDataTree)
@@ -757,7 +810,11 @@ Dprintf.dprintf("");
         gc.drawString(branchData.name,x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2+4,y+PADDING+ENTRY_HEIGHT/2,true);
 //Dprintf.dprintf("%d %d %s",x+width,y+height/2,width,height,branchData.name);
 
-        redraw(branchData.revisionDataTree,
+        redraw(view,
+               gc,
+               image,
+               imageGC,
+               branchData.revisionDataTree,
                x+dx+PADDING+ENTRY_WIDTH,
                y+   PADDING+ENTRY_HEIGHT,
                containerDeltaWidth,
@@ -774,6 +831,10 @@ Dprintf.dprintf("");
       prevY = y;
       y += dy;
       firstFlag = false;
+
+//Dprintf.dprintf("%d %d",y,view.y+view.height);
+      // stop when rest is invisible
+      if (y > -view.y+view.height) break;
     }
   }
 
@@ -781,35 +842,69 @@ Dprintf.dprintf("");
    */
   private void redraw()
   {
-    ArrayList<DrawInfo> drawInfoList = new ArrayList<DrawInfo>();
+    if (data.revisionDataTree != null)
+    {
+      final int ENTRY_WIDTH  = Math.max(Settings.geometryRevisionBox.x,CONTAINER_MIN_WIDTH );
+      final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y,CONTAINER_MIN_HEIGHT);
 
-    // clear
-    Rectangle bounds = widgetRevisions.getBounds();
-    GC gc = new GC(widgetRevisions);
-    gc.setBackground(Onzen.COLOR_WHITE);
-    gc.fillRectangle(0,0,bounds.width,bounds.height);
-    gc.dispose();
+      ArrayList<DrawInfo> drawInfoList = new ArrayList<DrawInfo>();
 
-    // redraw
-    redraw(data.revisionDataTree,MARGIN,MARGIN,0,0,drawInfoList);
+      GC    gc      = new GC(widgetRevisions);
+      Image image   = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
+      GC    imageGC = new GC(image);
 
-    // get container, handles coordinates
-    data.drawInfos = drawInfoList.toArray(new DrawInfo[drawInfoList.size()]);
+      redraw(data.view,
+             gc,
+             image,
+             imageGC,
+             data.revisionDataTree,
+             data.view.x+MARGIN,
+             data.view.y+MARGIN,
+             0,
+             0,
+             drawInfoList
+            );
+
+      gc.dispose();
+
+      // get container, handles coordinates
+      data.drawInfos = drawInfoList.toArray(new DrawInfo[drawInfoList.size()]);
+    }
   }
 
   /** redraw revision tree with container delta width/height (no update of draw infos)
    */
   private void redraw(int containerDeltaWidth, int containerDeltaHeight)
   {
-    // clear
-    Rectangle bounds = widgetRevisions.getBounds();
-    GC gc = new GC(widgetRevisions);
-    gc.setBackground(Onzen.COLOR_WHITE);
-    gc.fillRectangle(0,0,bounds.width,bounds.height);
-    gc.dispose();
-
     // redraw
-    redraw(data.revisionDataTree,MARGIN,MARGIN,containerDeltaWidth,containerDeltaHeight,null);
+    if (data.revisionDataTree != null)
+    {
+      final int ENTRY_WIDTH  = Math.max(Settings.geometryRevisionBox.x+containerDeltaWidth ,CONTAINER_MIN_WIDTH );
+      final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y+containerDeltaHeight,CONTAINER_MIN_HEIGHT);
+
+      GC    gc      = new GC(widgetRevisions);
+      Image image   = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
+      GC    imageGC = new GC(image);
+
+      // clear
+      gc.setBackground(Onzen.COLOR_WHITE);
+      gc.fillRectangle(0,0,data.view.width,data.view.height);
+
+      // redraw
+      redraw(data.view,
+             gc,
+             image,
+             imageGC,
+             data.revisionDataTree,
+             data.view.x+MARGIN,
+             data.view.y+MARGIN,
+             containerDeltaWidth,
+             containerDeltaHeight,
+             null
+            );
+
+      gc.dispose();
+    }
   }
 
   /** set canvas size and redraw
@@ -818,11 +913,23 @@ Dprintf.dprintf("");
   {
     if (!widgetRevisions.isDisposed())
     {
-      // set canvas size
-      Point size = getSize(data.revisionDataTree);
-      size.x += 2*MARGIN;
-      size.y += 2*MARGIN;
-      widgetRevisions.setSize(size);
+      // get size
+      data.size = getSize(data.revisionDataTree);
+      data.size.x += 2*MARGIN;
+      data.size.y += 2*MARGIN;
+
+      // set scroll bars
+      Rectangle clientArea = widgetRevisions.getClientArea ();
+      widgetHorizontalScrollBar.setMaximum(data.size.x);
+      widgetVerticalScrollBar.setMaximum(data.size.y);
+      widgetHorizontalScrollBar.setThumb(Math.min(clientArea.width,data.size.x));
+      widgetVerticalScrollBar.setThumb(Math.min(clientArea.height,data.size.y));
+
+      // clear
+      GC gc = new GC(widgetRevisions);
+      gc.setBackground(Onzen.COLOR_WHITE);
+      gc.fillRectangle(0,0,clientArea.width,clientArea.height);
+      gc.dispose();
 
       // redraw
       redraw();
@@ -873,7 +980,7 @@ Dprintf.dprintf("");
         {
           repositoryTab.clearStatusText();
         }
-printRevisionDataTree(data.revisionDataTree);
+//printRevisionDataTree(data.revisionDataTree);
 
         // show
         if (!display.isDisposed())
@@ -909,8 +1016,14 @@ printRevisionDataTree(data.revisionDataTree);
   {
     for (RevisionData revisionData : revisionDataTree)
     {
-      for (int z = 0; z < indent; z++) System.out.print(' ');
+      System.out.print(StringUtils.repeat(' ',indent));
       System.out.println(revisionData.revision+": "+revisionData.date);
+      for (RevisionData parentRevisionData : revisionData.parents)
+      {
+        System.out.print(StringUtils.repeat(' ',indent+1)+"parent ");
+        System.out.println(parentRevisionData.revision);
+      }
+
       for (BranchData branchData : revisionData.branches)
       {
         printRevisionDataTree(branchData.revisionDataTree,indent+2);
