@@ -829,16 +829,31 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       Exec    exec;
       String  line;
 
-      // get file
+      // get patch
       command.clear();
-      command.append(Settings.svnCommand,"diff","-x");
-      if (ignoreWhitespaces)
+      command.append(Settings.svnCommand,"diff");
+      if (!Settings.svnDiffCommand.isEmpty())
       {
-        command.append("-wbBEdu");
+        // use external diff command
+        command.append("--diff-cmd",Settings.svnDiffCommand);
+        if (ignoreWhitespaces)
+        {
+          if (!Settings.svnDiffCommandOptionsIgnoreWhitespaces.isEmpty())
+          {
+            command.append("-x",Settings.svnDiffCommandOptionsIgnoreWhitespaces);
+          }
+        }
+        else
+        {
+          if (!Settings.svnDiffCommandOptions.isEmpty())
+          {
+            command.append("-x",Settings.svnDiffCommandOptions);
+          }
+        }
       }
       else
       {
-        command.append("-u");
+        // use internal diff
       }
       command.append("--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
       command.append("--");

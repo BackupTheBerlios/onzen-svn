@@ -936,16 +936,40 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       Exec    exec;
       String  line;
 
-      // get file
+      // get patch
       command.clear();
-      command.append(Settings.hgCommand,"diff");
-      if (ignoreWhitespaces)
+      command.append(Settings.hgCommand);
+      if (!Settings.hgDiffCommand.isEmpty())
       {
-        command.append("-w","-b","-B","--git");
+        // use external diff command
+        command.append("extdiff","-p",Settings.hgDiffCommand);
+        if (ignoreWhitespaces)
+        {
+          if (!Settings.hgDiffCommandOptionsIgnoreWhitespaces.isEmpty())
+          {
+            command.append("-o",Settings.hgDiffCommandOptionsIgnoreWhitespaces);
+          }
+        }
+        else
+        {
+          if (!Settings.hgDiffCommandOptions.isEmpty())
+          {
+            command.append("-o",Settings.hgDiffCommandOptions);
+          }
+        }
       }
       else
       {
-        command.append("--git");
+        // use internal diff
+        command.append("diff");
+        if (ignoreWhitespaces)
+        {
+          command.append("diff","-w","-b","-B","--git");
+        }
+        else
+        {
+          command.append("--git");
+        }
       }
       if (revision1 != null) command.append("-r",revision1);
       if (revision2 != null) command.append("-r",revision2);

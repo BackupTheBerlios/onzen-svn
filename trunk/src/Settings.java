@@ -591,221 +591,221 @@ public class Settings
   @ConfigComment(text={"Onzen configuration",""})
 
   // program settings
-  public static HostSystems              hostSystem                    = HostSystems.LINUX;
+  public static HostSystems              hostSystem                     = HostSystems.LINUX;
   @ConfigValue
-  public static String                   tmpDirectory                  = "/tmp";
+  public static String                   tmpDirectory                   = "/tmp";
 
   @ConfigValue
-  public static String                   dateFormat                    = "yyyy-MM-dd";
+  public static String                   dateFormat                     = "yyyy-MM-dd";
   @ConfigValue
-  public static String                   timeFormat                    = "HH:mm:ss";
+  public static String                   timeFormat                     = "HH:mm:ss";
   @ConfigValue
-  public static String                   dateTimeFormat                = "yyyy-MM-dd HH:mm:ss";
+  public static String                   dateTimeFormat                 = "yyyy-MM-dd HH:mm:ss";
 
   @ConfigValue
-  public static int                      maxBackgroundTasks            = 8;
+  public static int                      maxBackgroundTasks             = 8;
 
   @ConfigValue
-  public static int                      maxMessageHistory             = 50;
+  public static int                      maxMessageHistory              = 50;
 
   @ConfigComment(text={"","UDP message broadcasting"})
   @ConfigValue
-  public static String                   messageBroadcastAddress       = "192.168.11.255";
+  public static String                   messageBroadcastAddress        = "192.168.11.255";
   @ConfigValue
-  public static int                      messageBroadcastPort          = 9583;
+  public static int                      messageBroadcastPort           = 9583;
 
   @ConfigComment(text={"","Hidden files in file tree: <pattern>"})
   @ConfigValue(name="hiddenFilePattern", type=ConfigValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenFilePatterns            = new FilePattern[]{new FilePattern(".*")};
+  public static FilePattern[]            hiddenFilePatterns             = new FilePattern[]{new FilePattern(".*")};
   @ConfigComment(text={"","Hidden directories in file tree: <pattern>"})
   @ConfigValue(name="hiddenDirectoryPattern", type=ConfigValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenDirectoryPatterns       = new FilePattern[]
-                                                                         {
-                                                                           new FilePattern("CVS"),
-                                                                           new FilePattern(".svn"),
-                                                                           new FilePattern(".hg"),
-                                                                           new FilePattern(".git")
-                                                                         };
+  public static FilePattern[]            hiddenDirectoryPatterns        = new FilePattern[]
+                                                                          {
+                                                                            new FilePattern("CVS"),
+                                                                            new FilePattern(".svn"),
+                                                                            new FilePattern(".hg"),
+                                                                            new FilePattern(".git")
+                                                                          };
 
   @ConfigComment(text={"","Geometry: <width>x<height>"})
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryMain                  = new Point(900,600);
+  public static Point                    geometryMain                   = new Point(900,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryEditRepository        = new Point(500,400);
+  public static Point                    geometryEditRepository         = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryCommit                = new Point(500,300);
+  public static Point                    geometryCommit                 = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryAdd                   = new Point(500,400);
+  public static Point                    geometryAdd                    = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRename                = new Point(500,400);
+  public static Point                    geometryRename                 = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRemove                = new Point(500,400);
+  public static Point                    geometryRemove                 = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRevert                = new Point(500,400);
+  public static Point                    geometryRevert                 = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometrySetFileMode           = new Point(500,400);
+  public static Point                    geometrySetFileMode            = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryDiff                  = new Point(800,600);
+  public static Point                    geometryDiff                   = new Point(800,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRevisions             = new Point(800,400);
+  public static Point                    geometryRevisions              = new Point(800,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRevisionBox           = new Point(200, 70);
+  public static Point                    geometryRevisionBox            = new Point(200, 70);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRevisionInfo          = new Point(500,300);
+  public static Point                    geometryRevisionInfo           = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryView                  = new Point(500,600);
+  public static Point                    geometryView                   = new Point(500,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryNewFile               = new Point(300,200);
+  public static Point                    geometryNewFile                = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryNewDirectory          = new Point(300,200);
+  public static Point                    geometryNewDirectory           = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryRenameLocalFile       = new Point(400,200);
+  public static Point                    geometryRenameLocalFile        = new Point(400,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryDeleteLocalFiles      = new Point(300,200);
+  public static Point                    geometryDeleteLocalFiles       = new Point(300,200);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryChangedFiles          = new Point(600,500); 
+  public static Point                    geometryChangedFiles           = new Point(600,500); 
   @ConfigValue(type=ConfigValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryChangedFilesColumn    = new ColumnSizes(600,100);
+  public static ColumnSizes              geometryChangedFilesColumn     = new ColumnSizes(600,100);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryAnnotations           = new Point(800,500); 
+  public static Point                    geometryAnnotations            = new Point(800,500); 
   @ConfigValue(type=ConfigValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryAnnotationsColumn     = new ColumnSizes(60,60,80,60,100);
+  public static ColumnSizes              geometryAnnotationsColumn      = new ColumnSizes(60,60,80,60,100);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryPatches               = new Point(500,600);
+  public static Point                    geometryPatches                = new Point(500,600);
   @ConfigValue(type=ConfigValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryPatchesColumn         = new ColumnSizes(100,300);
+  public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(100,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryCreatePatch           = new Point(500,600);
+  public static Point                    geometryCreatePatch            = new Point(500,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryMailPatch             = new Point(500,600);
+  public static Point                    geometryMailPatch              = new Point(500,600);
 
-  @ConfigComment(text={"","Colors: <rgb foreground>:<rgb background> or <rgb foreground>"})
+  @ConfigComment(text={"","Colors: <rgb foreground>:<rgb background> or  <rgb foreground>"})
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorDiffAdded                 = new Color(null,new RGB(128,255,128));
+  public static Color                   colorDiffAdded                  = new Color(null,new RGB(128,255,128));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorDiffDeleted               = new Color(null,new RGB(128,128,255));
+  public static Color                   colorDiffDeleted                = new Color(null,new RGB(128,128,255));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorDiffChanged               = new Color(null,new RGB(255,  0,  0));
+  public static Color                   colorDiffChanged                = new Color(null,new RGB(255,  0,  0));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorDiffChangedWhitespaces    = new Color(null,new RGB(255,128,128));
+  public static Color                   colorDiffChangedWhitespaces     = new Color(null,new RGB(255,128,128));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorDiffSearchText            = new Color(new RGB(  0,  0,255),null);
+  public static Color                   colorDiffSearchText             = new Color(new RGB(  0,  0,255),null);
 
   @ConfigComment(text={""})
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusOK                  = new Color(null,new RGB(255,255,255));
+  public static Color                   colorStatusOK                   = new Color(null,new RGB(255,255,255));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusUnknown             = new Color(new RGB(196,196,196),null);
+  public static Color                   colorStatusUnknown              = new Color(new RGB(196,196,196),null);
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusUpdate              = new Color(null,new RGB(255, 255, 0));
+  public static Color                   colorStatusUpdate               = new Color(null,new RGB(255, 255, 0));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusCheckout            = new Color(null,new RGB(  0,  0,255));
+  public static Color                   colorStatusCheckout             = new Color(null,new RGB(  0,  0,255));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusModified            = new Color(null,new RGB(  0,255,  0));
+  public static Color                   colorStatusModified             = new Color(null,new RGB(  0,255,  0));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusMerge               = new Color(null,new RGB(128,128,  0));
+  public static Color                   colorStatusMerge                = new Color(null,new RGB(128,128,  0));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusConflict            = new Color(null,new RGB(255,128,128));
+  public static Color                   colorStatusConflict             = new Color(null,new RGB(255,128,128));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusAdded               = new Color(null,new RGB(255,160,160));
+  public static Color                   colorStatusAdded                = new Color(null,new RGB(255,160,160));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusRemoved             = new Color(null,new RGB( 64, 64,128));
+  public static Color                   colorStatusRemoved              = new Color(null,new RGB( 64, 64,128));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusNotExists           = new Color(null,new RGB(192,192,192));
+  public static Color                   colorStatusNotExists            = new Color(null,new RGB(192,192,192));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusWaiting             = new Color(null,new RGB(220,220,220));
+  public static Color                   colorStatusWaiting              = new Color(null,new RGB(220,220,220));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusError               = new Color(null,new RGB(255,  0,  0));
+  public static Color                   colorStatusError                = new Color(null,new RGB(255,  0,  0));
   @ConfigValue(type=ConfigValueAdapterColor.class)
-  public static Color                   colorStatusUpdateStatus        = new Color(new RGB(128,128,128),null);
+  public static Color                   colorStatusUpdateStatus         = new Color(new RGB(128,128,128),null);
 
   @ConfigComment(text={"","Fonts: <name>,<height>,normal|bold|italic"})
   @ConfigValue(type=ConfigValueAdapterFontData.class)
-  public static FontData                fontDiff                       = null;
+  public static FontData                fontDiff                        = null;
   @ConfigValue(type=ConfigValueAdapterFontData.class)
-  public static FontData                fontDiffLine                   = null;
+  public static FontData                fontDiffLine                    = null;
 
   @ConfigComment(text={"","shown diff types"})
 //  @ConfigValue(type=ConfigValueAdapterDiffTypes.class)
   @ConfigValue(type=DiffData.Types.class)
-  public static EnumSet<DiffData.Types> diffShowTypes                  = EnumSet.allOf(DiffData.Types.class);
+  public static EnumSet<DiffData.Types> diffShowTypes                   = EnumSet.allOf(DiffData.Types.class);
 
   @ConfigComment(text={"","shown file states in changed file list"})
 //  @ConfigValue(type=ConfigValueAdapterFileDataStates.class)
   @ConfigValue(type=FileData.States.class)
-  public static EnumSet<FileData.States> changedFilesShowStates        = EnumSet.allOf(FileData.States.class);
+  public static EnumSet<FileData.States> changedFilesShowStates         = EnumSet.allOf(FileData.States.class);
 
   @ConfigComment(text={"","shown patch states in patch list"})
   @ConfigValue(type=Patch.States.class)
-  public static EnumSet<Patch.States>    patchShowStates               = EnumSet.allOf(Patch.States.class);
+  public static EnumSet<Patch.States>    patchShowStates                = EnumSet.allOf(Patch.States.class);
 
   @ConfigComment(text={"","Accelerator keys"})
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyOpenRepository             = SWT.CTRL+'O';
+  public static int                      keyOpenRepository              = SWT.CTRL+'O';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyEditRepository             = SWT.NONE;
+  public static int                      keyEditRepository              = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyCloseRepository            = SWT.CTRL+'W';
+  public static int                      keyCloseRepository             = SWT.CTRL+'W';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyStatus                     = SWT.F5;
+  public static int                      keyStatus                      = SWT.F5;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyUpdate                     = SWT.CTRL+'U';
+  public static int                      keyUpdate                      = SWT.CTRL+'U';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyCommit                     = '#';
+  public static int                      keyCommit                      = SWT.CTRL+'X';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyCreatePatch                = SWT.CTRL+'P';
+  public static int                      keyCreatePatch                 = SWT.CTRL+'P';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyPatches                    = SWT.CTRL+'E';
+  public static int                      keyPatches                     = SWT.CTRL+'E';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyAdd                        = '+';
+  public static int                      keyAdd                         = '+';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyRemove                     = SWT.NONE;
+  public static int                      keyRemove                      = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyRename                     = SWT.NONE;
+  public static int                      keyRename                      = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keySetFileMode                = SWT.NONE;
+  public static int                      keySetFileMode                 = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyRevert                     = SWT.NONE;
+  public static int                      keyRevert                      = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyApplyPatches               = SWT.NONE;
+  public static int                      keyApplyPatches                = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyUnapplyPatches             = SWT.NONE;
+  public static int                      keyUnapplyPatches              = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyPullChanges                = SWT.NONE;
+  public static int                      keyPullChanges                 = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyPushChanges                = SWT.NONE;
+  public static int                      keyPushChanges                 = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyDiff                       = SWT.CTRL+'D';
+  public static int                      keyDiff                        = SWT.CTRL+'D';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyRevisionInfo               = SWT.CTRL+'I';
+  public static int                      keyRevisionInfo                = SWT.CTRL+'I';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyRevisions                  = SWT.CTRL+'R';
+  public static int                      keyRevisions                   = SWT.CTRL+'R';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keySolve                      = SWT.NONE;
+  public static int                      keySolve                       = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyChangedFiles               = SWT.CTRL+'L';
+  public static int                      keyChangedFiles                = SWT.CTRL+'L';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyAnnotations                = SWT.CTRL+'A';
+  public static int                      keyAnnotations                 = SWT.CTRL+'A';
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyReread                     = SWT.F5;
+  public static int                      keyReread                      = SWT.F5;
 
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyOpenFileWith               = SWT.NONE;
+  public static int                      keyOpenFileWith                = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyNewFile                    = SWT.NONE;
+  public static int                      keyNewFile                     = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyNewDirectory               = SWT.NONE;
+  public static int                      keyNewDirectory                = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyRenameLocal                = SWT.NONE;
+  public static int                      keyRenameLocal                 = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyDeleteLocal                = SWT.NONE;
+  public static int                      keyDeleteLocal                 = SWT.NONE;
 
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyFindPrev                   = SWT.CTRL+SWT.ARROW_LEFT;
+  public static int                      keyFindPrev                    = SWT.CTRL+SWT.ARROW_LEFT;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyFindNext                   = SWT.CTRL+SWT.ARROW_RIGHT;
+  public static int                      keyFindNext                    = SWT.CTRL+SWT.ARROW_RIGHT;
   @ConfigValue(type=ConfigValueAdapterKey.class)
-  public static int                      keyFindNextDiff               = ' ';
+  public static int                      keyFindNextDiff                = ' ';
 
 
 /*
@@ -838,50 +838,62 @@ public class Settings
 
   @ConfigComment(text={"","Editors: <mime type>:<command>"})
   @ConfigValue(type=ConfigValueAdapterEditor.class)
-  public static Editor[]         editors                        = new Editor[0];
+  public static Editor[]         editors                                = new Editor[0];
 
   @ConfigComment(text={"","Mail commands","Macros:","  %to% - to mail address","  %cc% - CC mail address","  %subjectPrefix% - subject prefix text","  %subject% - subject text","  %file% attachment file name"})
   @ConfigValue
-  public static String           commandMail                    = "mail -s '%subject%' %to% %cc%";
+  public static String           commandMail                            = "mail -s '%subject%' %to% %cc%";
   @ConfigValue
-  public static String           commandMailAttachment          = "mail -s '%subjectPrefix%%subject%' -a %file% %to% %cc%";
+  public static String           commandMailAttachment                  = "mail -s '%subjectPrefix%%subject%' -a %file% %to% %cc%";
 
   // general flags
   @ConfigComment(text={"","flags"})
   @ConfigValue
-  public static boolean          immediateCommit                = true;
+  public static boolean          immediateCommit                        = true;
 
   // CVS
   @ConfigComment(text={"","CVS specific settings"})
   @ConfigValue
-  public static String           cvsCommand                     = "cvs";
+  public static String           cvsCommand                             = "cvs";
   @ConfigValue
-  public static boolean          cvsPruneEmtpyDirectories       = false;
+  public static boolean          cvsPruneEmtpyDirectories               = false;
 
   // SVN
   @ConfigComment(text={"","SVN specific settings"})
   @ConfigValue
-  public static String           svnCommand                     = "svn";
+  public static String           svnCommand                             = "svn";
+  @ConfigValue
+  public static String           svnDiffCommand                         = "";
+  @ConfigValue
+  public static String           svnDiffCommandOptions                  = "-u";
+  @ConfigValue
+  public static String           svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdu";
 
   // HG
   @ConfigComment(text={"","HG specific settings"})
   @ConfigValue
-  public static String           hgCommand                      = "hg";
+  public static String           hgCommand                              = "hg";
   @ConfigValue
-  public static boolean          hgForest                       = false;
+  public static String           hgDiffCommand                          = "";
   @ConfigValue
-  public static boolean          hgImmediatePush                = false;
+  public static String           hgDiffCommandOptions                   = "-u";
+  @ConfigValue
+  public static String           hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdu";
+  @ConfigValue
+  public static boolean          hgForest                               = false;
+  @ConfigValue
+  public static boolean          hgImmediatePush                        = false;
 
   // Git
 //  @ConfigComment(text={"","Git specific settings"})
 //  @ConfigValue
-//  public static String           gitCommand                     = "git";
+//  public static String           gitCommand                             = "git";
 
   // debug
-  public static boolean          debugFlag                      = false;
+  public static boolean          debugFlag                              = false;
 
   // help
-  public static boolean          helpFlag                       = false;
+  public static boolean          helpFlag                               = false;
 
 
   // ------------------------ native functions ----------------------------
