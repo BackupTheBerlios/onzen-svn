@@ -586,6 +586,8 @@ public class Settings
 
   // --------------------------- variables --------------------------------
 
+  private static long lastModified = 0L;
+
   @ConfigComment(text={"Onzen configuration",""})
 
   // program settings
@@ -885,13 +887,10 @@ public class Settings
   // ---------------------------- methods ---------------------------------
 
   /** load program settings
-   * @param fileName file nam
-   * @return Errors.NONE or error code
+   * @param file settings file to load
    */
-  public static int load(String fileName)
+  public static void load(File file)
   {
-    // load file
-    File file = new File(fileName);
     if (file.exists())
     {
       BufferedReader input = null;
@@ -986,7 +985,6 @@ public class Settings
                           }
                           else if (type == EnumSet.class)
                           {
-Dprintf.dprintf("");
                             field.set(null,addArrayUniq((EnumSet[])field.get(null),StringUtils.parseEnumSet(type,string)));
                           }
                           else
@@ -1096,27 +1094,36 @@ exception.printStackTrace();
         }
       }
     }
-
-    return 0;
   }
 
   /** load program settings
-   * @param fileName file nam
-   * @return Errors.NONE or error code
+   * @param fileName settings file name
    */
-  public static int load()
+  public static void load(String fileName)
   {
-    return load(ONZEN_CONFIG_FILE_NAME);
+    load(new File(fileName));
+  }
+
+  /** load default program settings
+   */
+  public static void load()
+  {
+    File file = new File(ONZEN_CONFIG_FILE_NAME);
+
+    // load file
+    load(file);
+
+    // save last modified time
+    lastModified = file.lastModified();
   }
 
   /** save program settings
    * @param fileName file nam
-   * @return Errors.NONE or error code
    */
-  public static int save(String fileName)
+  public static void save(File file)
   {
     // create directory
-    File directory = new File(fileName).getParentFile();
+    File directory = file.getParentFile();
     if ((directory != null) && !directory.exists()) directory.mkdirs();
 
     PrintWriter output = null;
@@ -1126,7 +1133,7 @@ exception.printStackTrace();
       Class[] settingClasses = getSettingClasses();
 
       // open file
-      output = new PrintWriter(new FileWriter(fileName));
+      output = new PrintWriter(new FileWriter(file));
 
       // write settings
       for (Class clazz : settingClasses)
@@ -1305,22 +1312,40 @@ exception.printStackTrace();
     }
     catch (IOException exception)
     {
-      return -1;
+      // ignored
     }
     finally
     {
       if (output != null) output.close();
     }
-
-    return 0;
   }
 
   /** save program settings
-   * @return Errors.NONE or error code
+   * @param fileName settings file name
    */
-  public static int save()
+  public static void save(String fileName)
   {
-    return save(ONZEN_CONFIG_FILE_NAME);
+    save(new File(fileName));
+  }
+
+  /** save default program settings (only if not external modified)
+   */
+  public static void save()
+  {
+    File file = new File(ONZEN_CONFIG_FILE_NAME);
+
+    if ((lastModified == 0L) || (file.lastModified() <= lastModified))
+    {
+      save(file);
+    }
+  }
+
+  /** check if program settings file is modified
+   * @return true iff modified
+   */
+  public static boolean isFileModified()
+  {
+    return (lastModified != 0L) && (new File(ONZEN_CONFIG_FILE_NAME).lastModified() > lastModified);
   }
 
   //-----------------------------------------------------------------------
