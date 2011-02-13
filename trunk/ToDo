@@ -1,6 +1,6 @@
 ToDo
 
-- improve speed of revision tree drawing
+- improve speed of revision tree drawing: calculate bounding boxes
 - page up/down in revision tree view
 - hg: save push
 - view/edit tag names
@@ -12,3 +12,4 @@ ToDo
 - use text widget separator instead of \n
 - use file watch service from Java 7 to detect files changes outside
 - fix moving tabs: arrow appear at wrong time+wrong place
+- menu entry to show/hidden hidden files
