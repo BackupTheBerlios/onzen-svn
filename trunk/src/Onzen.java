@@ -2278,7 +2278,7 @@ new Message("Und nun?").addToHistory();
     else
     {
 // NYI: add git
-      Dialogs.error(shell,"'%s' does not contain a known repository (CVS,SVN,HG)",rootPath);
+      Dialogs.error(shell,"'%s'\n\ndoes not contain a known repository (CVS,SVN,HG)",rootPath);
       return;
     }
   }
