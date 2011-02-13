@@ -2319,7 +2319,7 @@ new Message("Und nun?").addToHistory();
       Button      button;
 
       // repository edit dialog
-      dialog = Dialogs.open(shell,"Edit repository",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+      dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
 
       final Text   widgetTitle;
       final Text   widgetRootPath;
@@ -2386,7 +2386,7 @@ new Message("Und nun?").addToHistory();
         }
 
         subComposite = Widgets.newGroup(composite,"Patch mail");
-        subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
+        subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
         Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subComposite,"To:");
@@ -2444,6 +2444,8 @@ new Message("Und nun?").addToHistory();
             data.patchMailSubject = widgetPatchMailSubject.getText();
             data.patchMailText    = widgetPatchMailText.getText();
 
+            Settings.geometryEditRepository = dialog.getSize();
+
             Dialogs.close(dialog,true);
           }
         });
@@ -2488,7 +2490,7 @@ new Message("Und nun?").addToHistory();
       });
 
       // show dialog
-      Dialogs.show(dialog);
+      Dialogs.show(dialog,Settings.geometryEditRepository);
 
       // set title
       widgetTitle.setText(selectedRepositoryTab.repository.title);

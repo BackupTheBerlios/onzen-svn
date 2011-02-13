@@ -631,6 +631,8 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryMain                  = new Point(900,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometryEditRepository        = new Point(500,400);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryCommit                = new Point(500,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryAdd                   = new Point(500,400);
