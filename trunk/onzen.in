@@ -75,7 +75,13 @@ if test $rc -ne 0; then
 fi
 
 # run main
-$JAVA $JAVA_FLAGS -jar $ONZEN_JAR --debug "$@"
-rc=$?
+while true; do
+  $JAVA $JAVA_FLAGS -jar $ONZEN_JAR --debug "$@"
+  rc=$?
+  if test $rc -eq 64; then
+    continue
+  fi
+  break
+done
 
 exit $rc
