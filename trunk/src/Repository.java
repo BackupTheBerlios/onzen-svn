@@ -1576,6 +1576,27 @@ abstract class Repository implements Serializable
   }
 
   /** get patch for file
+   * @param fileDataSet file data set
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatch(HashSet<FileData> fileDataSet, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    return getPatch(fileDataSet,getLastRevision(),null,ignoreWhitespaces);
+  }
+
+  /** get patch for file
+   * @param fileDataSet file data set
+   * @return patch data lines
+   */
+  public String[] getPatch(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    return getPatch(fileDataSet,false);
+  }
+
+  /** get patch for file
    * @param fileData file data
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
@@ -1603,6 +1624,27 @@ abstract class Repository implements Serializable
     fileDataSet.add(fileData);
 
     return getPatch(fileDataSet,revision1,revision2,false);
+  }
+
+  /** get patch for file
+   * @param fileData file data
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatch(FileData fileData, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    return getPatch(fileData,getLastRevision(),null,ignoreWhitespaces);
+  }
+
+  /** get patch for file
+   * @param fileData file data
+   * @return patch data lines
+   */
+  public String[] getPatch(FileData fileData)
+    throws RepositoryException
+  {
+    return getPatch(fileData,false);
   }
 
   /** get log to file
