@@ -1224,8 +1224,11 @@ class Widgets
    */
   static void setEnabled(Control control, boolean enableFlag)
   {
-    control.setEnabled(enableFlag);
-    control.getDisplay().update();
+    if (!control.isDisposed())
+    {
+      control.setEnabled(enableFlag);
+      control.getDisplay().update();
+    }
   }
 
   /** set visible
@@ -1234,12 +1237,15 @@ class Widgets
    */
   static void setVisible(Control control, boolean visibleFlag)
   {
-    TableLayoutData tableLayoutData = (TableLayoutData)control.getLayoutData();
-    tableLayoutData.exclude = !visibleFlag;
-    control.setVisible(visibleFlag);
-    if (visibleFlag)
+    if (!control.isDisposed())
     {
-      control.getParent().layout();
+      TableLayoutData tableLayoutData = (TableLayoutData)control.getLayoutData();
+      tableLayoutData.exclude = !visibleFlag;
+      control.setVisible(visibleFlag);
+      if (visibleFlag)
+      {
+        control.getParent().layout();
+      }
     }
   }
 
@@ -1248,18 +1254,21 @@ class Widgets
    */
   static void setFocus(Control control)
   {
-    control.setFocus();
-    if      (control instanceof Text)
+    if (!control.isDisposed())
     {
-      Text   widget = (Text)control;
-      String text   = widget.getText();
-      widget.setSelection(text.length(),text.length());
-    }
-    else if (control instanceof StyledText)
-    {
-      StyledText widget = (StyledText)control;
-      String     text   = widget.getText();
-      widget.setSelection(text.length(),text.length());
+      control.setFocus();
+      if      (control instanceof Text)
+      {
+        Text   widget = (Text)control;
+        String text   = widget.getText();
+        widget.setSelection(text.length(),text.length());
+      }
+      else if (control instanceof StyledText)
+      {
+        StyledText widget = (StyledText)control;
+        String     text   = widget.getText();
+        widget.setSelection(text.length(),text.length());
+      }
     }
   }
 
