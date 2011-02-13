@@ -982,6 +982,7 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetOpen = Widgets.newButton(composite,"Open");
+      widgetOpen.setEnabled(false);
       Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
       widgetOpen.addSelectionListener(new SelectionListener()
       {
@@ -1909,7 +1910,7 @@ Dprintf.dprintf("");
 
       final Data data = new Data();
 
-      Composite composite,subComposite;
+      Composite composite,subComposite,subSubComposite;
       Label     label;
       Button    button;
 
@@ -1946,8 +1947,36 @@ Dprintf.dprintf("");
           label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,1,0,TableLayoutData.W);
 
-          widgetCommand = Widgets.newText(subComposite);
-          Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+          Widgets.layout(subSubComposite,1,1,TableLayoutData.WE);
+          {
+            widgetCommand = Widgets.newText(subSubComposite);
+            Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
+            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%f - file name");
+
+            button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
+            Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String fileName = Dialogs.fileOpen(shell,
+                                                   "Select program",
+                                                   widgetCommand.getText(),
+                                                   new String[]{"All files","*",
+                                                               }
+                                                  );
+                if (fileName != null)
+                {
+                  widgetCommand.setText(fileName);
+                }
+              }
+            });
+          }
         }
       }
 
@@ -1957,6 +1986,7 @@ Dprintf.dprintf("");
       Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
       {
         widgetOpen = Widgets.newButton(composite,"Open");
+        widgetOpen.setEnabled(false);
         Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
         widgetOpen.addSelectionListener(new SelectionListener()
         {
@@ -2016,6 +2046,15 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+        }
+      });
+      widgetCommand.addModifyListener(new ModifyListener()
+      {
+        public void modifyText(ModifyEvent modifyEvent)
+        {
+          Text widget = (Text)modifyEvent.widget;
+
+          widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
         }
       });
       widgetCommand.addSelectionListener(new SelectionListener()
