@@ -1137,13 +1137,13 @@ abstract class Repository implements Serializable
   @XmlElement(name = "path")
   private HashSet<String> openDirectories;
 
-  @XmlElement(name = "patchMailTo")
+  @XmlElement(name = "patchMailTo", defaultValue = "")
   public String patchMailTo;
-  @XmlElement(name = "patchMailCC")
+  @XmlElement(name = "patchMailCC", defaultValue = "")
   public String patchMailCC;
-  @XmlElement(name = "patchMailSubject")
+  @XmlElement(name = "patchMailSubject", defaultValue = "Patch #%n%: %summary%")
   public String patchMailSubject;
-  @XmlElement(name = "patchMailText")
+  @XmlElement(name = "patchMailText", defaultValue = "%message%")
   public String patchMailText;
 
   // ------------------------ native functions ----------------------------
