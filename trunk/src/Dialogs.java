@@ -428,61 +428,64 @@ class Dialogs
    */
   public static Object run(final Shell dialog, final Object escapeKeyReturnValue)
   {
-    Display display = dialog.getParent().getDisplay();
-
     final Object[] result = new Object[1];
 
-    // add escape key handler
-    dialog.addTraverseListener(new TraverseListener()
+    if (!dialog.isDisposed())
     {
-      public void keyTraversed(TraverseEvent traverseEvent)
-      {
-        Shell widget = (Shell)traverseEvent.widget;
+      Display display = dialog.getParent().getDisplay();
 
-        if (traverseEvent.detail == SWT.TRAVERSE_ESCAPE)
+      // add escape key handler
+      dialog.addTraverseListener(new TraverseListener()
+      {
+        public void keyTraversed(TraverseEvent traverseEvent)
         {
-          // store ESC result
-          widget.setData(escapeKeyReturnValue);
+          Shell widget = (Shell)traverseEvent.widget;
 
-          /* stop processing key, send close event. Note: this is required
-             in case a widget in the dialog has a key-handler. Then the
-             ESC key will not trigger an SWT.Close event.
-          */
-          traverseEvent.doit = false;
-          Event event = new Event();
-          event.widget = dialog;
-          dialog.notifyListeners(SWT.Close,event);
+          if (traverseEvent.detail == SWT.TRAVERSE_ESCAPE)
+          {
+            // store ESC result
+            widget.setData(escapeKeyReturnValue);
+
+            /* stop processing key, send close event. Note: this is required
+               in case a widget in the dialog has a key-handler. Then the
+               ESC key will not trigger an SWT.Close event.
+            */
+            traverseEvent.doit = false;
+            Event event = new Event();
+            event.widget = dialog;
+            dialog.notifyListeners(SWT.Close,event);
+          }
         }
-      }
-    });
+      });
 
-    // close handler to get result
-    dialog.addListener(SWT.Close,new Listener()
-    {
-      public void handleEvent(Event event)
+      // close handler to get result
+      dialog.addListener(SWT.Close,new Listener()
       {
-        // get result
-        result[0] = dialog.getData();
+        public void handleEvent(Event event)
+        {
+          // get result
+          result[0] = dialog.getData();
 
-        // set escape result if no result set
-        if (result[0] == null) result[0] = escapeKeyReturnValue;
+          // set escape result if no result set
+          if (result[0] == null) result[0] = escapeKeyReturnValue;
 
-        // close the dialog
-        dialog.dispose();
+          // close the dialog
+          dialog.dispose();
+        }
+      });
+
+      // show
+      show(dialog);
+
+      // run dialog
+      while (!dialog.isDisposed())
+      {
+        if (!display.readAndDispatch()) display.sleep();
       }
-    });
 
-    // show
-    show(dialog);
-
-    // run dialog
-    while (!dialog.isDisposed())
-    {
-      if (!display.readAndDispatch()) display.sleep();
+      // update all
+      display.update();
     }
-
-    // update all
-    display.update();
 
     return result[0];
   }
@@ -508,46 +511,49 @@ class Dialogs
     Label           label;
     Button          button;
 
-    final Shell dialog = open(parentShell,title,300,70);
-    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    // message
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+    if (!parentShell.isDisposed())
     {
-      label = new Label(composite,SWT.LEFT);
-      label.setImage(image);
-      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+      final Shell dialog = open(parentShell,title,300,70);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
-      label = new Label(composite,SWT.LEFT|SWT.WRAP);
-      label.setText(message);
-      label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NS|TableLayoutData.W,0,0,4));
-    }
-
-    // buttons
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
-    {
-      button = new Button(composite,SWT.CENTER);
-      button.setText("Close");
-      button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
-      button.addSelectionListener(new SelectionListener()
+      // message
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
       {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
+        label = new Label(composite,SWT.LEFT);
+        label.setImage(image);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
 
-          close(dialog);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        label = new Label(composite,SWT.LEFT|SWT.WRAP);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NS|TableLayoutData.W,0,0,4));
+      }
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
+      {
+        button = new Button(composite,SWT.CENTER);
+        button.setText("Close");
+        button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
         {
-        }
-      });
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            close(dialog);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      run(dialog);
     }
-
-    run(dialog);
   }
 
   /** info dialog
@@ -575,47 +581,50 @@ class Dialogs
     Label           label;
     Button          button;
 
-    final Shell dialog = open(parentShell,"Error",300,70);
-    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    // message
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+    if (!parentShell.isDisposed())
     {
-      label = new Label(composite,SWT.LEFT);
-      label.setImage(IMAGE);
-      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+      final Shell dialog = open(parentShell,"Error",300,70);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
-      label = new Label(composite,SWT.LEFT|SWT.WRAP);
-      label.setText(message);
-      label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
-    }
-
-    // buttons
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
-    {
-      button = new Button(composite,SWT.CENTER);
-      button.setText("Close");
-      button.setFocus();
-      button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
-      button.addSelectionListener(new SelectionListener()
+      // message
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
       {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
+        label = new Label(composite,SWT.LEFT);
+        label.setImage(IMAGE);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
 
-          close(dialog);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        label = new Label(composite,SWT.LEFT|SWT.WRAP);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+      }
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
+      {
+        button = new Button(composite,SWT.CENTER);
+        button.setText("Close");
+        button.setFocus();
+        button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
         {
-        }
-      });
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            close(dialog);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      run(dialog);
     }
-
-    run(dialog);
   }
 
   /** error dialog
@@ -645,66 +654,73 @@ class Dialogs
     Label           label;
     Button          button;
 
-    final boolean[] result = new boolean[1];
-
-    final Shell dialog = open(parentShell,title,300,70);
-    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    // message
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+    if (!parentShell.isDisposed())
     {
-      label = new Label(composite,SWT.LEFT);
-      label.setImage(image);
-      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+      final boolean[] result = new boolean[1];
 
-      label = new Label(composite,SWT.LEFT|SWT.WRAP);
-      label.setText(message);
-      label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+      final Shell dialog = open(parentShell,title,300,70);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+      // message
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+      {
+        label = new Label(composite,SWT.LEFT);
+        label.setImage(image);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+
+        label = new Label(composite,SWT.LEFT|SWT.WRAP);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+      }
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
+      {
+        button = new Button(composite,SWT.CENTER);
+        button.setText(yesText);
+        if (defaultValue == true) button.setFocus();
+        button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            close(dialog,true);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+
+        button = new Button(composite,SWT.CENTER);
+        button.setText(noText);
+        if (defaultValue == false) button.setFocus();
+        button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            close(dialog,false);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      return (Boolean)run(dialog,false);
     }
-
-    // buttons
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
+    else
     {
-      button = new Button(composite,SWT.CENTER);
-      button.setText(yesText);
-      if (defaultValue == true) button.setFocus();
-      button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-
-          close(dialog,true);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      button = new Button(composite,SWT.CENTER);
-      button.setText(noText);
-      if (defaultValue == false) button.setFocus();
-      button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-
-          close(dialog,false);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
+      return false;
     }
-
-    return (Boolean)run(dialog,false);
   }
 
   /** confirmation dialog
@@ -824,64 +840,71 @@ class Dialogs
     Label           label;
     Button          button;
 
-    final int[] result = new int[1];
-
-    final Shell dialog = open(parentShell,title);
-    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    // message
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+    if (!parentShell.isDisposed())
     {
-      label = new Label(composite,SWT.LEFT);
-      label.setImage(IMAGE);
-      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+      final int[] result = new int[1];
 
-      label = new Label(composite,SWT.LEFT|SWT.WRAP);
-      label.setText(message);
-      label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
-    }
+      final Shell dialog = open(parentShell,title);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
-    // buttons
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
-    {
-      int textWidth = 0;
-      GC gc = new GC(composite);
-      for (String text : texts)
+      // message
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
       {
-        textWidth = Math.max(textWidth,gc.textExtent(text).x);
+        label = new Label(composite,SWT.LEFT);
+        label.setImage(IMAGE);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+
+        label = new Label(composite,SWT.LEFT|SWT.WRAP);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
       }
-      gc.dispose();
 
-      int value = 0;
-      for (String text : texts)
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
       {
-        button = new Button(composite,SWT.CENTER);
-        button.setText(text);
-        button.setData(value);
-        if (value == defaultValue) button.setFocus();
-        button.setLayoutData(new TableLayoutData(0,value,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,textWidth+20,SWT.DEFAULT));
-        button.addSelectionListener(new SelectionListener()
+        int textWidth = 0;
+        GC gc = new GC(composite);
+        for (String text : texts)
         {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
+          textWidth = Math.max(textWidth,gc.textExtent(text).x);
+        }
+        gc.dispose();
 
-            close(dialog,widget.getData());
-          }
-        });
+        int value = 0;
+        for (String text : texts)
+        {
+          button = new Button(composite,SWT.CENTER);
+          button.setText(text);
+          button.setData(value);
+          if (value == defaultValue) button.setFocus();
+          button.setLayoutData(new TableLayoutData(0,value,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,textWidth+20,SWT.DEFAULT));
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              Button widget = (Button)selectionEvent.widget;
 
-        value++;
+              close(dialog,widget.getData());
+            }
+          });
+
+          value++;
+        }
       }
-    }
 
-    return (Integer)run(dialog,defaultValue);
+      return (Integer)run(dialog,defaultValue);
+    }
+    else
+    {
+      return defaultValue;
+    }
   }
 
   /** password dialog
@@ -902,135 +925,142 @@ class Dialogs
     Label           label;
     Button          button;
 
-    final String[] result = new String[1];
-
-    final Shell dialog = open(parentShell,title,450,SWT.DEFAULT);
-    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    // password
-    final Text   widgetPassword1,widgetPassword2;
-    final Button widgetOkButton;
-    row = 0;
-    if (message != null)
+    if (!parentShell.isDisposed())
     {
-      label = new Label(dialog,SWT.LEFT);
-      label.setText(message);
-      label.setLayoutData(new TableLayoutData(row,0,TableLayoutData.W));
-      row++;
-    }
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    composite.setLayoutData(new TableLayoutData(row+0,0,TableLayoutData.WE));
-    {
-      label = new Label(composite,SWT.LEFT);
-      label.setText(text1);
-      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W));
+      final String[] result = new String[1];
 
-      widgetPassword1 = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.PASSWORD);
-      widgetPassword1.setLayoutData(new TableLayoutData(0,1,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
+      final Shell dialog = open(parentShell,title,450,SWT.DEFAULT);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
-      if (text2 != null)
+      // password
+      final Text   widgetPassword1,widgetPassword2;
+      final Button widgetOkButton;
+      row = 0;
+      if (message != null)
+      {
+        label = new Label(dialog,SWT.LEFT);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(row,0,TableLayoutData.W));
+        row++;
+      }
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(row+0,0,TableLayoutData.WE));
       {
         label = new Label(composite,SWT.LEFT);
-        label.setText(text2);
-        label.setLayoutData(new TableLayoutData(1,0,TableLayoutData.W));
+        label.setText(text1);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W));
 
-        widgetPassword2 = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.PASSWORD);
-        widgetPassword2.setLayoutData(new TableLayoutData(1,1,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
-      }
-      else
-      {
-        widgetPassword2 = null;
-      }
-    }
-    row++;
+        widgetPassword1 = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.PASSWORD);
+        widgetPassword1.setLayoutData(new TableLayoutData(0,1,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
 
-    // buttons
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    composite.setLayoutData(new TableLayoutData(row,0,TableLayoutData.WE,0,0,4));
-    {
-      widgetOkButton = new Button(composite,SWT.CENTER);
-      widgetOkButton.setText(okText);
-      widgetOkButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
-      widgetOkButton.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        if (text2 != null)
         {
+          label = new Label(composite,SWT.LEFT);
+          label.setText(text2);
+          label.setLayoutData(new TableLayoutData(1,0,TableLayoutData.W));
+
+          widgetPassword2 = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.PASSWORD);
+          widgetPassword2.setLayoutData(new TableLayoutData(1,1,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
         }
-        public void widgetSelected(SelectionEvent selectionEvent)
+        else
         {
-          Button widget = (Button)selectionEvent.widget;
-          String password1 = widgetPassword1.getText();
-          if (text2 != null)
+          widgetPassword2 = null;
+        }
+      }
+      row++;
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(row,0,TableLayoutData.WE,0,0,4));
+      {
+        widgetOkButton = new Button(composite,SWT.CENTER);
+        widgetOkButton.setText(okText);
+        widgetOkButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        widgetOkButton.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
-            String password2 = widgetPassword2.getText();
-            if (password1.equals(password2))
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+            String password1 = widgetPassword1.getText();
+            if (text2 != null)
+            {
+              String password2 = widgetPassword2.getText();
+              if (password1.equals(password2))
+              {
+                close(dialog,password1);
+              }
+            }
+            else
             {
               close(dialog,password1);
             }
           }
-          else
+        });
+
+        button = new Button(composite,SWT.CENTER);
+        button.setText(cancelText);
+        button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
-            close(dialog,password1);
           }
-        }
-      });
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
 
-      button = new Button(composite,SWT.CENTER);
-      button.setText(cancelText);
-      button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-
-          close(dialog,null);
-        }
-      });
-    }
-
-    // install handlers
-    widgetPassword1.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        Text widget = (Text)selectionEvent.widget;
-
-        if (text2 != null)
-        {
-          widgetPassword2.forceFocus();
-        }
-        else
-        {
-          widgetOkButton.forceFocus();
-        }
+            close(dialog,null);
+          }
+        });
       }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-    if (text2 != null)
-    {
-      widgetPassword2.addSelectionListener(new SelectionListener()
+
+      // install handlers
+      widgetPassword1.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
           Text widget = (Text)selectionEvent.widget;
 
-          widgetOkButton.forceFocus();
+          if (text2 != null)
+          {
+            widgetPassword2.forceFocus();
+          }
+          else
+          {
+            widgetOkButton.forceFocus();
+          }
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
         }
       });
-    }
+      if (text2 != null)
+      {
+        widgetPassword2.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+            Text widget = (Text)selectionEvent.widget;
 
-    return (String)run(dialog,null);
+            widgetOkButton.forceFocus();
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      return (String)run(dialog,null);
+    }
+    else
+    {
+      return null;
+    }
   }
 
   /** password dialog
