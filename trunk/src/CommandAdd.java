@@ -196,7 +196,7 @@ class CommandAdd
           if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
         }
       });
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to add files.");
+      widgetMessage.setToolTipText("Commit message.\nCtrl-Up/Down/Home/End to select message from history.\nCtrl-Return to add files.");
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,1.0));
