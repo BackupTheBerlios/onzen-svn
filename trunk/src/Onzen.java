@@ -458,7 +458,7 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
         }
         catch (IOException exception)
         {
-          Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+          printError("Cannot store repository list (error: %s)",exception.getMessage());
         }
       }
 
