@@ -1,7 +1,7 @@
 # ----------------------------------------------------------------------------
 #
 # $Source: /tmp/cvs/onzen/Makefile,v $
-# $Revision: 1.5 $
+# $Revision: 1.6 $
 # $Author: torsten $
 # Contents: Makefile for Onzen
 # Systems: all
@@ -198,7 +198,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-linux.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_LINUX)
+onzen-linux.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -217,7 +217,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-linux_64.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_LINUX_64)
+onzen-linux_64.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX_64)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -277,7 +277,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-solaris.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_SOLARIS)
+onzen-solaris.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_SOLARIS)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -297,7 +297,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-macosx.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_MACOSX)
+onzen-macosx.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_MACOSX)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -317,7 +317,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-macosx_64.jar: jar.txt $(OBJECTS) src/Errors.java images/*.png $(SWT_JAR_MACOSX_64)
+onzen-macosx_64.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_MACOSX_64)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
