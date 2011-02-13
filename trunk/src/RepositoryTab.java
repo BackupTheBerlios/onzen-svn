@@ -943,7 +943,7 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     final Text   widgetCommand;
     final Button widgetOpen;
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Command:");
@@ -952,6 +952,28 @@ Dprintf.dprintf("treeItem=%s",treeItem);
       widgetCommand = Widgets.newText(composite);
       Widgets.layout(widgetCommand,0,1,TableLayoutData.WE);
       widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%f - file name");
+
+      button = Widgets.newButton(composite,Onzen.IMAGE_DIRECTORY);
+      Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          String fileName = Dialogs.fileOpen(shell,
+                                             "Select program",
+                                             widgetCommand.getText(),
+                                             new String[]{"All files","*",
+                                                         }
+                                            );
+          if (fileName != null)
+          {
+            widgetCommand.setText(fileName);
+          }
+        }
+      });
     }
 
     // buttons
