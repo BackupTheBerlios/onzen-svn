@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
 * $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.10 $
+* $Revision: 1.11 $
 * $Author: torsten $
 * Contents: CVS repository functions
 * Systems: all
@@ -60,50 +60,31 @@ class RepositoryCVS extends Repository
 
     /** create CVS revision data
      * @param revision revision string
-     * @param revisionNumbers revision numbers
-     * @param symbolicName symbolic name of revision
+     * @param revisionNumberList list of revision numbers
+     * @param tag tag name or null
      * @param date date
      * @param author author name
-     * @param branchRevisions branch revisions
-     * @param commitMessage commit message lines
+     * @param branchRevisionList branch revisions
+     * @param commitMessageList commit message lines
      */
     RevisionDataCVS(String                revision,
-                    AbstractList<Integer> revisionNumbers,
-                    String                symbolicName,
+                    AbstractList<Integer> revisionNumberList,
+                    String                tag,
                     Date                  date,
                     String                author,
-                    AbstractList<String>  branchRevisions,
-                    AbstractList<String>  commitMessage
+                    AbstractList<String>  branchRevisionList,
+                    AbstractList<String>  commitMessageList
                    )
     {
-      super(revision,symbolicName,date,author,commitMessage);
+// NYI: parent list
+      super(revision,new ArrayList<RevisionData>(),tag,date,author,commitMessageList);
 
-      this.revisionNumbers = new int[revisionNumbers.size()];
-      for (int z = 0; z < revisionNumbers.size(); z++)
+      this.revisionNumbers = new int[revisionNumberList.size()];
+      for (int z = 0; z < revisionNumberList.size(); z++)
       {
-        this.revisionNumbers[z] = revisionNumbers.get(z).intValue();
+        this.revisionNumbers[z] = revisionNumberList.get(z).intValue();
       }
-      this.branchRevisions = branchRevisions.toArray(new String[branchRevisions.size()]);
-    }
-
-    /** create CVS revision data
-     * @param revision revision string
-     * @param symbolicName symbolic name of revision
-     * @param date date
-     * @param author author name
-     * @param commitMessage commit message lines
-     */
-    RevisionDataCVS(String   revision,
-                    int[]    revisionNumbers,
-                    String   symbolicName,
-                    Date     date,
-                    String   author,
-                    String[] commitMessage
-                   )
-    {
-      super(revision,symbolicName,date,author,commitMessage);
-      this.revisionNumbers = revisionNumbers;
-      this.branchRevisions = null;
+      this.branchRevisions = branchRevisionList.toArray(new String[branchRevisionList.size()]);
     }
 
     /** convert data to string
@@ -111,7 +92,7 @@ class RepositoryCVS extends Repository
      */
     public String toString()
     {
-      return "CVS revision info {revision: "+revision+", name: "+symbolicName+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
+      return "CVS revision info {revision: "+revision+", tags: "+tags+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
     }
   }
 
@@ -1645,21 +1626,21 @@ Dprintf.dprintf("unknown %s",line);
   private RevisionDataCVS parseLogData(Exec exec, HashMap<String,String> branchNamesMap, HashMap<String,String> tagNamesMap)
     throws IOException
   {
-    final Pattern PATTERN_REVISION       = Pattern.compile("^\\s*revision\\s+(\\S+).*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DATE_AUTHOR    = Pattern.compile("^\\s*date:\\s+([-\\d/]*\\s+[\\d: +]*);\\s*author:\\s*(\\S*);.*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_BRANCES        = Pattern.compile("^\\s*branches:\\s*(.*).*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_REVISION    = Pattern.compile("^\\s*revision\\s+(\\S+).*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DATE_AUTHOR = Pattern.compile("^\\s*date:\\s+([-\\d/]*\\s+[\\d: +]*);\\s*author:\\s*(\\S*);.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_BRANCES     = Pattern.compile("^\\s*branches:\\s*(.*).*",Pattern.CASE_INSENSITIVE);
 
-    RevisionDataCVS    revisionData = null;
+    RevisionDataCVS    revisionData       = null;
 
-    boolean            dataDone        = false;
+    boolean            dataDone           = false;
     Matcher            matcher;
     String             line;                    
-    String             revision        = null;
-    ArrayList<Integer> revisionNumbers = new ArrayList<Integer>();
-    Date               date            = null;
-    String             author          = null;
-    ArrayList<String>  branchRevisions = new ArrayList<String>();
-    LinkedList<String> commitMessage   = new LinkedList<String>();
+    String             revision           = null;
+    ArrayList<Integer> revisionNumberList = new ArrayList<Integer>();
+    Date               date               = null;
+    String             author             = null;
+    ArrayList<String>  branchRevisionList = new ArrayList<String>();
+    LinkedList<String> commitMessageList  = new LinkedList<String>();
     while (   !dataDone
            && ((line = exec.getStdout()) != null)
           )
@@ -1674,7 +1655,7 @@ Dprintf.dprintf("unknown %s",line);
         revision = matcher.group(1);
         for (String string : revision.split("\\."))
         {
-          revisionNumbers.add(Integer.parseInt(string));
+          revisionNumberList.add(Integer.parseInt(string));
         }
       }
       else if ((matcher = PATTERN_DATE_AUTHOR.matcher(line)).matches())
@@ -1684,14 +1665,13 @@ Dprintf.dprintf("unknown %s",line);
         author = matcher.group(2);
 
         // get branch names (if any)
-        branchRevisions.clear();
         if ((line = exec.getStdout()) != null)
         {
           if ((matcher = PATTERN_BRANCES.matcher(line)).matches())
           {
             for (String branchName : matcher.group(1).split(";"))
             {
-              branchRevisions.add(branchName.trim());
+              branchRevisionList.add(branchName.trim());
             }
           }
           else
@@ -1701,7 +1681,6 @@ Dprintf.dprintf("unknown %s",line);
         }
 
         // get commit message lines
-        commitMessage.clear();
         while (  ((line = exec.getStdout()) != null)
                && !line.startsWith("-----")
                && !line.startsWith("=====")
@@ -1709,30 +1688,30 @@ Dprintf.dprintf("unknown %s",line);
         {
           if (!line.equals("*** empty log message ***"))
           {
-            commitMessage.add(line);
+            commitMessageList.add(line);
           }
         }
-        while (   (commitMessage.peekFirst() != null)
-               && commitMessage.peekFirst().trim().isEmpty()
+        while (   (commitMessageList.peekFirst() != null)
+               && commitMessageList.peekFirst().trim().isEmpty()
               )
         {
-          commitMessage.removeFirst();
+          commitMessageList.removeFirst();
         }
-        while (   (commitMessage.peekLast() != null)
-               && commitMessage.peekLast().trim().isEmpty()
+        while (   (commitMessageList.peekLast() != null)
+               && commitMessageList.peekLast().trim().isEmpty()
               )
         {
-          commitMessage.removeLast();
+          commitMessageList.removeLast();
         }
 
         // add log info entry
         revisionData = new RevisionDataCVS(revision,
-                                           revisionNumbers,
+                                           revisionNumberList,
                                            (branchNamesMap != null) ? branchNamesMap.get(revision) : "",
                                            date,
                                            author,
-                                           branchRevisions,
-                                           commitMessage
+                                           branchRevisionList,
+                                           commitMessageList
                                           );
         dataDone = true;
       }
