@@ -1748,9 +1748,6 @@ Dprintf.dprintf("");
       treeItem.removeAll();
       new TreeItem(treeItem,SWT.NONE);
     }
-
-    // clear directory info requests
-//    directoryInfoThread.clear();
   }
 
   /** find tree item
@@ -1779,10 +1776,11 @@ Dprintf.dprintf("");
    */
   private int findFilesTreeIndex(TreeItem treeItem, FileData fileData)
   {
+    int index = 0;
+
     TreeItem           subTreeItems[]     = treeItem.getItems();
     FileDataComparator fileDataComparator = new FileDataComparator(widgetFileTree);
 
-    int index = 0;
     while (   (index < subTreeItems.length)
            && (fileDataComparator.compare(fileData,(FileData)subTreeItems[index].getData()) > 0)
           )
@@ -2359,31 +2357,34 @@ Dprintf.dprintf("");
         {
           public void run()
           {
-            // find parent tree item to insert new tree item
-            TreeItem treeItem = null;
-            for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
+            if (!widgetFileTree.isDisposed())
             {
-              FileData fileData = (FileData)rootTreeItem.getData();
-//Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
-              if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
+              // find parent tree item to insert new tree item
+              TreeItem treeItem = null;
+              for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
               {
-                treeItem = rootTreeItem;
-                break;
+                FileData fileData = (FileData)rootTreeItem.getData();
+  //Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
+                if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
+                {
+                  treeItem = rootTreeItem;
+                  break;
+                }
               }
-            }
 
-            if (treeItem != null)
-            {
-              // create tree item
-              TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
-              newTreeItem.setText(0,newFileData.getBaseName());
-              newTreeItem.setImage(getFileDataImage(newFileData));
-              updateTreeItem(newTreeItem,newFileData);
+              if ((treeItem != null) && !treeItem.isDisposed())
+              {
+                // create tree item
+                TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
+                newTreeItem.setText(0,newFileData.getBaseName());
+                newTreeItem.setImage(getFileDataImage(newFileData));
+                updateTreeItem(newTreeItem,newFileData);
 
-              // store tree item reference
-              fileNameMap.put(newFileData.getFileName(),newTreeItem);
+                // store tree item reference
+                fileNameMap.put(newFileData.getFileName(),newTreeItem);
+              }
+//else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
             }
-  //else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
           }
         });
       }
