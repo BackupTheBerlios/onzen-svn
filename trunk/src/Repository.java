@@ -1156,27 +1156,33 @@ abstract class Repository implements Serializable
    */
   public static Types getType(String rootPath)
   {
-    File file;
+    File directory = new File(rootPath);
+    while (directory != null)
+    {
+      File file;
 
-    file = new File(rootPath,"CVS");
-    if (file.exists() && file.isDirectory())
-    {
-      return Types.CVS;
-    }
-    file = new File(rootPath,".svn");
-    if (file.exists() && file.isDirectory())
-    {
-      return Types.SVN;
-    }
-    file = new File(rootPath,".hg");
-    if (file.exists() && file.isDirectory())
-    {
-      return Types.HG;
-    }
-    file = new File(rootPath,".git");
-    if (file.exists() && file.isDirectory())
-    {
-      return Types.GIT;
+      file = new File(directory,"CVS");
+      if (file.exists() && file.isDirectory())
+      {
+        return Types.CVS;
+      }
+      file = new File(directory,".svn");
+      if (file.exists() && file.isDirectory())
+      {
+        return Types.SVN;
+      }
+      file = new File(directory,".hg");
+      if (file.exists() && file.isDirectory())
+      {
+        return Types.HG;
+      }
+      file = new File(directory,".git");
+      if (file.exists() && file.isDirectory())
+      {
+        return Types.GIT;
+      }
+
+      directory = directory.getParentFile();
     }
 
     return Types.UNKNOWN;
