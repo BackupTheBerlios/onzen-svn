@@ -533,16 +533,20 @@ class CommandPatches
         int id = getSelectedPatchId();
 
         widgetPatches.removeAll();
-        for (Patch patch : Patch.getPatches(repositoryTab.repository.rootPath,data.showStates,50))
+        Patch[] patches = Patch.getPatches(repositoryTab.repository.rootPath,data.showStates,50);
+        if (patches != null)
         {
-          Widgets.addTableEntry(widgetPatches,
-                                patch,
-                                patch.state.toString(),
-                                patch.summary
-                               );
-        }
+          for (Patch patch : patches)
+          {
+            Widgets.addTableEntry(widgetPatches,
+                                  patch,
+                                  patch.state.toString(),
+                                  patch.summary
+                                 );
+          }
 
-        setSelectedPatch(id);
+          setSelectedPatch(id);
+        }
       }
     });
 
