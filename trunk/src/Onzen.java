@@ -699,27 +699,57 @@ exception.printStackTrace();
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
         TabFolder tabFolder = (TabFolder)mouseEvent.widget;
-        TabItem   tabItem = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
 
-        if (tabItem != null)
+        /* Note: it is not possible to add a mouse-double-click handle to
+          a tab-item nor a tab-folder and the correct tab-item is returned
+          when the tab-items a scrolled. Thus use the following work-around:
+            - get offset of first time = width of scroll buttons left and right
+            - check mouse position with offset
+            - currently selected tab-item is item with mouse-click
+        */
+        TabItem[] tabItems    = tabFolder.getItems();
+        int scrollButtonWidth = (tabItems != null)?tabItems[0].getBounds().x:0;
+        Rectangle bounds      = tabFolder.getBounds();
+        if ((mouseEvent.x > bounds.x+scrollButtonWidth) && (mouseEvent.x < bounds.x+bounds.width-scrollButtonWidth))
         {
-          editRepository((RepositoryTab)tabItem.getData());
+          TabItem[] selectedTabItems = tabFolder.getSelection();
+          TabItem   tabItem          = ((selectedTabItems != null) && (selectedTabItems.length > 0))?selectedTabItems[0]:null;
+
+          if (tabItem != null)
+          {
+            editRepository((RepositoryTab)selectedTabItems[0].getData());
+          }
         }
       }
 
       public void mouseDown(final MouseEvent mouseEvent)
       {
         TabFolder tabFolder = (TabFolder)mouseEvent.widget;
-        TabItem   tabItem = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
 
-        if (tabItem != null)
+        /* Note: it is not possible to add a mouse-double-click handle to
+          a tab-item nor a tab-folder and the correct tab-item is returned
+          when the tab-items a scrolled. Thus use the following work-around:
+            - get offset of first time = width of scroll buttons left and right
+            - check mouse position with offset
+            - currently selected tab-item is item with mouse-click
+        */
+        TabItem[] tabItems    = tabFolder.getItems();
+        int scrollButtonWidth = (tabItems != null)?tabItems[0].getBounds().x:0;
+        Rectangle bounds      = tabFolder.getBounds();
+        if ((mouseEvent.x > bounds.x+scrollButtonWidth) && (mouseEvent.x < bounds.x+bounds.width-scrollButtonWidth))
         {
-          // start dragging tab
-          data.dragTab              = true;
-          data.dragTabStartX        = mouseEvent.x;
-          data.dragTabRepositoryTab = (RepositoryTab)tabItem.getData();
-          data.dragTabItems         = tabFolder.getItems();
-          data.dragTabItem          = tabItem;
+          TabItem[] selectedTabItems = tabFolder.getSelection();
+          TabItem   tabItem          = ((selectedTabItems != null) && (selectedTabItems.length > 0))?selectedTabItems[0]:null;
+
+          if (tabItem != null)
+          {
+            // start dragging tab
+            data.dragTab              = true;
+            data.dragTabStartX        = mouseEvent.x;
+            data.dragTabRepositoryTab = (RepositoryTab)tabItem.getData();
+            data.dragTabItems         = tabItems;
+            data.dragTabItem          = selectedTabItems[0];
+          }
         }
       }
 
@@ -728,24 +758,39 @@ exception.printStackTrace();
         if (data.dragTab)
         {
           TabFolder tabFolder = (TabFolder)mouseEvent.widget;
-          TabItem   tabItem   = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
 
-          if (   (tabItem != null)
-              && (data.dragTabItem != null)
-              && (tabItem != data.dragTabItem)
-              && (Math.abs(mouseEvent.x-data.dragTabStartX) > 20)
-             )
+          /* Note: it is not possible to add a mouse-double-click handle to
+            a tab-item nor a tab-folder and the correct tab-item is returned
+            when the tab-items a scrolled. Thus use the following work-around:
+              - get offset of first time = width of scroll buttons left and right
+              - check mouse position with offset
+              - currently selected tab-item is item with mouse-click
+          */
+          TabItem[] tabItems    = tabFolder.getItems();
+          int scrollButtonWidth = (tabItems != null)?tabItems[0].getBounds().x:0;
+          Rectangle bounds      = tabFolder.getBounds();
+          if ((mouseEvent.x > bounds.x+scrollButtonWidth) && (mouseEvent.x < bounds.x+bounds.width-scrollButtonWidth))
           {
-            // get new tab index
-            int newTabIndex = tabFolder.indexOf(tabItem);
-            assert newTabIndex != -1;
+            TabItem[] selectedTabItems = tabFolder.getSelection();
+            TabItem   tabItem          = ((selectedTabItems != null) && (selectedTabItems.length > 0))?selectedTabItems[0]:null;
 
-            // re-order tabs
-            Widgets.moveTab(widgetTabFolder,data.dragTabItem,newTabIndex);
-            repositoryList.move(data.dragTabRepositoryTab.repository,newTabIndex);
+            if (   (tabItem != null)
+                && (data.dragTabItem != null)
+                && (tabItem != data.dragTabItem)
+                && (Math.abs(mouseEvent.x-data.dragTabStartX) > 20)
+               )
+            {
+              // get new tab index
+              int newTabIndex = tabFolder.indexOf(tabItem);
+              assert newTabIndex != -1;
 
-            // set selected repository
-            selectRepository(data.dragTabRepositoryTab);
+              // re-order tabs
+              Widgets.moveTab(widgetTabFolder,data.dragTabItem,newTabIndex);
+              repositoryList.move(data.dragTabRepositoryTab.repository,newTabIndex);
+
+              // set selected repository
+              selectRepository(data.dragTabRepositoryTab);
+            }
           }
 
           // stop dragging tab
@@ -2271,7 +2316,7 @@ new Message("Und nun?").addToHistory();
    */
   private void editRepository(RepositoryTab repositoryTab)
   {
-    if (selectedRepositoryTab != null)
+    if (repositoryTab != null)
     {
       /** dialog data
        */
@@ -2387,6 +2432,7 @@ new Message("Und nun?").addToHistory();
           widgetPatchMailCC = Widgets.newText(subComposite);
           if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
           Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE);
+          widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
 
           label = Widgets.newLabel(subComposite,"Subject:");
           Widgets.layout(label,2,0,TableLayoutData.W);
@@ -2394,6 +2440,7 @@ new Message("Und nun?").addToHistory();
           widgetPatchMailSubject = Widgets.newText(subComposite);
           if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
           Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE);
+          widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  %n% - patch number\n  %summary% - summary text");
 
           label = Widgets.newLabel(subComposite,"Text:");
           Widgets.layout(label,3,0,TableLayoutData.NW);
@@ -2401,7 +2448,7 @@ new Message("Und nun?").addToHistory();
           widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
           if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
           Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE);
-          widgetPatchMailText.setToolTipText("Patch mail template.\n\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
+          widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
         }
       }
 
@@ -2476,9 +2523,6 @@ new Message("Und nun?").addToHistory();
 
       // show dialog
       Dialogs.show(dialog,Settings.geometryEditRepository);
-
-      // set title
-      widgetTitle.setText(selectedRepositoryTab.repository.title);
 
       // run
       Widgets.setFocus(widgetTitle);
