@@ -187,7 +187,7 @@ class Patch
     }
     catch (SQLException exception)
     {
-      Onzen.printWarning("Cannot patches from database (error: %s)",exception.getMessage());
+      Onzen.printWarning("Cannot get patches from database (error: %s)",exception.getMessage());
       return null;
     }
 
@@ -451,7 +451,7 @@ class Patch
                               "  rootPath TEXT, "+
                               "  state    INTEGER, "+
                               "  text     TEXT, "+
-                              "  summary  TEXT "+
+                              "  summary  TEXT,"+
                               "  message  TEXT "+
                               ");"
                              );
