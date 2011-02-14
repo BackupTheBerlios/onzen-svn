@@ -866,22 +866,6 @@ exception.printStackTrace();
         }
       });
 
-      widgetButtonPatch = Widgets.newButton(composite,"Create patch");
-      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonPatch.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          if (selectedRepositoryTab != null)
-          {
-            selectedRepositoryTab.createPatch();
-          }
-        }
-      });
-
       widgetButtonPatch = Widgets.newButton(composite,"Patches");
       Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonPatch.addSelectionListener(new SelectionListener()
