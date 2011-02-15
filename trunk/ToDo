@@ -11,6 +11,8 @@ ToDo
 - create branch
 - use text widget separator instead of \n
 - use file watch service from Java 7 to detect files changes outside
-- fix moving tabs: arrow appear at wrong time+wrong place
 - menu entry to show/hidden hidden files
 - check-out functions
+- annotation dialog: buttons for prev/next release
+- pane in commit dialog between changes/history/message
+- use inotify-tools (inotifywait) to monitor external file changes (use new interface classes in Java 7)
