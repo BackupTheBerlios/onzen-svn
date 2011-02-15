@@ -242,33 +242,6 @@ public class Onzen
     }
   };
 
-  /** dialog data
-   */
-  class Data
-  {
-    boolean       mouseDownFlag;
-    boolean       dragTab;
-    int           dragTabStartX;
-    RepositoryTab dragTabRepositoryTab;
-    TabItem[]     dragTabItems;
-    TabItem       dragTabItem;
-    boolean       dragTabDrawMarker;
-    Point         dragTabMarker;
-    int           dragTabMarkerHeight;
-
-    Data()
-    {
-      this.dragTab              = false;
-      this.dragTabStartX        = 0;
-      this.dragTabRepositoryTab = null;
-      this.dragTabItems         = null;
-      this.dragTabItem          = null;
-      this.dragTabDrawMarker    = false;
-      this.dragTabMarker        = new Point(0,0);
-      this.dragTabMarkerHeight  = 0;
-    }
-  };
-
   // --------------------------- constants --------------------------------
 
   // exit codes
@@ -294,8 +267,8 @@ public class Onzen
   public static Image            IMAGE_DIRECTORY;
   public static Image            IMAGE_FILE;
   public static Image            IMAGE_LINK;
-  public static Image            IMAGE_ARRAY_UP;
-  public static Image            IMAGE_ARRAY_DOWN;
+  public static Image            IMAGE_ARROW_UP;
+  public static Image            IMAGE_ARROW_DOWN;
   public static Image            IMAGE_ARROW_LEFT;
   public static Image            IMAGE_ARROW_RIGHT;
 
@@ -326,38 +299,37 @@ public class Onzen
   };
 
   // --------------------------- variables --------------------------------
-  private Display                   display;
-  private Shell                     shell;
+  private Display                           display;
+  private Shell                             shell;
 
-  private final Data                data = new Data();
-  private String                    repositoryListName = null;
-  private RepositoryList            repositoryList;
-  private Composite                 repositoryTabEmpty = null;
-  private LinkedList<RepositoryTab> repositoryTabList = new LinkedList<RepositoryTab>();
-  private RepositoryTab             selectedRepositoryTab = null;
-  private LinkedList<StatusText>    statusTextList = new LinkedList<StatusText>();
+  private String                            repositoryListName = null;
+  private RepositoryList                    repositoryList;
+  private Composite                         repositoryTabEmpty = null;
+  private HashMap<Repository,RepositoryTab> repositoryTabMap = new HashMap<Repository,RepositoryTab>();
+  private RepositoryTab                     selectedRepositoryTab = null;
+  private LinkedList<StatusText>            statusTextList = new LinkedList<StatusText>();
 
-  private MenuItem                  menuItemApplyPatches;
-  private MenuItem                  menuItemUnapplyPatches;
-  private MenuItem                  menuItemPullChanges;
-  private MenuItem                  menuItemPushChanges;
-  private MenuItem                  menuSetFileMode;
+  private MenuItem                          menuItemApplyPatches;
+  private MenuItem                          menuItemUnapplyPatches;
+  private MenuItem                          menuItemPullChanges;
+  private MenuItem                          menuItemPushChanges;
+  private MenuItem                          menuSetFileMode;
 
-  private Menu                      menuRepositories;
+  private Menu                              menuRepositories;
 
-  private TabFolder                 widgetTabFolder;
+  private TabFolder                         widgetTabFolder;
 
-  private Button                    widgetButtonUpdate;
-  private Button                    widgetButtonCommit;
-  private Button                    widgetButtonPatch;
-  private Button                    widgetButtonAdd;
-  private Button                    widgetButtonRemove;
-  private Button                    widgetButtonRevert;
-  private Button                    widgetButtonDiff;
-  private Button                    widgetButtonRevisions;
-  private Button                    widgetButtonSolve;
+  private Button                            widgetButtonUpdate;
+  private Button                            widgetButtonCommit;
+  private Button                            widgetButtonPatch;
+  private Button                            widgetButtonAdd;
+  private Button                            widgetButtonRemove;
+  private Button                            widgetButtonRevert;
+  private Button                            widgetButtonDiff;
+  private Button                            widgetButtonRevisions;
+  private Button                            widgetButtonSolve;
 
-  private Label                     widgetStatus;
+  private Label                             widgetStatus;
 
   // ------------------------ native functions ----------------------------
 
@@ -642,8 +614,8 @@ exception.printStackTrace();
     IMAGE_DIRECTORY   = Widgets.loadImage(display,"directory.png");
     IMAGE_FILE        = Widgets.loadImage(display,"file.png");
     IMAGE_LINK        = Widgets.loadImage(display,"link.png");
-    IMAGE_ARRAY_UP    = Widgets.loadImage(display,"arrow-up.png");
-    IMAGE_ARRAY_DOWN  = Widgets.loadImage(display,"arrow-down.png");
+    IMAGE_ARROW_UP    = Widgets.loadImage(display,"arrow-up.png");
+    IMAGE_ARROW_DOWN  = Widgets.loadImage(display,"arrow-down.png");
     IMAGE_ARROW_LEFT  = Widgets.loadImage(display,"arrow-left.png");
     IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
 
@@ -671,29 +643,6 @@ exception.printStackTrace();
     // create tab
     widgetTabFolder = Widgets.newTabFolder(shell);
     Widgets.layout(widgetTabFolder,0,0,TableLayoutData.NSWE);
-    widgetTabFolder.addPaintListener(new PaintListener()
-    {
-      public void paintControl(PaintEvent paintEvent)
-      {
-        if (data.dragTab && data.dragTabDrawMarker)
-        {
-          int[] marker = new int[2*7];
-          marker[0*2+0] = data.dragTabMarker.x+2; marker[0*2+1] = data.dragTabMarker.y+0;
-          marker[1*2+0] = data.dragTabMarker.x+2; marker[1*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
-          marker[2*2+0] = data.dragTabMarker.x+5; marker[2*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
-          marker[3*2+0] = data.dragTabMarker.x+0; marker[3*2+1] = data.dragTabMarker.y+5+data.dragTabMarkerHeight;
-          marker[4*2+0] = data.dragTabMarker.x-5; marker[4*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
-          marker[5*2+0] = data.dragTabMarker.x-2; marker[5*2+1] = data.dragTabMarker.y+0+data.dragTabMarkerHeight-5;
-          marker[6*2+0] = data.dragTabMarker.x-2; marker[6*2+1] = data.dragTabMarker.y+0;
-          paintEvent.gc.setAntialias(SWT.OFF);
-          paintEvent.gc.setBackground(Onzen.COLOR_BLUE);
-          paintEvent.gc.setForeground(Onzen.COLOR_MAGENTA);
-          paintEvent.gc.fillPolygon(marker);
-          paintEvent.gc.drawPolygon(marker);
-          paintEvent.gc.setAntialias(SWT.DEFAULT);
-        }
-      }
-    });
     widgetTabFolder.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -724,139 +673,10 @@ exception.printStackTrace();
 
       public void mouseDown(final MouseEvent mouseEvent)
       {
-        TabFolder tabFolder = (TabFolder)mouseEvent.widget;
-
-        /* Note: it is not possible to add a mouse-double-click handle to
-          a tab-item nor a tab-folder and the correct tab-item is returned
-          when the tab-items a scrolled. Thus use the following work-around:
-            - get offset of first time = width of scroll buttons left and right
-            - check mouse position with offset
-            - currently selected tab-item is item with mouse-click
-        */
-        TabItem[] tabItems    = tabFolder.getItems();
-        int scrollButtonWidth = (tabItems != null)?tabItems[0].getBounds().x:0;
-        Rectangle bounds      = tabFolder.getBounds();
-        if ((mouseEvent.x > bounds.x+scrollButtonWidth) && (mouseEvent.x < bounds.x+bounds.width-scrollButtonWidth))
-        {
-          TabItem[] selectedTabItems = tabFolder.getSelection();
-          TabItem   tabItem          = ((selectedTabItems != null) && (selectedTabItems.length > 0))?selectedTabItems[0]:null;
-
-          if (tabItem != null)
-          {
-            // start dragging tab
-            data.dragTab              = true;
-            data.dragTabStartX        = mouseEvent.x;
-            data.dragTabRepositoryTab = (RepositoryTab)tabItem.getData();
-            data.dragTabItems         = tabItems;
-            data.dragTabItem          = selectedTabItems[0];
-          }
-        }
       }
 
       public void mouseUp(final MouseEvent mouseEvent)
       {
-        if (data.dragTab)
-        {
-          TabFolder tabFolder = (TabFolder)mouseEvent.widget;
-
-          /* Note: it is not possible to add a mouse-double-click handle to
-            a tab-item nor a tab-folder and the correct tab-item is returned
-            when the tab-items a scrolled. Thus use the following work-around:
-              - get offset of first time = width of scroll buttons left and right
-              - check mouse position with offset
-              - currently selected tab-item is item with mouse-click
-          */
-          TabItem[] tabItems    = tabFolder.getItems();
-          int scrollButtonWidth = (tabItems != null)?tabItems[0].getBounds().x:0;
-          Rectangle bounds      = tabFolder.getBounds();
-          if ((mouseEvent.x > bounds.x+scrollButtonWidth) && (mouseEvent.x < bounds.x+bounds.width-scrollButtonWidth))
-          {
-            TabItem[] selectedTabItems = tabFolder.getSelection();
-            TabItem   tabItem          = ((selectedTabItems != null) && (selectedTabItems.length > 0))?selectedTabItems[0]:null;
-
-            if (   (tabItem != null)
-                && (data.dragTabItem != null)
-                && (tabItem != data.dragTabItem)
-                && (Math.abs(mouseEvent.x-data.dragTabStartX) > 20)
-               )
-            {
-              // get new tab index
-              int newTabIndex = tabFolder.indexOf(tabItem);
-              assert newTabIndex != -1;
-
-              // re-order tabs
-              Widgets.moveTab(widgetTabFolder,data.dragTabItem,newTabIndex);
-              repositoryList.move(data.dragTabRepositoryTab.repository,newTabIndex);
-
-              // set selected repository
-              selectRepository(data.dragTabRepositoryTab);
-            }
-          }
-
-          // stop dragging tab
-          data.dragTab       = false;
-          data.dragTabItems  = null;
-          data.dragTabItem   = null;
-          widgetTabFolder.redraw();
-        }
-      }
-    });
-    widgetTabFolder.addMouseMoveListener(new MouseMoveListener()
-    {
-      public void mouseMove(MouseEvent mouseEvent)
-      {
-        if (data.dragTab)
-        {
-          TabFolder tabFolder = (TabFolder)mouseEvent.widget;
-          TabItem   tabItem   = tabFolder.getItem(new Point(mouseEvent.x,mouseEvent.y));
-
-          // check if dragging (mouse is over another tab than drag tab and moved some way)
-          data.dragTabDrawMarker =    (tabItem != null)
-                                   && (data.dragTabItem != null)
-                                   && (tabItem != data.dragTabItem)
-                                   && (Math.abs(mouseEvent.x-data.dragTabStartX) > 20);
-
-          // get marker drawing position and height
-          if (data.dragTabDrawMarker)
-          {
-            // get new tab index
-            int newTabIndex = tabFolder.indexOf(tabItem);
-            assert newTabIndex != -1;
-
-            Rectangle bounds = data.dragTabItems[newTabIndex].getBounds();
-            if (mouseEvent.x > data.dragTabStartX)
-            {
-              // right
-              if (newTabIndex < data.dragTabItems.length-1)
-              {
-                Rectangle boundsNext = data.dragTabItems[newTabIndex+1].getBounds();
-                data.dragTabMarker.x = (bounds.x+bounds.width+boundsNext.x)/2;
-              }
-              else
-              {
-                data.dragTabMarker.x = bounds.x+bounds.width+4;
-              }
-            }
-            else
-            {
-              // left
-              if (newTabIndex > 0)
-              {
-                Rectangle boundsPrev = data.dragTabItems[newTabIndex-1].getBounds();
-                data.dragTabMarker.x = (boundsPrev.x+boundsPrev.width+bounds.x)/2;
-              }
-              else
-              {
-                data.dragTabMarker.x = bounds.x-4;
-              }
-            }
-            data.dragTabMarker.y     = 2;
-            data.dragTabMarkerHeight = bounds.height;
-          }
-
-          // redraw
-          widgetTabFolder.redraw();
-        }
       }
     });
     widgetTabFolder.addSelectionListener(new SelectionListener()
@@ -869,10 +689,10 @@ exception.printStackTrace();
         TabFolder tabFolder = (TabFolder)selectionEvent.widget;
         TabItem   tabItem   = (TabItem)selectionEvent.item;
 
-        selectRepository((RepositoryTab)tabItem.getData());
+        selectRepositoryTab((RepositoryTab)tabItem.getData());
       }
     });
-    widgetTabFolder.setToolTipText("Repository tab.\nClick-drag&&drop to move tab to left or right.\nDouble-click to edit settings of repository.");
+    widgetTabFolder.setToolTipText("Repository tab.\nDouble-click to edit settings of repository.");
 
     // create buttons
     composite = Widgets.newComposite(shell);
@@ -1112,6 +932,18 @@ Dprintf.dprintf("");
         }
       });
 
+      menuItem = Widgets.addMenuItem(menu,"Edit repository list...",Settings.keyEditRepositoryList);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          editRepositoryList();
+        }
+      });
+
       menuItem = Widgets.addMenuItem(menu,"Edit repository...",Settings.keyEditRepository);
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1120,7 +952,10 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          editRepository(selectedRepositoryTab);
+          if (selectedRepositoryTab != null)
+          {
+            editRepository(selectedRepositoryTab);
+          }
         }
       });
 
@@ -1134,7 +969,10 @@ Dprintf.dprintf("");
         {
           MenuItem widget = (MenuItem)selectionEvent.widget;
 
-          closeRepository();
+          if (selectedRepositoryTab != null)
+          {
+            closeRepository(selectedRepositoryTab);
+          }
         }
       });
 
@@ -1726,11 +1564,11 @@ new Message("Und nun?").addToHistory();
     selectedRepositoryTab = null;
 
     // remove old tabs (Note: empty tab is workaround for a problem when creating first tab which is not shown - bug in SWT?)
-    for (RepositoryTab repositoryTab : repositoryTabList)
+    for (RepositoryTab repositoryTab : repositoryTabMap.values())
     {
       repositoryTab.close();
     }
-    repositoryTabList.clear();
+    repositoryTabMap.clear();
     addRepositoryTabEmpty();
 
     // remove entries in repository menu
@@ -1741,10 +1579,66 @@ new Message("Und nun?").addToHistory();
     }
   }
 
+  /** reset repository tab list (with possible new ordering)
+   */
+  private void setRepositoryList()
+  {
+    // clear repositories
+    clearRepositories();
+
+    // reset repository list
+    for (Repository repository : repositoryList)
+    {
+      // add repository tab
+      RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
+      repositoryTabMap.put(repository,repositoryTab);
+
+      // open sub-directories in repository tab, remove unknown sub-directories
+      for (String directory : repository.getOpenDirectories())
+      {
+        if (!repositoryTab.openDirectory(directory))
+        {
+          repository.closeDirectory(directory);
+        }
+      }
+    }
+
+    // remove empty tab if repository list is not empty
+    if (repositoryTabMap.size() > 0)
+    {
+      removeRepositoryTabEmpty();
+    }
+
+    // because SWT select first tab, process this selection now
+    while (display.readAndDispatch())
+    {
+      // nothing
+    }
+
+    // reset repository menu entries
+    for (Repository repository : repositoryList)
+    {
+      MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
+      menuItem.setData(repositoryTabMap.get(repository));
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          MenuItem widget = (MenuItem)selectionEvent.widget;
+
+          selectRepositoryTab((RepositoryTab)widget.getData());
+        }
+      });
+    }
+  }
+
   /** set repository tab list
    * @param repositoryList repository list to set
    */
-  private void setRepositoryList(RepositoryList repositoryList)
+  private void XXXXsetRepositoryList(RepositoryList repositoryList)
   {
     RepositoryTab newSelectedRepositoryTab = null;
 
@@ -1757,7 +1651,7 @@ new Message("Und nun?").addToHistory();
     {
       // add repository tab
       RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
-      repositoryTabList.add(repositoryTab);
+      repositoryTabMap.put(repository,repositoryTab);
 
       // save select repository
       if (repository.selected)
@@ -1776,7 +1670,7 @@ new Message("Und nun?").addToHistory();
     }
 
     // remove empty tab if repository list is not empty
-    if (repositoryTabList.size() > 0)
+    if (repositoryTabMap.size() > 0)
     {
       removeRepositoryTabEmpty();
     }
@@ -1784,14 +1678,14 @@ new Message("Und nun?").addToHistory();
     // select new tab
     if (newSelectedRepositoryTab != null)
     {
-      selectRepository(newSelectedRepositoryTab);
+      selectRepositoryTab(newSelectedRepositoryTab);
     }
 
     // set repository menu
-    for (RepositoryTab repositoryTab : repositoryTabList)
+    for (Repository repository : repositoryList)
     {
-      MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repositoryTab.repository.title);
-      menuItem.setData(repositoryTab);
+      MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
+      menuItem.setData(repositoryTabMap.get(repository));
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1801,10 +1695,48 @@ new Message("Und nun?").addToHistory();
         {
           MenuItem widget = (MenuItem)selectionEvent.widget;
 
-          selectRepository((RepositoryTab)widget.getData());
+          selectRepositoryTab((RepositoryTab)widget.getData());
         }
       });
     }
+  }
+
+  /** set repository tab list
+   * @param repositoryList repository list to set
+   */
+  private void setRepositoryList(RepositoryList repositoryList)
+  {
+    // get selected repository
+    Repository selectedRepository = null;
+    for (Repository repository : repositoryList)
+    {
+      if (repository.selected)
+      {
+        selectedRepository = repository;
+        break;
+      }
+    }
+
+    // set list
+    this.repositoryList = repositoryList;
+    setRepositoryList();
+
+    // select repository tab
+    selectRepositoryTab(repositoryTabMap.get(selectedRepository));
+  }
+
+  /** reset repository tab list (with possible new ordering)
+   */
+  private void resetRepositoryList()
+  {
+    // save currently selected repository
+    Repository selectedRepository = (selectedRepositoryTab != null)?selectedRepositoryTab.repository:null;
+
+    // set list
+    setRepositoryList();
+
+    // select repository tab
+    selectRepositoryTab(repositoryTabMap.get(selectedRepository));
   }
 
   /** add a repository tab to the repository tab list
@@ -1820,11 +1752,11 @@ new Message("Und nun?").addToHistory();
 
     // add tab, set default selected tab
     repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
-    repositoryTabList.add(repositoryTab);
-    if (repositoryTabList.size() == 1)
+    repositoryTabMap.put(repository,repositoryTab);
+    if (repositoryTabMap.size() == 1)
     {
       // select repository tab
-      selectRepository(repositoryTab);
+      selectRepositoryTab(repositoryTab);
     }
 
     // remove empty tab, set default selected tab
@@ -1852,14 +1784,14 @@ new Message("Und nun?").addToHistory();
     repositoryList.remove(repositoryTab.repository);
 
     // add empty tab if list will become empty
-    if (repositoryTabList.size() <= 1)
+    if (repositoryTabMap.size() <= 1)
     {
       addRepositoryTabEmpty();
     }
 
     // close tab, remove from repository list
     repositoryTab.close();
-    repositoryTabList.remove(repositoryTab);
+    repositoryTabMap.remove(repositoryTab.repository);
 
     // save list
     try
@@ -1932,7 +1864,7 @@ new Message("Und nun?").addToHistory();
     {
       widgetNew = Widgets.newButton(composite,"New");
       widgetNew.setEnabled(false);
-      Widgets.layout(widgetNew,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetNew,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetNew.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1950,7 +1882,7 @@ new Message("Und nun?").addToHistory();
 
       widgetDelete = Widgets.newButton(composite,"Delete");
       widgetDelete.setEnabled(false);
-      Widgets.layout(widgetDelete,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetDelete,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetDelete.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1983,7 +1915,7 @@ new Message("Und nun?").addToHistory();
       });
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2118,7 +2050,7 @@ new Message("Und nun?").addToHistory();
       {
         widgetOpen = Widgets.newButton(composite,"Open");
         widgetOpen.setEnabled(false);
-        Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         widgetOpen.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2141,7 +2073,7 @@ new Message("Und nun?").addToHistory();
 
         widgetNew = Widgets.newButton(composite,"New");
         widgetNew.setEnabled(false);
-        Widgets.layout(widgetNew,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        Widgets.layout(widgetNew,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         widgetNew.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2159,7 +2091,7 @@ new Message("Und nun?").addToHistory();
 
         widgetDelete = Widgets.newButton(composite,"Delete");
         widgetDelete.setEnabled(false);
-        Widgets.layout(widgetDelete,0,2,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        Widgets.layout(widgetDelete,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         widgetDelete.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2193,7 +2125,7 @@ new Message("Und nun?").addToHistory();
         });
 
         button = Widgets.newButton(composite,"Cancel");
-        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2274,10 +2206,235 @@ new Message("Und nun?").addToHistory();
     loadRepositoryList(null);
   }
 
+  /** edit repository list
+   */
+  private void editRepositoryList()
+  {
+    /** dialog data
+     */
+    class Data
+    {
+      RepositoryTab[] repositories;
+
+      Data()
+      {
+        this.repositories     = null;
+      }
+    };
+
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite,subSubComposite;
+    Label       label;
+    Button      button;
+
+    // repository edit dialog
+    dialog = Dialogs.open(shell,"Edit repository list",new double[]{1.0,0.0},1.0);
+
+    final List   widgetList;
+    final Button widgetSave;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      widgetList = Widgets.newList(composite);
+      Widgets.layout(widgetList,0,0,TableLayoutData.NSWE);
+      widgetList.setToolTipText("Repository title.");
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,1.0));
+      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+      {
+        button = Widgets.newButton(subComposite,"Open");
+        Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String rootPath = Dialogs.directory(shell,"Open repository","");
+            if (rootPath != null)
+            {
+              Repository repository = openRepository(rootPath);
+
+              widgetList.add(repository.title);
+            }
+          }
+        });
+        button.setToolTipText("Open repository.");
+
+        button = Widgets.newButton(subComposite,"Edit");
+        Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            int index = widgetList.getSelectionIndex();
+            if ((index >= 0) && (index < repositoryList.size()))
+            {
+              RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
+              editRepository(repositoryTab);
+            }
+          }
+        });
+        button.setToolTipText("Edit repository settings.");
+
+        button = Widgets.newButton(subComposite,"Close");
+        Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            int index = widgetList.getSelectionIndex();
+            if ((index >= 0) && (index < repositoryList.size()))
+            {
+              RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
+              closeRepository(repositoryTab);
+            }
+          }
+        });
+        button.setToolTipText("Close repository.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
+        Widgets.layout(button,0,3,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            int index = widgetList.getSelectionIndex();
+            if (index > 0)
+            {
+              // move up
+              repositoryList.move(repositoryList.get(index),index-1);
+
+              // update view
+              widgetList.removeAll();
+              for (Repository repository : repositoryList)
+              {
+                widgetList.add(repository.title);
+              }
+
+              // set selection
+              widgetList.setSelection(index-1);
+            }
+          }
+        });
+        button.setToolTipText("Open repository position up.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
+        Widgets.layout(button,0,4,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            int index = widgetList.getSelectionIndex();
+            if (index < repositoryList.size()-1)
+            {
+              // move up
+              repositoryList.move(repositoryList.get(index),index+1);
+
+              // update view
+              widgetList.removeAll();
+              for (Repository repository : repositoryList)
+              {
+                widgetList.add(repository.title);
+              }
+
+              // set selection
+              widgetList.setSelection(index+1);
+            }
+          }
+        });
+        button.setToolTipText("Move repository position down.");
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      button = Widgets.newButton(composite,"Close");
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetList.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+Dprintf.dprintf("");
+        int index = widgetList.getSelectionIndex();
+        if ((index >= 0) && (index < repositoryList.size()))
+        {
+          RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
+          editRepository(repositoryTab);
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+
+
+    // show dialog
+    Dialogs.show(dialog,Settings.geometryEditRepositoryList);
+
+    // add repositories
+    for (Repository repository : repositoryList)
+    {
+      widgetList.add(repository.title);
+    }
+
+    // run
+    Widgets.setFocus(widgetList);
+    Dialogs.run(dialog);
+
+    // set data
+    resetRepositoryList();
+
+    // save list
+    try
+    {
+      repositoryList.save();
+    }
+    catch (IOException exception)
+    {
+      Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+    }
+  }
+
   /** open new repository tab
    * @param rootPath root path
+   * @return repository or null
    */
-  private void openRepository(String rootPath)
+  private Repository openRepository(String rootPath)
   {
     // open repository
     Repository repository = null;
@@ -2302,264 +2459,264 @@ new Message("Und nun?").addToHistory();
     if (repository != null)
     {
       // add and select new repository
-      selectRepository(addRepositoryTab(repository));
+      selectRepositoryTab(addRepositoryTab(repository));
     }
     else
     {
 // NYI: add git
       Dialogs.error(shell,"'%s'\n\ndoes not contain a known repository (CVS,SVN,HG)",rootPath);
-      return;
+      return null;
     }
+
+    return repository;
   }
 
   /** edit repository
    */
   private void editRepository(RepositoryTab repositoryTab)
   {
-    if (repositoryTab != null)
+    /** dialog data
+     */
+    class Data
     {
-      /** dialog data
-       */
-      class Data
+      String title;
+      String rootPath;
+      String masterRepository;
+      String patchMailTo;
+      String patchMailCC;
+      String patchMailSubject;
+      String patchMailText;
+
+      Data()
       {
-        String title;
-        String rootPath;
-        String masterRepository;
-        String patchMailTo;
-        String patchMailCC;
-        String patchMailSubject;
-        String patchMailText;
+        this.title            = null;
+        this.rootPath         = null;
+        this.masterRepository = null;
+        this.patchMailTo      = null;
+        this.patchMailCC      = null;
+        this.patchMailSubject = null;
+        this.patchMailSubject = null;
+      }
+    };
 
-        Data()
-        {
-          this.title            = null;
-          this.rootPath         = null;
-          this.masterRepository = null;
-          this.patchMailTo      = null;
-          this.patchMailCC      = null;
-          this.patchMailSubject = null;
-          this.patchMailSubject = null;
-        }
-      };
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite,subSubComposite;
+    Label       label;
+    Button      button;
 
-      final Data  data = new Data();
-      final Shell dialog;
-      Composite   composite,subComposite,subSubComposite;
-      Label       label;
-      Button      button;
+    // repository edit dialog
+    dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
 
-      // repository edit dialog
-      dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
-
-      final Text   widgetTitle;
-      final Text   widgetRootPath;
+    final Text   widgetTitle;
+    final Text   widgetRootPath;
 //      final Text   widgetMasterRepository;
-      final Text   widgetPatchMailTo;
-      final Text   widgetPatchMailCC;
-      final Text   widgetPatchMailSubject;
-      final Text   widgetPatchMailText;
-      final Button widgetSave;
-      composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0,4));
-      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    final Text   widgetPatchMailTo;
+    final Text   widgetPatchMailCC;
+    final Text   widgetPatchMailSubject;
+    final Text   widgetPatchMailText;
+    final Button widgetSave;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0,4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
-        subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,0,0,TableLayoutData.WE);
+        label = Widgets.newLabel(subComposite,"Type:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        label = Widgets.newLabel(subComposite);
+        label.setText(repositoryTab.repository.getType().toString());
+        Widgets.layout(label,0,1,TableLayoutData.W);
+
+        label = Widgets.newLabel(subComposite,"Title:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
+
+        widgetTitle = Widgets.newText(subComposite);
+        widgetTitle.setText(repositoryTab.repository.title);
+        Widgets.layout(widgetTitle,1,1,TableLayoutData.WE);
+        widgetTitle.setToolTipText("Repository title.");
+
+        label = Widgets.newLabel(subComposite,"Root path:");
+        Widgets.layout(label,2,0,TableLayoutData.W);
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+        Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
         {
-          label = Widgets.newLabel(subComposite,"Type:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
+          widgetRootPath = Widgets.newText(subSubComposite);
+          widgetRootPath.setText(repositoryTab.repository.rootPath);
+          Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
 
-          label = Widgets.newLabel(subComposite);
-          label.setText(repositoryTab.repository.getType().toString());
-          Widgets.layout(label,0,1,TableLayoutData.W);
-
-          label = Widgets.newLabel(subComposite,"Title:");
-          Widgets.layout(label,1,0,TableLayoutData.W);
-
-          widgetTitle = Widgets.newText(subComposite);
-          widgetTitle.setText(repositoryTab.repository.title);
-          Widgets.layout(widgetTitle,1,1,TableLayoutData.WE);
-          widgetTitle.setToolTipText("Repository title.");
-
-          label = Widgets.newLabel(subComposite,"Root path:");
-          Widgets.layout(label,2,0,TableLayoutData.W);
-
-          subSubComposite = Widgets.newComposite(subComposite);
-          subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-          Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
+          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
+          Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
           {
-            widgetRootPath = Widgets.newText(subSubComposite);
-            widgetRootPath.setText(repositoryTab.repository.rootPath);
-            Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
-
-            button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
-            Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
             {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String directoryPath = Dialogs.directory(shell,
+                                                       "Select directory",
+                                                       widgetRootPath.getText()
+                                                      );
+              if (directoryPath != null)
               {
+                widgetRootPath.setText(directoryPath);
               }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String directoryPath = Dialogs.directory(shell,
-                                                         "Select directory",
-                                                         widgetRootPath.getText()
-                                                        );
-                if (directoryPath != null)
-                {
-                  widgetRootPath.setText(directoryPath);
-                }
-              }
-            });
-          }
-        }
-
-        subComposite = Widgets.newGroup(composite,"Patch mail");
-        subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
-        {
-          label = Widgets.newLabel(subComposite,"To:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          widgetPatchMailTo = Widgets.newText(subComposite);
-          if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
-          Widgets.layout(widgetPatchMailTo,0,1,TableLayoutData.WE);
-
-          label = Widgets.newLabel(subComposite,"CC:");
-          Widgets.layout(label,1,0,TableLayoutData.W);
-
-          widgetPatchMailCC = Widgets.newText(subComposite);
-          if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
-          Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE);
-          widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
-
-          label = Widgets.newLabel(subComposite,"Subject:");
-          Widgets.layout(label,2,0,TableLayoutData.W);
-
-          widgetPatchMailSubject = Widgets.newText(subComposite);
-          if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
-          Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE);
-          widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  %n% - patch number\n  %summary% - summary text");
-
-          label = Widgets.newLabel(subComposite,"Text:");
-          Widgets.layout(label,3,0,TableLayoutData.NW);
-
-          widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-          if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
-          Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE);
-          widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
+            }
+          });
         }
       }
 
-      // buttons
-      composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(0.0,1.0));
-      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      subComposite = Widgets.newGroup(composite,"Patch mail");
+      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
-        widgetSave = Widgets.newButton(composite,"Save");
-        Widgets.layout(widgetSave,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-        widgetSave.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
+        label = Widgets.newLabel(subComposite,"To:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
 
-            data.title            = widgetTitle.getText();
-            data.rootPath         = widgetRootPath.getText();
+        widgetPatchMailTo = Widgets.newText(subComposite);
+        if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
+        Widgets.layout(widgetPatchMailTo,0,1,TableLayoutData.WE);
+
+        label = Widgets.newLabel(subComposite,"CC:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
+
+        widgetPatchMailCC = Widgets.newText(subComposite);
+        if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
+        Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE);
+        widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
+
+        label = Widgets.newLabel(subComposite,"Subject:");
+        Widgets.layout(label,2,0,TableLayoutData.W);
+
+        widgetPatchMailSubject = Widgets.newText(subComposite);
+        if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
+        Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE);
+        widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  %n% - patch number\n  %summary% - summary text");
+
+        label = Widgets.newLabel(subComposite,"Text:");
+        Widgets.layout(label,3,0,TableLayoutData.NW);
+
+        widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+        if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
+        Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE);
+        widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetSave = Widgets.newButton(composite,"Save");
+      Widgets.layout(widgetSave,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetSave.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          data.title            = widgetTitle.getText();
+          data.rootPath         = widgetRootPath.getText();
 //            data.masterRepository = widgetMasterRepository.getText();
-            data.patchMailTo      = widgetPatchMailTo.getText();
-            data.patchMailCC      = widgetPatchMailCC.getText();
-            data.patchMailSubject = widgetPatchMailSubject.getText();
-            data.patchMailText    = widgetPatchMailText.getText();
+          data.patchMailTo      = widgetPatchMailTo.getText();
+          data.patchMailCC      = widgetPatchMailCC.getText();
+          data.patchMailSubject = widgetPatchMailSubject.getText();
+          data.patchMailText    = widgetPatchMailText.getText();
 
-            Settings.geometryEditRepository = dialog.getSize();
+          Settings.geometryEditRepository = dialog.getSize();
 
-            Dialogs.close(dialog,true);
-          }
-        });
-        widgetSave.setToolTipText("Open selected repository list.");
+          Dialogs.close(dialog,true);
+        }
+      });
+      widgetSave.setToolTipText("Open selected repository list.");
 
-        button = Widgets.newButton(composite,"Cancel");
-        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
 
-            Dialogs.close(dialog,false);
-          }
-        });
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetTitle.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetRootPath.setFocus();
       }
-
-      // listeners
-      widgetTitle.addSelectionListener(new SelectionListener()
+      public void widgetSelected(SelectionEvent selectionEvent)
       {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-          widgetRootPath.setFocus();
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-      widgetRootPath.addSelectionListener(new SelectionListener()
+      }
+    });
+    widgetRootPath.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-          widgetSave.setFocus();
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-
-      // show dialog
-      Dialogs.show(dialog,Settings.geometryEditRepository);
-
-      // run
-      Widgets.setFocus(widgetTitle);
-      if ((Boolean)Dialogs.run(dialog,false))
+        widgetSave.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
       {
-        // set data
-        repositoryTab.setTitle(data.title);
-        repositoryTab.repository.rootPath         = data.rootPath;
-        repositoryTab.repository.patchMailTo      = data.patchMailTo;
-        repositoryTab.repository.patchMailCC      = data.patchMailCC;
-        repositoryTab.repository.patchMailSubject = data.patchMailSubject;
-        repositoryTab.repository.patchMailText    = data.patchMailText;
+      }
+    });
 
-        // save list
-        try
-        {
-          repositoryList.save();
-        }
-        catch (IOException exception)
-        {
-          Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
-        }
+    // show dialog
+    Dialogs.show(dialog,Settings.geometryEditRepository);
+
+    // run
+    Widgets.setFocus(widgetTitle);
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      // set data
+      repositoryTab.setTitle(data.title);
+      repositoryTab.repository.rootPath         = data.rootPath;
+      repositoryTab.repository.patchMailTo      = data.patchMailTo;
+      repositoryTab.repository.patchMailCC      = data.patchMailCC;
+      repositoryTab.repository.patchMailSubject = data.patchMailSubject;
+      repositoryTab.repository.patchMailText    = data.patchMailText;
+
+      // save list
+      try
+      {
+        repositoryList.save();
+      }
+      catch (IOException exception)
+      {
+        Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
       }
     }
   }
 
   /** close selected repository tab
+   * @param repositoryTab repository tab to close
    */
-  private void closeRepository()
+  private void closeRepository(RepositoryTab repositoryTab)
   {
-    if (selectedRepositoryTab != null)
+    if (Dialogs.confirm(shell,String.format("Really close repository '%s'?",repositoryTab.repository.title)))
     {
-      if (Dialogs.confirm(shell,String.format("Really close repository '%s'?",selectedRepositoryTab.repository.title)))
-      {
-        // remove tab
-        removeRepositoryTab(selectedRepositoryTab);
+      // remove tab
+      removeRepositoryTab(repositoryTab);
 
+      if (repositoryTab == selectedRepositoryTab)
+      {
         // deselect repository
         selectedRepositoryTab.repository.selected = false;
         selectedRepositoryTab = null;
@@ -2576,23 +2733,52 @@ new Message("Und nun?").addToHistory();
     }
   }
 
-  /** select repository
+  /** select repository tab
    * @param repositoryTab repository tab to select
    */
-  private void selectRepository(RepositoryTab repositoryTab)
+  private void selectRepositoryTab(RepositoryTab repositoryTab)
   {
     // deselect previous repository
     if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
 
     // select new repository
-    selectedRepositoryTab = repositoryTab;
     if (repositoryTab != null)
     {
       // select
-      selectedRepositoryTab.repository.selected = true;
+      repositoryTab.repository.selected = true;
 
       // show tab
+      repositoryTab.show();
+
+      // enable/disable menu entries
+      menuItemApplyPatches.setEnabled(repositoryTab.repository.supportPatchQueues());
+      menuItemUnapplyPatches.setEnabled(repositoryTab.repository.supportPatchQueues());
+      menuItemPullChanges.setEnabled(repositoryTab.repository.supportPullPush());
+      menuItemPushChanges.setEnabled(repositoryTab.repository.supportPullPush());
+      menuSetFileMode.setEnabled(repositoryTab.repository.supportSetFileMode());
+    }
+    else
+    {
+      // disable menu entries
+      menuItemApplyPatches.setEnabled(false);
+      menuItemUnapplyPatches.setEnabled(false);
+      menuItemPullChanges.setEnabled(false);
+      menuItemPushChanges.setEnabled(false);
+      menuSetFileMode.setEnabled(false);
+    }
+    selectedRepositoryTab = repositoryTab;
+  }
+
+  /** reselect selected repository tab
+   */
+  private void reselectRepository()
+  {
+    if (selectedRepositoryTab != null)
+    {
+      // show tab
       selectedRepositoryTab.show();
+
+      // enable/disable menu entries
       menuItemApplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
       menuItemUnapplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
       menuItemPullChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
@@ -2601,6 +2787,7 @@ new Message("Und nun?").addToHistory();
     }
     else
     {
+      // disable menu entries
       menuItemApplyPatches.setEnabled(false);
       menuItemUnapplyPatches.setEnabled(false);
       menuItemPullChanges.setEnabled(false);
