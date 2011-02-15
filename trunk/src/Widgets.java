@@ -3343,6 +3343,29 @@ private static void printTree(Tree tree)
     return addTab(tabFolder,title,null);
   }
 
+  /** set tab widget
+   * @param tabItem tab item
+   * @param composite tab to set
+   * @param title title of tab
+   * @param data data element
+   */
+  static void setTab(TabItem tabItem, Composite composite, String title, Object data)
+  {
+    tabItem.setData(data);
+    tabItem.setText(title);
+    tabItem.setControl(composite);
+  }
+
+  /** set tab widget
+   * @param tabItem tab item
+   * @param composite tab to set
+   * @param title title of tab
+   */
+  static void setTab(TabItem tabItem, Composite composite, String title)
+  {
+    setTab(tabItem,composite,title,null);
+  }
+
   /** remove tab widget
    * @param tabFolder tab folder
    * @param composite tab to remove
@@ -3969,6 +3992,17 @@ private static void printTree(Tree tree)
   static void notify(Control control, int type, int index, Widget widget)
   {
     notify(control,type,widget,index,null);
+  }
+
+  /** event notification
+   * @param control control
+   * @param type event type to generate
+   * @param widget widget of event
+   * @param item item of event
+   */
+  static void notify(Control control, int type, Widget widget, Widget item)
+  {
+    notify(control,type,widget,-1,item);
   }
 
   /** event notification
