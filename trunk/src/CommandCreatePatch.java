@@ -223,7 +223,7 @@ class CommandCreatePatch
           }
         });
 
-        widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARRAY_UP);
+        widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
         Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
         Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
@@ -234,7 +234,7 @@ class CommandCreatePatch
           }
         });
 
-        widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARRAY_DOWN);
+        widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
         Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
         Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)

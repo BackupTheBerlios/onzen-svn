@@ -331,7 +331,7 @@ class CommandDiff
           }
         });
 
-        widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARRAY_UP);
+        widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindLeftPrev.setEnabled(false);
         Widgets.layout(widgetFindLeftPrev,0,2,TableLayoutData.W);
         Widgets.addModifyListener(new WidgetListener(widgetFindLeftPrev,data)
@@ -342,7 +342,7 @@ class CommandDiff
           }
         });
 
-        widgetFindLeftNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARRAY_DOWN);
+        widgetFindLeftNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindLeftNext.setEnabled(false);
         Widgets.layout(widgetFindLeftNext,0,3,TableLayoutData.W);
         Widgets.addModifyListener(new WidgetListener(widgetFindLeftNext,data)
@@ -372,7 +372,7 @@ class CommandDiff
           }
         });
 
-        widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARRAY_UP);
+        widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindRightPrev.setEnabled(false);
         Widgets.layout(widgetFindRightPrev,0,2,TableLayoutData.W);
         Widgets.addModifyListener(new WidgetListener(widgetFindRightPrev,data)
@@ -383,7 +383,7 @@ class CommandDiff
           }
         });
 
-        widgetFindRightNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARRAY_DOWN);
+        widgetFindRightNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindRightNext.setEnabled(false);
         Widgets.layout(widgetFindRightNext,0,3,TableLayoutData.W);
         Widgets.addModifyListener(new WidgetListener(widgetFindRightNext,data)
