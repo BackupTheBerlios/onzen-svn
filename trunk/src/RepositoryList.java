@@ -18,6 +18,7 @@ import java.io.Writer;
 
 import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -49,9 +50,9 @@ public class RepositoryList implements Iterable<Repository>
 
   // --------------------------- variables --------------------------------
   @XmlElement(name = "repository")
-  private ArrayList<Repository> repositories;      // list of repositories
+  private LinkedList<Repository> repositories;      // list of repositories
 
-  private String                name;              // repository list name
+  private String                 name;              // repository list name
 
   // ------------------------ native functions ----------------------------
 
@@ -62,7 +63,7 @@ public class RepositoryList implements Iterable<Repository>
    */
   RepositoryList(String name)
   {
-    this.repositories = new ArrayList<Repository>();
+    this.repositories = new LinkedList<Repository>();
     if (name != null) load(name);
   }
 
@@ -259,6 +260,28 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
     }
   }
 
+  /** get repository list size
+   * @param list size
+   */
+  public int size()
+  {
+    synchronized(repositories)
+    {
+      return repositories.size();
+    }
+  }
+
+  /** get repository in list
+   * @param index index
+   */
+  public Repository get(int index)
+  {
+    synchronized(repositories)
+    {
+      return repositories.get(index);
+    }
+  }
+
   /** add repository to list
    * @param repository repository
    */
@@ -292,17 +315,6 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
       repositories.remove(repository);
       repositories.add(newIndex,repository);
     }    
-  }
-
-  /** get repository list size
-   * @param list size
-   */
-  public int size()
-  {
-    synchronized(repositories)
-    {
-      return repositories.size();
-    }
   }
 }
 
