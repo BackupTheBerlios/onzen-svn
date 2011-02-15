@@ -1258,14 +1258,6 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
   {
   }
 
-  /** convert data to string
-   * @return string
-   */
-  public String toString()
-  {
-    return "{Repository "+rootPath+"}";
-  }
-
   //-----------------------------------------------------------------------
 
   /** parse SVN state string

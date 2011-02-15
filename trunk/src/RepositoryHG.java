@@ -1501,14 +1501,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
-  /** convert data to string
-   * @return string
-   */
-  public String toString()
-  {
-    return "{Repository "+rootPath+"}";
-  }
-
   //-----------------------------------------------------------------------
 
   /** parse hg state string

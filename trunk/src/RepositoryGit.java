@@ -276,14 +276,6 @@ class RepositoryGit extends Repository
   {
   }
 
-  /** convert data to string
-   * @return string
-   */
-  public String toString()
-  {
-    return "{Repository "+rootPath+"}";
-  }
-
   //-----------------------------------------------------------------------
 
 }

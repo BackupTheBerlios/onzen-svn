@@ -1821,14 +1821,14 @@ abstract class Repository implements Serializable
    */
   public String toString()
   {
-    return "Repository {"+rootPath+"}";
+    return "Repository {type: "+getType()+", root: "+rootPath+", selected: "+selected+"}";
   }
 
   //-----------------------------------------------------------------------
 
-  /** 
-   * @param 
-   * @return 
+  /** parse date
+   * @param string date/time string
+   * @return date/time or current date/time
    */
   protected Date parseDate(String string)
   {

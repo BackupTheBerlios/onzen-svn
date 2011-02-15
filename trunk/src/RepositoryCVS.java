@@ -1489,14 +1489,6 @@ Dprintf.dprintf("unknown %s",line);
   {
   }
 
-  /** convert data to string
-   * @return string
-   */
-  public String toString()
-  {
-    return "Repository {type: CVS, root: "+rootPath+"}";
-  }
-
   //-----------------------------------------------------------------------
 
   /** parse CVS state string
