@@ -436,9 +436,6 @@ RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
 
       // done
       doneAll();
-
-      // save settings
-      Settings.save();
     }
     catch (org.eclipse.swt.SWTException exception)
     {
@@ -838,7 +835,7 @@ widgetButtonSolve.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-//          Dialogs.close(dialog,false);
+Dprintf.dprintf("");
         }
       });
     }
@@ -1011,8 +1008,8 @@ Dprintf.dprintf("");
         {
         }
         public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          // send close-evemnt to shell
+        {          
+          // send close-event to shell
           Widgets.notify(shell,SWT.Close,0);
         }
       });
@@ -1497,6 +1494,7 @@ new Message("Und nun?").addToHistory();
     shell.open();
 
     // listener
+    
     shell.addListener(SWT.Resize,new Listener()
     {
       public void handleEvent(Event event)
@@ -1508,6 +1506,43 @@ new Message("Und nun?").addToHistory();
     {
       public void handleEvent(Event event)
       {
+        // save repository list
+        if (repositoryList != null)
+        {
+          try
+          {
+            repositoryList.save();
+          }
+          catch (IOException exception)
+          {
+            if (!Dialogs.confirm(shell,"Confirmation",String.format("Cannot store repository list (error: %s).\n\nQuit anyway?",exception.getMessage())))
+            {
+              return;
+            }
+          }
+        }
+
+        // save settings
+        boolean saveSettings = true;
+        if (Settings.isFileModified())
+        {
+          switch (Dialogs.select(shell,"Confirmation","Settings were modified externally.",new String[]{"Overwrite","Just quit","Cancel"},0))
+          {
+            case 0:
+              break;
+            case 1:
+              saveSettings = false;
+              break;
+            case 2:
+              event.doit = false;
+              return;
+          }
+        }
+        if (saveSettings)
+        {
+          Settings.save();
+        }
+
         // store exitcode
         result[0] = event.index;
 
