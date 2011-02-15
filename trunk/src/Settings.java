@@ -631,6 +631,8 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryMain                   = new Point(900,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
+  public static Point                    geometryEditRepositoryList     = new Point(400,400);
+  @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryEditRepository         = new Point(500,400);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryCommit                 = new Point(500,500);
@@ -742,6 +744,8 @@ public class Settings
   @ConfigComment(text={"","Accelerator keys"})
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyOpenRepository              = SWT.CTRL+'O';
+  @ConfigValue(type=ConfigValueAdapterKey.class)
+  public static int                      keyEditRepositoryList          = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
   public static int                      keyEditRepository              = SWT.NONE;
   @ConfigValue(type=ConfigValueAdapterKey.class)
