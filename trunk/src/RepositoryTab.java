@@ -1813,6 +1813,7 @@ Dprintf.dprintf("");
         TreeItem subTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,fileData),fileData,false);
         subTreeItem.setText(0,fileData.getBaseName());
         subTreeItem.setImage(getFileDataImage(fileData));
+        if (fileData.type == FileData.Types.DIRECTORY) new TreeItem(subTreeItem,SWT.NONE);
 
         // store tree item reference
         fileNameMap.put(fileData.getFileName(),subTreeItem);
