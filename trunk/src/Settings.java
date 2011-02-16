@@ -97,7 +97,7 @@ public class Settings
 {
   /** hidden pattern
    */
-  static class FilePattern
+  static class FilePattern implements Cloneable
   {
     public final String  string;
     public final Pattern pattern;
@@ -109,6 +109,14 @@ public class Settings
     {
       this.string  = string;
       this.pattern = Pattern.compile(StringUtils.globToRegex(string));
+    }
+
+    /** clone object
+     * @return cloned object
+     */
+    public FilePattern clone()
+    {
+      return new FilePattern(string);
     }
 
     /** convert data to string
@@ -252,10 +260,10 @@ public class Settings
 
   /** color
    */
-  static class Color
+  static class Color implements Cloneable
   {
-    public final RGB foreground;
-    public final RGB background;
+    public RGB foreground;
+    public RGB background;
 
     /** create color
      * @param foreground,background foreground/background RGB values
@@ -272,6 +280,14 @@ public class Settings
     Color(RGB foreground)
     {
       this(foreground,foreground);
+    }
+
+    /** clone object
+     * @return cloned object
+     */
+    public Color clone()
+    {
+      return new Color(foreground,background);
     }
 
     /** convert data to string
@@ -363,11 +379,11 @@ public class Settings
 
   /** editor
    */
-  static class Editor
+  static class Editor implements Cloneable
   {
-    public final String  mimeTypePattern;
-    public final String  command;
-    public final Pattern pattern;
+    public String  mimeTypePattern;
+    public String  command;
+    public Pattern pattern;
 
     /** create editor
      * @param mimeTypePattern glob pattern string
@@ -378,6 +394,21 @@ public class Settings
       this.mimeTypePattern = mimeTypePattern;
       this.command         = command;
       this.pattern         = Pattern.compile(StringUtils.globToRegex(mimeTypePattern));
+    }
+
+    /** create editor
+     */
+    Editor()
+    {
+      this("","");
+    }
+
+    /** clone object
+     * @return cloned object
+     */
+    public Editor clone()
+    {
+      return new Editor(mimeTypePattern,command);
     }
 
     /** convert data to string
@@ -502,44 +533,7 @@ public class Settings
   {
     public FontData toValue(String string) throws Exception
     {
-      FontData fontData = null;
-
-      Object[] data = new Object[3];
-      if      (StringParser.parse(string,"%s,%d,%s",data))
-      {
-        String name   = (String)data[0];
-        int    height = (Integer)data[1];
-        int    style;
-        if      (((String)data[2]).equalsIgnoreCase("normal")) style = SWT.NORMAL;
-        else if (((String)data[2]).equalsIgnoreCase("bold"  )) style = SWT.BOLD;
-        else if (((String)data[2]).equalsIgnoreCase("italic")) style = SWT.ITALIC;
-        else                                                   style = 0;
-
-        fontData = new FontData(name,height,style);
-      }
-      else if (StringParser.parse(string,"%s,%d",data))
-      {
-        String name   = (String)data[0];
-        int    height = (Integer)data[1];
-
-        fontData = new FontData(name,height,SWT.NORMAL);
-      }
-      else if (string.isEmpty())
-      {
-        fontData = null;
-      }
-      else if (StringParser.parse(string,"%s",data))
-      {
-        String name = (String)data[0];
-
-        fontData = new FontData(name);
-      }
-      else
-      {
-        throw new Exception(String.format("Cannot parse font definition '%s'",string));
-      }
-
-      return fontData;
+      return Widgets.textToFontData(string);
     }
 
     public String toString(FontData fontData) throws Exception
@@ -548,15 +542,7 @@ public class Settings
 
       if (fontData != null)
       {
-        StringBuilder buffer = new StringBuilder();
-
-        buffer.append(fontData.getName());
-        buffer.append(',');
-        buffer.append(Integer.toString(fontData.getHeight()));
-        if      (fontData.getStyle() == SWT.BOLD  ) buffer.append(",bold");
-        else if (fontData.getStyle() == SWT.ITALIC) buffer.append(",italic");
-
-        string = buffer.toString();
+        string = Widgets.fontDataToText(fontData);
       }
       else
       {
@@ -721,7 +707,7 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterColor.class)
   public static Color                   colorStatusUpdateStatus         = new Color(new RGB(128,128,128),null);
 
-  @ConfigComment(text={"","Fonts: <name>,<height>,normal|bold|italic"})
+  @ConfigComment(text={"","Fonts: <name>,<height>,normal|bold|italic|bold italic"})
   @ConfigValue(type=ConfigValueAdapterFontData.class)
   public static FontData                fontDiff                        = null;
   @ConfigValue(type=ConfigValueAdapterFontData.class)
@@ -887,6 +873,8 @@ public class Settings
   public static boolean          hgForest                               = false;
   @ConfigValue
   public static boolean          hgImmediatePush                        = false;
+  @ConfigValue
+  public static boolean          hgSafeUpdate                           = false;
 
   // Git
 //  @ConfigComment(text={"","Git specific settings"})
@@ -1371,7 +1359,7 @@ exception.printStackTrace();
   /** get all setting classes
    * @return classes array
    */
-  private static Class[] getSettingClasses()
+  protected static Class[] getSettingClasses()
   {
     // get all setting classes
     ArrayList<Class> classList = new ArrayList<Class>();
