@@ -1406,7 +1406,7 @@ Dprintf.dprintf("");
 
     menu = Widgets.addMenu(menuBar,"Options");
     {
-      menuItem = Widgets.addMenuItem(menu,"Preferenes");
+      menuItem = Widgets.addMenuItem(menu,"Preferences");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
