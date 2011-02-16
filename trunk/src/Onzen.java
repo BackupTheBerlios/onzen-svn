@@ -1001,6 +1001,19 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
+      menuItem = Widgets.addMenuItem(menu,"Restart");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          // send close event with restart
+          Widgets.notify(shell,SWT.Close,64);
+        }
+      });
+
       menuItem = Widgets.addMenuItem(menu,"Quit",SWT.CTRL+'Q');
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1393,6 +1406,17 @@ Dprintf.dprintf("");
 
     menu = Widgets.addMenu(menuBar,"Options");
     {
+      menuItem = Widgets.addMenuItem(menu,"Preferenes");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          editPreferences();
+        }
+      });
     }
 
     menu = Widgets.addMenu(menuBar,"Help");
@@ -1414,19 +1438,6 @@ Dprintf.dprintf("");
     {
       menu = Widgets.addMenu(menuBar,"Debug");
       {
-        menuItem = Widgets.addMenuItem(menu,"Restart");
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            // send close event with restart
-            Widgets.notify(shell,SWT.Close,64);
-          }
-        });
-
 /*
 menuItem = Widgets.addMenuItem(menu,"XXXXX");
 menuItem.addSelectionListener(new SelectionListener()
@@ -2829,6 +2840,12 @@ Dprintf.dprintf("");
       menuItemPushChanges.setEnabled(false);
       menuSetFileMode.setEnabled(false);
     }
+  }
+
+  private void editPreferences()
+  {
+    Preferences preferences = new Preferences(shell,this);
+    preferences.run();
   }
 }
 
