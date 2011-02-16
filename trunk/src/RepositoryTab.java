@@ -237,9 +237,9 @@ class RepositoryTab
   private final Display       display;
 
   // widgets
-  private TabFolder           widgetTabFolder;
+  private final TabFolder     widgetTabFolder;
   public  final Composite     widgetTab;
-  private Tree                widgetFileTree;
+  private final Tree          widgetFileTree;
 
   // map file name -> tree item
   private WeakHashMap<String,TreeItem> fileNameMap = new WeakHashMap<String,TreeItem>();
@@ -951,7 +951,7 @@ Dprintf.dprintf("treeItem=%s",treeItem);
 
       widgetCommand = Widgets.newText(composite);
       Widgets.layout(widgetCommand,0,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%f - file name");
+      widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%file% - file name");
 
       button = Widgets.newButton(composite,Onzen.IMAGE_DIRECTORY);
       Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
@@ -1046,8 +1046,8 @@ Dprintf.dprintf("treeItem=%s",treeItem);
     {
       // expand command
       String command = data.command;
-      command = (command.indexOf("%f")>=0)
-                  ?command.replace("%f",fileData.getFileName(repository.rootPath))
+      command = (command.indexOf("%file%")>=0)
+                  ?command.replace("%file%",fileData.getFileName(repository.rootPath))
                   :command+" "+fileData.getFileName(repository.rootPath);
 
       // run command
@@ -1952,7 +1952,7 @@ Dprintf.dprintf("");
           {
             widgetCommand = Widgets.newText(subSubComposite);
             Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
-            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%f - file name");
+            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%file% - file name");
 
             button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
             Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -2101,7 +2101,9 @@ Dprintf.dprintf("");
     if (command != null)
     {
       // expand command
-      command = command.replace("%f",fileData.getFileName(repository.rootPath));
+      command = (command.indexOf("%file%")>=0)
+                  ?command.replace("%file%",fileData.getFileName(repository.rootPath))
+                  :command+" "+fileData.getFileName(repository.rootPath);
 
       // run command
       try
