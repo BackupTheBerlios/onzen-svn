@@ -16,6 +16,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Scanner;
 
 // graphics
 import org.eclipse.swt.custom.SashForm;
@@ -1011,6 +1012,59 @@ class Widgets
                   );
   }
 
+  /** convert font data to text
+   * @param fontData font data
+   * @return text
+   */
+  static String fontDataToText(FontData fontData)
+  {
+    StringBuilder buffer = new StringBuilder();
+
+    buffer.append(fontData.getName());
+    buffer.append(',');
+    buffer.append(Integer.toString(fontData.getHeight()));
+    int style = fontData.getStyle();
+    if      ((style & (SWT.BOLD|SWT.ITALIC)) == (SWT.BOLD|SWT.ITALIC)) buffer.append(",bold italic");
+    else if ((style & SWT.BOLD             ) == SWT.BOLD             ) buffer.append(",bold");
+    else if ((style & SWT.ITALIC           ) == SWT.ITALIC           ) buffer.append(",italic");
+
+    return buffer.toString();
+  }
+
+  /** convert text to font data
+   * @param string string
+   * @return font data or null
+   */
+  static FontData textToFontData(String string)
+  {
+    String name;
+    int    height = 0;
+    int    style  = 0;
+
+    Scanner scanner = new Scanner(string.trim()).useDelimiter("\\s*,\\s*");
+
+    if (!scanner.hasNext()) return null;
+    name = scanner.next();
+
+    if (scanner.hasNext())
+    {
+      if (!scanner.hasNextInt()) return null;
+      height = scanner.nextInt();
+    }
+
+    if (scanner.hasNext())
+    {
+      String styleString = scanner.next();
+      if      (styleString.equalsIgnoreCase("normal"     )) style = SWT.NORMAL;
+      else if (styleString.equalsIgnoreCase("bold italic")) style = SWT.BOLD|SWT.ITALIC;
+      else if (styleString.equalsIgnoreCase("bold"       )) style = SWT.BOLD;
+      else if (styleString.equalsIgnoreCase("italic"     )) style = SWT.ITALIC;
+      else return null;
+    }
+
+    return new FontData(name,height,style);
+  }
+
   /** get key code text
    * @param keyCode accelerator key code
    * @return accelerator key code text
@@ -1542,6 +1596,19 @@ class Widgets
     return button;
   }
 
+  /** create new button
+   * @param composite composite widget
+   * @return new button
+   */
+  static Button newButton(Composite composite)
+  {
+    Button button;
+
+    button = new Button(composite,SWT.PUSH);
+
+    return button;
+  }
+
   //-----------------------------------------------------------------------
 
   /** create new checkbox
@@ -2050,15 +2117,37 @@ class Widgets
 
   /** create new spinner widget
    * @param composite composite widget
+   * @param min,max min./max. value
    * @return new spinner widget
    */
-  static Spinner newSpinner(Composite composite)
+  static Spinner newSpinner(Composite composite, int min, int max)
   {
     Spinner spinner;
 
     spinner = new Spinner(composite,SWT.READ_ONLY);
+    spinner.setMinimum(min);
+    spinner.setMaximum(max);
 
     return spinner;
+  }
+
+  /** create new spinner widget
+   * @param composite composite widget
+   * @param min min. value
+   * @return new spinner widget
+   */
+  static Spinner newSpinner(Composite composite, int min)
+  {
+    return newSpinner(composite,min,Integer.MAX_VALUE);
+  }
+
+  /** create new spinner widget
+   * @param composite composite widget
+   * @return new spinner widget
+   */
+  static Spinner newSpinner(Composite composite)
+  {
+    return newSpinner(composite,Integer.MIN_VALUE);
   }
 
   //-----------------------------------------------------------------------
@@ -2463,12 +2552,10 @@ class Widgets
         {
           if (index >= 0)
           {
-//            insertIndex = index;
             tableItem = new TableItem(table,SWT.NONE,index);
           }
           else
           {
-//            insertIndex = table.getItemCount();
             tableItem = new TableItem(table,SWT.NONE);
           }
           tableItem.setData(data);
@@ -2478,6 +2565,7 @@ class Widgets
             {
               if      (values[i] instanceof String)
               {
+//Dprintf.dprintf("i=%d values[i]=%s",i,values[i]);
                 tableItem.setText(i,(String)values[i]);
               }
               else if (values[i] instanceof Image)
@@ -2664,6 +2752,129 @@ class Widgets
   static void setTableEntryColor(Table table, Object data, Color backgroundColor)
   {
     setTableEntryColor(table,data,null,backgroundColor);
+  }
+
+  /** set table entry color
+   * @param table table
+   * @param table entry data
+   * @param columnNb column (0..n-1)
+   * @param foregroundColor foregound color
+   * @param backgroundColor background color
+   */
+  static void setTableEntryColor(final Table table, final Object data, final int columnNb, final Color foregroundColor, final Color backgroundColor)
+  {
+    if (!table.isDisposed())
+    {
+      table.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!table.isDisposed())
+          {
+            for (TableItem tableItem : table.getItems())
+            {
+              if (tableItem.getData() == data)
+              {
+                tableItem.setForeground(columnNb,foregroundColor);
+                tableItem.setBackground(columnNb,backgroundColor);
+                break;
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** set table entry color
+   * @param table table
+   * @param table entry data
+   * @param columnNb column (0..n-1)
+   * @param backgroundColor background color
+   */
+  static void setTableEntryColor(Table table, Object data, int columnNb, Color backgroundColor)
+  {
+    setTableEntryColor(table,data,columnNb,null,backgroundColor);
+  }
+
+  /** set table entry font
+   * @param table table
+   * @param table entry data
+   * @param font font
+   */
+  static void setTableEntryFont(final Table table, final Object data, final Font font)
+  {
+    if (!table.isDisposed())
+    {
+      table.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!table.isDisposed())
+          {
+            for (TableItem tableItem : table.getItems())
+            {
+              if (tableItem.getData() == data)
+              {
+                tableItem.setFont(font);
+                break;
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** set table entry font
+   * @param table table
+   * @param table entry data
+   * @param fontData font data
+   */
+  static void setTableEntryFont(final Table table, final Object data, final FontData fontData)
+  {
+    setTableEntryFont(table,data,new Font(table.getDisplay(),fontData));
+  } 
+
+  /** set table entry font
+   * @param table table
+   * @param table entry data
+   * @param columnNb column (0..n-1)
+   * @param font font
+   */
+  static void setTableEntryFont(final Table table, final Object data, final int columnNb, final Font font)
+  {
+    if (!table.isDisposed())
+    {
+      table.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!table.isDisposed())
+          {
+            for (TableItem tableItem : table.getItems())
+            {
+              if (tableItem.getData() == data)
+              {
+                tableItem.setFont(columnNb,font);
+                break;
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** set table entry font
+   * @param table table
+   * @param table entry data
+   * @param columnNb column (0..n-1)
+   * @param fontData font data
+   */
+  static void setTableEntryFont(final Table table, final Object data, final int columnNb, final FontData fontData)
+  {
+    setTableEntryFont(table,data,columnNb,new Font(table.getDisplay(),fontData));
   }
 
   /** set table entry checked
