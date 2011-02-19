@@ -339,26 +339,31 @@ class CommandCreatePatch
               }
             }
 
-            // create patch file
+            // create patch
+            Patch patch = new Patch(repositoryTab.repository.rootPath,
+                                    fileDataSet,
+                                    patchLines
+                                   );
             try
             {
-              // open file
-              PrintWriter patchOutput = new PrintWriter(new FileWriter(fileName,true));
-
-              // write file
-              for (String patchLine : patchLines)
+              // write patch to file
+              try
               {
-                patchOutput.println(patchLine);
+                patch.write(fileName);
               }
-
-              // close file
-              patchOutput.close();
+              catch (IOException exception)
+              {
+                Dialogs.error(dialog,"Cannot save patch file! (error: %s)",exception.getMessage());
+                return;
+              }
             }
-            catch (IOException exception)
+            finally
             {
-              Dialogs.error(dialog,"Cannot save patch file! (error: %s)",exception.getMessage());
-              return;
+              patch.done();
             }
+
+            // close dialog
+            Dialogs.close(dialog,true);
           }
         }
       });
@@ -382,6 +387,9 @@ class CommandCreatePatch
         {
           Button widget = (Button)selectionEvent.widget;
 Dprintf.dprintf("");
+
+                // close dialog
+                Dialogs.close(dialog,true);
 
         }
       });
@@ -412,34 +420,39 @@ Dprintf.dprintf("");
                                     fileDataSet,
                                     patchLines
                                    );
-
-            // mail patch
-            CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
-                                                                     repositoryTab,
-                                                                     fileDataSet,
-                                                                     patch,
-                                                                     ""
-                                                                    );
-            if (commandMailPatch.execute())
+            try
             {
-              try
+              // mail patch
+              CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
+                                                                       repositoryTab,
+                                                                       fileDataSet,
+                                                                       patch,
+                                                                       ""
+                                                                      );
+              if (commandMailPatch.execute())
               {
-                // save patch
-                patch.state   = Patch.States.REVIEW;
-                patch.summary = commandMailPatch.summary;
-                patch.message = commandMailPatch.message;
-                patch.save();
-              }
-              catch (SQLException exception)
-              {
-                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                try
+                {
+                  // save patch
+                  patch.state   = Patch.States.REVIEW;
+                  patch.summary = commandMailPatch.summary;
+                  patch.message = commandMailPatch.message;
+                  patch.save();
+                }
+                catch (SQLException exception)
+                {
+                  Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                  return;
+                }
               }
             }
-            else
+            finally
             {
-              // discard path
               patch.done();
             }
+
+            // close dialog
+            Dialogs.close(dialog,true);
           }
         }
       });
@@ -464,6 +477,8 @@ Dprintf.dprintf("");
           Button widget = (Button)selectionEvent.widget;
 Dprintf.dprintf("");
 
+          // close dialog
+          Dialogs.close(dialog,true);
         }
       });
 
@@ -476,8 +491,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           Settings.geometryCreatePatch = dialog.getSize();
 
           Dialogs.close(dialog,false);
