@@ -870,16 +870,18 @@ public class Settings
   @ConfigValue
   public static String           hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdu";
   @ConfigValue
-  public static boolean          hgForest                               = false;
-  @ConfigValue
   public static boolean          hgImmediatePush                        = false;
+  @ConfigValue
+  public static boolean          hgUseForestExtension                   = false;
+  @ConfigValue
+  public static boolean          hgUpdateWithFetch                      = false;
   @ConfigValue
   public static boolean          hgSafeUpdate                           = false;
 
   // Git
-//  @ConfigComment(text={"","Git specific settings"})
-//  @ConfigValue
-//  public static String           gitCommand                             = "git";
+  @ConfigComment(text={"","Git specific settings"})
+  @ConfigValue
+  public static String           gitCommand                             = "git";
 
   // debug
   public static boolean          debugFlag                              = false;
