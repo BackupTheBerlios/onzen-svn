@@ -830,11 +830,11 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterEditor.class)
   public static Editor[]         editors                                = new Editor[0];
 
-  @ConfigComment(text={"","Mail commands","Macros:","  %to% - to mail address","  %cc% - CC mail address","  %subjectPrefix% - subject prefix text","  %subject% - subject text","  %file% attachment file name"})
+  @ConfigComment(text={"","Mail commands","Macros:","  %to% - to mail address","  %cc% - CC mail address","  %subject% - subject text","  %file% attachment file name"})
   @ConfigValue
   public static String           commandMail                            = "mail -s '%subject%' %to% %cc%";
   @ConfigValue
-  public static String           commandMailAttachment                  = "mail -s '%subjectPrefix%%subject%' -a %file% %to% %cc%";
+  public static String           commandMailAttachment                  = "mail -s '%subject%' -a %file% %to% %cc%";
 
   // general flags
   @ConfigComment(text={"","flags"})
