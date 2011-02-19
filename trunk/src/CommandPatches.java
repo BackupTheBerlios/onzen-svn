@@ -15,7 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-//import java.text.SimpleDateFormat;
+import java.sql.SQLException;
 
 import java.util.ArrayList;
 //import java.util.Arrays;
@@ -349,14 +349,7 @@ class CommandPatches
             // create patch file
             try
             {
-              // open file
-              FileWriter patchOutput = new FileWriter(fileName,true);
-
-              // write file
-              patchOutput.write(data.patch.text,0,data.patch.text.length());
-
-              // close file
-              patchOutput.close();
+              data.patch.write(fileName);
             }
             catch (IOException exception)
             {
@@ -389,11 +382,18 @@ class CommandPatches
           Patch patch = data.patch;
           if (patch != null)
           {
-            patch.state = Patch.States.COMMITED;
-            patch.save();
+            try
+            {
+              patch.state = Patch.States.COMMITED;
+              patch.save();
 
-            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-            setSelectedPatch(patch.getId());
+              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              setSelectedPatch(patch.getNumber());
+            }
+            catch (SQLException exception)
+            {
+              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+            }
           }
         }
       });
@@ -420,11 +420,18 @@ class CommandPatches
           Patch patch = data.patch;
           if (patch != null)
           {
-            data.patch.state = Patch.States.APPLIED;
-            data.patch.save();
+            try
+            {
+              data.patch.state = Patch.States.APPLIED;
+              data.patch.save();
 
-            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-            setSelectedPatch(patch.getId());
+              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              setSelectedPatch(patch.getNumber());
+            }
+            catch (SQLException exception)
+            {
+              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+            }
           }
         }
       });
@@ -451,11 +458,18 @@ class CommandPatches
           Patch patch = data.patch;
           if (patch != null)
           {
-            data.patch.state = Patch.States.NONE;
-            data.patch.save();
+            try
+            {
+              data.patch.state = Patch.States.NONE;
+              data.patch.save();
 
-            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-            setSelectedPatch(patch.getId());
+              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              setSelectedPatch(patch.getNumber());
+            }
+            catch (SQLException exception)
+            {
+              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+            }
           }
         }
       });
@@ -482,11 +496,18 @@ class CommandPatches
           Patch patch = data.patch;
           if (patch != null)
           {
-            data.patch.state = Patch.States.DISCARDED;
-            data.patch.save();
+            try
+            {
+              data.patch.state = Patch.States.DISCARDED;
+              data.patch.save();
 
-            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-            setSelectedPatch(patch.getId());
+              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              setSelectedPatch(patch.getNumber());
+            }
+            catch (SQLException exception)
+            {
+              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+            }
           }
         }
       });
@@ -608,7 +629,7 @@ class CommandPatches
   private int getSelectedPatchId()
   {
     TableItem[] tableItems = widgetPatches.getSelection();
-    return ((tableItems != null) && (tableItems.length > 0)) ? ((Patch)tableItems[0].getData()).getId() : -1;
+    return ((tableItems != null) && (tableItems.length > 0)) ? ((Patch)tableItems[0].getData()).getNumber() : -1;
   }
 
   /** set selected patch
@@ -633,9 +654,9 @@ class CommandPatches
   } 
 
   /** set selected patch
-   * @param id id of patch to select
+   * @param patchNumber number of patch to select
    */
-  private void setSelectedPatch(int id)
+  private void setSelectedPatch(int patchNumber)
   {
     data.patch = null;
     widgetFileNames.removeAll();
@@ -644,7 +665,7 @@ class CommandPatches
     for (TableItem tableItem : widgetPatches.getItems())
     {
       Patch patch = (Patch)tableItem.getData();
-      if (patch.getId() == id)
+      if (patch.getNumber() == patchNumber)
       {
         data.patch = patch;
 
