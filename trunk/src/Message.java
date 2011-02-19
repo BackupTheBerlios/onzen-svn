@@ -3,7 +3,7 @@
 * $Source: /tmp/cvs/onzen/src/Message.java,v $
 * $Revision: 1.3 $
 * $Author: torsten $
-* Contents: message broadcasting functions
+* Contents: message functions
 * Systems: all
 *
 \***********************************************************************/
@@ -145,13 +145,13 @@ class Message
 
   // ---------------------------- methods ---------------------------------
 
-  /** load history from database
+  /** load message history from database
    */
   public static void loadHistory()
   {
+    Connection connection = null;
     try
     {
-      Connection        connection;
       PreparedStatement preparedStatement;
       ResultSet         resultSet;
 
@@ -178,12 +178,16 @@ class Message
       }
 
       // close database
-      closeHistoryDatabase(connection);
+      closeHistoryDatabase(connection); connection = null;
     }
     catch (SQLException exception)
     {
       Onzen.printWarning("Cannot load message history from database (error: %s)",exception.getMessage());
       return;
+    }
+    finally
+    {
+      try { if (connection != null) closeHistoryDatabase(connection); } catch (SQLException exception) { /* ignored */ }
     }
   }
 
@@ -218,8 +222,8 @@ class Message
     }
   }
 
-  /** get history
-   * @return history array
+  /** get message history
+   * @return message history array
    */
   public static String[] getHistory()
   {
@@ -275,8 +279,7 @@ class Message
     }
     catch (IOException exception)
     {
-Dprintf.dprintf("");
-      
+Dprintf.dprintf("exception=%s",exception);
     }
   }
 
@@ -320,7 +323,6 @@ Dprintf.dprintf("");
     throws SQLException
   {
     Connection connection;
-
     try
     {
       Statement         statement;
@@ -373,10 +375,8 @@ Dprintf.dprintf("");
   private static void closeHistoryDatabase(Connection connection)
     throws SQLException
   {
+    connection.setAutoCommit(true);
     connection.close();
-
-    // unlock database
-//???
   }
 
   /** store message into history database
@@ -397,9 +397,9 @@ Dprintf.dprintf("");
         }
 
         // store in database
+        Connection connection = null;
         try
         {
-          Connection        connection;
           PreparedStatement preparedStatement;
           ResultSet         resultSet;
 
@@ -433,12 +433,16 @@ Dprintf.dprintf("");
           while (!done);
 
           // close database
-          closeHistoryDatabase(connection);
+          closeHistoryDatabase(connection); connection = null;
         }
         catch (SQLException exception)
         {
           Onzen.printWarning("Cannot store message into history database (error: %s)",exception.getMessage());
           return;
+        }
+        finally
+        {
+          try { if (connection != null) closeHistoryDatabase(connection); } catch (SQLException exception) { /* ignored */ }
         }
       }
     }
