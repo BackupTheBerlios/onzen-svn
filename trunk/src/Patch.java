@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -46,8 +47,8 @@ import java.util.regex.Matcher;
 class Patch
 {
   // --------------------------- constants --------------------------------
-  private static final String ONZEN_PATCHES_DATABASE_FILE_NAME = Settings.ONZEN_DIRECTORY+File.separator+"patches.db";
-  private static final int    ONZEN_PATCHES_DATABASE_VERSION   = 1;
+  private static final String PATCHES_DATABASE_FILE_NAME = Settings.ONZEN_DIRECTORY+File.separator+"patches.db";
+  private static final int    PATCHES_DATABASE_VERSION   = 1;
 
   private final int PATCH_NUMBER_NONE = -1;
 
@@ -96,14 +97,14 @@ class Patch
   };
 
   // --------------------------- variables --------------------------------
+  public  String   rootPath;
   public  States   state;
   public  String[] fileNames;
   public  String   summary;
   public  String   message;
   public  String[] lines;
 
-  private String   rootPath;
-  private int      id;
+  private int      databaseId;
   private int      number;
   private File     tmpFile;
 
@@ -160,16 +161,16 @@ class Patch
         while (resultSet1.next())
         {
           // get patch data
-          int      id      = resultSet1.getInt("id"); 
-          States   state   = States.toEnum(resultSet1.getInt("state"));
-          String   summary = resultSet1.getString("summary"); if (summary == null) summary = "";
-          String   message = resultSet1.getString("message"); if (message == null) message = "";
-          String[] lines   = resultSet1.getString("data").split("\n"); 
+          int      databaseId = resultSet1.getInt("id");
+          States   state      = States.toEnum(resultSet1.getInt("state"));
+          String   summary    = resultSet1.getString("summary"); if (summary == null) summary = "";
+          String   message    = resultSet1.getString("message"); if (message == null) message = "";
+          String[] lines      = dataToLines(resultSet1.getString("data"));
   //Dprintf.dprintf("id=%d s=%s",id,summary);
 
           // get file names
           ArrayList<String> fileNameList = new ArrayList<String>();
-          preparedStatement.setInt(1,id);
+          preparedStatement.setInt(1,databaseId);
           resultSet2 = null;
           try
           {
@@ -188,7 +189,7 @@ class Patch
 
           // add to list
           patchList.add(new Patch(rootPath,
-                                  id,
+                                  databaseId,
                                   state,
                                   summary,
                                   message,
@@ -223,25 +224,25 @@ class Patch
 
   /** create patch
    * @param rootPath root path
-   * @param id patch id
+   * @param databaseId database id
    * @param state state
    * @param summary summary text
    * @param message message text
    * @param lines patch lines
    * @param fileNames file names
    */
-  Patch(String rootPath, int id, States state, String summary, String message, String[] lines, String[] fileNames)
+  Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames)
   {
-    this.state     = state;
-    this.summary   = summary;
-    this.message   = message;
-    this.fileNames = fileNames;
+    this.rootPath   = rootPath;
+    this.state      = state;
+    this.summary    = summary;
+    this.message    = message;
+    this.fileNames  = fileNames;
 
-    this.rootPath  = rootPath;
-    this.id        = id;
-    this.number    = -1;
-    this.lines     = lines;
-    this.tmpFile   = null;
+    this.databaseId = databaseId;
+    this.number     = -1;
+    this.lines      = lines;
+    this.tmpFile    = null;
   }
 
   /** create patch
@@ -267,17 +268,6 @@ class Patch
 
   /** create patch
    * @param rootPath root path
-   * @param fileDataSet file data set
-   * @param text patch text
-   */
-/*  Patch(String rootPath, HashSet<FileData> fileDataSet, String text)
-  {
-// NYI: \n?
-    this(rootPath,StringUtils.split(text,"\n"));
-  }*/
-
-  /** create patch
-   * @param rootPath root path
    * @param lines patch lines
    */
   Patch(String rootPath, String[] lines)
@@ -287,19 +277,19 @@ class Patch
 
   /** create patch
    * @param rootPath root path
-   * @param id id
+   * @param databaseId database id
    */
-  Patch(String rootPath, int id)
+  Patch(String rootPath, int databaseId)
   {
-    this(rootPath,id,States.NONE,"","",null,null);
+    this(rootPath,databaseId,States.NONE,"","",null,null);
   }
 
   /** create patch
-   * @param id id
+   * @param databaseId database id
    */
-  Patch(int id)
+  Patch(int databaseId)
   {
-    this(null,id,States.NONE,"","",null,null);
+    this(null,databaseId,States.NONE,"","",null,null);
   }
 
   /** done patch
@@ -307,7 +297,7 @@ class Patch
   public void done()
   {
     // clean-up not used/saved patch: discard allocated patch number
-    if ((id < 0) && (number >= 0))
+    if ((databaseId < 0) && (number >= 0))
     {
       Connection connection = null;
       try
@@ -367,7 +357,7 @@ class Patch
           {
             // create empty patch number entry
             preparedStatement = connection.prepareStatement("INSERT INTO numbers (patchId) VALUES (?);");
-            preparedStatement.setInt(1,id);
+            preparedStatement.setInt(1,databaseId);
             preparedStatement.executeUpdate();
 
             // get patch number (=id)
@@ -438,7 +428,7 @@ Dprintf.dprintf("");
       connection = openPatchesDatabase();
 
       // store patch data
-      if (id >= 0)
+      if (databaseId >= 0)
       {
         // update
         preparedStatement = connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,data=? WHERE id=?;");
@@ -446,8 +436,8 @@ Dprintf.dprintf("");
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,message);
-        preparedStatement.setString(5,StringUtils.join(lines,"\n"));
-        preparedStatement.setInt(6,id);
+        preparedStatement.setString(5,linesToData(lines));
+        preparedStatement.setInt(6,databaseId);
         preparedStatement.executeUpdate();
       }
       else
@@ -458,15 +448,15 @@ Dprintf.dprintf("");
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,message);
-        preparedStatement.setString(5,StringUtils.join(lines,"\n"));
-        preparedStatement.executeUpdate(); 
-        id = getLastInsertId(connection);
+        preparedStatement.setString(5,linesToData(lines));
+        preparedStatement.executeUpdate();
+        databaseId = getLastInsertId(connection);
 
         if (number >= 0)
         {
           // update patch number entry
           preparedStatement = connection.prepareStatement("UPDATE numbers SET patchId=? WHERE id=?;");
-          preparedStatement.setInt(1,id);
+          preparedStatement.setInt(1,databaseId);
           preparedStatement.setInt(2,number);
           preparedStatement.executeUpdate();
         }
@@ -476,12 +466,12 @@ Dprintf.dprintf("");
       {
         // insert files
         preparedStatement = connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
-        preparedStatement.setInt(1,id);
+        preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
         preparedStatement = connection.prepareStatement("INSERT INTO files (patchId,fileName) VALUES (?,?);");
         for (String fileName : fileNames)
         {
-          preparedStatement.setInt(1,number);
+          preparedStatement.setInt(1,databaseId);
           preparedStatement.setString(2,fileName);
           preparedStatement.executeUpdate();
         }
@@ -495,7 +485,7 @@ Dprintf.dprintf("");
       try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
     }
 
-    return id;
+    return databaseId;
   }
 
   /** load patch from database
@@ -503,7 +493,7 @@ Dprintf.dprintf("");
   public void load()
     throws SQLException
   {
-    if (id >= 0)
+    if (databaseId >= 0)
     {
       Connection connection = null;
       try
@@ -526,7 +516,7 @@ Dprintf.dprintf("");
                                                         "WHERE id=? "+
                                                         ";"
                                                        );
-        preparedStatement.setInt(1,id);
+        preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
         {
@@ -538,11 +528,11 @@ Dprintf.dprintf("rootPath=%s",rootPath);
             state    = States.toEnum(resultSet.getInt("state"));
             summary  = resultSet.getString("summary"); if (summary == null) summary = "";
             message  = resultSet.getString("message"); if (message == null) message = "";
-            lines    = resultSet.getString("data").split("\n"); 
+            lines    = resultSet.getString("data").split("\n");
           }
           else
           {
-            throw new SQLException("patch "+id+" not found");
+            throw new SQLException("patch "+databaseId+" not found");
           }
           resultSet.close(); resultSet = null;
         }
@@ -559,7 +549,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
                                                         "WHERE patchId=? "+
                                                         ";"
                                                        );
-        preparedStatement.setInt(1,id);
+        preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
         {
@@ -591,7 +581,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
   public void delete()
     throws SQLException
   {
-    if (id >= 0)
+    if (databaseId >= 0)
     {
       Connection connection = null;
       try
@@ -605,21 +595,23 @@ Dprintf.dprintf("rootPath=%s",rootPath);
 
         // delete patch number
         preparedStatement = connection.prepareStatement("DELETE FROM numbers WHERE patchId=?;");
-        preparedStatement.setInt(1,id);
+        preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete file names
         preparedStatement = connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
-        preparedStatement.setInt(1,id);
+        preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete patch data
         preparedStatement = connection.prepareStatement("DELETE FROM patches WHERE id=?;");
-        preparedStatement.setInt(1,id);
+        preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // close database
         closePatchesDatabase(connection); connection = null;
+
+        databaseId = -1;
       }
       finally
       {
@@ -628,7 +620,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
     }
   }
 
-  /** write patch data to file
+  /** write/append patch data to file
    * @param file file
    */
   public void write(File file)
@@ -647,7 +639,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
     output.close();
   }
 
-  /** write patch data to file
+  /** write/append patch data to file
    * @param fileName file name
    */
   public void write(String fileName)
@@ -702,7 +694,7 @@ Dprintf.dprintf("exception=%s",exception);
       newLineList.clear();
       while (patchChunk.nextChunk())
       {
-Dprintf.dprintf("file %s, line #%d",patchChunk.fileName,patchChunk.lineNb);
+Dprintf.dprintf("file '%s', line #%d",patchChunk.fileName,patchChunk.lineNb);
 //for (PatchLines patchLines : patchChunk.patchLineList) Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
 
         // add not changed lines
@@ -716,7 +708,7 @@ Dprintf.dprintf("file %s, line #%d",patchChunk.fileName,patchChunk.lineNb);
         int lineNbOffset;
         for (PatchLines patchLines : patchChunk.patchLineList)
         {
-//Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
+Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
           switch (patchLines.type)
           {
             case CONTEXT:
@@ -882,7 +874,7 @@ Dprintf.dprintf("exception=%s",exception);
      */
     public boolean match(AbstractList<String> lineList, int lineNb)
     {
-      if (((lineNb-1)+lines.length) <= lineList.size())
+      if (((lineNb-1) >= 0) && (((lineNb-1)+lines.length) <= lineList.size()))
       {
         for (int z = 0; z < lines.length; z++)
         {
@@ -971,7 +963,7 @@ Dprintf.dprintf("exception=%s",exception);
         int               oldLines = 0;
         int               newLines = 0;
         boolean           done     = false;
-        while (   (index < lines.length) 
+        while (   (index < lines.length)
                && !done
               )
         {
@@ -1048,7 +1040,7 @@ Dprintf.dprintf("exception=%s",exception);
       Class.forName("org.sqlite.JDBC");
 
       // open database
-      connection = DriverManager.getConnection("jdbc:sqlite:"+ONZEN_PATCHES_DATABASE_FILE_NAME);
+      connection = DriverManager.getConnection("jdbc:sqlite:"+PATCHES_DATABASE_FILE_NAME);
       connection.setAutoCommit(false);
 
       // create tables if needed
@@ -1093,7 +1085,7 @@ Dprintf.dprintf("exception=%s",exception);
         if (!resultSet.next())
         {
           preparedStatement = connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
-          preparedStatement.setString(1,Integer.toString(ONZEN_PATCHES_DATABASE_VERSION));
+          preparedStatement.setString(1,Integer.toString(PATCHES_DATABASE_VERSION));
           preparedStatement.executeUpdate();
         }
 
@@ -1161,6 +1153,41 @@ exception.printStackTrace();
     }
 
     return id;
+  }
+
+  /** convert data to lines
+   * @param data data (lines separated by \n) or null
+   * @return lines
+   */
+  private static String[] dataToLines(String data)
+  {
+    ArrayList<String> lineList = new ArrayList<String>();
+
+    if (data != null)
+    {
+      StringTokenizer stringTokenizer = new StringTokenizer(data,"\n");
+      while (stringTokenizer.hasMoreTokens())
+      {
+        lineList.add(stringTokenizer.nextToken());
+      }
+    }
+
+    return lineList.toArray(new String[lineList.size()]);
+  }
+
+  /** convert lines to data
+   * @param lines lines
+   * @return data (lines separated by \n)
+   */
+  private static String linesToData(String[] lines)
+  {
+    StringBuilder buffer = new StringBuilder();
+    for (String line : lines)
+    {
+      buffer.append(line); buffer.append('\n');
+    }
+
+    return buffer.toString();
   }
 }
 
