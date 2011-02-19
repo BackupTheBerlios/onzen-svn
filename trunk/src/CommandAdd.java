@@ -444,12 +444,15 @@ class CommandAdd
     Message message = null;
     try
     {
-      // add files
-      if (data.immediateCommitFlag) message = new Message(data.message);
-      repositoryTab.repository.add(fileDataSet,message,data.binaryFlag);
-
       // add message to history
-      message.addToHistory();
+      if (data.immediateCommitFlag)
+      {
+        message = new Message(data.message);
+        message.addToHistory();
+      }
+
+      // add files
+      repositoryTab.repository.add(fileDataSet,message,data.binaryFlag);
 
       // update file states
       repositoryTab.repository.updateStates(fileDataSet);
