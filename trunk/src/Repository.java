@@ -14,6 +14,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -46,7 +53,6 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 class FileData
 {
   // --------------------------- constants --------------------------------
-
   /** file types
    */
   enum Types
@@ -1560,13 +1566,13 @@ abstract class Repository implements Serializable
     return getDiff(fileData,revision,null);
   }
 
-  /** get patch for file
+  /** get patch lines for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  abstract public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  abstract public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException;
 
   /** get patch for file
@@ -1575,10 +1581,10 @@ abstract class Repository implements Serializable
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2)
+  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2)
     throws RepositoryException
   {
-    return getPatch(fileDataSet,revision1,revision2,false);
+    return getPatchLines(fileDataSet,revision1,revision2,false);
   }
 
   /** get patch for file
@@ -1586,20 +1592,29 @@ abstract class Repository implements Serializable
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(HashSet<FileData> fileDataSet, boolean ignoreWhitespaces)
+  public String[] getPatchLines(HashSet<FileData> fileDataSet, boolean ignoreWhitespaces)
     throws RepositoryException
   {
-    return getPatch(fileDataSet,getLastRevision(),null,ignoreWhitespaces);
+    return getPatchLines(fileDataSet,getLastRevision(),null,ignoreWhitespaces);
   }
 
   /** get patch for file
    * @param fileDataSet file data set
    * @return patch data lines
    */
-  public String[] getPatch(HashSet<FileData> fileDataSet)
+  public String[] getPatchLines(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
-    return getPatch(fileDataSet,false);
+    return getPatchLines(fileDataSet,false);
+  }
+
+  /** get patch for all changed files
+   * @return patch data lines
+   */
+  public String[] getPatchLines()
+    throws RepositoryException
+  {
+    return getPatchLines((HashSet<FileData>)null);
   }
 
   /** get patch for file
@@ -1608,13 +1623,13 @@ abstract class Repository implements Serializable
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(FileData fileData, String revision1, String revision2, boolean ignoreWhitespaces)
+  public String[] getPatchLines(FileData fileData, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     fileDataSet.add(fileData);
 
-    return getPatch(fileDataSet,revision1,revision2,false);
+    return getPatchLines(fileDataSet,revision1,revision2,false);
   }
 
   /** get patch for file
@@ -1623,13 +1638,13 @@ abstract class Repository implements Serializable
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(FileData fileData, String revision1, String revision2)
+  public String[] getPatchLines(FileData fileData, String revision1, String revision2)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     fileDataSet.add(fileData);
 
-    return getPatch(fileDataSet,revision1,revision2,false);
+    return getPatchLines(fileDataSet,revision1,revision2,false);
   }
 
   /** get patch for file
@@ -1637,20 +1652,39 @@ abstract class Repository implements Serializable
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(FileData fileData, boolean ignoreWhitespaces)
+  public String[] getPatchLines(FileData fileData, boolean ignoreWhitespaces)
     throws RepositoryException
   {
-    return getPatch(fileData,getLastRevision(),null,ignoreWhitespaces);
+    return getPatchLines(fileData,getLastRevision(),null,ignoreWhitespaces);
   }
 
   /** get patch for file
    * @param fileData file data
    * @return patch data lines
    */
-  public String[] getPatch(FileData fileData)
+  public String[] getPatchLines(FileData fileData)
     throws RepositoryException
   {
-    return getPatch(fileData,false);
+    return getPatchLines(fileData,false);
+  }
+
+// NYI: is getPatchBytes() obsolete?
+  /** get patch data for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @return patch data bytes
+   */
+  abstract public byte[] getPatchBytes(HashSet<FileData> fileDataSet, String revision1, String revision2)
+    throws RepositoryException;
+
+  /** get patch data for file
+   * @param fileDataSet file data set
+   * @return patch data bytes
+   */
+  public byte[] getPatchBytes(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    return getPatchBytes(fileDataSet,null,null);
   }
 
   /** get log to file
@@ -1747,7 +1781,7 @@ abstract class Repository implements Serializable
   }
 
   /** revert files
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
    */
   abstract public void revert(HashSet<FileData> fileDataSet, String revision)
@@ -1764,6 +1798,15 @@ abstract class Repository implements Serializable
     fileDataSet.add(fileData);
 
     revert(fileDataSet,revision);
+  }
+
+  /** revert files
+   * @param fileDataSet file data set or null for all files
+   */
+  public void revert(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+   revert(fileDataSet,getLastRevision());
   }
 
   /** rename file
@@ -1806,12 +1849,12 @@ abstract class Repository implements Serializable
   abstract public void pushChanges()
     throws RepositoryException;
 
-  /** apply patches
+  /** apply patch queue patches
    */
   abstract public void applyPatches()
     throws RepositoryException;
 
-  /** unapply patches
+  /** unapply patch queue patches
    */
   abstract public void unapplyPatches()
     throws RepositoryException;
@@ -1921,6 +1964,66 @@ abstract class Repository implements Serializable
   protected String getFileDataName(FileData fileData)
   {
     return fileData.getFileName();
+  }
+
+  /** store all local changes into database (as a patch)
+   * @return datbase id or -1 on error
+   */
+  protected int storeChanges()
+    throws RepositoryException
+  {
+    int databaseId = -1;
+
+    try
+    {
+      // get patch lines for all changed files
+      String[] lines = getPatchLines();
+
+      // store into database
+      Patch patch = new Patch(rootPath,lines);
+      databaseId = patch.save();
+
+      // revert all changes
+      revert(null);
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("");
+      throw new RepositoryException(exception);
+    }
+
+    return databaseId;
+  }
+
+  /** restore changes stored in database
+   * @param id database id
+   * @return true iff changes restored
+   */
+  protected boolean restoreChanges(int databaseId)
+    throws RepositoryException
+  {
+    try
+    {
+      // load patch from database
+      Patch patch = new Patch(databaseId);
+      patch.load();
+
+      // apply patch to restore changes
+      if (!patch.apply())
+      {
+        return false;
+      }
+
+      // delete patch from database
+      patch.delete();
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("");
+      throw new RepositoryException(exception);
+    }
+
+    return true;
   }
 }
 
