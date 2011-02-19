@@ -122,7 +122,7 @@ class CommandPatches
   // --------------------------- constants --------------------------------
 
   // user events
-  private final int USER_EVENT_FILTER_PATCHES  = 0xFFFF+0;
+  private final int USER_EVENT_FILTER_PATCHES = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
 
@@ -298,7 +298,7 @@ class CommandPatches
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,1.0}));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       button = Widgets.newButton(composite,"Save as file");
@@ -377,22 +377,30 @@ class CommandPatches
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          Patch patch = data.patch;
-          if (patch != null)
-          {
+          if (data.patch != null)
+          {            
             try
             {
-              patch.state = Patch.States.COMMITED;
-              patch.save();
+              // commit patch
+Dprintf.dprintf("");
+              commit(data.patch);
 
+              // save new state
+              data.patch.state = Patch.States.COMMITED;
+              data.patch.save();
+
+              // notify change of data
               Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              setSelectedPatch(patch.getNumber());
+            }
+            catch (RepositoryException exception)
+            {
+              Dialogs.error(dialog,"Cannot commit patch (error: %s)",exception.getMessage());
+              return;
             }
             catch (SQLException exception)
             {
-              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+              return;
             }
           }
         }
@@ -415,22 +423,24 @@ class CommandPatches
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          Patch patch = data.patch;
-          if (patch != null)
+          if (data.patch != null)
           {
             try
             {
+              // apply patch
+Dprintf.dprintf("");
+
+              // save new state
               data.patch.state = Patch.States.APPLIED;
               data.patch.save();
 
+              // notify change of data
               Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              setSelectedPatch(patch.getNumber());
             }
             catch (SQLException exception)
             {
-              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+              return;
             }
           }
         }
@@ -453,22 +463,24 @@ class CommandPatches
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          Patch patch = data.patch;
-          if (patch != null)
+          if (data.patch != null)
           {
             try
             {
+              // unapply patch
+Dprintf.dprintf("");
+
+              // save new state
               data.patch.state = Patch.States.NONE;
               data.patch.save();
 
+              // notify change of data
               Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              setSelectedPatch(patch.getNumber());
             }
             catch (SQLException exception)
             {
-              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+              return;
             }
           }
         }
@@ -491,29 +503,68 @@ class CommandPatches
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          Patch patch = data.patch;
-          if (patch != null)
+          if (data.patch != null)
           {
             try
             {
+              // save new state
               data.patch.state = Patch.States.DISCARDED;
               data.patch.save();
 
+              // notify change of data
               Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              setSelectedPatch(patch.getNumber());
             }
             catch (SQLException exception)
             {
-              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+              return;
+            }
+          }
+        }
+      });
+
+      button = Widgets.newButton(composite,"Delete");
+      button.setEnabled(false);
+      Widgets.layout(button,0,5,TableLayoutData.W);
+      Widgets.addModifyListener(new WidgetListener(button,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.DISCARDED));
+        }
+      });
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (data.patch != null)
+          {
+            if (Dialogs.confirm(dialog,"Confirmation","Really delete patch?","Delete","Cancel"))
+            {
+              try
+              {
+                // delete
+                data.patch.delete();
+                data.patch = null;
+
+                // notify change of data
+                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+                return;
+              }
             }
           }
         }
       });
 
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,5,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,6,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -680,6 +731,89 @@ class CommandPatches
 
     Widgets.modified(data);
   }
+
+  private void commit(Patch patch)
+    throws RepositoryException
+  {
+    // get repository instance
+    Repository repository = Repository.newInstance(patch.rootPath);
+    if (repository == null)
+    {
+      throw new RepositoryException("cannot access repository '"+patch.rootPath+"'");
+    }
+
+    // get patches files
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : patch.fileNames)
+    {
+      fileDataSet.add(new FileData(fileName,FileData.Types.FILE));
+    }
+
+Dprintf.dprintf("");
+    // save files
+    int databaseId = -1;
+    databaseId = repository.storeFiles(fileDataSet);
+    if (databaseId < 0)
+    {
+      throw new RepositoryException("temporary storage of local changes fail");
+    }
+Dprintf.dprintf("");
+
+    try
+    {
+      // revert
+      repository.revert(fileDataSet);
+
+      // apply patch
+      if (!patch.apply())
+      {
+        throw new RepositoryException("applying patch fail");
+      }
+
+      // commit patch
+      Message message = null;
+      try
+      {
+        // add message to history
+        message = new Message(patch.message);
+        message.addToHistory();
+
+        // commit files
+        repository.commit(fileDataSet,message);
+
+        // update file states
+  // ???
+      }
+      finally
+      {
+        message.done();
+      }
+Dprintf.dprintf("");
+
+      // restore files
+      if (!repository.restoreFiles(databaseId))
+      {
+        throw new RepositoryException("restore local changes fail");
+      }
+      databaseId = -1;
+Dprintf.dprintf("");
+    }
+    finally
+    {
+      if (databaseId >= 0) repository.restoreFiles(databaseId);
+    }
+Dprintf.dprintf("");
+  }
+
+  private void apply()
+  {
+  }
+
+  private void unapply()
+  {
+  }
+
+
 }
 
 /* end of file */
