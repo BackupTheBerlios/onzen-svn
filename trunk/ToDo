@@ -17,3 +17,6 @@ ToDo
 - pane in commit dialog between changes/history/message
 - use inotify-tools (inotifywait) to monitor external file changes (use new interface classes in Java 7)
 - add repository list name to window title
+- support for launch4j
+- animated busy-cursor
+- make dialogs non-modal
