@@ -2483,25 +2483,7 @@ Dprintf.dprintf("");
   private Repository openRepository(String rootPath)
   {
     // open repository
-    Repository repository = null;
-    switch (Repository.getType(rootPath))
-    {
-      case CVS:
-        repository = new RepositoryCVS(rootPath);
-        break;
-      case SVN:
-        repository = new RepositorySVN(rootPath);
-        break;
-      case HG:
-        repository = new RepositoryHG(rootPath);
-        break;
-      case GIT:
-        repository = new RepositoryGit(rootPath);
-        break;
-      default:
-        break;
-    }
-
+    Repository repository = Repository.newInstance(rootPath);
     if (repository != null)
     {
       // add and select new repository
