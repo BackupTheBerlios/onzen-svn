@@ -615,7 +615,7 @@ class RepositoryCVS extends Repository
       Command command = new Command();
       Exec    exec;
       int     n;
-      byte[]  buffer  = new byte[4*1024];
+      byte[]  buffer  = new byte[64*1024];
 
       // get file data
       command.clear();
@@ -977,13 +977,13 @@ else {
     return diffDataList.toArray(new DiffData[diffDataList.size()]);
   }
 
-  /** get patch for file
+  /** get patch lines for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
     ArrayList<String> patchLineList = new ArrayList<String>();
@@ -993,7 +993,7 @@ else {
       Exec    exec;
       String  line;
 
-      // get file
+      // get patch
       command.clear();
       if (ignoreWhitespaces)
       {
@@ -1006,7 +1006,7 @@ else {
       if (revision1 != null) command.append("-r",revision1);
       if (revision2 != null) command.append("-r",revision2);
       command.append("--");
-      command.append(getFileDataNames(fileDataSet));
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
 
       // read patch data
@@ -1024,6 +1024,49 @@ else {
     }
 
     return patchLineList.toArray(new String[patchLineList.size()]);
+  }
+
+  /** get patch data for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @return patch data bytes
+   */
+  public byte[] getPatchBytes(HashSet<FileData> fileDataSet, String revision1, String revision2)
+    throws RepositoryException
+  {
+    ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+    try
+    {
+      Command command = new Command();
+      Exec    exec;
+      int     n;
+      byte[]  buffer  = new byte[64*1024];
+
+      // get patch
+      command.clear();
+      command.append(Settings.cvsCommand,"diff","-u");
+      if (revision1 != null) command.append("-r",revision1);
+      if (revision2 != null) command.append("-r",revision2);
+      command.append("--");
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+
+      // read patch bytes into byte array stream
+      while ((n = exec.readStdout(buffer)) > 0)
+      {
+        output.write(buffer,0,n);
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    // convert byte array stream into array
+    return output.toByteArray();
   }
 
   /** get log to file
@@ -1295,7 +1338,7 @@ Dprintf.dprintf("unknown %s",line);
   }
 
   /** revert files
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
    */
   public void revert(HashSet<FileData> fileDataSet, String revision)
@@ -1310,7 +1353,7 @@ Dprintf.dprintf("unknown %s",line);
       command.clear();
       command.append(Settings.cvsCommand,"update","-r",revision);
       command.append("--");
-      command.append(getFileDataNames(fileDataSet));
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
