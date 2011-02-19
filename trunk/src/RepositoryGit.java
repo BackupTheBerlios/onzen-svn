@@ -157,7 +157,18 @@ class RepositoryGit extends Repository
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get patch data for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @return patch data bytes
+   */
+  public byte[] getPatchBytes(HashSet<FileData> fileDataSet, String revision1, String revision2)
     throws RepositoryException
   {
     return null;
@@ -220,7 +231,7 @@ class RepositoryGit extends Repository
   }
 
   /** revert files
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
    */
   public void revert(HashSet<FileData> fileDataSet, String revision)
