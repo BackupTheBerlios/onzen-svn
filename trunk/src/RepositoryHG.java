@@ -566,7 +566,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       Command command = new Command();
       Exec    exec;
       int     n;
-      byte[]  buffer  = new byte[4*1024];
+      byte[]  buffer  = new byte[64*1024];
 
       // get file data
       command.clear();
@@ -920,15 +920,18 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     return diffDataList.toArray(new DiffData[diffDataList.size()]);
   }
 
-  /** get patch for file
+  /** get patch lines for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  public String[] getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
+    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+[^"+File.separator+"]+"+File.separator+"(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+[^"+File.separator+"]+"+File.separator+"(.*)",Pattern.CASE_INSENSITIVE);
+
     ArrayList<String> patchLineList = new ArrayList<String>();
     try
     {
@@ -974,13 +977,26 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (revision1 != null) command.append("-r",revision1);
       if (revision2 != null) command.append("-r",revision2);
       command.append("--");
-      command.append(getFileDataNames(fileDataSet));
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
 
       // read patch data
+      Matcher matcher;
       while ((line = exec.getStdout()) != null)
       {
-        patchLineList.add(line);
+        // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/"
+        if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
+        {
+          patchLineList.add("--- "+matcher.group(1));
+        }
+        else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
+        {
+          patchLineList.add("+++ "+matcher.group(1));
+        }
+        else
+        {
+          patchLineList.add(line);
+        }
       }
 
       // done
@@ -992,6 +1008,49 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
 
     return patchLineList.toArray(new String[patchLineList.size()]);
+  }
+
+  /** get patch data for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @return patch data bytes
+   */
+  public byte[] getPatchBytes(HashSet<FileData> fileDataSet, String revision1, String revision2)
+    throws RepositoryException
+  {
+    ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+    try
+    {
+      Command command = new Command();
+      Exec    exec;
+      int     n;
+      byte[]  buffer  = new byte[64*1024];
+
+      // get patch
+      command.clear();
+      command.append(Settings.hgCommand,"diff");
+      if (revision1 != null) command.append("-r",revision1);
+      if (revision2 != null) command.append("-r",revision2);
+      command.append("--");
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+
+      // read patch bytes into byte array stream
+      while ((n = exec.readStdout(buffer)) > 0)
+      {
+        output.write(buffer,0,n);
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    // convert byte array stream into array
+    return output.toByteArray();
   }
 
   /** get log to file
@@ -1118,9 +1177,21 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       Command command = new Command();
       int     exitCode;
+      
+      String[] trees;
+      if (Settings.hgUseForestExtension)
+      {
+        // get trees of forest (if forest extension is enabled)
+        trees = getTrees();
+      }
+      else
+      {
+        // only single tree
+        trees = new String[]{rootPath};
+      }
 
-      // unapply patches for all trees in forest
-      for (String tree : getTrees())
+      // unapply patches for all trees in forest/single repository
+      for (String tree : trees)
       {
         command.clear();
         command.append(Settings.hgCommand,"qpop","-a");
@@ -1132,16 +1203,90 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
       }
 
-      // push ???
-
       // update files (Note: hg does not allow to update single files, thus update all files)
-      command.clear();
-      command.append(Settings.hgCommand,Settings.hgForest?"fupdate":"update");
-      command.append("--");
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
+      if      (Settings.hgUpdateWithFetch)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        // do 'safe' update when fetch is used: store local changes
+        int databaseId = -1;
+        if (Settings.hgSafeUpdate)
+        {
+          databaseId = storeChanges();
+          if (databaseId < 0)
+          {
+            throw new RepositoryException("temporary storage of local changes fail");
+          }
+        }
+
+        // fetch+fpush
+        command.clear();
+        command.append(Settings.hgCommand,"fetch");
+        command.append("--");
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+          {
+            restoreChanges(databaseId);
+          }
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+        command.clear();
+        command.append(Settings.hgCommand,"fpush");
+        command.append("--");
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+          {
+            restoreChanges(databaseId);
+          }
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+
+        // do 'safe' update when fetch is used: restore local changes and merge if needed
+        if (Settings.hgSafeUpdate)
+        {
+  Dprintf.dprintf("");
+          if (!restoreChanges(databaseId))
+          {
+            throw new RepositoryException("restore local changes fail");
+          }
+        }
+      }
+      else if (Settings.hgUseForestExtension)
+      {
+        command.clear();
+        command.append(Settings.hgCommand,"fupdate");
+        command.append("--");
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        command.clear();
+        command.append(Settings.hgCommand,"update");
+        command.append("--");
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+
+      // apply patches for all trees in forest/single repository
+      for (String tree : trees)
+      {
+        command.clear();
+        command.append(Settings.hgCommand,"qpush","-a");
+        command.append("--");
+        exitCode = new Exec(tree,command).waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
       }
     }
     catch (IOException exception)
@@ -1300,7 +1445,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** revert files
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
    */
   public void revert(HashSet<FileData> fileDataSet, String revision)
@@ -1313,9 +1458,17 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // revert files
       command.clear();
-      command.append(Settings.hgCommand,"revert","-r",revision);
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
+      command.append(Settings.hgCommand,"revert","--no-backup","-r",revision);
+      if (fileDataSet != null)
+      {
+        command.append("--");
+        command.append(getFileDataNames(fileDataSet));
+      }
+      else
+      {
+        command.append("-a");
+        command.append("--");
+      }
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
@@ -1404,7 +1557,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       int     exitCode;
 
       command.clear();
-      command.append(Settings.hgCommand,Settings.hgForest?"fpull":"pull");
+      command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpull":"pull");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -1429,7 +1582,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       int     exitCode;
 
       command.clear();
-      command.append(Settings.hgCommand,Settings.hgForest?"fpush":"push");
+      command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpush":"push");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -1453,8 +1606,20 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       Command command = new Command();
       int     exitCode;
 
-      // unapply patches for all trees in forest
-      for (String tree : getTrees())
+      String[] trees;
+      if (Settings.hgUseForestExtension)
+      {
+        // get trees of forest (if forest extension is enabled)
+        trees = getTrees();
+      }
+      else
+      {
+        // only single tree
+        trees = new String[]{rootPath};
+      }
+
+      // unapply patches for all trees in forest/single repository
+      for (String tree : trees)
       {
         command.clear();
         command.append(Settings.hgCommand,"qpush","-a");
@@ -1482,8 +1647,20 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       Command command = new Command();
       int     exitCode;
 
-      // unapply patches for all trees in forest
-      for (String tree : getTrees())
+      String[] trees;
+      if (Settings.hgUseForestExtension)
+      {
+        // get trees of forest (if forest extension is enabled)
+        trees = getTrees();
+      }
+      else
+      {
+        // only single tree
+        trees = new String[]{rootPath};
+      }
+
+      // unapply patches for all trees in forest/single repository
+      for (String tree : trees)
       {
         command.clear();
         command.append(Settings.hgCommand,"qpop","-a");
@@ -1811,7 +1988,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // push changes to master repository
       command.clear();
-      command.append(Settings.hgCommand,Settings.hgForest?"fpush":"push");
+      command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpush":"push");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
