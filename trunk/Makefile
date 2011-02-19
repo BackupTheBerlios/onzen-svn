@@ -124,6 +124,7 @@ SOURCES        = src/Onzen.java \
                  src/Patch.java \
                  src/Background.java \
                  $(wildcard src/Command*.java) \
+                 src/Preferences.java \
                  \
                  src/TableLayout.java \
                  src/TableLayoutData.java \
