@@ -644,8 +644,9 @@ Dprintf.dprintf("");
       // get file data of all open directories
       for (TreeItem treeItem : Widgets.getTreeItems(widgetFileTree))
       {
-Dprintf.dprintf("treeItem=%s",treeItem);
-        fileDataSet.add((FileData)treeItem.getData());
+        FileData fileData = (FileData)treeItem.getData();
+//Dprintf.dprintf("treeItem=%s: %s",treeItem,(FileData)treeItem.getData());
+        if (fileData != null) fileDataSet.add(fileData);
       }
     }
 
