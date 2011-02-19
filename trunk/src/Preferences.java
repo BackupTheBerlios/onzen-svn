@@ -152,7 +152,8 @@ class Preferences
   private final Text          widgetHGDiffCommand;
   private final Text          widgetHGDiffCommandOptions;
   private final Text          widgetHGDiffCommandOptionsIgnoreWhitespaces;
-  private final Button        widgetHGForest;
+  private final Button        widgetHGUseForestExtension;
+  private final Button        widgetHGUpdateWithFetch;
   private final Button        widgetHGSafeUpdate;
 
   private final Text          widgetGitCommand;
@@ -675,15 +676,20 @@ class Preferences
           subSubComposite.setLayout(new TableLayout(null,null));
           Widgets.layout(subSubComposite,3,1,TableLayoutData.WE);
           {
-            widgetHGForest = Widgets.newCheckbox(subSubComposite,"forest extension");
-            widgetHGForest.setSelection(Settings.hgForest);
-            Widgets.layout(widgetHGForest,0,0,TableLayoutData.WE);
-            widgetHGForest.setToolTipText("Use HG forest extension commands.");
+            widgetHGUseForestExtension = Widgets.newCheckbox(subSubComposite,"use forest extension");
+            widgetHGUseForestExtension.setSelection(Settings.hgUseForestExtension);
+            Widgets.layout(widgetHGUseForestExtension,0,0,TableLayoutData.WE);
+            widgetHGUseForestExtension.setToolTipText("Use HG forest extension commands.");
+
+            widgetHGUpdateWithFetch = Widgets.newCheckbox(subSubComposite,"update with fetch extension");
+            widgetHGUpdateWithFetch.setSelection(Settings.hgUpdateWithFetch);
+            Widgets.layout(widgetHGUpdateWithFetch,1,0,TableLayoutData.WE);
+            widgetHGUpdateWithFetch.setToolTipText("Use HG fetch extension for update (fetch+fpush).");
 
             widgetHGSafeUpdate = Widgets.newCheckbox(subSubComposite,"'safe' update");
             widgetHGSafeUpdate.setSelection(Settings.hgSafeUpdate);
-            Widgets.layout(widgetHGSafeUpdate,1,0,TableLayoutData.WE);
-            widgetHGSafeUpdate.setToolTipText("Do 'safe' update: allow update with local changes. Do merge if needed.");
+            Widgets.layout(widgetHGSafeUpdate,2,0,TableLayoutData.WE);
+            widgetHGSafeUpdate.setToolTipText("Do 'safe' update. Allow fetch update with not-commited local changes: save local changes, revert, update and restore local changes with merge if needed.");
           }
         }
 
@@ -700,7 +706,7 @@ class Preferences
           Widgets.layout(subSubComposite,0,1,TableLayoutData.WE);
           {
             widgetGitCommand = Widgets.newText(subSubComposite);
-  //          widgetGitCommand.setText(Settings.gitCommand);
+            widgetGitCommand.setText(Settings.gitCommand);
             Widgets.layout(widgetGitCommand,0,0,TableLayoutData.WE);
             widgetGitCommand.setToolTipText("Git command.");
 
@@ -985,17 +991,21 @@ class Preferences
 
           Settings.cvsCommand                             = widgetCVSCommand.getText();
           Settings.cvsPruneEmtpyDirectories               = widgetCVSPruneEmptyDirectories.getSelection();
+
           Settings.svnCommand                             = widgetSVNCommand.getText();
           Settings.svnDiffCommand                         = widgetSVNDiffCommand.getText();
           Settings.svnDiffCommandOptions                  = widgetSVNDiffCommandOptions.getText();
           Settings.svnDiffCommandOptionsIgnoreWhitespaces = widgetSVNDiffCommandOptionsIgnoreWhitespaces.getText();
+
           Settings.hgCommand                              = widgetHGCommand.getText();
           Settings.hgDiffCommand                          = widgetHGDiffCommand.getText();
           Settings.hgDiffCommandOptions                   = widgetHGDiffCommandOptions.getText();
           Settings.hgDiffCommandOptionsIgnoreWhitespaces  = widgetHGDiffCommandOptionsIgnoreWhitespaces.getText();
-//          Settings.gitCommand                             = widgetGitCommand.getText();
-          Settings.hgForest                               = widgetHGForest.getSelection();
+          Settings.hgUseForestExtension                   = widgetHGUseForestExtension.getSelection();
+          Settings.hgUpdateWithFetch                      = widgetHGUpdateWithFetch.getSelection();
           Settings.hgSafeUpdate                           = widgetHGSafeUpdate.getSelection();
+
+          Settings.gitCommand                             = widgetGitCommand.getText();
 
           Settings.tmpDirectory                           = widgetTmpDirectory.getText();
           Settings.dateFormat                             = widgetDateFormat.getText();
