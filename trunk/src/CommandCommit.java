@@ -17,13 +17,11 @@
 
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.Comparator;
 //import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-//import java.util.ListIterator;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -409,7 +407,7 @@ class CommandCommit
         try
         {
           // get patch without whitespace change
-          data.patchLinesNoWhitespaces = repositoryTab.repository.getPatch(fileDataSet,true);
+          data.patchLinesNoWhitespaces = repositoryTab.repository.getPatchLines(fileDataSet,true);
 
           // show
           if (!dialog.isDisposed())
@@ -434,7 +432,7 @@ class CommandCommit
           }
 
           // get patch
-          data.patchLines = repositoryTab.repository.getPatch(fileDataSet,false);
+          data.patchLines = repositoryTab.repository.getPatchLines(fileDataSet,false);
 
           // show
           if (!dialog.isDisposed())
@@ -608,12 +606,12 @@ class CommandCommit
     Message message = null;
     try
     {
-      // commit files
-      message = new Message(data.message);
-      repositoryTab.repository.commit(fileDataSet,message);
-
       // add message to history
+      message = new Message(data.message);
       message.addToHistory();
+
+      // commit files
+      repositoryTab.repository.commit(fileDataSet,message);
 
       // update file states
       repositoryTab.repository.updateStates(fileDataSet);
