@@ -15,20 +15,12 @@
 //import java.io.BufferedReader;
 //import java.io.IOException;
 
-//import java.text.SimpleDateFormat;
-
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -378,7 +370,7 @@ class CommandSetFileMode
     {
       for (String string : history)
       {
-        widgetHistory.add(string.replaceAll("\n","\\\\n"));
+        widgetHistory.add(string.trim().replaceAll("\n",", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
       widgetHistory.showSelection();
@@ -471,12 +463,15 @@ class CommandSetFileMode
     Message message = null;
     try
     {
-      // set files mode
-      if (data.immediateCommitFlag) message = new Message(data.message);
-      repositoryTab.repository.setFileMode(data.fileDataSet,data.mode,message);
-
       // add message to history
-      message.addToHistory();
+      if (data.immediateCommitFlag)
+      {
+        message = new Message(data.message);
+        message.addToHistory();
+      }
+
+      // set files mode
+      repositoryTab.repository.setFileMode(data.fileDataSet,data.mode,message);
 
       // update file states
       repositoryTab.repository.updateStates(data.fileDataSet);
