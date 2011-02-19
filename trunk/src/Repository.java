@@ -11,6 +11,8 @@
 /****************************** Imports ********************************/
 // base
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -1120,6 +1122,9 @@ abstract class Repository implements Serializable
   private File file;
 
   // --------------------------- constants --------------------------------
+  private static final String FILES_DATABASE_FILE_NAME = Settings.ONZEN_DIRECTORY+File.separator+"files.db";
+  private static final int    FILES_DATABASE_VERSION   = 1;
+
   enum Types
   {
     CVS,
@@ -1192,6 +1197,22 @@ abstract class Repository implements Serializable
     }
 
     return Types.UNKNOWN;
+  }
+
+  /** create new repository instance
+   * @param rootPath root path
+   * @return repository or null
+   */
+  public static Repository newInstance(String rootPath)
+  {
+    switch (Repository.getType(rootPath))
+    {
+      case CVS: return new RepositoryCVS(rootPath);
+      case SVN: return new RepositorySVN(rootPath);
+      case HG:  return new RepositoryHG(rootPath);
+      case GIT: return new RepositoryGit(rootPath);
+      default:  return null;
+    }
   }
 
   /** create repository
@@ -1967,9 +1988,10 @@ abstract class Repository implements Serializable
   }
 
   /** store all local changes into database (as a patch)
-   * @return datbase id or -1 on error
+   * @param fileDataSet file data set to store changes
+   * @return database id or -1 on error
    */
-  protected int storeChanges()
+  protected int storeChanges(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
     int databaseId = -1;
@@ -1977,14 +1999,14 @@ abstract class Repository implements Serializable
     try
     {
       // get patch lines for all changed files
-      String[] lines = getPatchLines();
+      String[] lines = getPatchLines(fileDataSet);
 
       // store into database
       Patch patch = new Patch(rootPath,lines);
       databaseId = patch.save();
 
       // revert all changes
-      revert(null);
+      revert(fileDataSet);
     }
     catch (SQLException exception)
     {
@@ -1993,6 +2015,12 @@ Dprintf.dprintf("");
     }
 
     return databaseId;
+  }
+
+  protected int storeChanges()
+    throws RepositoryException
+  {
+    return storeChanges(null);
   }
 
   /** restore changes stored in database
@@ -2024,6 +2052,263 @@ Dprintf.dprintf("");
     }
 
     return true;
+  }
+
+  /** open files database
+   * @return connection
+   */
+  private static Connection openFilesDatabase()
+    throws SQLException
+  {
+    Connection connection = null;
+    try
+    {
+      Statement         statement;
+      ResultSet         resultSet;
+      PreparedStatement preparedStatement;
+
+      // load SQLite driver class
+      Class.forName("org.sqlite.JDBC");
+
+      // open database
+      connection = DriverManager.getConnection("jdbc:sqlite:"+FILES_DATABASE_FILE_NAME);
+      connection.setAutoCommit(false);
+
+      // create tables if needed
+      statement = connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
+                              "  name  TEXT, "+
+                              "  value TEXT "+
+                              ");"
+                             );
+      statement = connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS storage ( "+
+                              "  id       INTEGER PRIMARY KEY, "+
+                              "  rootPath TEXT "+
+                              ");"
+                             );
+      statement = connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS files ( "+
+                              "  id        INTEGER PRIMARY KEY, "+
+                              "  storageId INTEGER, "+
+                              "  fileName  TEXT, "+
+                              "  data      BLOB "+
+                              ");"
+                             );
+
+      // init meta data (if not already initialized)
+      statement = connection.createStatement();
+      resultSet = null;
+      try
+      {
+        resultSet = statement.executeQuery("SELECT name,value FROM meta;");
+
+        if (!resultSet.next())
+        {
+          preparedStatement = connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+          preparedStatement.setString(1,Integer.toString(FILES_DATABASE_VERSION));
+          preparedStatement.executeUpdate();
+        }
+
+        resultSet.close(); resultSet = null;
+      }
+      finally
+      {
+        if (resultSet != null) resultSet.close();
+      }
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+      throw exception;
+    }
+    catch (ClassNotFoundException exception)
+    {
+      throw new SQLException("SQLite database driver not found");
+    }
+
+    return connection;
+  }
+
+  /** close files database
+   * @param connection connection
+   */
+  private static void closeFilesDatabase(Connection connection)
+    throws SQLException
+  {
+    connection.setAutoCommit(true);
+    connection.close();
+  }
+
+  /** store files into database
+   * @param fileDataSet file data set to store
+   * @return database id or -1 on error
+   */
+  protected int storeFiles(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    int databaseId = -1;
+
+    Connection connection = null;
+    try
+    {
+      Statement         statement;
+      PreparedStatement preparedStatement;
+
+      // open database
+      connection = openFilesDatabase();
+
+      // create storage
+      preparedStatement = connection.prepareStatement("INSERT INTO storage (rootPath) VALUES (?);");
+      preparedStatement.setString(1,rootPath);
+      preparedStatement.executeUpdate();    
+      databaseId = getLastInsertId(connection);
+
+      // store files
+      preparedStatement = connection.prepareStatement("INSERT INTO files (storageId,fileName,data) VALUES (?,?,?);");
+      for (FileData fileData : fileDataSet)
+      {
+        // read file as byte array
+        File file = new File(rootPath,fileData.getFileName());
+        byte[] data = new byte[(int)file.length()];
+        FileInputStream input = new FileInputStream(file);
+        input.read(data,0,data.length);
+        input.close();
+
+        // store in database
+        preparedStatement.setInt(1,databaseId);
+        preparedStatement.setString(2,fileData.getFileName());
+        preparedStatement.setBytes(3,data);
+        preparedStatement.executeUpdate();    
+      }
+
+      // close database
+      closeFilesDatabase(connection); connection = null;
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("");
+      throw new RepositoryException(exception);
+    }
+    catch (IOException exception)
+    {
+Dprintf.dprintf("");
+      throw new RepositoryException(exception);
+    }
+    finally
+    {
+      try { if (connection != null) closeFilesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+    }
+
+    return databaseId;
+  }
+
+  /** restore files stored in database
+   * @param id database id
+   * @return true iff changes restored
+   */
+  protected boolean restoreFiles(int databaseId)
+    throws RepositoryException
+  {
+    Connection connection = null;
+    try
+    {
+      Statement         statement;
+      PreparedStatement preparedStatement;
+      ResultSet         resultSet;
+
+      // open database
+      connection = openFilesDatabase();
+
+      // restore files
+      preparedStatement = connection.prepareStatement("SELECT "+
+                                                      "  fileName, "+
+                                                      "  data "+
+                                                      "FROM files "+
+                                                      "WHERE storageId=? "+
+                                                      ";"
+                                                     );
+      preparedStatement.setInt(1,databaseId);
+      resultSet = null;
+      try
+      {
+        resultSet = preparedStatement.executeQuery();
+        while (resultSet.next())
+        {
+          // get file name
+          String fileName = resultSet.getString("fileName");
+
+          try
+          {
+            // write file
+            File file = new File(rootPath,fileName);
+            FileOutputStream output = new FileOutputStream(file);
+            output.write(resultSet.getBytes("data"));
+            output.close();
+          }
+          catch (IOException exception)
+          {
+Dprintf.dprintf("");
+            throw new RepositoryException(exception);
+          }
+        }
+        resultSet.close(); resultSet = null;
+      }
+      finally
+      {
+        if (resultSet != null) resultSet.close();
+      }
+
+      // close database
+      closeFilesDatabase(connection); connection = null;
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("");
+      throw new RepositoryException(exception);
+    }
+    finally
+    {
+      try { if (connection != null) closeFilesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+    }
+
+    return true;
+  }
+
+  /** get id of last inserted row
+   * @param connection database connection
+   * @return id
+   */
+  private int getLastInsertId(Connection connection)
+    throws SQLException
+  {
+    int id = -1;
+
+    PreparedStatement preparedStatement;
+    ResultSet         resultSet;
+
+    // Note: Java sqlite does not support getGeneratedKeys, thus use last_insert_rowid() direct.
+    preparedStatement = connection.prepareStatement("SELECT last_insert_rowid();");
+    resultSet = null;
+    try
+    {
+      resultSet = preparedStatement.executeQuery();
+      if (!resultSet.next())
+      {
+        throw new SQLException("no result");
+      }
+
+      id = resultSet.getInt(1);
+
+      resultSet.close(); resultSet = null;
+    }
+    finally
+    {
+      if (resultSet != null) resultSet.close();
+    }
+
+    return id;
   }
 }
 
