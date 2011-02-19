@@ -1312,7 +1312,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(Settings.hgCommand,"commit");
       if (!commitMessage.isEmpty())
       {
-        command.append("-F",commitMessage.getFileName());
+        command.append("-l",commitMessage.getFileName());
       }
       else
       {
@@ -1365,7 +1365,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append(Settings.hgCommand,"commit");
         if (!commitMessage.isEmpty())
         {
-          command.append("-F",commitMessage.getFileName());
+          command.append("-l",commitMessage.getFileName());
         }
         else
         {
@@ -1423,7 +1423,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append(Settings.hgCommand,"commit");
         if (!commitMessage.isEmpty())
         {
-          command.append("-F",commitMessage.getFileName());
+          command.append("-l",commitMessage.getFileName());
         }
         else
         {
@@ -1514,7 +1514,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append(Settings.hgCommand,"commit");
         if (!commitMessage.isEmpty())
         {
-          command.append("-F",commitMessage.getFileName());
+          command.append("-l",commitMessage.getFileName());
         }
         else
         {
