@@ -17,14 +17,10 @@
 
 //import java.util.ArrayList;
 //import java.util.Arrays;
-//import java.util.Comparator;
-//import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
 //import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -391,7 +387,7 @@ class CommandRename
     {
       for (String string : history)
       {
-        widgetHistory.add(string.replaceAll("\n","\\\\n"));
+        widgetHistory.add(string.trim().replaceAll("\n",", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
       widgetHistory.showSelection();
@@ -459,12 +455,15 @@ class CommandRename
     Message message = null;
     try
     {
-      // rename file
-      if (data.immediateCommitFlag) message = new Message(data.message);
-      repositoryTab.repository.rename(fileData,data.newFileName,message);
-
       // add message to history
-      message.addToHistory();
+      if (data.immediateCommitFlag)
+      {
+        message = new Message(data.message);
+        message.addToHistory();
+      }
+
+      // rename file
+      repositoryTab.repository.rename(fileData,data.newFileName,message);
 
       // update file states
       HashSet<FileData> fileDataSet = fileData.toSet();
