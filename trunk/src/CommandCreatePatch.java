@@ -15,6 +15,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.sql.SQLException;
+
 import java.util.ArrayList;
 //import java.util.Arrays;
 //import java.util.HashMap;
@@ -298,7 +300,7 @@ class CommandCreatePatch
       {
         public void modified(Control control)
         {
-          control.setEnabled(data.lines != null);
+          if (!control.isDisposed()) control.setEnabled(data.lines != null);
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -368,7 +370,7 @@ class CommandCreatePatch
       {
         public void modified(Control control)
         {
-          control.setEnabled(data.lines != null);
+          if (!control.isDisposed()) control.setEnabled(data.lines != null);
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -391,7 +393,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(data.lines != null);
+          if (!control.isDisposed()) control.setEnabled(data.lines != null);
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -415,17 +417,23 @@ Dprintf.dprintf("");
             CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
                                                                      repositoryTab,
                                                                      fileDataSet,
-                                                                     patch.getId(),
-                                                                     patch.text,
+                                                                     patch,
                                                                      ""
                                                                     );
             if (commandMailPatch.execute())
             {
-              // save patch
-              patch.state   = Patch.States.REVIEW;
-              patch.summary = commandMailPatch.summary;
-              patch.message = commandMailPatch.message;
-              patch.save();
+              try
+              {
+                // save patch
+                patch.state   = Patch.States.REVIEW;
+                patch.summary = commandMailPatch.summary;
+                patch.message = commandMailPatch.message;
+                patch.save();
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+              }
             }
             else
             {
@@ -443,7 +451,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(repositoryTab.repository.supportPatchQueues() && (data.lines != null));
+          if (!control.isDisposed()) control.setEnabled(repositoryTab.repository.supportPatchQueues() && (data.lines != null));
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -478,7 +486,6 @@ Dprintf.dprintf("");
     }
 
     // listeners
-
     listener = new Listener()
     {
       public void handleEvent(Event event)
@@ -800,7 +807,7 @@ Dprintf.dprintf("");
         try
         {
           // get patch without whitespace change
-          data.linesNoWhitespaces = repositoryTab.repository.getPatch(fileDataSet,revision1,revision2,true);
+          data.linesNoWhitespaces = repositoryTab.repository.getPatchLines(fileDataSet,revision1,revision2,true);
 
           // show
           if (!dialog.isDisposed())
@@ -820,19 +827,19 @@ Dprintf.dprintf("");
                           widgetHorizontalScrollBar,
                           widgetVerticalScrollBar
                          );
-
-                  // notify modification
-                  Widgets.modified(data);
-
-                  // focus find
-                  if (!widgetFind.isDisposed()) widgetFind.setFocus();
                 }
+
+                // notify modification
+                Widgets.modified(data);
+
+                // focus find
+                if (!widgetFind.isDisposed()) widgetFind.setFocus();
               }
             });
           }
 
           // get patch
-          data.lines = repositoryTab.repository.getPatch(fileDataSet,revision1,revision2,false);
+          data.lines = repositoryTab.repository.getPatchLines(fileDataSet,revision1,revision2,false);
 
           // show
           if (!dialog.isDisposed())
@@ -852,13 +859,13 @@ Dprintf.dprintf("");
                           widgetHorizontalScrollBar,
                           widgetVerticalScrollBar
                          );
-
-                  // notify modification
-                  Widgets.modified(data);
-
-                  // focus find
-                  if (!widgetFind.isDisposed()) widgetFind.setFocus();
                 }
+
+                // notify modification
+                Widgets.modified(data);
+
+                // focus find
+                if (!widgetFind.isDisposed()) widgetFind.setFocus();
               }
             });
           }
