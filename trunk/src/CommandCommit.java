@@ -391,7 +391,7 @@ class CommandCommit
     {
       for (String string : history)
       {
-        widgetHistory.add(string.replaceAll("\n","\\\\n"));
+        widgetHistory.add(string.trim().replaceAll("\n",", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
       widgetHistory.showSelection();
