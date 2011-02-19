@@ -128,7 +128,7 @@ class CommandMailPatch
 
   // global variable references
   private final RepositoryTab     repositoryTab;
-  private final int               patchNumber;
+  private final Patch             patch;
   private final Date              date;
   private final Display           display;
 
@@ -154,13 +154,12 @@ class CommandMailPatch
   /** mail patch command
    * @param shell shell
    * @param repositoryTab repository tab
-   * @param patchNumber patch number
-   * @param patchText patch text
+   * @param patch patch
    * @param message message text
    */
-  CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final int patchNumber, final String patchText, String message)
+  CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String message)
   {
-    Composite composite,subComposite;
+    Composite composite,subComposite,subSubComposite;
     Label     label;
     TabFolder tabFolder;
     Button    button;
@@ -170,7 +169,7 @@ class CommandMailPatch
     this.summary       = null;
     this.message       = null;
     this.repositoryTab = repositoryTab;
-    this.patchNumber   = patchNumber;
+    this.patch         = patch;
     this.date          = new Date();
 
     // get display
@@ -194,20 +193,36 @@ class CommandMailPatch
       Widgets.layout(tabFolder,2,0,TableLayoutData.NSWE);
 
       subComposite = Widgets.addTab(tabFolder,"Message");
-      subComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0},2));
+      subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
       Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
-        label = Widgets.newLabel(subComposite,"Summary:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subSubComposite,"Summary:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetSummary = Widgets.newText(subComposite);
-        Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
+          widgetSummary = Widgets.newText(subSubComposite);
+          Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(subComposite,"Text:");
-        Widgets.layout(label,1,0,TableLayoutData.NW);
+          label = Widgets.newLabel(subSubComposite,"Message:");
+          Widgets.layout(label,1,0,TableLayoutData.NW);
 
-        widgetMessage = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-        Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
+          widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
+        }
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(null,1.0));
+        Widgets.layout(subSubComposite,0,1,TableLayoutData.NS);
+        {
+// NYI: test infos?
+          button = Widgets.newCheckbox(subSubComposite,"compile");
+          Widgets.layout(button,0,0,TableLayoutData.W);
+          button = Widgets.newCheckbox(subSubComposite,"compile without warnings");
+          Widgets.layout(button,1,0,TableLayoutData.W);
+        }
       }
 
       subComposite = Widgets.addTab(tabFolder,"Mail");
@@ -264,9 +279,7 @@ class CommandMailPatch
 
             // create mail attachment
             tmpFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
-            FileWriter attachmentOutput = new FileWriter(tmpFile.getPath());
-            attachmentOutput.write(patchText,0,patchText.length());
-            attachmentOutput.close();
+            patch.write(tmpFile);
 
             // create command
             String[] command = StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false);
@@ -293,6 +306,9 @@ class CommandMailPatch
               Dialogs.error(dialog,"Cannot send patch! (exitcode: %d)",exitcode);
               return;
             }
+
+            // free resources
+            tmpFile.delete(); tmpFile = null;
           }
           catch (IOException exception)
           {
@@ -369,7 +385,7 @@ Dprintf.dprintf("");
     Dialogs.show(dialog,Settings.geometryMailPatch);
 
     // update
-    widgetPatch.setText(patchText);
+    widgetPatch.setText(StringUtils.join(patch.lines,widgetPatch.DELIMITER));
     widgetMailTo.setText(repositoryTab.repository.patchMailTo);
     widgetMailCC.setText(repositoryTab.repository.patchMailCC);
     updateMailSubject();
@@ -431,7 +447,7 @@ Dprintf.dprintf("");
   private void updateMailSubject()
   {
     String subject = repositoryTab.repository.patchMailSubject;
-    subject = subject.replace("%n%",Integer.toString(patchNumber));
+    subject = subject.replace("%n%",Integer.toString(patch.getNumber()));
     subject = subject.replace("%summary%",widgetSummary.getText());
     widgetMailSubject.setText(subject);
   }
@@ -441,7 +457,7 @@ Dprintf.dprintf("");
   private void updateMailText()
   {
     String text = repositoryTab.repository.patchMailText;
-    text = text.replace("%n%",Integer.toString(patchNumber));
+    text = text.replace("%n%",Integer.toString(patch.getNumber()));
     text = text.replace("%summary%",widgetSummary.getText());
     text = text.replace("%date%",Onzen.DATE_FORMAT.format(date));
     text = text.replace("%time%",Onzen.TIME_FORMAT.format(date));
