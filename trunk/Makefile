@@ -112,6 +112,7 @@ endif
 
 SOURCES        = src/Onzen.java \
                  src/Settings.java \
+                 src/Macro.java \
                  src/Repository.java \
                  src/RepositoryCVS.java \
                  src/RepositorySVN.java \
@@ -120,6 +121,7 @@ SOURCES        = src/Onzen.java \
                  src/RepositoryList.java \
                  src/RepositoryTab.java \
                  src/Exec.java \
+                 src/Database.java \
                  src/Message.java \
                  src/Patch.java \
                  src/Background.java \
