@@ -4071,6 +4071,8 @@ private static void printTree(Tree tree)
     return newComposite(composite,SWT.NONE);
   }
 
+  //-----------------------------------------------------------------------
+
   /** new composite widget
    * @param composite composite widget
    * @param style style
@@ -4087,8 +4089,6 @@ private static void printTree(Tree tree)
 
     return childComposite;
   }
-
-  //-----------------------------------------------------------------------
 
   /** new composite widget
    * @param composite composite widget
