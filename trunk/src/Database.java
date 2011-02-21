@@ -19,6 +19,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import java.util.ArrayList;
+import java.util.StringTokenizer;
+
 /****************************** Classes ********************************/
 
 /** database
@@ -106,6 +109,41 @@ class Database
     }
 
     return id;
+  }
+
+  /** convert data to lines
+   * @param data data (lines separated by \n) or null
+   * @return lines
+   */
+  public static String[] dataToLines(String data)
+  {
+    ArrayList<String> lineList = new ArrayList<String>();
+
+    if (data != null)
+    {
+      StringTokenizer stringTokenizer = new StringTokenizer(data,"\n");
+      while (stringTokenizer.hasMoreTokens())
+      {
+        lineList.add(stringTokenizer.nextToken());
+      }
+    }
+
+    return lineList.toArray(new String[lineList.size()]);
+  }
+
+  /** convert lines to data
+   * @param lines lines
+   * @return data (lines separated by \n)
+   */
+  public static String linesToData(String[] lines)
+  {
+    StringBuilder buffer = new StringBuilder();
+    for (String line : lines)
+    {
+      buffer.append(line); buffer.append('\n');
+    }
+
+    return buffer.toString();
   }
 
   /** convert data to string
