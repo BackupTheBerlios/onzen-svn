@@ -346,10 +346,13 @@ class CommandCreatePatch
                                    );
             try
             {
-              // write patch to file
               try
               {
+                // write patch to file
                 patch.write(fileName);
+
+                // close dialog
+                Dialogs.close(dialog,true);
               }
               catch (IOException exception)
               {
@@ -361,9 +364,6 @@ class CommandCreatePatch
             {
               patch.done();
             }
-
-            // close dialog
-            Dialogs.close(dialog,true);
           }
         }
       });
@@ -433,11 +433,14 @@ Dprintf.dprintf("");
               {
                 try
                 {
-                  // save patch
+                  // save patch in database
                   patch.state   = Patch.States.REVIEW;
                   patch.summary = commandMailPatch.summary;
                   patch.message = commandMailPatch.message;
                   patch.save();
+
+                  // close dialog
+                  Dialogs.close(dialog,true);
                 }
                 catch (SQLException exception)
                 {
@@ -450,9 +453,6 @@ Dprintf.dprintf("");
             {
               patch.done();
             }
-
-            // close dialog
-            Dialogs.close(dialog,true);
           }
         }
       });
