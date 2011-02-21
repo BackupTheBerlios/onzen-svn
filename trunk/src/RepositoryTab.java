@@ -594,7 +594,14 @@ Dprintf.dprintf("");
    */
   public boolean openDirectory(String directory)
   {
-    return openSubDirectory(widgetFileTree.getItems(),directory);
+    if (!widgetFileTree.isDisposed())
+    {
+      return openSubDirectory(widgetFileTree.getItems(),directory);
+    }
+    else
+    {
+      return false;
+    }
   }
 
   /** set status text
@@ -1851,22 +1858,25 @@ Dprintf.dprintf("");
   {
     for (TreeItem treeItem : treeItems)
     {
-      FileData fileData = (FileData)treeItem.getData();
-
-      if (directory.startsWith(fileData.getFileName()))
+      if (!treeItem.isDisposed())
       {
-        // open this tree item
-        openFileTreeItem(treeItem);
+        FileData fileData = (FileData)treeItem.getData();
 
-        if (!directory.equals(fileData.getFileName()))
+        if (directory.startsWith(fileData.getFileName()))
         {
-          // go down to sub-items
-          return openSubDirectory(treeItem.getItems(),directory);
-        }
-        else
-        {
-          // done
-          return true;
+          // open this tree item
+          openFileTreeItem(treeItem);
+
+          if (!directory.equals(fileData.getFileName()))
+          {
+            // go down to sub-items
+            return openSubDirectory(treeItem.getItems(),directory);
+          }
+          else
+          {
+            // done
+            return true;
+          }
         }
       }
     }
