@@ -367,7 +367,7 @@ class CommandPatches
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.COMMITED));
+          Widgets.setEnabled(control,(data.patch != null));
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -382,7 +382,6 @@ class CommandPatches
             try
             {
               // commit patch
-Dprintf.dprintf("");
               commit(data.patch);
 
               // save new state
@@ -413,7 +412,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.APPLIED));
+          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.COMMITED) && (data.patch.state != Patch.States.APPLIED));
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -453,7 +452,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state == Patch.States.APPLIED));
+          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.COMMITED) && (data.patch.state == Patch.States.APPLIED));
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -493,7 +492,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.DISCARDED));
+          Widgets.setEnabled(control,(data.patch != null) && (data.patch.state != Patch.States.COMMITED) && (data.patch.state != Patch.States.DISCARDED));
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -749,19 +748,11 @@ Dprintf.dprintf("");
       fileDataSet.add(new FileData(fileName,FileData.Types.FILE));
     }
 
-Dprintf.dprintf("");
     // save files
-    int databaseId = -1;
-    databaseId = repository.storeFiles(fileDataSet);
-    if (databaseId < 0)
-    {
-      throw new RepositoryException("temporary storage of local changes fail");
-    }
-Dprintf.dprintf("");
-
+    StoredFiles storedFiles = new StoredFiles(repository.rootPath,fileDataSet);
     try
     {
-      // revert
+      // revert local files changes
       repository.revert(fileDataSet);
 
       // apply patch
@@ -791,18 +782,22 @@ Dprintf.dprintf("");
 Dprintf.dprintf("");
 
       // restore files
-      if (!repository.restoreFiles(databaseId))
+      if (!storedFiles.restore())
       {
         throw new RepositoryException("restore local changes fail");
       }
-      databaseId = -1;
-Dprintf.dprintf("");
+
+      // discard stored files
+      storedFiles.discard(); storedFiles = null;
     }
     finally
     {
-      if (databaseId >= 0) repository.restoreFiles(databaseId);
+      if (storedFiles != null)
+      {
+        storedFiles.restore();
+        storedFiles.discard();
+      }
     }
-Dprintf.dprintf("");
   }
 
   private void apply()
