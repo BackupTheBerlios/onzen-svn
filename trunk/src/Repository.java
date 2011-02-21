@@ -1515,10 +1515,10 @@ abstract class Repository implements Serializable
   public String patchMailTo = "";
   @XmlElement(name = "patchMailCC", defaultValue = "")
   public String patchMailCC = "";
-  @XmlElement(name = "patchMailSubject", defaultValue = "Patch #%n%: %summary%")
-  public String patchMailSubject = "Patch #%n%: %summary%";
-  @XmlElement(name = "patchMailText", defaultValue = "%message%")
-  public String patchMailText = "%message%";
+  @XmlElement(name = "patchMailSubject", defaultValue = "Patch #${n %04d}: ${summary}")
+  public String patchMailSubject = "Patch #${n %04d}: ${summary}";
+  @XmlElement(name = "patchMailText", defaultValue = "${message}\n\n${tests - %s}")
+  public String patchMailText = "${message}\n\n${tests - %s}";
 
   // ------------------------ native functions ----------------------------
 
