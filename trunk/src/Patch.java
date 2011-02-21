@@ -134,17 +134,20 @@ class Patch
       try
       {
         resultSet1 = statement.executeQuery("SELECT "+
-                                            "  id, "+
-                                            "  state, "+
-                                            "  summary, "+
-                                            "  message, "+
-                                            "  data "+
+                                            "  patches.id AS databaseId, "+
+                                            "  patches.state, "+
+                                            "  patches.summary, "+
+                                            "  patches.message, "+
+                                            "  patches.data, "+
+                                            "  numbers.id AS number "+
                                             "FROM patches "+
-                                            "WHERE     rootPath='"+rootPath+"'"+
-                                            "      AND (   state="+Patch.States.NONE.ordinal()+" "+
-                                            "           OR state IN ("+StringUtils.join(filterStates,",",true)+") "+
+                                            "  LEFT JOIN numbers ON numbers.patchId=patches.id "+
+                                            "WHERE     patches.rootPath='"+rootPath+"'"+
+                                            "      AND (   patches.state="+Patch.States.NONE.ordinal()+" "+
+                                            "           OR patches.state IN ("+StringUtils.join(filterStates,",",true)+") "+
                                             "          )"+
-                                            "LIMIT 0,"+n+
+                                            "GROUP BY databaseId "+
+                                            "LIMIT 0,"+n+" "+
                                             ";"
                                            );
 
@@ -157,12 +160,13 @@ class Patch
         while (resultSet1.next())
         {
           // get patch data
-          int      databaseId = resultSet1.getInt("id");
+          int      databaseId = resultSet1.getInt("databaseId");
           States   state      = States.toEnum(resultSet1.getInt("state"));
           String   summary    = resultSet1.getString("summary"); if (summary == null) summary = "";
           String   message    = resultSet1.getString("message"); if (message == null) message = "";
           String[] lines      = dataToLines(resultSet1.getString("data"));
-  //Dprintf.dprintf("id=%d s=%s",id,summary);
+          int      number     = resultSet1.getInt("number");
+//Dprintf.dprintf("databaseId=%d state=%s summary=%s number=%d",databaseId,state,summary,number);
 
           // get file names
           ArrayList<String> fileNameList = new ArrayList<String>();
@@ -190,9 +194,10 @@ class Patch
                                   summary,
                                   message,
                                   lines,
-                                  fileNames
+                                  fileNames,
+                                  number
                                  )
-                           );
+                       );
         }
 
         resultSet1.close(); resultSet1 = null;
@@ -226,8 +231,9 @@ class Patch
    * @param message message text
    * @param lines patch lines
    * @param fileNames file names
+   * @param patch number
    */
-  public Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames)
+  private Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames, int number)
   {
     this.rootPath   = rootPath;
     this.state      = state;
@@ -236,9 +242,23 @@ class Patch
     this.fileNames  = fileNames;
 
     this.databaseId = databaseId;
-    this.number     = Database.ID_NONE;
+    this.number     = number;
     this.lines      = lines;
     this.tmpFile    = null;
+  }
+
+  /** create patch
+   * @param rootPath root path
+   * @param databaseId database id
+   * @param state state
+   * @param summary summary text
+   * @param message message text
+   * @param lines patch lines
+   * @param fileNames file names
+   */
+  public Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames)
+  {
+    this(rootPath,databaseId,state,summary,message,lines,fileNames,Database.ID_NONE);
   }
 
   /** create patch
@@ -384,6 +404,14 @@ class Patch
     }
 
     return number;
+  }
+
+  /** get patch number text
+   * @return patch number text or "-"
+   */
+  public String getNumberText()
+  {
+    return (number != Database.ID_NONE)?Integer.toString(number):"-";
   }
 
   /** get patch file name
