@@ -871,7 +871,7 @@ class Preferences
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","Add","Cancel");
+                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
                 if (string != null)
                 {
                   widgetHiddenFilePatterns.add(string);
@@ -943,7 +943,7 @@ class Preferences
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String string = Dialogs.string(dialog,"Add directory pattern","Pattern:","Add","Cancel");
+                String string = Dialogs.string(dialog,"Add directory pattern","Pattern:","","Add","Cancel");
                 if (string != null)
                 {
                   widgetHiddenDirectoryPatterns.add(string);
