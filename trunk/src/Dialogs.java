@@ -1188,11 +1188,12 @@ class Dialogs
    * @param parentShell parent shell
    * @param title title string
    * @param text text before input element
+   * @param value value to edit
    * @param okText OK button text
    * @param CancelText cancel button text
    * @return string or null on cancel
    */
-  public static String string(Shell parentShell, String title, String text, String okText, String cancelText)
+  public static String string(Shell parentShell, String title, String text, String value, String okText, String cancelText)
   {
     int             row;
     Composite       composite;
@@ -1222,6 +1223,11 @@ class Dialogs
           column++;
         }
         widgetString = new Text(composite,SWT.LEFT|SWT.BORDER);
+        if (value != null)
+        {
+          widgetString.setText(value);
+          widgetString.setSelection(value.length(),value.length());
+        }
         widgetString.setLayoutData(new TableLayoutData(0,column,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
         column++;
       }
@@ -1274,12 +1280,36 @@ class Dialogs
         }
       });
 
+      widgetString.setFocus();      
       return (String)run(dialog,null);
     }
     else
     {
       return null;
     }
+  }
+
+  /** simple string dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @param value value to edit
+   * @return string or null on cancel
+   */
+  public static String string(Shell parentShell, String title, String text, String value)
+  {
+    return string(parentShell,title,text,value);
+  }
+
+  /** simple string dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @return string or null on cancel
+   */
+  public static String string(Shell parentShell, String title, String text)
+  {
+    return string(parentShell,title,text,"");
   }
 
 /// NYI not complete
