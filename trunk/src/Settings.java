@@ -661,7 +661,7 @@ public class Settings
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryPatches                = new Point(500,600);
   @ConfigValue(type=ConfigValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(100,300);
+  public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(50,100,300);
   @ConfigValue(type=ConfigValueAdapterSize.class)
   public static Point                    geometryCreatePatch            = new Point(500,600);
   @ConfigValue(type=ConfigValueAdapterSize.class)
