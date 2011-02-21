@@ -2507,19 +2507,21 @@ Dprintf.dprintf("");
      */
     class Data
     {
-      String title;
-      String rootPath;
-      String masterRepository;
-      String patchMailTo;
-      String patchMailCC;
-      String patchMailSubject;
-      String patchMailText;
+      String   title;
+      String   rootPath;
+      String   masterRepository;
+      String[] patchMailTests;
+      String   patchMailTo;
+      String   patchMailCC;
+      String   patchMailSubject;
+      String   patchMailText;
 
       Data()
       {
         this.title            = null;
         this.rootPath         = null;
         this.masterRepository = null;
+        this.patchMailTests   = null;
         this.patchMailTo      = null;
         this.patchMailCC      = null;
         this.patchMailSubject = null;
@@ -2539,6 +2541,7 @@ Dprintf.dprintf("");
     final Text   widgetTitle;
     final Text   widgetRootPath;
 //      final Text   widgetMasterRepository;
+    final List   widgetPatchTests;
     final Text   widgetPatchMailTo;
     final Text   widgetPatchMailCC;
     final Text   widgetPatchMailSubject;
@@ -2601,38 +2604,94 @@ Dprintf.dprintf("");
       }
 
       subComposite = Widgets.newGroup(composite,"Patch mail");
-      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
+      subComposite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
+        label = Widgets.newLabel(subComposite,"Tests:");
+        Widgets.layout(label,0,0,TableLayoutData.NW);
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(new double[]{1.0,0},new double[]{1.0,0.0,0.0}));
+        Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
+        {
+          widgetPatchTests = Widgets.newList(subSubComposite);
+          if (repositoryTab.repository.patchMailTests != null)
+          {
+            for (String test : repositoryTab.repository.patchMailTests)
+            {
+              widgetPatchTests.add(test);
+            }
+          }
+          Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,3);
+
+          button = Widgets.newButton(subSubComposite,"Add");
+          Widgets.layout(button,1,1,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String string = Dialogs.string(dialog,"Edit test","Test:","","Save","Cancel");
+              if (string != null)
+              {
+                widgetPatchTests.add(string);
+              }
+            }
+          });
+
+          button = Widgets.newButton(subSubComposite,"Remove");
+          Widgets.layout(button,1,2,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetPatchTests.getSelectionIndex();
+              if (index >= 0)
+              {
+                String string = widgetPatchTests.getItem(index);
+                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove test '%s'?",string)))
+                {
+                  widgetPatchTests.remove(index);
+                }
+              }
+            }
+          });
+        }
+
         label = Widgets.newLabel(subComposite,"To:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+        Widgets.layout(label,1,0,TableLayoutData.W);
 
         widgetPatchMailTo = Widgets.newText(subComposite);
         if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
-        Widgets.layout(widgetPatchMailTo,0,1,TableLayoutData.WE);
+        Widgets.layout(widgetPatchMailTo,1,1,TableLayoutData.WE);
 
         label = Widgets.newLabel(subComposite,"CC:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+        Widgets.layout(label,2,0,TableLayoutData.W);
 
         widgetPatchMailCC = Widgets.newText(subComposite);
         if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
-        Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE);
+        Widgets.layout(widgetPatchMailCC,2,1,TableLayoutData.WE);
         widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
 
         label = Widgets.newLabel(subComposite,"Subject:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
+        Widgets.layout(label,3,0,TableLayoutData.W);
 
         widgetPatchMailSubject = Widgets.newText(subComposite);
         if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
-        Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE);
+        Widgets.layout(widgetPatchMailSubject,3,1,TableLayoutData.WE);
         widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  %n% - patch number\n  %summary% - summary text");
 
         label = Widgets.newLabel(subComposite,"Text:");
-        Widgets.layout(label,3,0,TableLayoutData.NW);
+        Widgets.layout(label,4,0,TableLayoutData.NW);
 
         widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
         if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
-        Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE);
+        Widgets.layout(widgetPatchMailText,4,1,TableLayoutData.NSWE);
         widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
       }
     }
@@ -2656,6 +2715,7 @@ Dprintf.dprintf("");
           data.title            = widgetTitle.getText();
           data.rootPath         = widgetRootPath.getText();
 //            data.masterRepository = widgetMasterRepository.getText();
+          data.patchMailTests   = widgetPatchTests.getItems();
           data.patchMailTo      = widgetPatchMailTo.getText();
           data.patchMailCC      = widgetPatchMailCC.getText();
           data.patchMailSubject = widgetPatchMailSubject.getText();
@@ -2705,6 +2765,27 @@ Dprintf.dprintf("");
       {
       }
     });
+    widgetPatchTests.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        List widget = (List)selectionEvent.widget;
+
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
+        {
+          String string = widget.getItem(index);
+          string = Dialogs.string(dialog,"Edit test","Test:",string,"Save","Cancel");
+          if (string != null)
+          {
+            widget.setItem(index,string);
+          }
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryEditRepository);
@@ -2716,6 +2797,7 @@ Dprintf.dprintf("");
       // set data
       repositoryTab.setTitle(data.title);
       repositoryTab.repository.rootPath         = data.rootPath;
+      repositoryTab.repository.patchMailTests   = data.patchMailTests;
       repositoryTab.repository.patchMailTo      = data.patchMailTo;
       repositoryTab.repository.patchMailCC      = data.patchMailCC;
       repositoryTab.repository.patchMailSubject = data.patchMailSubject;
