@@ -20,3 +20,4 @@ ToDo
 - support for launch4j
 - animated busy-cursor
 - make dialogs non-modal
+- integrate JavaMail
