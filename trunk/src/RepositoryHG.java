@@ -929,8 +929,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
-    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+[^"+File.separator+"]+"+File.separator+"(.*)",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+[^"+File.separator+"]+"+File.separator+"(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*)",Pattern.CASE_INSENSITIVE);
 
     ArrayList<String> patchLineList = new ArrayList<String>();
     try
@@ -984,14 +984,38 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       Matcher matcher;
       while ((line = exec.getStdout()) != null)
       {
-        // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/"
+        // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
         if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
         {
-          patchLineList.add("--- "+matcher.group(1));
+          String fileName = matcher.group(1);
+          if (fileName.startsWith(rootPath))
+          {
+            // absolute path -> convert to relative path
+            fileName = matcher.group(1).substring(rootPath.length()+1);
+          }
+          else
+          {
+            // relative path -> strip out first path in name
+            int index = fileName.indexOf(File.separator);
+            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+          }
+          patchLineList.add("--- "+fileName);
         }
         else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
         {
-          patchLineList.add("+++ "+matcher.group(1));
+          String fileName = matcher.group(1);
+          if (fileName.startsWith(rootPath))
+          {
+            // absolute path -> convert to relative path
+            fileName = matcher.group(1).substring(rootPath.length()+1);
+          }
+          else
+          {
+            // relative path -> strip out first path in name
+            int index = fileName.indexOf(File.separator);
+            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+          }
+          patchLineList.add("+++ "+fileName);
         }
         else
         {
@@ -1206,51 +1230,78 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       // update files (Note: hg does not allow to update single files, thus update all files)
       if      (Settings.hgUpdateWithFetch)
       {
-        // do 'safe' update when fetch is used: store local changes
-        int databaseId = -1;
-        if (Settings.hgSafeUpdate)
+        StoredFiles   storedFiles   = null;
+        StoredChanges storedChanges = null;
+        try
         {
-          databaseId = storeChanges();
-          if (databaseId < 0)
-          {
-            throw new RepositoryException("temporary storage of local changes fail");
-          }
-        }
+          // create files backup of all local changes (in case there occur some error)
+          storedFiles = new StoredFiles(rootPath,getChangedFiles());
 
-        // fetch+fpush
-        command.clear();
-        command.append(Settings.hgCommand,"fetch");
-        command.append("--");
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+          if (Settings.hgSafeUpdate)
           {
-            restoreChanges(databaseId);
+            // do 'safe' update when fetch is used: store local changes into patch
+            storedChanges = new StoredChanges();
           }
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
-        command.clear();
-        command.append(Settings.hgCommand,"fpush");
-        command.append("--");
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
-          {
-            restoreChanges(databaseId);
-          }
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
 
-        // do 'safe' update when fetch is used: restore local changes and merge if needed
-        if (Settings.hgSafeUpdate)
-        {
-  Dprintf.dprintf("");
-          if (!restoreChanges(databaseId))
+          // revert all local changes
+          command.clear();
+          command.append(Settings.hgCommand,"revert","--no-backup","-a");
+          command.append("--");
+          exitCode = new Exec(rootPath,command).waitFor();
+          if (exitCode != 0)
           {
-            throw new RepositoryException("restore local changes fail");
+            if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+            {
+              storedFiles.restore(); storedFiles = null;
+            }
+            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
           }
+
+          // fetch+fpush
+          command.clear();
+          command.append(Settings.hgCommand,"fetch");
+          command.append("--");
+          exitCode = new Exec(rootPath,command).waitFor();
+          if (exitCode != 0)
+          {
+            if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+            {
+              storedFiles.restore(); storedFiles = null;
+            }
+            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          }
+          command.clear();
+          command.append(Settings.hgCommand,"fpush");
+          command.append("--");
+          exitCode = new Exec(rootPath,command).waitFor();
+          if (exitCode != 0)
+          {
+            if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+            {
+              storedFiles.restore(); storedFiles = null;
+            }
+            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          }
+
+          if (Settings.hgSafeUpdate)
+          {
+            // do 'safe' update when fetch is used: restore local changes and merge if needed
+            if (!storedChanges.restore())
+            {
+              throw new RepositoryException("restore local changes fail");
+            }          
+
+            // discard changes patch
+            storedChanges.discard(); storedChanges = null;
+          }
+
+          // discard files backup
+          storedFiles.discard(); storedFiles = null;
+        }
+        finally
+        {
+          if (storedChanges != null) storedChanges.discard();
+          if (storedFiles != null) storedFiles.restore();
         }
       }
       else if (Settings.hgUseForestExtension)
@@ -1326,7 +1377,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
-      immediatePush();
+      // immediate push changes when configured
+      if (Settings.hgImmediatePush)
+      {
+        pushChanges();
+      }
     }
     catch (IOException exception)
     {
@@ -1358,26 +1413,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
+      // immediate commit when message is given
       if (commitMessage != null)
       {
-        // commit added files
-        command.clear();
-        command.append(Settings.hgCommand,"commit");
-        if (!commitMessage.isEmpty())
-        {
-          command.append("-l",commitMessage.getFileName());
-        }
-        else
-        {
-          command.append("-m","empty");
-        }
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
@@ -1416,26 +1455,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
+      // immediate commit when message is given
       if (commitMessage != null)
       {
-        // commit removed files
-        command.clear();
-        command.append(Settings.hgCommand,"commit");
-        if (!commitMessage.isEmpty())
-        {
-          command.append("-l",commitMessage.getFileName());
-        }
-        else
-        {
-          command.append("-m","empty");
-        }
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
@@ -1506,28 +1529,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
-      // commit
+      // immediate commit when message is given
       if (commitMessage != null)
       {
-        // commit remove/add (=rename) file
-        command.clear();
-        command.append(Settings.hgCommand,"commit");
-        if (!commitMessage.isEmpty())
-        {
-          command.append("-l",commitMessage.getFileName());
-        }
-        else
-        {
-          command.append("-m","empty");
-        }
-        command.append("--");
-        command.append(fileData.getFileName());
-        command.append(newName);
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
+        commit(fileData,commitMessage);
       }
     }
     catch (IOException exception)
