@@ -24,8 +24,6 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -47,10 +45,8 @@ import java.util.regex.Matcher;
 class Patch
 {
   // --------------------------- constants --------------------------------
-  private static final String PATCHES_DATABASE_FILE_NAME = Settings.ONZEN_DIRECTORY+File.separator+"patches.db";
-  private static final int    PATCHES_DATABASE_VERSION   = 1;
-
-  private final int PATCH_NUMBER_NONE = -1;
+  private static final String PATCHES_DATABASE_NAME    = "patches";
+  private static final int    PATCHES_DATABASE_VERSION = 1;
 
   public enum States
   {
@@ -122,7 +118,7 @@ class Patch
   {
     ArrayList<Patch> patchList = new ArrayList<Patch>();
 
-    Connection connection = null;
+    Database database = null;
     try
     {
       Statement         statement;
@@ -130,10 +126,10 @@ class Patch
       ResultSet         resultSet1,resultSet2;
 
       // open database
-      connection = openPatchesDatabase();
+      database = openPatchesDatabase();
 
       // get patches (Note: there is no way to use prepared statements with variable "IN"-operator)
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       resultSet1 = null;
       try
       {
@@ -152,12 +148,12 @@ class Patch
                                             ";"
                                            );
 
-        preparedStatement = connection.prepareStatement("SELECT "+
-                                                        "  fileName "+
-                                                        "FROM files "+
-                                                        "WHERE patchId=? "+
-                                                        ";"
-                                                       );
+        preparedStatement = database.connection.prepareStatement("SELECT "+
+                                                                 "  fileName "+
+                                                                 "FROM files "+
+                                                                 "WHERE patchId=? "+
+                                                                 ";"
+                                                                );
         while (resultSet1.next())
         {
           // get patch data
@@ -207,7 +203,7 @@ class Patch
       }
 
       // close database
-      closePatchesDatabase(connection); connection = null;
+      closePatchesDatabase(database);
     }
     catch (SQLException exception)
     {
@@ -216,7 +212,7 @@ class Patch
     }
     finally
     {
-      try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+      try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
     }
 
     return patchList.toArray(new Patch[patchList.size()]);
@@ -231,7 +227,7 @@ class Patch
    * @param lines patch lines
    * @param fileNames file names
    */
-  Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames)
+  public Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames)
   {
     this.rootPath   = rootPath;
     this.state      = state;
@@ -240,7 +236,7 @@ class Patch
     this.fileNames  = fileNames;
 
     this.databaseId = databaseId;
-    this.number     = -1;
+    this.number     = Database.ID_NONE;
     this.lines      = lines;
     this.tmpFile    = null;
   }
@@ -250,9 +246,9 @@ class Patch
    * @param fileDataSet file data set
    * @param lines patch lines
    */
-  Patch(String rootPath, HashSet<FileData> fileDataSet, String[] lines)
+  public Patch(String rootPath, HashSet<FileData> fileDataSet, String[] lines)
   {
-    this(rootPath,-1,States.NONE,"","",lines,null);
+    this(rootPath,Database.ID_NONE,States.NONE,"","",lines,null);
 
     if (fileDataSet != null)
     {
@@ -270,7 +266,7 @@ class Patch
    * @param rootPath root path
    * @param lines patch lines
    */
-  Patch(String rootPath, String[] lines)
+  public Patch(String rootPath, String[] lines)
   {
     this(rootPath,null,lines);
   }
@@ -279,7 +275,7 @@ class Patch
    * @param rootPath root path
    * @param databaseId database id
    */
-  Patch(String rootPath, int databaseId)
+  public Patch(String rootPath, int databaseId)
   {
     this(rootPath,databaseId,States.NONE,"","",null,null);
   }
@@ -287,7 +283,7 @@ class Patch
   /** create patch
    * @param databaseId database id
    */
-  Patch(int databaseId)
+  public Patch(int databaseId)
   {
     this(null,databaseId,States.NONE,"","",null,null);
   }
@@ -297,25 +293,25 @@ class Patch
   public void done()
   {
     // clean-up not used/saved patch: discard allocated patch number
-    if ((databaseId < 0) && (number >= 0))
+    if ((databaseId == Database.ID_NONE) && (number != Database.ID_NONE))
     {
-      Connection connection = null;
+      Database database = null;
       try
       {
         PreparedStatement preparedStatement;
 
         // open database
-        connection = openPatchesDatabase();
+        database = openPatchesDatabase();
 
         // remove not use patch number
-        preparedStatement = connection.prepareStatement("DELETE FROM numbers WHERE id=?;");
+        preparedStatement = database.connection.prepareStatement("DELETE FROM numbers WHERE id=?;");
         preparedStatement.setInt(1,number);
         preparedStatement.executeUpdate();
 
         // close database
-        closePatchesDatabase(connection); connection = null;
+        closePatchesDatabase(database);
 
-        number = -1;
+        number = Database.ID_NONE;
       }
       catch (SQLException exception)
       {
@@ -324,7 +320,7 @@ class Patch
       }
       finally
       {
-        try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
 
@@ -333,20 +329,20 @@ class Patch
   }
 
   /** get patch number
-   * @return patch number or -1 if no patch number could be allocated
+   * @return patch number or Database.ID_NONE if no patch number could be allocated
    */
   public int getNumber()
   {
     // reserve a patch number if required
-    if (number < 0)
+    if (number == Database.ID_NONE)
     {
-      Connection connection = null;
+      Database database = null;
       try
       {
         PreparedStatement preparedStatement;
 
         // open database
-        connection = openPatchesDatabase();
+        database = openPatchesDatabase();
 
         // create number
         SQLException sqlException = null;
@@ -356,12 +352,12 @@ class Patch
           try
           {
             // create empty patch number entry
-            preparedStatement = connection.prepareStatement("INSERT INTO numbers (patchId) VALUES (?);");
+            preparedStatement = database.connection.prepareStatement("INSERT INTO numbers (patchId) VALUES (?);");
             preparedStatement.setInt(1,databaseId);
             preparedStatement.executeUpdate();
 
             // get patch number (=id)
-            number = getLastInsertId(connection);
+            number = database.getLastInsertId();
           }
           catch (SQLException exception)
           {
@@ -372,10 +368,10 @@ class Patch
             try { Thread.sleep(250); } catch (InterruptedException interruptedException) { /* ignored */ }
           }
         }
-        while ((number < 0) && (retryCount < 5));
+        while ((number == Database.ID_NONE) && (retryCount < 5));
 
         // close database
-        closePatchesDatabase(connection); connection = null;
+        closePatchesDatabase(database);
       }
       catch (SQLException exception)
       {
@@ -383,7 +379,7 @@ class Patch
       }
       finally
       {
-        try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
 
@@ -418,20 +414,20 @@ Dprintf.dprintf("");
   public int save()
     throws SQLException
   {
-    Connection connection = null;
+    Database database = null;
     try
     {
       Statement         statement;
       PreparedStatement preparedStatement;
 
       // open database
-      connection = openPatchesDatabase();
+      database = openPatchesDatabase();
 
       // store patch data
       if (databaseId >= 0)
       {
         // update
-        preparedStatement = connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,data=? WHERE id=?;");
+        preparedStatement = database.connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,data=? WHERE id=?;");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
@@ -443,19 +439,19 @@ Dprintf.dprintf("");
       else
       {
         // insert
-        preparedStatement = connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,data) VALUES (?,?,?,?,?);");
+        preparedStatement = database.connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,data) VALUES (?,?,?,?,?);");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,message);
         preparedStatement.setString(5,linesToData(lines));
         preparedStatement.executeUpdate();
-        databaseId = getLastInsertId(connection);
+        databaseId = database.getLastInsertId();
 
         if (number >= 0)
         {
           // update patch number entry
-          preparedStatement = connection.prepareStatement("UPDATE numbers SET patchId=? WHERE id=?;");
+          preparedStatement = database.connection.prepareStatement("UPDATE numbers SET patchId=? WHERE id=?;");
           preparedStatement.setInt(1,databaseId);
           preparedStatement.setInt(2,number);
           preparedStatement.executeUpdate();
@@ -465,10 +461,10 @@ Dprintf.dprintf("");
       if (fileNames != null)
       {
         // insert files
-        preparedStatement = connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
+        preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
-        preparedStatement = connection.prepareStatement("INSERT INTO files (patchId,fileName) VALUES (?,?);");
+        preparedStatement = database.connection.prepareStatement("INSERT INTO files (patchId,fileName) VALUES (?,?);");
         for (String fileName : fileNames)
         {
           preparedStatement.setInt(1,databaseId);
@@ -478,11 +474,11 @@ Dprintf.dprintf("");
       }
 
       // close database
-      closePatchesDatabase(connection); connection = null;
+      closePatchesDatabase(database);
     }
     finally
     {
-      try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+      try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
     }
 
     return databaseId;
@@ -495,7 +491,7 @@ Dprintf.dprintf("");
   {
     if (databaseId >= 0)
     {
-      Connection connection = null;
+      Database database = null;
       try
       {
         Statement         statement;
@@ -503,19 +499,19 @@ Dprintf.dprintf("");
         ResultSet         resultSet;
 
         // open database
-        connection = openPatchesDatabase();
+        database = openPatchesDatabase();
 
         // load patch data
-        preparedStatement = connection.prepareStatement("SELECT "+
-                                                        "  rootPath, "+
-                                                        "  state, "+
-                                                        "  summary, "+
-                                                        "  message, "+
-                                                        "  data "+
-                                                        "FROM patches "+
-                                                        "WHERE id=? "+
-                                                        ";"
-                                                       );
+        preparedStatement = database.connection.prepareStatement("SELECT "+
+                                                                 "  rootPath, "+
+                                                                 "  state, "+
+                                                                 "  summary, "+
+                                                                 "  message, "+
+                                                                 "  data "+
+                                                                 "FROM patches "+
+                                                                 "WHERE id=? "+
+                                                                 ";"
+                                                                );
         preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
@@ -543,12 +539,12 @@ Dprintf.dprintf("rootPath=%s",rootPath);
 
         // load file names
         ArrayList<String> fileNameList = new ArrayList<String>();
-        preparedStatement = connection.prepareStatement("SELECT "+
-                                                        "  fileName "+
-                                                        "FROM files "+
-                                                        "WHERE patchId=? "+
-                                                        ";"
-                                                       );
+        preparedStatement = database.connection.prepareStatement("SELECT "+
+                                                                 "  fileName "+
+                                                                 "FROM files "+
+                                                                 "WHERE patchId=? "+
+                                                                 ";"
+                                                                );
         preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
@@ -567,11 +563,11 @@ Dprintf.dprintf("rootPath=%s",rootPath);
         fileNames = fileNameList.toArray(new String[fileNameList.size()]);
 
         // close database
-        closePatchesDatabase(connection); connection = null;
+        closePatchesDatabase(database);
       }
       finally
       {
-        try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
   }
@@ -583,7 +579,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
   {
     if (databaseId >= 0)
     {
-      Connection connection = null;
+      Database database = null;
       try
       {
         Statement         statement;
@@ -591,31 +587,31 @@ Dprintf.dprintf("rootPath=%s",rootPath);
         ResultSet         resultSet;
 
         // open database
-        connection = openPatchesDatabase();
+        database = openPatchesDatabase();
 
         // delete patch number
-        preparedStatement = connection.prepareStatement("DELETE FROM numbers WHERE patchId=?;");
+        preparedStatement = database.connection.prepareStatement("DELETE FROM numbers WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete file names
-        preparedStatement = connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
+        preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete patch data
-        preparedStatement = connection.prepareStatement("DELETE FROM patches WHERE id=?;");
+        preparedStatement = database.connection.prepareStatement("DELETE FROM patches WHERE id=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // close database
-        closePatchesDatabase(connection); connection = null;
+        closePatchesDatabase(database);
 
-        databaseId = -1;
+        databaseId = Database.ID_NONE;
       }
       finally
       {
-        try { if (connection != null) closePatchesDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
   }
@@ -688,13 +684,12 @@ Dprintf.dprintf("exception=%s",exception);
         try { if (input != null) input.close(); } catch (IOException exception) { /* ignored */ }
       }
 
-//Dprintf.dprintf("fileName=%s",patchChunk.fileName);
       // apply patch lines and create new file
       int lineNb = 1;
       newLineList.clear();
       while (patchChunk.nextChunk())
       {
-Dprintf.dprintf("file '%s', line #%d",patchChunk.fileName,patchChunk.lineNb);
+//Dprintf.dprintf("file '%s', line #%d",patchChunk.fileName,patchChunk.lineNb);
 //for (PatchLines patchLines : patchChunk.patchLineList) Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
 
         // add not changed lines
@@ -708,7 +703,7 @@ Dprintf.dprintf("file '%s', line #%d",patchChunk.fileName,patchChunk.lineNb);
         int lineNbOffset;
         for (PatchLines patchLines : patchChunk.patchLineList)
         {
-Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
+//Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
           switch (patchLines.type)
           {
             case CONTEXT:
@@ -743,7 +738,7 @@ Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
                for (String line : patchLines.lines)
                {
                  newLineList.add(line);
-Dprintf.dprintf("cont %s",line);
+//Dprintf.dprintf("cont %d %d %s",lineNb,patchLines.lines.length,line);
                }
                lineNb += patchLines.lines.length;
              }
@@ -776,7 +771,7 @@ newLineList.add("<<<< unsolved end >>>>");
       }
 
       // add rest of not changed lines
-      while (lineNb < oldLineList.size())
+      while (lineNb <= oldLineList.size())
       {
         newLineList.add(oldLineList.get(lineNb-1));
 //Dprintf.dprintf("rest %s",oldLineList.get(lineNb-1));
@@ -821,7 +816,7 @@ Dprintf.dprintf("exception=%s",exception);
    */
   public String toString()
   {
-    return "Patch {"+number+", summary: "+summary+", state: "+state.toString()+"}";
+    return "Patch {"+number+", summary: "+summary+", state: "+state.toString()+", lines: "+lines.length+"}";
   }
 
   //-----------------------------------------------------------------------
@@ -1026,31 +1021,26 @@ Dprintf.dprintf("exception=%s",exception);
   /** open history database
    * @return connection
    */
-  private static Connection openPatchesDatabase()
+  private static Database openPatchesDatabase()
     throws SQLException
   {
-    Connection connection = null;
+    Database database = null;
     try
     {
       Statement         statement;
       ResultSet         resultSet;
       PreparedStatement preparedStatement;
 
-      // load SQLite driver class
-      Class.forName("org.sqlite.JDBC");
-
-      // open database
-      connection = DriverManager.getConnection("jdbc:sqlite:"+PATCHES_DATABASE_FILE_NAME);
-      connection.setAutoCommit(false);
+      database = new Database(PATCHES_DATABASE_NAME);
 
       // create tables if needed
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
                               "  name  TEXT, "+
                               "  value TEXT "+
                               ");"
                              );
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS patches ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  datetime INTEGER DEFAULT (DATETIME('now')), "+
@@ -1061,14 +1051,14 @@ Dprintf.dprintf("exception=%s",exception);
                               "  data     TEXT "+
                               ");"
                              );
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS files ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  patchId  INTEGER, "+
                               "  fileName TEXT "+
                               ");"
                              );
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS numbers ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  patchId  INTEGER "+
@@ -1076,7 +1066,7 @@ Dprintf.dprintf("exception=%s",exception);
                              );
 
       // init meta data (if not already initialized)
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       resultSet = null;
       try
       {
@@ -1084,7 +1074,7 @@ Dprintf.dprintf("exception=%s",exception);
 
         if (!resultSet.next())
         {
-          preparedStatement = connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+          preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
           preparedStatement.setString(1,Integer.toString(PATCHES_DATABASE_VERSION));
           preparedStatement.executeUpdate();
         }
@@ -1102,57 +1092,17 @@ Dprintf.dprintf("exception=%s",exception);
 exception.printStackTrace();
       throw exception;
     }
-    catch (ClassNotFoundException exception)
-    {
-      throw new SQLException("SQLite database driver not found");
-    }
 
-    return connection;
+    return database;
   }
 
   /** close history database
    * @param connection connection
    */
-  private static void closePatchesDatabase(Connection connection)
+  private static void closePatchesDatabase(Database database)
     throws SQLException
   {
-    connection.setAutoCommit(true);
-    connection.close();
-  }
-
-  /** get id of last inserted row
-   * @param connection database connection
-   * @return id
-   */
-  private int getLastInsertId(Connection connection)
-    throws SQLException
-  {
-    int id = -1;
-
-    PreparedStatement preparedStatement;
-    ResultSet         resultSet;
-
-    // Note: Java sqlite does not support getGeneratedKeys, thus use last_insert_rowid() direct.
-    preparedStatement = connection.prepareStatement("SELECT last_insert_rowid();");
-    resultSet = null;
-    try
-    {
-      resultSet = preparedStatement.executeQuery();
-      if (!resultSet.next())
-      {
-        throw new SQLException("no result");
-      }
-
-      id = resultSet.getInt(1);
-
-      resultSet.close(); resultSet = null;
-    }
-    finally
-    {
-      if (resultSet != null) resultSet.close();
-    }
-
-    return id;
+    database.close();
   }
 
   /** convert data to lines
