@@ -855,9 +855,9 @@ public class Settings
   @ConfigValue
   public static String           svnDiffCommand                         = "";
   @ConfigValue
-  public static String           svnDiffCommandOptions                  = "-u";
+  public static String           svnDiffCommandOptions                  = "-ur";
   @ConfigValue
-  public static String           svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdu";
+  public static String           svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdur";
 
   // HG
   @ConfigComment(text={"","HG specific settings"})
@@ -866,9 +866,9 @@ public class Settings
   @ConfigValue
   public static String           hgDiffCommand                          = "";
   @ConfigValue
-  public static String           hgDiffCommandOptions                   = "-u";
+  public static String           hgDiffCommandOptions                   = "-ur";
   @ConfigValue
-  public static String           hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdu";
+  public static String           hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdur";
   @ConfigValue
   public static boolean          hgImmediatePush                        = false;
   @ConfigValue
