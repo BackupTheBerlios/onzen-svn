@@ -2623,6 +2623,7 @@ Dprintf.dprintf("");
             }
           }
           Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,3);
+          widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch mail.");
 
           button = Widgets.newButton(subSubComposite,"Add");
           Widgets.layout(button,1,1,TableLayoutData.E);
@@ -2640,6 +2641,7 @@ Dprintf.dprintf("");
               }
             }
           });
+          button.setToolTipText("Add new test description.");
 
           button = Widgets.newButton(subSubComposite,"Remove");
           Widgets.layout(button,1,2,TableLayoutData.E);
@@ -2661,6 +2663,7 @@ Dprintf.dprintf("");
               }
             }
           });
+          button.setToolTipText("Remove selected test description.");
         }
 
         label = Widgets.newLabel(subComposite,"To:");
@@ -2669,9 +2672,11 @@ Dprintf.dprintf("");
         widgetPatchMailTo = Widgets.newText(subComposite);
         if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
         Widgets.layout(widgetPatchMailTo,1,1,TableLayoutData.WE);
+        button.setToolTipText("Default to-address for patch mails.");
 
         label = Widgets.newLabel(subComposite,"CC:");
         Widgets.layout(label,2,0,TableLayoutData.W);
+        button.setToolTipText("Default CC-addresses for patch mails.");
 
         widgetPatchMailCC = Widgets.newText(subComposite);
         if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
