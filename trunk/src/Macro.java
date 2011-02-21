@@ -85,7 +85,7 @@ public class Macro
         {
           Object object    = (Object)variable[0];
           String separator = (String)variable[1];
-Dprintf.dprintf("object=%s -- %s",object,separator);
+//Dprintf.dprintf("object=%s -- %s",object,separator);
 
           if      (object instanceof Object[])
           {
