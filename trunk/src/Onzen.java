@@ -2684,7 +2684,7 @@ Dprintf.dprintf("");
         widgetPatchMailSubject = Widgets.newText(subComposite);
         if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
         Widgets.layout(widgetPatchMailSubject,3,1,TableLayoutData.WE);
-        widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  %n% - patch number\n  %summary% - summary text");
+        widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
 
         label = Widgets.newLabel(subComposite,"Text:");
         Widgets.layout(label,4,0,TableLayoutData.NW);
@@ -2692,7 +2692,7 @@ Dprintf.dprintf("");
         widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
         if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
         Widgets.layout(widgetPatchMailText,4,1,TableLayoutData.NSWE);
-        widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  %date% - date\n  %time% - time\n  %datetime% - date/time\n");
+        widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
       }
     }
 
