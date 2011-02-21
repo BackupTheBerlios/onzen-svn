@@ -18,7 +18,7 @@ import java.io.PrintWriter;
 //import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
-//import java.util.Arrays;
+import java.util.Arrays;
 //import java.util.Comparator;
 import java.util.Date;
 //import java.util.HashMap;
@@ -124,6 +124,9 @@ class CommandMailPatch
 
   // --------------------------- constants --------------------------------
 
+  // user events
+  private final int   USER_EVENT_ADD_TEST = 0xFFFF+0;
+
   // --------------------------- variables --------------------------------
   public String               summary;
   public String               message;
@@ -139,15 +142,18 @@ class CommandMailPatch
   private final Shell         dialog;
 
   // widgets
-  private final Text          widgetPatch;
-  private final Text          widgetSummary;
-  private final Text          widgetMessage;
-  private final Text          widgetMailTo;
-  private final Text          widgetMailCC;
-  private final Text          widgetMailSubject;
-  private final Text          widgetMailText;
-  private final Button        widgetSend;
-  private final Button        widgetCancel;
+  private final Text              widgetPatch;
+  private final Text              widgetSummary;
+  private final Text              widgetMessage;
+  private final ScrolledComposite widgetTestsComposite;
+  private final Composite         widgetTests;
+  private final Text              widgetNewTest;
+  private final Text              widgetMailTo;
+  private final Text              widgetMailCC;
+  private final Text              widgetMailSubject;
+  private final Text              widgetMailText;
+  private final Button            widgetSend;
+  private final Button            widgetCancel;
 
   // ------------------------ native functions ----------------------------
 
@@ -166,6 +172,7 @@ class CommandMailPatch
     TabFolder         tabFolder;
     Button            button;
     ScrolledComposite scrolledComposite;
+    SelectionListener selectionListener;
     Listener          listener;
 
     // initialize variables
@@ -223,17 +230,17 @@ class CommandMailPatch
           label = Widgets.newLabel(subSubComposite,"Tests:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
-          scrolledComposite = Widgets.newScrolledComposite(subSubComposite,SWT.V_SCROLL|SWT.H_SCROLL);
-          scrolledComposite.setLayout(new TableLayout(1.0,1.0));
-          Widgets.layout(scrolledComposite,1,0,TableLayoutData.NSWE);
+          widgetTestsComposite = Widgets.newScrolledComposite(subSubComposite,SWT.V_SCROLL|SWT.H_SCROLL);
+          widgetTestsComposite.setLayout(new TableLayout(1.0,1.0));
+          Widgets.layout(widgetTestsComposite,1,0,TableLayoutData.NSWE);
           {
-            subSubSubComposite = Widgets.newComposite(scrolledComposite,SWT.LEFT,2);
-            subSubSubComposite.setLayout(new TableLayout(null,null));
-            Widgets.layout(subSubSubComposite,0,0,TableLayoutData.NSWE);
+            widgetTests = Widgets.newComposite(widgetTestsComposite,SWT.LEFT,2);
+            widgetTests.setLayout(new TableLayout(null,null));
+            Widgets.layout(widgetTests,0,0,TableLayoutData.NSWE);
             {
               for (int z = 0; z < repositoryTab.repository.patchMailTests.length; z++)
               {
-                button = Widgets.newCheckbox(subSubSubComposite,repositoryTab.repository.patchMailTests[z]);
+                button = Widgets.newCheckbox(widgetTests,repositoryTab.repository.patchMailTests[z]);
                 Widgets.layout(button,z,0,TableLayoutData.W);
                 button.addSelectionListener(new SelectionListener()
                 {
@@ -256,10 +263,108 @@ class CommandMailPatch
                 });
               }
             }
-            subSubSubComposite.pack();
-            scrolledComposite.setMinSize(subSubSubComposite.getSize());
-            scrolledComposite.setExpandHorizontal(true);
-            scrolledComposite.setExpandVertical(true);
+            widgetTests.pack();
+            widgetTestsComposite.setMinSize(widgetTests.getSize());
+            widgetTestsComposite.setExpandHorizontal(true);
+            widgetTestsComposite.setExpandVertical(true);
+          }
+
+          subSubSubComposite = Widgets.newComposite(subSubComposite,SWT.LEFT,2);
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+          Widgets.layout(subSubSubComposite,2,0,TableLayoutData.WE);
+          {
+            selectionListener = new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String newTest = widgetNewTest.getText().trim();
+
+                if (!newTest.isEmpty())
+                {
+                  // check for duplicate
+                  boolean found = false;
+                  for (String test : repositoryTab.repository.patchMailTests)
+                  {
+                    if (test.equalsIgnoreCase(newTest))
+                    {
+                      found = true;
+                      break;
+                    }
+                  }
+
+                  if (!found)
+                  {
+                    int n = repositoryTab.repository.patchMailTests.length;
+
+                    // add new test
+                    repositoryTab.repository.patchMailTests = Arrays.copyOf(repositoryTab.repository.patchMailTests,n+1);
+                    repositoryTab.repository.patchMailTests[n] = newTest;
+
+                    // add button
+                    Button button = Widgets.newCheckbox(widgetTests,newTest);
+                    Widgets.layout(button,n,0,TableLayoutData.W);
+                    button.addSelectionListener(new SelectionListener()
+                    {
+                      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                      {
+                      }
+                      public void widgetSelected(SelectionEvent selectionEvent)
+                      {
+                        Button widget = (Button)selectionEvent.widget;
+                        if (widget.getSelection())
+                        {
+                          data.tests.add(widget.getText());
+                        }
+                        else
+                        {
+                          data.tests.remove(widget.getText());
+                        }
+                        updateMailText();
+                      }
+                    });
+                    widgetTests.pack();
+                    widgetTestsComposite.setMinSize(widgetTests.getSize());
+                  }
+
+                  // add test to mail
+                  data.tests.add(newTest);
+                  updateMailText();
+                }
+
+                widgetNewTest.setText("");
+                widgetNewTest.setFocus();
+              }
+            };
+
+            widgetNewTest = Widgets.newText(subSubSubComposite);
+            Widgets.layout(widgetNewTest,0,0,TableLayoutData.WE);
+            widgetNewTest.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+                Widgets.notify(dialog,USER_EVENT_ADD_TEST);
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+              }
+            });
+
+            
+            button = Widgets.newButton(subSubSubComposite,"Add");
+            Widgets.layout(button,0,1,TableLayoutData.E);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Widgets.notify(dialog,USER_EVENT_ADD_TEST);
+              }
+            });
           }
         }
       }
@@ -414,6 +519,70 @@ class CommandMailPatch
       public void modifyText(ModifyEvent modifyEvent)
       {
         updateMailText();
+      }
+    });
+
+    dialog.addListener(USER_EVENT_ADD_TEST,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        String newTest = widgetNewTest.getText().trim();
+
+        if (!newTest.isEmpty())
+        {
+          // check for duplicate
+          boolean found = false;
+          for (String test : repositoryTab.repository.patchMailTests)
+          {
+            if (test.equalsIgnoreCase(newTest))
+            {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found)
+          {
+            int n = repositoryTab.repository.patchMailTests.length;
+
+            // add new test
+            repositoryTab.repository.patchMailTests = Arrays.copyOf(repositoryTab.repository.patchMailTests,n+1);
+            repositoryTab.repository.patchMailTests[n] = newTest;
+
+            // add button
+            Button button = Widgets.newCheckbox(widgetTests,newTest);
+            button.setSelection(true);
+            Widgets.layout(button,n,0,TableLayoutData.W);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Button widget = (Button)selectionEvent.widget;
+                if (widget.getSelection())
+                {
+                  data.tests.add(widget.getText());
+                }
+                else
+                {
+                  data.tests.remove(widget.getText());
+                }
+                updateMailText();
+              }
+            });
+            widgetTests.pack();
+            widgetTestsComposite.setMinSize(widgetTests.getSize());
+          }
+
+          // add test to mail
+          data.tests.add(newTest);
+          updateMailText();
+        }
+
+        widgetNewTest.setText("");
+        widgetNewTest.setFocus();
       }
     });
 
