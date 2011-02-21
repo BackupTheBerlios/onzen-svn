@@ -22,8 +22,6 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.MulticastSocket;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -131,8 +129,8 @@ class Message
   protected final static String  USER_NAME = System.getProperty("user.name");
   protected final static String  ID        = String.format("%08x",System.currentTimeMillis());
 
-  private static final String ONZEN_HISTORY_DATABASE_FILE_NAME = Settings.ONZEN_DIRECTORY+File.separator+"history.db";
-  private static final int    ONZEN_HISTORY_DATABASE_VERSION   = 1;
+  private static final String HISTORY_DATABASE_NAME    = "history";
+  private static final int    HISTORY_DATABASE_VERSION = 1;
 
   // --------------------------- variables --------------------------------
   private static                LinkedList<String> history = new LinkedList<String>();
@@ -149,19 +147,19 @@ class Message
    */
   public static void loadHistory()
   {
-    Connection connection = null;
+    Database database = null;
     try
     {
       PreparedStatement preparedStatement;
       ResultSet         resultSet;
 
       // open database
-      connection = openHistoryDatabase();
+      database = openHistoryDatabase();
 
       synchronized(history)
       {
         // load history
-        preparedStatement = connection.prepareStatement("SELECT message FROM messages ORDER BY datetime ASC;");
+        preparedStatement = database.connection.prepareStatement("SELECT message FROM messages ORDER BY datetime ASC;");
         resultSet = preparedStatement.executeQuery();
         history.clear();
         while (resultSet.next())
@@ -178,7 +176,7 @@ class Message
       }
 
       // close database
-      closeHistoryDatabase(connection); connection = null;
+      closeHistoryDatabase(database);
     }
     catch (SQLException exception)
     {
@@ -187,7 +185,7 @@ class Message
     }
     finally
     {
-      try { if (connection != null) closeHistoryDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+      try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { /* ignored */ }
     }
   }
 
@@ -317,32 +315,29 @@ Dprintf.dprintf("exception=%s",exception);
   //-----------------------------------------------------------------------
 
   /** open history database
-   * @return connection
+   * @return database
    */
-  private static Connection openHistoryDatabase()
+  private static Database openHistoryDatabase()
     throws SQLException
   {
-    Connection connection;
+    Database database = null;
     try
     {
       Statement         statement;
       ResultSet         resultSet;
       PreparedStatement preparedStatement;
 
-      // load SQLite driver class
-      Class.forName("org.sqlite.JDBC");
-
       // open database
-      connection = DriverManager.getConnection("jdbc:sqlite:"+ONZEN_HISTORY_DATABASE_FILE_NAME);
+      database = new Database(HISTORY_DATABASE_NAME);
 
       // create tables if needed
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
                               "  name  TEXT, "+
                               "  value TEXT "+
                               ");"
                              );
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS messages ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  datetime INTEGER DEFAULT (DATETIME('now')), "+
@@ -351,32 +346,33 @@ Dprintf.dprintf("exception=%s",exception);
                              );
 
       // init meta data (if not already initialized)
-      statement = connection.createStatement();
+      statement = database.connection.createStatement();
       resultSet = statement.executeQuery("SELECT name,value FROM meta");
       if (!resultSet.next())
       {
-        preparedStatement = connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
-        preparedStatement.setString(1,Integer.toString(ONZEN_HISTORY_DATABASE_VERSION));
+        preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+        preparedStatement.setString(1,Integer.toString(HISTORY_DATABASE_VERSION));
         preparedStatement.executeUpdate();
       }
       resultSet.close();
     }
-    catch (ClassNotFoundException exception)
+    catch (SQLException exception)
     {
-      throw new SQLException("SQLite database driver not found");
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+      throw exception;
     }
 
-    return connection;
+    return database;
   }
 
   /** close history database
-   * @param connection connection
+   * @param database database
    */
-  private static void closeHistoryDatabase(Connection connection)
+  private static void closeHistoryDatabase(Database database)
     throws SQLException
   {
-    connection.setAutoCommit(true);
-    connection.close();
+    database.close();
   }
 
   /** store message into history database
@@ -397,17 +393,17 @@ Dprintf.dprintf("exception=%s",exception);
         }
 
         // store in database
-        Connection connection = null;
+        Database database = null;
         try
         {
           PreparedStatement preparedStatement;
           ResultSet         resultSet;
 
           // open database
-          connection = openHistoryDatabase();
+          database = openHistoryDatabase();
 
           // add to database
-          preparedStatement = connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
+          preparedStatement = database.connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
           preparedStatement.setString(1,message);
           preparedStatement.execute();
 
@@ -415,12 +411,12 @@ Dprintf.dprintf("exception=%s",exception);
           boolean done = false;
           do
           {
-            preparedStatement = connection.prepareStatement("SELECT id FROM messages ORDER BY datetime DESC LIMIT ?,1;");
+            preparedStatement = database.connection.prepareStatement("SELECT id FROM messages ORDER BY datetime DESC LIMIT ?,1;");
             preparedStatement.setInt(1,Settings.maxMessageHistory);
             resultSet = preparedStatement.executeQuery();
             if (resultSet.next())
             {
-              preparedStatement = connection.prepareStatement("DELETE FROM messages WHERE id=?;");
+              preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE id=?;");
               preparedStatement.setLong(1,resultSet.getLong("id"));
               preparedStatement.execute();
             }
@@ -433,7 +429,7 @@ Dprintf.dprintf("exception=%s",exception);
           while (!done);
 
           // close database
-          closeHistoryDatabase(connection); connection = null;
+          closeHistoryDatabase(database);
         }
         catch (SQLException exception)
         {
@@ -442,7 +438,7 @@ Dprintf.dprintf("exception=%s",exception);
         }
         finally
         {
-          try { if (connection != null) closeHistoryDatabase(connection); } catch (SQLException exception) { /* ignored */ }
+          try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { /* ignored */ }
         }
       }
     }
