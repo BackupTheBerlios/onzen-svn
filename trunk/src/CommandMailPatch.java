@@ -29,11 +29,12 @@ import java.util.StringTokenizer;
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
 import org.eclipse.swt.custom.CaretListener;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
@@ -103,11 +104,12 @@ class CommandMailPatch
    */
   class Data
   {
-    String[] revisionNames;        // revision names
-    String[] lines;                // patch lines
-    String[] linesNoWhitespaces;   // patch lines (without whitespaces)
-    String   summary;              // summary for patch
-    String   message;              // message for patch (without mail prefix/postfix etc.)
+    String[]        revisionNames;        // revision names
+    String[]        lines;                // patch lines
+    String[]        linesNoWhitespaces;   // patch lines (without whitespaces)
+    String          summary;              // summary for patch
+    String          message;              // message for patch (without mail prefix/postfix etc.)
+    HashSet<String> tests;                // test infos
 
     Data()
     {
@@ -116,35 +118,36 @@ class CommandMailPatch
       this.linesNoWhitespaces = null;
       this.summary            = null;
       this.message            = null;
+      this.tests              = new HashSet<String>();
     }
   };
 
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  public String summary;
-  public String message;
+  public String               summary;
+  public String               message;
 
   // global variable references
-  private final RepositoryTab     repositoryTab;
-  private final Patch             patch;
-  private final Date              date;
-  private final Display           display;
+  private final RepositoryTab repositoryTab;
+  private final Patch         patch;
+  private final Date          date;
+  private final Display       display;
 
   // dialog
-  private final Data              data = new Data();
-  private final Shell             dialog;
+  private final Data          data = new Data();
+  private final Shell         dialog;
 
   // widgets
-  private final Text              widgetPatch;
-  private final Text              widgetSummary;
-  private final Text              widgetMessage;
-  private final Text              widgetMailTo;
-  private final Text              widgetMailCC;
-  private final Text              widgetMailSubject;
-  private final Text              widgetMailText;
-  private final Button            widgetSend;
-  private final Button            widgetCancel;
+  private final Text          widgetPatch;
+  private final Text          widgetSummary;
+  private final Text          widgetMessage;
+  private final Text          widgetMailTo;
+  private final Text          widgetMailCC;
+  private final Text          widgetMailSubject;
+  private final Text          widgetMailText;
+  private final Button        widgetSend;
+  private final Button        widgetCancel;
 
   // ------------------------ native functions ----------------------------
 
@@ -158,11 +161,12 @@ class CommandMailPatch
    */
   CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String message)
   {
-    Composite composite,subComposite,subSubComposite;
-    Label     label;
-    TabFolder tabFolder;
-    Button    button;
-    Listener  listener;
+    Composite         composite,subComposite,subSubComposite,subSubSubComposite;
+    Label             label;
+    TabFolder         tabFolder;
+    Button            button;
+    ScrolledComposite scrolledComposite;
+    Listener          listener;
 
     // initialize variables
     this.summary       = null;
@@ -213,14 +217,50 @@ class CommandMailPatch
         }
 
         subSubComposite = Widgets.newComposite(subComposite);
-        subSubComposite.setLayout(new TableLayout(null,1.0));
-        Widgets.layout(subSubComposite,0,1,TableLayoutData.NS);
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0));
+        Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
         {
-// NYI: test infos?
-          button = Widgets.newCheckbox(subSubComposite,"compile");
-          Widgets.layout(button,0,0,TableLayoutData.W);
-          button = Widgets.newCheckbox(subSubComposite,"compile without warnings");
-          Widgets.layout(button,1,0,TableLayoutData.W);
+          label = Widgets.newLabel(subSubComposite,"Tests:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          scrolledComposite = Widgets.newScrolledComposite(subSubComposite,SWT.V_SCROLL|SWT.H_SCROLL);
+          scrolledComposite.setLayout(new TableLayout(1.0,1.0));
+          Widgets.layout(scrolledComposite,1,0,TableLayoutData.NSWE);
+          {
+            subSubSubComposite = Widgets.newComposite(scrolledComposite,SWT.LEFT,2);
+            subSubSubComposite.setLayout(new TableLayout(null,null));
+            Widgets.layout(subSubSubComposite,0,0,TableLayoutData.NSWE);
+            {
+              for (int z = 0; z < repositoryTab.repository.patchMailTests.length; z++)
+              {
+                button = Widgets.newCheckbox(subSubSubComposite,repositoryTab.repository.patchMailTests[z]);
+                Widgets.layout(button,z,0,TableLayoutData.W);
+                button.addSelectionListener(new SelectionListener()
+                {
+                  public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                  {
+                  }
+                  public void widgetSelected(SelectionEvent selectionEvent)
+                  {
+                    Button widget = (Button)selectionEvent.widget;
+                    if (widget.getSelection())
+                    {
+                      data.tests.add(widget.getText());
+                    }
+                    else
+                    {
+                      data.tests.remove(widget.getText());
+                    }
+                    updateMailText();
+                  }
+                });
+              }
+            }
+            subSubSubComposite.pack();
+            scrolledComposite.setMinSize(subSubSubComposite.getSize());
+            scrolledComposite.setExpandHorizontal(true);
+            scrolledComposite.setExpandVertical(true);
+          }
         }
       }
 
@@ -339,9 +379,6 @@ class CommandMailPatch
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-Dprintf.dprintf("");
-
           Settings.geometryMailPatch = dialog.getSize();
 
           Dialogs.close(dialog,true);
@@ -445,24 +482,25 @@ Dprintf.dprintf("");
    */
   private void updateMailSubject()
   {
-    String subject = repositoryTab.repository.patchMailSubject;
-    subject = subject.replace("%n%",Integer.toString(patch.getNumber()));
-    subject = subject.replace("%summary%",widgetSummary.getText());
-    widgetMailSubject.setText(subject);
+    Macro macro = new Macro(repositoryTab.repository.patchMailSubject);
+    macro.expand("n",      patch.getNumber()      );
+    macro.expand("summary",widgetSummary.getText());
+    widgetMailSubject.setText(macro.value());
   }
 
   /** update mail text
    */
   private void updateMailText()
   {
-    String text = repositoryTab.repository.patchMailText;
-    text = text.replace("%n%",Integer.toString(patch.getNumber()));
-    text = text.replace("%summary%",widgetSummary.getText());
-    text = text.replace("%date%",Onzen.DATE_FORMAT.format(date));
-    text = text.replace("%time%",Onzen.TIME_FORMAT.format(date));
-    text = text.replace("%datetime%",Onzen.DATETIME_FORMAT.format(date));
-    text = text.replace("%message%",widgetMessage.getText());
-    widgetMailText.setText(text);
+    Macro macro = new Macro(repositoryTab.repository.patchMailText);
+    macro.expand("n",       patch.getNumber()                 );
+    macro.expand("summary", widgetSummary.getText()           );
+    macro.expand("date",    Onzen.DATE_FORMAT.format(date)    );
+    macro.expand("time",    Onzen.TIME_FORMAT.format(date)    );
+    macro.expand("datetime",Onzen.DATETIME_FORMAT.format(date));
+    macro.expand("message", widgetMessage.getText()           );
+    macro.expand("tests",   data.tests,"\n"                   );
+    widgetMailText.setText(macro.value());
   }
 }
 
