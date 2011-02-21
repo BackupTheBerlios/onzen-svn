@@ -3,7 +3,7 @@
 * $Source: /tmp/cvs/onzen/src/Patch.java,v $
 * $Revision: 1.1 $
 * $Author: torsten $
-* Contents: patch function
+* Contents: patch functions
 * Systems: all
 *
 \***********************************************************************/
@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -93,15 +92,15 @@ class Patch
   };
 
   // --------------------------- variables --------------------------------
-  public  String   rootPath;
-  public  States   state;
-  public  String[] fileNames;
-  public  String   summary;
-  public  String   message;
-  public  String[] lines;
+  public  String   rootPath;               // root path
+  public  States   state;                  // patch state; see States
+  public  String[] fileNames;              // files belonging to patch
+  public  String   summary;                // summary comment
+  public  String   message;                // commit message
+  public  String[] lines;                  // patch lines
 
-  private int      databaseId;
-  private int      number;
+  private int      databaseId;             // id in database or Database.ID_NONE
+  private int      number;                 // patch number or Database.ID_NONE
   private File     tmpFile;
 
   // ------------------------ native functions ----------------------------
@@ -164,7 +163,7 @@ class Patch
           States   state      = States.toEnum(resultSet1.getInt("state"));
           String   summary    = resultSet1.getString("summary"); if (summary == null) summary = "";
           String   message    = resultSet1.getString("message"); if (message == null) message = "";
-          String[] lines      = dataToLines(resultSet1.getString("data"));
+          String[] lines      = Database.dataToLines(resultSet1.getString("data"));
           int      number     = resultSet1.getInt("number");
 //Dprintf.dprintf("databaseId=%d state=%s summary=%s number=%d",databaseId,state,summary,number);
 
@@ -348,7 +347,7 @@ class Patch
     if (tmpFile != null) tmpFile.delete();
   }
 
-  /** get patch number
+  /** allocate a patch number
    * @return patch number or Database.ID_NONE if no patch number could be allocated
    */
   public int getNumber()
@@ -460,7 +459,7 @@ Dprintf.dprintf("");
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,message);
-        preparedStatement.setString(5,linesToData(lines));
+        preparedStatement.setString(5,Database.linesToData(lines));
         preparedStatement.setInt(6,databaseId);
         preparedStatement.executeUpdate();
       }
@@ -472,7 +471,7 @@ Dprintf.dprintf("");
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,message);
-        preparedStatement.setString(5,linesToData(lines));
+        preparedStatement.setString(5,Database.linesToData(lines));
         preparedStatement.executeUpdate();
         databaseId = database.getLastInsertId();
 
@@ -881,8 +880,15 @@ Dprintf.dprintf("exception=%s",exception);
   // patch lines
   class PatchLines
   {
+    // --------------------------- constants --------------------------------
+
+    // --------------------------- variables --------------------------------
     PatchLineTypes type;
     String[]       lines;
+
+    // ------------------------ native functions ----------------------------
+
+    // ---------------------------- methods ---------------------------------
 
     PatchLines(PatchLineTypes type, AbstractList<String> lineList)
     {
@@ -915,12 +921,21 @@ Dprintf.dprintf("exception=%s",exception);
   // patch chunk
   class PatchChunk
   {
+    // --------------------------- constants --------------------------------
+
+    // --------------------------- variables --------------------------------
     String                fileName;
     int                   lineNb;
     ArrayList<PatchLines> patchLineList;
 
     private int index;
 
+    // ------------------------ native functions ----------------------------
+
+    // ---------------------------- methods ---------------------------------
+
+    /** create patch chunk
+     */
     PatchChunk()
     {
       this.fileName      = null;
@@ -929,6 +944,9 @@ Dprintf.dprintf("exception=%s",exception);
       this.index         = 0;
     }
 
+    /** parse next file entry in patch
+     * @return true iff file entry found
+     */
     public boolean nextFile()
     {
       final Pattern PATTERN_FILENAME = Pattern.compile("^\\+\\+\\+\\s+(.*)\\s+(\\S+\\s+\\S+\\s+).*",Pattern.CASE_INSENSITIVE);
@@ -941,7 +959,6 @@ Dprintf.dprintf("exception=%s",exception);
              && !(matcher = PATTERN_FILENAME.matcher(lines[index])).matches()
             )
       {
-  //Dprintf.dprintf("xxx=%s",lines[patchChunk.index]);
         index++;
       }
 
@@ -959,6 +976,9 @@ Dprintf.dprintf("exception=%s",exception);
       }
     }
 
+    /** parse next chunk in patch
+     * @return true iff chunk found
+     */
     public boolean nextChunk()
     {
       final Pattern PATTERN_INDEX  = Pattern.compile("^@@\\s+\\-([\\d,]*)\\s+\\+([\\d,]*)\\s+@@$",Pattern.CASE_INSENSITIVE);
@@ -1046,8 +1066,8 @@ Dprintf.dprintf("exception=%s",exception);
     }
   }
 
-  /** open history database
-   * @return connection
+  /** open patches database
+   * @return database
    */
   private static Database openPatchesDatabase()
     throws SQLException
@@ -1124,48 +1144,13 @@ exception.printStackTrace();
     return database;
   }
 
-  /** close history database
-   * @param connection connection
+  /** close patches database
+   * @param database database
    */
   private static void closePatchesDatabase(Database database)
     throws SQLException
   {
     database.close();
-  }
-
-  /** convert data to lines
-   * @param data data (lines separated by \n) or null
-   * @return lines
-   */
-  private static String[] dataToLines(String data)
-  {
-    ArrayList<String> lineList = new ArrayList<String>();
-
-    if (data != null)
-    {
-      StringTokenizer stringTokenizer = new StringTokenizer(data,"\n");
-      while (stringTokenizer.hasMoreTokens())
-      {
-        lineList.add(stringTokenizer.nextToken());
-      }
-    }
-
-    return lineList.toArray(new String[lineList.size()]);
-  }
-
-  /** convert lines to data
-   * @param lines lines
-   * @return data (lines separated by \n)
-   */
-  private static String linesToData(String[] lines)
-  {
-    StringBuilder buffer = new StringBuilder();
-    for (String line : lines)
-    {
-      buffer.append(line); buffer.append('\n');
-    }
-
-    return buffer.toString();
   }
 }
 
