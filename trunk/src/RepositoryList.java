@@ -133,18 +133,12 @@ Dprintf.dprintf("");
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 
         // read xml file
-        RepositoryList tmpRepositories = (RepositoryList)unmarshaller.unmarshal(new FileReader(fileName));
+        RepositoryList tmpRepositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(fileName));
         synchronized(repositories)
         {
           repositories.clear();
-          repositories.addAll(tmpRepositories.repositories);
+          repositories.addAll(tmpRepositoryList.repositories);
         }
-/*
-for (Repository repository : repositories)
-{
-Dprintf.dprintf("repository=%s",repository);
-}
-/**/
       }
 
       // store name
