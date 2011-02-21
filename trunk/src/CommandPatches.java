@@ -276,8 +276,9 @@ class CommandPatches
       widgetPatches = Widgets.newTable(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
       widgetPatches.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetPatches,1,0,TableLayoutData.NSWE);
-      Widgets.addTableColumn(widgetPatches,0,"State",  SWT.LEFT);
-      Widgets.addTableColumn(widgetPatches,1,"Summary",SWT.LEFT);
+      Widgets.addTableColumn(widgetPatches,0,"#",      SWT.RIGHT);
+      Widgets.addTableColumn(widgetPatches,1,"State",  SWT.LEFT );
+      Widgets.addTableColumn(widgetPatches,2,"Summary",SWT.LEFT );
       Widgets.setTableColumnWidth(widgetPatches,Settings.geometryPatchesColumn.width);
 
       label = Widgets.newLabel(composite,"Files:");
@@ -611,6 +612,7 @@ Dprintf.dprintf("");
           {
             Widgets.addTableEntry(widgetPatches,
                                   patch,
+                                  patch.getNumberText(),
                                   patch.state.toString(),
                                   patch.summary
                                  );
