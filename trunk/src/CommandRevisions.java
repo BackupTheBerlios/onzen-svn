@@ -543,48 +543,54 @@ throw new RepositoryException("NYI");
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
-        for (DrawInfo drawInfo : data.drawInfos)
+        if (data.drawInfos != null)
         {
-          if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
+          for (DrawInfo drawInfo : data.drawInfos)
           {
-            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData);
-            rommandRevisionInfo.run();
-            break;
+            if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
+            {
+              CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData);
+              rommandRevisionInfo.run();
+              break;
+            }
           }
         }
       }
       public void mouseDown(MouseEvent mouseEvent)
       {
-        if (!data.containerResizeFlag)
-        {          
-          for (DrawInfo drawInfo : data.drawInfos)
-          {
-            if      (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
+        if (data.drawInfos != null)
+        {
+          if (!data.containerResizeFlag)
+          {          
+            for (DrawInfo drawInfo : data.drawInfos)
             {
-              // selected revision
-              data.selectedRevisionData0 = data.selectedRevisionData1;
-              data.selectedRevisionData1 = drawInfo.revisionData;
-              data.selectedRevisionData  = drawInfo.revisionData;
+              if      (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
+              {
+                // selected revision
+                data.selectedRevisionData0 = data.selectedRevisionData1;
+                data.selectedRevisionData1 = drawInfo.revisionData;
+                data.selectedRevisionData  = drawInfo.revisionData;
 
-              // notify modification
-              Widgets.modified(data);
+                // notify modification
+                Widgets.modified(data);
 
-              redraw();
-              break;
-            }
-            else if (drawInfo.handle.contains(mouseEvent.x,mouseEvent.y))
-            {
-              // start resize container
-              data.containerResizeStart.x          = mouseEvent.x;
-              data.containerResizeStart.y          = mouseEvent.y;
-              data.containerResizeDelta.x          = 0;
-              data.containerResizeDelta.y          = 0;
-              data.containerResizeRectangle.x      = drawInfo.container.x;
-              data.containerResizeRectangle.y      = drawInfo.container.y;
-              data.containerResizeRectangle.width  = drawInfo.container.width;
-              data.containerResizeRectangle.height = drawInfo.container.height;
-              data.containerResizeFlag             = true;
-              break;
+                redraw();
+                break;
+              }
+              else if (drawInfo.handle.contains(mouseEvent.x,mouseEvent.y))
+              {
+                // start resize container
+                data.containerResizeStart.x          = mouseEvent.x;
+                data.containerResizeStart.y          = mouseEvent.y;
+                data.containerResizeDelta.x          = 0;
+                data.containerResizeDelta.y          = 0;
+                data.containerResizeRectangle.x      = drawInfo.container.x;
+                data.containerResizeRectangle.y      = drawInfo.container.y;
+                data.containerResizeRectangle.width  = drawInfo.container.width;
+                data.containerResizeRectangle.height = drawInfo.container.height;
+                data.containerResizeFlag             = true;
+                break;
+              }
             }
           }
         }
