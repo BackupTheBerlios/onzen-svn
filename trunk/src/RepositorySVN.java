@@ -821,6 +821,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException
   {
+    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*)",Pattern.CASE_INSENSITIVE);
+
     ArrayList<String> patchLineList = new ArrayList<String>();
     try
     {
@@ -860,9 +863,46 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exec = new Exec(rootPath,command);
 
       // read patch data
+      Matcher matcher;
       while ((line = exec.getStdout()) != null)
       {
-        patchLineList.add(line);
+        // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
+        if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
+        {
+          String fileName = matcher.group(1);
+          if (fileName.startsWith(rootPath))
+          {
+            // absolute path -> convert to relative path
+            fileName = matcher.group(1).substring(rootPath.length()+1);
+          }
+          else
+          {
+            // relative path -> strip out first path in name
+            int index = fileName.indexOf(File.separator);
+            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+          }
+          patchLineList.add("--- "+fileName);
+        }
+        else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
+        {
+          String fileName = matcher.group(1);
+          if (fileName.startsWith(rootPath))
+          {
+            // absolute path -> convert to relative path
+            fileName = matcher.group(1).substring(rootPath.length()+1);
+          }
+          else
+          {
+            // relative path -> strip out first path in name
+            int index = fileName.indexOf(File.separator);
+            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+          }
+          patchLineList.add("+++ "+fileName);
+        }
+        else
+        {
+          patchLineList.add(line);
+        }
       }
 
       // done
