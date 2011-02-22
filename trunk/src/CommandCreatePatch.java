@@ -367,6 +367,7 @@ class CommandCreatePatch
           }
         }
       });
+      button.setToolTipText("Save patch to file.");
 
       button = Widgets.newButton(composite,"Store");
       button.setEnabled(false);
@@ -375,7 +376,7 @@ class CommandCreatePatch
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled(data.lines != null);
+//          if (!control.isDisposed()) control.setEnabled(data.lines != null);
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -393,6 +394,7 @@ Dprintf.dprintf("");
 
         }
       });
+      button.setToolTipText("NYI");
 
       button = Widgets.newButton(composite,"Mail for review");
       button.setEnabled(false);
@@ -426,8 +428,7 @@ Dprintf.dprintf("");
               CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
                                                                        repositoryTab,
                                                                        fileDataSet,
-                                                                       patch,
-                                                                       ""
+                                                                       patch
                                                                       );
               if (commandMailPatch.execute())
               {
@@ -456,6 +457,7 @@ Dprintf.dprintf("");
           }
         }
       });
+      button.setToolTipText("Mail patch for reviewing.");
 
       button = Widgets.newButton(composite,"Commit");
       button.setEnabled(false);
@@ -464,7 +466,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled(repositoryTab.repository.supportPatchQueues() && (data.lines != null));
+//          if (!control.isDisposed()) control.setEnabled(repositoryTab.repository.supportPatchQueues() && (data.lines != null));
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -481,6 +483,7 @@ Dprintf.dprintf("");
           Dialogs.close(dialog,true);
         }
       });
+      button.setToolTipText("NYI");
 
       widgetButtonClose = Widgets.newButton(composite,"Close");
       Widgets.layout(widgetButtonClose,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
