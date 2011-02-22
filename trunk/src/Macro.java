@@ -23,7 +23,7 @@ public class Macro
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  private String                   string;
+  private String[]                 strings;
   private HashMap<String,Object[]> variableSet;
 
   // ------------------------ native functions ----------------------------
@@ -33,10 +33,18 @@ public class Macro
   /** create macro
    * @param string string to expand
    */
+  Macro(String[] strings)
+  {
+    this.strings = strings;
+    variableSet  = new HashMap<String,Object[]>();
+  }
+
+  /** create macro
+   * @param string string to expand
+   */
   Macro(String string)
   {
-    this.string = string;
-    variableSet = new HashMap<String,Object[]>();
+    this(new String[]{string});
   }
 
   /** add expand variable
@@ -58,120 +66,140 @@ public class Macro
     expand(name,value,null);
   }
 
-  /** expand macro
-   * @return expanded macro string
+  /** expand macro value
+   * @return expanded macro values array
    */
-  public String value()
+  public String[] getValueArray()
   {
     final Pattern PATTERN_VARIABLE = Pattern.compile("(.*?)\\$\\{\\s*(\\w+)\\s*(.*?)\\}(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
 
-    StringBuilder buffer = new StringBuilder();
-    String        value  = string;
-    while (!value.isEmpty())
+    String[] values = new String[strings.length];
+
+    for (int z = 0; z < strings.length; z++)
     {
-//Dprintf.dprintf("value=%s",value);
-      Matcher matcher = PATTERN_VARIABLE.matcher(value);
-      if (matcher.matches())
+      StringBuilder value    = new StringBuilder();
+      String        template = strings[z];
+      while (!template.isEmpty())
       {
-        buffer.append(matcher.group(1));
-        value = matcher.group(4);
-
-        String name    = matcher.group(2);
-        String format  = matcher.group(3);
-//Dprintf.dprintf("name=%s -- format=#%s#",name,format);
-
-        Object[] variable = variableSet.get(name);
-        if (variable != null)
+  //Dprintf.dprintf("value=%s",value);
+        Matcher matcher = PATTERN_VARIABLE.matcher(template);
+        if (matcher.matches())
         {
-          Object object    = (Object)variable[0];
-          String separator = (String)variable[1];
-//Dprintf.dprintf("object=%s -- %s",object,separator);
+          value.append(matcher.group(1));
+          template = matcher.group(4);
 
-          if      (object instanceof Object[])
+          String name    = matcher.group(2);
+          String format  = matcher.group(3);
+  //Dprintf.dprintf("name=%s -- format=#%s#",name,format);
+
+          Object[] variable = variableSet.get(name);
+          if (variable != null)
           {
-            // expand array
-            Object[] array = (Object[])object;
-            for (int z = 0; z < array.length; z++)
+            Object object    = (Object)variable[0];
+            String separator = (String)variable[1];
+  //Dprintf.dprintf("object=%s -- %s",object,separator);
+
+            if      (object instanceof Object[])
             {
-              if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
-              String s = array[z].toString();
-              if (!format.isEmpty())
+              // expand array
+              StringBuilder buffer = new StringBuilder();
+              Object[] array = (Object[])object;
+              for (int i = 0; i < array.length; i++)
               {
-                try
+                if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
+                String s = array[i].toString();
+                if (!format.isEmpty())
                 {
-                  buffer.append(String.format(format,s));
+                  try
+                  {
+                    buffer.append(String.format(format,s));
+                  }
+                  catch (Exception exception)
+                  {
+                    buffer.append(s);
+                  }
                 }
-                catch (Exception exception)
+                else
                 {
                   buffer.append(s);
                 }
               }
-              else
-              {
-                buffer.append(s);
-              }
+              value.append(buffer);
             }
-          }
-          else if (object instanceof Collection)
-          {
-            // expand collection
-            Iterator iterator = ((Collection)object).iterator();
-            while (iterator.hasNext())
+            else if (object instanceof Collection)
             {
-              if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
-              String s = iterator.next().toString();
-              if (!format.isEmpty())
+              // expand collection
+              StringBuilder buffer = new StringBuilder();
+              Iterator iterator = ((Collection)object).iterator();
+              while (iterator.hasNext())
               {
-                try
+                if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
+                String s = iterator.next().toString();
+                if (!format.isEmpty())
                 {
-                  buffer.append(String.format(format,s));
+                  try
+                  {
+                    buffer.append(String.format(format,s));
+                  }
+                  catch (Exception exception)
+                  {
+                    buffer.append(s);
+                  }
                 }
-                catch (Exception exception)
+                else
                 {
                   buffer.append(s);
                 }
               }
+              value.append(buffer);
+            }
+            else
+            {
+              // expand object
+              String s = object.toString();
+              if (!format.isEmpty())
+              {
+                try
+                {
+                  value.append(String.format(format,s));
+                }
+                catch (Exception exception)
+                {
+                  value.append(s);
+                }
+              }
               else
               {
-                buffer.append(s);
+                value.append(s);
               }
             }
           }
           else
           {
-            // expand object
-            String s = object.toString();
-            if (!format.isEmpty())
-            {
-              try
-              {
-                buffer.append(String.format(format,s));
-              }
-              catch (Exception exception)
-              {
-                buffer.append(s);
-              }
-            }
-            else
-            {
-              buffer.append(s);
-            }
+            // unknown variable
+            value.append("???");
           }
         }
         else
         {
-          // unknown variable
-          buffer.append("???");
+          value.append(template);
+          template = "";
         }
       }
-      else
-      {
-        buffer.append(value);
-        value = "";
-      }
+      values[z] = value.toString();
     }
 
-    return buffer.toString();
+    return values;
+  }
+
+  /** expand macro value
+   * @return expanded macro value
+   */
+  public String getValue()
+  {
+    String[] values = getValueArray();
+
+    return (values.length > 0)?values[0]:"";
   }
 }
 
