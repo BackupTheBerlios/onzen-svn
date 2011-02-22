@@ -1326,6 +1326,48 @@ class Widgets
     }
   }
 
+  /** set next focus for control
+   * @param control control
+   * @param nextControl next control to focus on RETURN
+   */
+  static void setNextFocus(Control control, final Control nextControl)
+  {
+    if (!control.isDisposed())
+    {
+      SelectionListener selectionListener = new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.setFocus(nextControl);
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+        }
+      };
+
+      if      (control instanceof Button)
+      {
+        ((Button)control).addSelectionListener(selectionListener);
+      }
+      else if (control instanceof Combo)
+      {
+        ((Combo)control).addSelectionListener(selectionListener);
+      }
+      else if (control instanceof Spinner)
+      {
+        ((Spinner)control).addSelectionListener(selectionListener);
+      }
+      else if (control instanceof Text)
+      {
+        ((Text)control).addSelectionListener(selectionListener);
+      }
+      else
+      {
+        throw new Error("Internal error: unknown control");
+      }
+    }
+  }
+
   /** set field in data structure
    * @param data data structure
    * @param field field name
