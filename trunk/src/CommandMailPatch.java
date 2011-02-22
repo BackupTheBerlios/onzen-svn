@@ -24,7 +24,6 @@ import java.util.Date;
 //import java.util.HashMap;
 import java.util.HashSet;
 //import java.util.LinkedList;
-import java.util.StringTokenizer;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -142,18 +141,18 @@ class CommandMailPatch
   private final Shell         dialog;
 
   // widgets
-  private final Text              widgetPatch;
-  private final Text              widgetSummary;
-  private final Text              widgetMessage;
-  private final Table             widgetTests;
-  private final Text              widgetNewTest;
-  private final Button            widgetAddNewTest;
-  private final Text              widgetMailTo;
-  private final Text              widgetMailCC;
-  private final Text              widgetMailSubject;
-  private final Text              widgetMailText;
-  private final Button            widgetSend;
-  private final Button            widgetCancel;
+  private final Text          widgetPatch;
+  private final Text          widgetSummary;
+  private final Text          widgetMessage;
+  private final Table         widgetTests;
+  private final Text          widgetNewTest;
+  private final Button        widgetAddNewTest;
+  private final Text          widgetMailTo;
+  private final Text          widgetMailCC;
+  private final Text          widgetMailSubject;
+  private final Text          widgetMailText;
+  private final Button        widgetSend;
+  private final Button        widgetCancel;
 
   // ------------------------ native functions ----------------------------
 
@@ -227,7 +226,7 @@ class CommandMailPatch
         subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0));
         Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
         {
-          label = Widgets.newLabel(subSubComposite,"Tests:");
+          label = Widgets.newLabel(subSubComposite,"Tests done:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
           widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK);
@@ -332,20 +331,20 @@ class CommandMailPatch
             patch.write(tmpFile);
 
             // create command
-            String[] command = StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false);
-            StringUtils.replace(command,"%to%",widgetMailTo.getText());
-            StringUtils.replace(command,"%cc%",widgetMailCC.getText());
-            StringUtils.replace(command,"%subject%",widgetMailSubject.getText());
-            StringUtils.replace(command,"%file%",tmpFile.getAbsolutePath());
-//for (String s : command) Dprintf.dprintf("s=%s",s);
+            Macro macro = new Macro(StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+            macro.expand("to",     widgetMailTo.getText().trim()     );
+            macro.expand("cc",     widgetMailCC.getText().trim()     );
+            macro.expand("subject",widgetMailSubject.getText().trim());
+            macro.expand("file",   tmpFile.getAbsolutePath()         );
+            String[] commandArray = macro.getValueArray();
+//for (String s : command) Dprintf.dprintf("command=%s",s);
 
             // execute and add text
-            Process process = Runtime.getRuntime().exec(command);
+            Process process = Runtime.getRuntime().exec(commandArray);
             PrintWriter processOutput = new PrintWriter(process.getOutputStream());
-            StringTokenizer stringTokenizer = new StringTokenizer(widgetMailText.getText(),widgetMailText.DELIMITER);
-            while (stringTokenizer.hasMoreTokens())
+            for (String line : StringUtils.split(widgetMailText.getText(),widgetMailText.DELIMITER))
             {
-              processOutput.println(stringTokenizer.nextToken());
+              processOutput.println(line);
             }
             processOutput.close();
 
@@ -420,6 +419,7 @@ class CommandMailPatch
         updateMailSubject();
       }
     });
+    Widgets.setNextFocus(widgetSummary,widgetMessage);
     widgetMessage.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
@@ -553,8 +553,8 @@ class CommandMailPatch
   {
     Macro macro = new Macro(repositoryTab.repository.patchMailSubject);
     macro.expand("n",      patch.getNumber()      );
-    macro.expand("summary",widgetSummary.getText());
-    widgetMailSubject.setText(macro.value());
+    macro.expand("summary",widgetSummary.getText().trim());
+    widgetMailSubject.setText(macro.getValue());
   }
 
   /** update mail text
@@ -569,13 +569,13 @@ class CommandMailPatch
 
     Macro macro = new Macro(repositoryTab.repository.patchMailText);
     macro.expand("n",       patch.getNumber()                 );
-    macro.expand("summary", widgetSummary.getText()           );
+    macro.expand("summary", widgetSummary.getText().trim()    );
     macro.expand("date",    Onzen.DATE_FORMAT.format(date)    );
     macro.expand("time",    Onzen.TIME_FORMAT.format(date)    );
     macro.expand("datetime",Onzen.DATETIME_FORMAT.format(date));
-    macro.expand("message", widgetMessage.getText()           );
+    macro.expand("message", widgetMessage.getText().trim()    );
     macro.expand("tests",   tests,"\n"                        );
-    widgetMailText.setText(macro.value());
+    widgetMailText.setText(macro.getValue());
   }
 }
 
