@@ -21,3 +21,5 @@ ToDo
 - animated busy-cursor
 - make dialogs non-modal
 - integrate JavaMail
+- add refresh shortcut key
+- change mime macro %file% to ${file}?
