@@ -2048,16 +2048,7 @@ Dprintf.dprintf("");
           }
         }
       });
-      widgetMimeType.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-          widgetCommand.setFocus();
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
+      Widgets.setNextFocus(widgetMimeType,widgetCommand);
       widgetCommand.addModifyListener(new ModifyListener()
       {
         public void modifyText(ModifyEvent modifyEvent)
@@ -2067,16 +2058,7 @@ Dprintf.dprintf("");
           widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
         }
       });
-      widgetCommand.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-          widgetOpen.setFocus();
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
+      Widgets.setNextFocus(widgetCommand,widgetOpen);
 
       // add editors
       for (Settings.Editor editor : Settings.editors)
@@ -2112,7 +2094,7 @@ Dprintf.dprintf("");
     if (command != null)
     {
       // expand command
-      command = (command.indexOf("%file%")>=0)
+      command = (command.indexOf("%file%") >= 0)
                   ?command.replace("%file%",fileData.getFileName(repository.rootPath))
                   :command+" "+fileData.getFileName(repository.rootPath);
 
