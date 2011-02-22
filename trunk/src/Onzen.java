@@ -728,7 +728,7 @@ exception.printStackTrace();
         }
       });
 
-      widgetButtonPatch = Widgets.newButton(composite,"Patches");
+      widgetButtonPatch = Widgets.newButton(composite,"Patch");
       Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonPatch.addSelectionListener(new SelectionListener()
       {
@@ -739,7 +739,7 @@ exception.printStackTrace();
         {
           if (selectedRepositoryTab != null)
           {
-            selectedRepositoryTab.patches();
+            selectedRepositoryTab.createPatch();
           }
         }
       });
@@ -2435,7 +2435,6 @@ new Message("Und nun?").addToHistory();
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-Dprintf.dprintf("");
         int index = widgetList.getSelectionIndex();
         if ((index >= 0) && (index < repositoryList.size()))
         {
@@ -2447,7 +2446,6 @@ Dprintf.dprintf("");
       {
       }
     });
-
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryEditRepositoryList);
@@ -2626,7 +2624,7 @@ Dprintf.dprintf("");
           widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch mail.");
 
           button = Widgets.newButton(subSubComposite,"Add");
-          Widgets.layout(button,1,1,TableLayoutData.E);
+          Widgets.layout(button,1,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2634,17 +2632,17 @@ Dprintf.dprintf("");
             }
             public void widgetSelected(SelectionEvent selectionEvent)
             {
-              String string = Dialogs.string(dialog,"Edit test","Test:","","Save","Cancel");
-              if (string != null)
+              String test = Dialogs.string(dialog,"Edit test","Test:","","Add","Cancel");
+              if (test != null)
               {
-                widgetPatchTests.add(string);
+                widgetPatchTests.add(test);
               }
             }
           });
           button.setToolTipText("Add new test description.");
 
           button = Widgets.newButton(subSubComposite,"Remove");
-          Widgets.layout(button,1,2,TableLayoutData.E);
+          Widgets.layout(button,1,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2655,8 +2653,8 @@ Dprintf.dprintf("");
               int index = widgetPatchTests.getSelectionIndex();
               if (index >= 0)
               {
-                String string = widgetPatchTests.getItem(index);
-                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove test '%s'?",string)))
+                String test = widgetPatchTests.getItem(index);
+                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove test '%s'?",test)))
                 {
                   widgetPatchTests.remove(index);
                 }
@@ -2750,26 +2748,6 @@ Dprintf.dprintf("");
     }
 
     // listeners
-    widgetTitle.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        widgetRootPath.setFocus();
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-    widgetRootPath.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        widgetSave.setFocus();
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
     widgetPatchTests.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2779,11 +2757,11 @@ Dprintf.dprintf("");
         int index = widget.getSelectionIndex();
         if (index >= 0)
         {
-          String string = widget.getItem(index);
-          string = Dialogs.string(dialog,"Edit test","Test:",string,"Save","Cancel");
-          if (string != null)
+          String test = widget.getItem(index);
+          test = Dialogs.string(dialog,"Edit test description","Test:",test,"Save","Cancel");
+          if (test != null)
           {
-            widget.setItem(index,string);
+            widget.setItem(index,test);
           }
         }
       }
@@ -2791,6 +2769,11 @@ Dprintf.dprintf("");
       {
       }
     });
+    Widgets.setNextFocus(widgetTitle,widgetRootPath);
+    Widgets.setNextFocus(widgetRootPath,widgetSave);
+    Widgets.setNextFocus(widgetPatchMailTo,widgetPatchMailCC);
+    Widgets.setNextFocus(widgetPatchMailCC,widgetPatchMailSubject);
+    Widgets.setNextFocus(widgetPatchMailSubject,widgetPatchMailText);
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryEditRepository);
