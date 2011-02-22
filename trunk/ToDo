@@ -2,11 +2,7 @@ ToDo
 
 - improve speed of revision tree drawing: calculate bounding boxes
 - page up/down in revision tree view
-- hg: save push
 - view/edit tag names
-- preferences dialogs
-- create patches
-- patch database
 - checkout module
 - create branch
 - use text widget separator instead of \n
@@ -16,7 +12,6 @@ ToDo
 - annotation dialog: buttons for prev/next release
 - pane in commit dialog between changes/history/message
 - use inotify-tools (inotifywait) to monitor external file changes (use new interface classes in Java 7)
-- add repository list name to window title
 - support for launch4j
 - animated busy-cursor
 - make dialogs non-modal
