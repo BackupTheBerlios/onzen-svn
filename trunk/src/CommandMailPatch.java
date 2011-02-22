@@ -15,15 +15,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-//import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.Arrays;
-//import java.util.Comparator;
 import java.util.Date;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -124,7 +119,7 @@ class CommandMailPatch
   // --------------------------- constants --------------------------------
 
   // user events
-  private final int   USER_EVENT_ADD_NEW_TEST = 0xFFFF+0;
+  private final int USER_EVENT_ADD_NEW_TEST = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
   public String               summary;
@@ -161,10 +156,12 @@ class CommandMailPatch
   /** mail patch command
    * @param shell shell
    * @param repositoryTab repository tab
+   * @param fileDataSet file data set
    * @param patch patch
+   * @param summary summary text
    * @param message message text
    */
-  CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String message)
+  CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String message)
   {
     Composite         composite,subComposite,subSubComposite,subSubSubComposite;
     Label             label;
@@ -175,8 +172,8 @@ class CommandMailPatch
     Listener          listener;
 
     // initialize variables
-    this.summary       = null;
-    this.message       = null;
+    this.summary       = summary;
+    this.message       = message;
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
     this.date          = new Date();
@@ -213,12 +210,14 @@ class CommandMailPatch
           Widgets.layout(label,0,0,TableLayoutData.W);
 
           widgetSummary = Widgets.newText(subSubComposite);
+          widgetSummary.setText(summary);
           Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
 
           label = Widgets.newLabel(subSubComposite,"Message:");
           Widgets.layout(label,1,0,TableLayoutData.NW);
 
           widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          widgetMessage.setText(message);
           Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
         }
 
@@ -495,6 +494,17 @@ class CommandMailPatch
     widgetMailCC.setText(repositoryTab.repository.patchMailCC);
     updateMailSubject();
     updateMailText();
+  }
+
+  /** mail patch command
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param fileDataSet file data set
+   * @param patch patch
+   */
+  CommandMailPatch(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, Patch patch)
+  {
+    this(shell,repositoryTab,fileDataSet,patch,"","");
   }
 
   /** run dialog
