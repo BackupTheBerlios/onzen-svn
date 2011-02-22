@@ -877,6 +877,8 @@ public class Settings
   public static boolean          hgUpdateWithFetch                      = false;
   @ConfigValue
   public static boolean          hgSafeUpdate                           = false;
+  @ConfigValue
+  public static boolean          hgSingleLineCommitMessages             = false;
 
   // Git
   @ConfigComment(text={"","Git specific settings"})
