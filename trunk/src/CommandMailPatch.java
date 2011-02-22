@@ -125,7 +125,7 @@ class CommandMailPatch
   // --------------------------- constants --------------------------------
 
   // user events
-  private final int   USER_EVENT_ADD_TEST = 0xFFFF+0;
+  private final int   USER_EVENT_ADD_NEW_TEST = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
   public String               summary;
@@ -145,9 +145,9 @@ class CommandMailPatch
   private final Text              widgetPatch;
   private final Text              widgetSummary;
   private final Text              widgetMessage;
-  private final ScrolledComposite widgetTestsComposite;
-  private final Composite         widgetTests;
+  private final Table             widgetTests;
   private final Text              widgetNewTest;
+  private final Button            widgetAddNewTest;
   private final Text              widgetMailTo;
   private final Text              widgetMailCC;
   private final Text              widgetMailSubject;
@@ -230,122 +230,27 @@ class CommandMailPatch
           label = Widgets.newLabel(subSubComposite,"Tests:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
-          widgetTestsComposite = Widgets.newScrolledComposite(subSubComposite,SWT.V_SCROLL|SWT.H_SCROLL);
-          widgetTestsComposite.setLayout(new TableLayout(1.0,1.0));
-          Widgets.layout(widgetTestsComposite,1,0,TableLayoutData.NSWE);
+          widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK);
+          widgetTests.setHeaderVisible(false);
+          Widgets.layout(widgetTests,1,0,TableLayoutData.NSWE);
           {
-            widgetTests = Widgets.newComposite(widgetTestsComposite,SWT.LEFT,2);
-            widgetTests.setLayout(new TableLayout(null,null));
-            Widgets.layout(widgetTests,0,0,TableLayoutData.NSWE);
+            for (String test : repositoryTab.repository.patchMailTests)
             {
-              for (int z = 0; z < repositoryTab.repository.patchMailTests.length; z++)
-              {
-                button = Widgets.newCheckbox(widgetTests,repositoryTab.repository.patchMailTests[z]);
-                Widgets.layout(button,z,0,TableLayoutData.W);
-                button.addSelectionListener(new SelectionListener()
-                {
-                  public void widgetDefaultSelected(SelectionEvent selectionEvent)
-                  {
-                  }
-                  public void widgetSelected(SelectionEvent selectionEvent)
-                  {
-                    Button widget = (Button)selectionEvent.widget;
-                    if (widget.getSelection())
-                    {
-                      data.tests.add(widget.getText());
-                    }
-                    else
-                    {
-                      data.tests.remove(widget.getText());
-                    }
-                    updateMailText();
-                  }
-                });
-              }
+              Widgets.addTableEntry(widgetTests,test,test);
             }
-            widgetTests.pack();
-            widgetTestsComposite.setMinSize(widgetTests.getSize());
-            widgetTestsComposite.setExpandHorizontal(true);
-            widgetTestsComposite.setExpandVertical(true);
           }
 
           subSubSubComposite = Widgets.newComposite(subSubComposite,SWT.LEFT,2);
           subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
           Widgets.layout(subSubSubComposite,2,0,TableLayoutData.WE);
           {
-            selectionListener = new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String newTest = widgetNewTest.getText().trim();
-
-                if (!newTest.isEmpty())
-                {
-                  // check for duplicate
-                  boolean found = false;
-                  for (String test : repositoryTab.repository.patchMailTests)
-                  {
-                    if (test.equalsIgnoreCase(newTest))
-                    {
-                      found = true;
-                      break;
-                    }
-                  }
-
-                  if (!found)
-                  {
-                    int n = repositoryTab.repository.patchMailTests.length;
-
-                    // add new test
-                    repositoryTab.repository.patchMailTests = Arrays.copyOf(repositoryTab.repository.patchMailTests,n+1);
-                    repositoryTab.repository.patchMailTests[n] = newTest;
-
-                    // add button
-                    Button button = Widgets.newCheckbox(widgetTests,newTest);
-                    Widgets.layout(button,n,0,TableLayoutData.W);
-                    button.addSelectionListener(new SelectionListener()
-                    {
-                      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-                      {
-                      }
-                      public void widgetSelected(SelectionEvent selectionEvent)
-                      {
-                        Button widget = (Button)selectionEvent.widget;
-                        if (widget.getSelection())
-                        {
-                          data.tests.add(widget.getText());
-                        }
-                        else
-                        {
-                          data.tests.remove(widget.getText());
-                        }
-                        updateMailText();
-                      }
-                    });
-                    widgetTests.pack();
-                    widgetTestsComposite.setMinSize(widgetTests.getSize());
-                  }
-
-                  // add test to mail
-                  data.tests.add(newTest);
-                  updateMailText();
-                }
-
-                widgetNewTest.setText("");
-                widgetNewTest.setFocus();
-              }
-            };
-
             widgetNewTest = Widgets.newText(subSubSubComposite);
             Widgets.layout(widgetNewTest,0,0,TableLayoutData.WE);
             widgetNewTest.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
               {
-                Widgets.notify(dialog,USER_EVENT_ADD_TEST);
+                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
@@ -353,16 +258,17 @@ class CommandMailPatch
             });
 
             
-            button = Widgets.newButton(subSubSubComposite,"Add");
-            Widgets.layout(button,0,1,TableLayoutData.E);
-            button.addSelectionListener(new SelectionListener()
+            widgetAddNewTest = Widgets.newButton(subSubSubComposite,"Add");
+            widgetAddNewTest.setEnabled(false);
+            Widgets.layout(widgetAddNewTest,0,1,TableLayoutData.E);
+            widgetAddNewTest.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
               {
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                Widgets.notify(dialog,USER_EVENT_ADD_TEST);
+                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
               }
             });
           }
@@ -521,8 +427,25 @@ class CommandMailPatch
         updateMailText();
       }
     });
+    widgetTests.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        updateMailText();
+      }
+    });
+    widgetNewTest.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetAddNewTest.setEnabled(!widgetNewTest.getText().trim().isEmpty());
+      }
+    });
 
-    dialog.addListener(USER_EVENT_ADD_TEST,new Listener()
+    dialog.addListener(USER_EVENT_ADD_NEW_TEST,new Listener()
     {
       public void handleEvent(Event event)
       {
@@ -549,31 +472,8 @@ class CommandMailPatch
             repositoryTab.repository.patchMailTests = Arrays.copyOf(repositoryTab.repository.patchMailTests,n+1);
             repositoryTab.repository.patchMailTests[n] = newTest;
 
-            // add button
-            Button button = Widgets.newCheckbox(widgetTests,newTest);
-            button.setSelection(true);
-            Widgets.layout(button,n,0,TableLayoutData.W);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                Button widget = (Button)selectionEvent.widget;
-                if (widget.getSelection())
-                {
-                  data.tests.add(widget.getText());
-                }
-                else
-                {
-                  data.tests.remove(widget.getText());
-                }
-                updateMailText();
-              }
-            });
-            widgetTests.pack();
-            widgetTestsComposite.setMinSize(widgetTests.getSize());
+            TableItem tableItem = Widgets.addTableEntry(widgetTests,newTest,newTest);
+            tableItem.setChecked(true);
           }
 
           // add test to mail
@@ -661,6 +561,12 @@ class CommandMailPatch
    */
   private void updateMailText()
   {
+    ArrayList<String> tests = new ArrayList<String>();
+    for (TableItem tableItem : widgetTests.getItems())
+    {
+      if (tableItem.getChecked()) tests.add((String)tableItem.getData());
+    }
+
     Macro macro = new Macro(repositoryTab.repository.patchMailText);
     macro.expand("n",       patch.getNumber()                 );
     macro.expand("summary", widgetSummary.getText()           );
@@ -668,7 +574,7 @@ class CommandMailPatch
     macro.expand("time",    Onzen.TIME_FORMAT.format(date)    );
     macro.expand("datetime",Onzen.DATETIME_FORMAT.format(date));
     macro.expand("message", widgetMessage.getText()           );
-    macro.expand("tests",   data.tests,"\n"                   );
+    macro.expand("tests",   tests,"\n"                        );
     widgetMailText.setText(macro.value());
   }
 }
