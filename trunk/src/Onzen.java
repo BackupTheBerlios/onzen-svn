@@ -1679,72 +1679,9 @@ new Message("Und nun?").addToHistory();
         }
       });
     }
-  }
 
-  /** set repository tab list
-   * @param repositoryList repository list to set
-   */
-  private void XXXXsetRepositoryList(RepositoryList repositoryList)
-  {
-    RepositoryTab newSelectedRepositoryTab = null;
-
-    // clear repositories
-    clearRepositories();
-
-    // set repository list
-    this.repositoryList = repositoryList;
-    for (Repository repository : repositoryList)
-    {
-      // add repository tab
-      RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
-      repositoryTabMap.put(repository,repositoryTab);
-
-      // save select repository
-      if (repository.selected)
-      {
-        newSelectedRepositoryTab = repositoryTab;
-      }
-
-      // open sub-directories in repository tab, remove unknown sub-directories
-      for (String directory : repository.getOpenDirectories())
-      {
-        if (!repositoryTab.openDirectory(directory))
-        {
-          repository.closeDirectory(directory);
-        }
-      }
-    }
-
-    // remove empty tab if repository list is not empty
-    if (repositoryTabMap.size() > 0)
-    {
-      removeRepositoryTabEmpty();
-    }
-
-    // select new tab
-    if (newSelectedRepositoryTab != null)
-    {
-      selectRepositoryTab(newSelectedRepositoryTab);
-    }
-
-    // set repository menu
-    for (Repository repository : repositoryList)
-    {
-      MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
-      menuItem.setData(repositoryTabMap.get(repository));
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem widget = (MenuItem)selectionEvent.widget;
-
-          selectRepositoryTab((RepositoryTab)widget.getData());
-        }
-      });
-    }
+    // set window title
+    shell.setText("Onzen: "+repositoryList.name);
   }
 
   /** set repository tab list
