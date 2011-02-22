@@ -360,6 +360,58 @@ class CommandPatches
           }
         }
       });
+      button.setToolTipText("Save patch to file.");
+
+      button = Widgets.newButton(composite,"Mail for review");
+      button.setEnabled(false);
+      Widgets.layout(button,0,1,TableLayoutData.W);
+      Widgets.addModifyListener(new WidgetListener(button,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(data.patch != null));
+        }
+      });
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (data.patch != null)
+          {
+            // mail patch
+            CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
+                                                                     repositoryTab,
+                                                                     data.fileDataSet,
+                                                                     data.patch,
+                                                                     data.patch.summary,
+                                                                     data.patch.message
+                                                                    );
+            if (commandMailPatch.execute())
+            {
+              try
+              {
+                // save patch in database
+                data.patch.state   = Patch.States.REVIEW;
+                data.patch.summary = commandMailPatch.summary;
+                data.patch.message = commandMailPatch.message;
+                data.patch.save();
+
+                // close dialog
+                Dialogs.close(dialog,true);
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+          }
+        }
+      });
+      button.setToolTipText("Mail patch for reviewing.");
 
       button = Widgets.newButton(composite,"Commit");
       button.setEnabled(false);
@@ -405,6 +457,7 @@ class CommandPatches
           }
         }
       });
+      button.setToolTipText("Commit changes in patch.");
 
       button = Widgets.newButton(composite,"Apply");
       button.setEnabled(false);
@@ -445,6 +498,7 @@ Dprintf.dprintf("");
           }
         }
       });
+      button.setToolTipText("Apply patch.");
 
       button = Widgets.newButton(composite,"Unapply");
       button.setEnabled(false);
@@ -485,6 +539,7 @@ Dprintf.dprintf("");
           }
         }
       });
+      button.setToolTipText("Unapply patch.");
 
       button = Widgets.newButton(composite,"Discard");
       button.setEnabled(false);
@@ -522,6 +577,7 @@ Dprintf.dprintf("");
           }
         }
       });
+      button.setToolTipText("Discard patch.");
 
       button = Widgets.newButton(composite,"Delete");
       button.setEnabled(false);
@@ -562,6 +618,7 @@ Dprintf.dprintf("");
           }
         }
       });
+      button.setToolTipText("Delete patch from database.");
 
       widgetClose = Widgets.newButton(composite,"Close");
       Widgets.layout(widgetClose,0,6,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
