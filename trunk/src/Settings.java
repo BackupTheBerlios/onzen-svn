@@ -826,15 +826,15 @@ public class Settings
   }
 */
 
-  @ConfigComment(text={"","Editors: <mime type>:<command>"})
+  @ConfigComment(text={"","Editors: <mime type>:<command>","Macros %name%:","  file - file name"})
   @ConfigValue(type=ConfigValueAdapterEditor.class)
   public static Editor[]         editors                                = new Editor[0];
 
-  @ConfigComment(text={"","Mail commands","Macros:","  %to% - to mail address","  %cc% - CC mail address","  %subject% - subject text","  %file% attachment file name"})
+  @ConfigComment(text={"","Mail commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
   @ConfigValue
-  public static String           commandMail                            = "mail -s '%subject%' %to% %cc%";
+  public static String           commandMail                            = "mail -s '${subject}' ${to} ${cc}";
   @ConfigValue
-  public static String           commandMailAttachment                  = "mail -s '%subject%' -a %file% %to% %cc%";
+  public static String           commandMailAttachment                  = "mail -s '${subject}' -a ${file} ${to} ${cc}";
 
   // general flags
   @ConfigComment(text={"","flags"})
