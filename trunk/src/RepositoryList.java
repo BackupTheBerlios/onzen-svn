@@ -49,10 +49,10 @@ public class RepositoryList implements Iterable<Repository>
   private final static String LISTS_SUB_DIRECOTRY = "lists";
 
   // --------------------------- variables --------------------------------
+  public String                  name;              // repository list name
+
   @XmlElement(name = "repository")
   private LinkedList<Repository> repositories;      // list of repositories
-
-  private String                 name;              // repository list name
 
   // ------------------------ native functions ----------------------------
 
