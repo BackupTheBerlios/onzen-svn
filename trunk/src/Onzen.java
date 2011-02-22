@@ -711,6 +711,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonUpdate.setToolTipText("Update selected entries with revisions from repository.");
 
       widgetButtonCommit = Widgets.newButton(composite,"Commit");
       Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -727,6 +728,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonCommit.setToolTipText("Commit selected entries.");
 
       widgetButtonPatch = Widgets.newButton(composite,"Patch");
       Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -743,6 +745,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonPatch.setToolTipText("Create patch for selected entries.");
 
       widgetButtonAdd = Widgets.newButton(composite,"Add");
       Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -759,6 +762,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonAdd.setToolTipText("Add selected entries to repository.");
 
       widgetButtonRemove = Widgets.newButton(composite,"Remove");
       Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -776,6 +780,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonRemove.setToolTipText("Remove selected entries from repository.");
 
       widgetButtonRevert = Widgets.newButton(composite,"Revert");
       Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -792,6 +797,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonRevert.setToolTipText("Revert local changes of selected entires.");
 
       widgetButtonDiff = Widgets.newButton(composite,"Diff");
       Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -808,6 +814,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonDiff.setToolTipText("Show differences of selected entry with revision in repository.");
 
       widgetButtonRevisions = Widgets.newButton(composite,"Revisions");
       Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT);
@@ -824,6 +831,7 @@ exception.printStackTrace();
           }
         }
       });
+      widgetButtonRevisions.setToolTipText("Show revisions of selected entry.");
 
       widgetButtonSolve = Widgets.newButton(composite,"Solve");
 widgetButtonSolve.setEnabled(false);
@@ -838,6 +846,7 @@ widgetButtonSolve.setEnabled(false);
 Dprintf.dprintf("");
         }
       });
+      widgetButtonSolve.setToolTipText("NYI");
     }
 
     // create status line
