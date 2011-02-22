@@ -284,16 +284,7 @@ class CommandRename
         widgetRename.setEnabled(!widget.getText().equals(fileData.getFileName()));
       }
     });
-    widgetNewFileName.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        widgetMessage.setFocus();
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
+    Widgets.setNextFocus(widgetNewFileName,widgetMessage);
     widgetHistory.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
