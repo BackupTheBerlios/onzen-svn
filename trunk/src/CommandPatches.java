@@ -131,7 +131,9 @@ class CommandPatches
 
   // widgets
   private final Table         widgetPatches;
-  private final List          widgetFileNames;   
+  private final StyledText    widgetChanges;
+  private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
+  private final List          widgetFileNames;
   private final Text          widgetMessage;
   private final Button        widgetClose;
 
@@ -149,6 +151,7 @@ class CommandPatches
     Composite composite,subComposite;
     Label     label;
     Button    button;
+    TabFolder tabFolder;
     Listener  listener;
 
     // initialize variables
@@ -161,7 +164,7 @@ class CommandPatches
     dialog = Dialogs.open(shell,"Patches",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0,0.0,1.0},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       subComposite = Widgets.newComposite(composite);
@@ -276,19 +279,37 @@ class CommandPatches
       Widgets.addTableColumn(widgetPatches,2,"Summary",SWT.LEFT );
       Widgets.setTableColumnWidth(widgetPatches,Settings.geometryPatchesColumn.width);
 
-      label = Widgets.newLabel(composite,"Files:");
-      Widgets.layout(label,2,0,TableLayoutData.W);
+      tabFolder = Widgets.newTabFolder(composite);
+      Widgets.layout(tabFolder,2,0,TableLayoutData.NSWE);
+      {
+        subComposite = Widgets.addTab(tabFolder,"Changes");
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+        {
+          widgetChanges = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetChanges.setBackground(Onzen.COLOR_GRAY);
+          Widgets.layout(widgetChanges,0,0,TableLayoutData.NSWE);
+          widgetChanges.setToolTipText("Changes to commit.");
+          widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
+          widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
+        }
 
-      widgetFileNames = Widgets.newList(composite);
-      widgetFileNames.setBackground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetFileNames,3,0,TableLayoutData.NSWE);
-      widgetFileNames.setToolTipText("Files of patch.");
+        subComposite = Widgets.addTab(tabFolder,"Files");
+        subComposite.setLayout(new TableLayout(1.0,1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+        {
+          widgetFileNames = Widgets.newList(subComposite);
+          widgetFileNames.setBackground(Onzen.COLOR_GRAY);
+          Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
+          widgetFileNames.setToolTipText("Files of patch.");
+        }
+      }
 
       label = Widgets.newLabel(composite,"Message:");
-      Widgets.layout(label,4,0,TableLayoutData.W);
+      Widgets.layout(label,3,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-      Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
+      Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Return to commit patch.");
     }
 
@@ -718,6 +739,45 @@ Dprintf.dprintf("");
 
   //-----------------------------------------------------------------------
 
+  /** set changes text
+   * @param lines changes lines
+   * @param widgetText text widget
+   * @param widgetHorizontalScrollBar horizontal scrollbar widget
+   * @param widgetVerticalScrollBar horizontal scrollbar widget
+   */
+  private void setChangesText(String[] lines)
+  {
+    if (   !widgetChanges.isDisposed()
+        && !widgetVerticalScrollBar.isDisposed()
+        && !widgetHorizontalScrollBar.isDisposed()
+       )
+    {
+      StringBuilder text     = new StringBuilder();
+      int           lineNb   = 1;
+      int           maxWidth = 0;
+
+      // get text
+      for (String line : lines)
+      {
+        text.append(line); text.append('\n');
+
+        maxWidth = Math.max(maxWidth,line.length());
+      }
+
+      // set text
+      widgetChanges.setText(text.toString());
+
+      // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
+      widgetChanges.redraw();
+      widgetChanges.update();
+
+      // show top
+      widgetChanges.setTopIndex(0);
+      widgetChanges.setCaretOffset(0);
+      widgetVerticalScrollBar.setSelection(0);
+    }
+  }
+
   /** get selected patch
    * @return selected patch or null
    */
@@ -742,11 +802,13 @@ Dprintf.dprintf("");
   private void setSelectedPatch(Patch patch)
   {
     data.patch = patch;
+    widgetChanges.setText("");
     widgetFileNames.removeAll();
     widgetMessage.setText("");
 
     if (patch != null)
     {
+      setChangesText(data.patch.lines);
       for (String fileName : data.patch.fileNames)
       {
         widgetFileNames.add(fileName);
@@ -773,11 +835,13 @@ Dprintf.dprintf("");
       {
         data.patch = patch;
 
+        setChangesText(data.patch.lines);
         for (String fileName : data.patch.fileNames)
         {
           widgetFileNames.add(fileName);
         }
         widgetMessage.setText(StringUtils.join(data.patch.message,widgetMessage.DELIMITER));
+
         break;
       }
     }
