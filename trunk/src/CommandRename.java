@@ -10,17 +10,10 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
-//import java.io.IOException;
+import java.io.IOException;
 
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.HashMap;
+import java.util.AbstractList;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -98,14 +91,14 @@ class CommandRename
    */
   class Data
   {
-    String  newFileName;
-    String  message;
-    boolean immediateCommitFlag;
+    String   newFileName;
+    String[] message;
+    boolean  immediateCommitFlag;
 
     Data()
     {
       this.newFileName         = null;
-      this.message             = "";
+      this.message             = null;
       this.immediateCommitFlag = false;
     }
   };
@@ -121,7 +114,7 @@ class CommandRename
   private final FileData      fileData;
   private final Shell         shell;
   private final Display       display;
-  private final String[]      history;
+  private final String[][]    history;
 
   // dialog
   private final Data          data = new Data();
@@ -247,7 +240,7 @@ class CommandRename
           Button widget = (Button)selectionEvent.widget;
 
           data.newFileName         = widgetNewFileName.getText();
-          data.message             = widgetMessage.getText();
+          data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
           Settings.geometryRename  = dialog.getSize();
@@ -294,7 +287,7 @@ class CommandRename
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          widgetMessage.setText(history[i]);
+          widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
           widgetMessage.setFocus();
         }
       }
@@ -321,7 +314,7 @@ class CommandRename
             {
               widgetHistory.setSelection(i+1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[i+1]);
+              widgetMessage.setText(StringUtils.join(history[i+1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -332,7 +325,7 @@ class CommandRename
             {
               widgetHistory.setSelection(i-1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[i-1]);
+              widgetMessage.setText(StringUtils.join(history[i-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -343,7 +336,7 @@ class CommandRename
             {
               widgetHistory.setSelection(0);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[0]);
+              widgetMessage.setText(StringUtils.join(history[0],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -354,7 +347,7 @@ class CommandRename
             {
               widgetHistory.setSelection(history.length-1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[history.length-1]);
+              widgetMessage.setText(StringUtils.join(history[history.length-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -376,9 +369,9 @@ class CommandRename
     // add history
     if (!widgetHistory.isDisposed())
     {
-      for (String string : history)
+      for (String[] lines : history)
       {
-        widgetHistory.add(string.trim().replaceAll("\n",", "));
+        widgetHistory.add(StringUtils.join(lines,", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
       widgetHistory.showSelection();
@@ -386,7 +379,6 @@ class CommandRename
     }
 
     // update
-//    data.fileData            = fileData;
     data.newFileName         = fileData.getFileName();
     data.immediateCommitFlag = Settings.immediateCommit;
     widgetNewFileName.setText(data.newFileName);
@@ -446,7 +438,7 @@ class CommandRename
     Message message = null;
     try
     {
-      // add message to history
+      // create and add message to history
       if (data.immediateCommitFlag)
       {
         message = new Message(data.message);
@@ -467,6 +459,23 @@ class CommandRename
                                   )
                      );
       repositoryTab.updateFileStates(fileData.toSet());
+    }
+    catch (IOException exception)
+    {
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(shell,
+                        "Cannot rename file\n\n'%s'\n\ninto\n\n'%s'\n\n(error: %s)",
+                        fileData.getFileName(),
+                        data.newFileName,
+                        exceptionMessage
+                       );
+        }
+      });
+      return;
     }
     catch (RepositoryException exception)
     {

@@ -15,13 +15,7 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -99,13 +93,13 @@ class CommandAdd
    */
   class Data
   {
-    String  message;
-    boolean immediateCommitFlag;
-    boolean binaryFlag;
+    String[] message;
+    boolean  immediateCommitFlag;
+    boolean  binaryFlag;
 
     Data()
     {
-      this.message             = "";
+      this.message             = null;
       this.immediateCommitFlag = false;
       this.binaryFlag          = false;
     }
@@ -120,7 +114,7 @@ class CommandAdd
   private final HashSet<FileData> fileDataSet;
   private final Shell             shell;
   private final Display           display;
-  private final String[]          history;       
+  private final String[][]        history;       
 
   // dialog
   private final Data              data = new Data();
@@ -240,7 +234,7 @@ class CommandAdd
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.message             = widgetMessage.getText();
+          data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
           data.binaryFlag          = widgetBinary.getSelection();
 
@@ -278,7 +272,7 @@ class CommandAdd
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          widgetMessage.setText(history[i]);
+          widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
           widgetMessage.setFocus();
         }
       }
@@ -305,7 +299,7 @@ class CommandAdd
             {
               widgetHistory.setSelection(i+1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[i+1]);
+              widgetMessage.setText(StringUtils.join(history[i+1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -316,7 +310,7 @@ class CommandAdd
             {
               widgetHistory.setSelection(i-1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[i-1]);
+              widgetMessage.setText(StringUtils.join(history[i-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -327,7 +321,7 @@ class CommandAdd
             {
               widgetHistory.setSelection(0);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[0]);
+              widgetMessage.setText(StringUtils.join(history[0],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -338,7 +332,7 @@ class CommandAdd
             {
               widgetHistory.setSelection(history.length-1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[history.length-1]);
+              widgetMessage.setText(StringUtils.join(history[history.length-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -369,9 +363,9 @@ class CommandAdd
     // add history
     if (!widgetHistory.isDisposed())
     {
-      for (String string : history)
+      for (String[] lines : history)
       {
-        widgetHistory.add(string.trim().replaceAll("\n",", "));
+        widgetHistory.add(StringUtils.join(lines,", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
       widgetHistory.showSelection();
@@ -444,7 +438,7 @@ class CommandAdd
     Message message = null;
     try
     {
-      // add message to history
+      // create and add message to history
       if (data.immediateCommitFlag)
       {
         message = new Message(data.message);
@@ -463,6 +457,18 @@ class CommandAdd
           repositoryTab.updateTreeItems(fileDataSet);
         }
       });
+    }
+    catch (IOException exception)
+    {
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(shell,"Cannot add files (error: %s)",exceptionMessage);
+        }
+      });
+      return;
     }
     catch (RepositoryException exception)
     {

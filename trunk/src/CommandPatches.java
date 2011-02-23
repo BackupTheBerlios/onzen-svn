@@ -18,14 +18,9 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
 import java.util.StringTokenizer;
 
 // graphics
@@ -108,14 +103,14 @@ class CommandPatches
     HashSet<FileData>     fileDataSet;
     EnumSet<Patch.States> showStates;
     Patch                 patch;
-    String                message;
+    String[]              message;
 
     Data()
     {
       this.fileDataSet = new HashSet<FileData>();
       this.showStates  = EnumSet.copyOf(Settings.patchShowStates);
       this.patch       = null;
-      this.message     = "";
+      this.message     = null;
     }
   };
 
@@ -756,7 +751,7 @@ Dprintf.dprintf("");
       {
         widgetFileNames.add(fileName);
       }
-      widgetMessage.setText(data.patch.message);
+      widgetMessage.setText(StringUtils.join(data.patch.message,widgetMessage.DELIMITER));
     }
 
     Widgets.modified(data);
@@ -782,7 +777,7 @@ Dprintf.dprintf("");
         {
           widgetFileNames.add(fileName);
         }
-        widgetMessage.setText(data.patch.message);
+        widgetMessage.setText(StringUtils.join(data.patch.message,widgetMessage.DELIMITER));
         break;
       }
     }
@@ -833,6 +828,10 @@ Dprintf.dprintf("");
 
         // update file states
   // ???
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
       }
       finally
       {

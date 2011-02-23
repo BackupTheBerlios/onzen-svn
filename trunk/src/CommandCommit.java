@@ -10,18 +10,8 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
-//import java.io.IOException;
-
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.Date;
-//import java.util.HashMap;
+import java.io.IOException;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -102,13 +92,13 @@ class CommandCommit
   {
     String[] patchLinesNoWhitespaces;   // changed lines (without whitespace changes)
     String[] patchLines;                // changed lines
-    String   message;                   // commit message
+    String[] message;                   // commit message
 
     Data()
     {
       this.patchLinesNoWhitespaces = null;
       this.patchLines              = null;
-      this.message                 = "";
+      this.message                 = null;
     }
   };
 
@@ -121,7 +111,7 @@ class CommandCommit
   private final HashSet<FileData> fileDataSet;
   private final Shell             shell;
   private final Display           display;
-  private final String[]          history;       
+  private final String[][]        history;       
 
   // dialog
   private final Data              data = new Data();
@@ -263,7 +253,7 @@ class CommandCommit
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.message = widgetMessage.getText();
+          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
 
           Settings.geometryCommit = dialog.getSize();
 
@@ -298,7 +288,7 @@ class CommandCommit
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          widgetMessage.setText(history[i]);
+          widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
           widgetMessage.setFocus();
         }
       }
@@ -325,7 +315,7 @@ class CommandCommit
             {
               widgetHistory.setSelection(i+1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[i+1]);
+              widgetMessage.setText(StringUtils.join(history[i+1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -336,7 +326,7 @@ class CommandCommit
             {
               widgetHistory.setSelection(i-1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[i-1]);
+              widgetMessage.setText(StringUtils.join(history[i-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -347,7 +337,7 @@ class CommandCommit
             {
               widgetHistory.setSelection(0);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[0]);
+              widgetMessage.setText(StringUtils.join(history[0],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -358,7 +348,7 @@ class CommandCommit
             {
               widgetHistory.setSelection(history.length-1);
               widgetHistory.showSelection();
-              widgetMessage.setText(history[history.length-1]);
+              widgetMessage.setText(StringUtils.join(history[history.length-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -389,9 +379,9 @@ class CommandCommit
     // add history
     if (!widgetHistory.isDisposed())
     {
-      for (String string : history)
+      for (String[] lines : history)
       {
-        widgetHistory.add(string.trim().replaceAll("\n",", "));
+        widgetHistory.add(StringUtils.join(lines,", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
       widgetHistory.showSelection();
@@ -577,14 +567,6 @@ class CommandCommit
       // set text
       widgetText.setText(text.toString());
 
-/*
-      // set scrollbars
-      widgetHorizontalScrollBar.setMinimum(0);
-      widgetHorizontalScrollBar.setMaximum(maxWidth);
-      widgetVerticalScrollBar.setMinimum(0);
-      widgetVerticalScrollBar.setMaximum(lineNb-1);
-*/
-
       // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
       widgetText.redraw();
       widgetText.update();
@@ -606,7 +588,7 @@ class CommandCommit
     Message message = null;
     try
     {
-      // add message to history
+      // create and add message to history
       message = new Message(data.message);
       message.addToHistory();
 
@@ -622,6 +604,18 @@ class CommandCommit
           repositoryTab.updateTreeItems(fileDataSet);
         }
       });
+    }
+    catch (IOException exception)
+    {
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(shell,"Cannot commit files (error: %s)",exceptionMessage);
+        }
+      });
+      return;
     }
     catch (RepositoryException exception)
     {
