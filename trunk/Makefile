@@ -67,8 +67,9 @@ endif
 endif
 endif
 SQLITE_JAR       = jars/sqlitejdbc.jar
+MAIL_JAR         = jars/mail.jar
 
-CLASSPATH        = classes:$(SWT_JAR):$(SQLITE_JAR)
+CLASSPATH        = classes:$(SWT_JAR):$(SQLITE_JAR):$(MAIL_JAR)
 
 #---------------------------------- commands----------------------------------
 
