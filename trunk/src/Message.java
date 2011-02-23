@@ -3,7 +3,7 @@
 * $Source: /tmp/cvs/onzen/src/Message.java,v $
 * $Revision: 1.3 $
 * $Author: torsten $
-* Contents: message functions
+* Contents: commit message functions
 * Systems: all
 *
 \***********************************************************************/
@@ -27,6 +27,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -39,10 +41,10 @@ class MessageReceiveBroadcast extends Thread
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  private LinkedList<String> history;
-  private MulticastSocket    socket;
-  private DatagramPacket     packet;
-  private byte[]             buffer = new byte[4*1024];
+  private LinkedList<String[]> history;
+  private MulticastSocket      socket;
+  private DatagramPacket       packet;
+  private byte[]               buffer = new byte[4*1024];
 
   // ------------------------ native functions ----------------------------
 
@@ -53,7 +55,7 @@ class MessageReceiveBroadcast extends Thread
    * @param address UDP broadcasting address
    * @param port UDP broadcasting port
    */
-  MessageReceiveBroadcast(LinkedList<String> history, InetAddress address, int port)
+  MessageReceiveBroadcast(LinkedList<String[]> history, InetAddress address, int port)
     throws UnknownHostException,SocketException,IOException
   {
     this.history  = history;
@@ -65,17 +67,14 @@ class MessageReceiveBroadcast extends Thread
    */
   public void run()
   {
-    String   line;
     Object[] data = new Object[3];
-    String   userName,id,string,message;
-
     for (;;)
     {
       try
       {
         // wait for UDP message
         socket.receive(packet);
-        line = new String(packet.getData(),0,packet.getLength()).trim();
+        String line = new String(packet.getData(),0,packet.getLength()).trim();
 //Dprintf.dprintf("line=#%s#",line);
 
         // parse
@@ -83,9 +82,9 @@ class MessageReceiveBroadcast extends Thread
         {
           continue;
         }
-        userName = (String)data[0];
-        id       = (String)data[1];
-        string   = (String)data[2];
+        String userName = (String)data[0];
+        String id       = (String)data[1];
+        String message  = (String)data[2];
 
         // filter out own messages
         if (userName.equals(Message.USER_NAME) && id.equals(Message.ID))
@@ -94,16 +93,20 @@ class MessageReceiveBroadcast extends Thread
         }
 
         // convert message
-        message  = string.replace("\\n","\n").
-                          replace("\\\\","\\");
+        ArrayList<String> lineList = new ArrayList<String>();
+        for (String string : StringUtils.split(message,"\\n"))
+        {
+          lineList.add(string.replace("\\\\","\\"));
+        }
+        String[] lines = lineList.toArray(new String[lineList.size()]);
 
         // add to history
         synchronized(history)
         {
-          if (!history.peekLast().equals(message))
+          if (!Message.equalLines(lines,history.peekLast()))
           {
             // add to history
-            history.addLast(message);
+            history.addLast(lines);
 
             // shorten history
             while (history.size() > Settings.maxMessageHistory)
@@ -129,15 +132,15 @@ class Message
   protected final static String  USER_NAME = System.getProperty("user.name");
   protected final static String  ID        = String.format("%08x",System.currentTimeMillis());
 
-  private static final String HISTORY_DATABASE_NAME    = "history";
-  private static final int    HISTORY_DATABASE_VERSION = 1;
+  private static final String    HISTORY_DATABASE_NAME    = "history";
+  private static final int       HISTORY_DATABASE_VERSION = 1;
 
   // --------------------------- variables --------------------------------
-  private static                LinkedList<String> history = new LinkedList<String>();
+  private static                LinkedList<String[]> history = new LinkedList<String[]>();
   private static DatagramSocket socket;
 
-  private final String message;
-  private File         tmpFile;
+  private final String[]        lines;
+  private File                  tmpFile;
 
   // ------------------------ native functions ----------------------------
 
@@ -164,7 +167,7 @@ class Message
         history.clear();
         while (resultSet.next())
         {
-          history.addLast(resultSet.getString("message").trim()+"\n");
+          history.addLast(Database.dataToLines(resultSet.getString("message").trim()));
         }
         resultSet.close();
 
@@ -223,12 +226,48 @@ class Message
   /** get message history
    * @return message history array
    */
-  public static String[] getHistory()
+  public static String[][] getHistory()
   {
     synchronized(history)
     {
-      return history.toArray(new String[history.size()]);
+      return history.toArray(new String[history.size()][]);
     }
+  }
+
+  /** create message
+   * @param line message lines
+   */
+  Message(String[] lines)
+    throws IOException
+  {
+    // discard empty lines at beginning/end
+    int i0 = 0;
+    while ((i0 < lines.length) && lines[i0].trim().isEmpty())
+    {
+      i0++;
+    }
+    int i1 = lines.length-1;
+    while ((i1 >= i0) && lines[i1].trim().isEmpty())
+    {
+      i1--;
+    }
+    this.lines = Arrays.copyOfRange(lines,i0,i1+1);
+
+    // write to file
+    tmpFile = File.createTempFile("msg",".tmp",new File(Settings.tmpDirectory));
+    PrintWriter output = new PrintWriter(new FileWriter(tmpFile.getPath()));
+    for (String line : this.lines)
+    {
+      output.println(line);
+    }
+    output.close();
+  }
+
+  /** done message
+   */
+  public void done()
+  {
+    tmpFile.delete();
   }
 
   /** add message to history
@@ -236,18 +275,22 @@ class Message
    */
   public void addToHistory()
   {
-    if (!message.isEmpty())
+    if (lines.length > 0)
     {
       // broadcast message
       try
       {
-        // convert message
-        String string = message.replace("\\","\\\\").
-                                replace("\n","\\n");
+        // convert message to string
+        StringBuilder buffer = new StringBuilder();
+        for (String line : lines)
+        {
+          buffer.append(line.replace("\\","\\\\"));
+          buffer.append("\\n");
+        }
+        String string = buffer.toString();
 
         // broadcast message to other running instances of Onzen
         byte[] data = String.format("%s %s %s\n",USER_NAME,ID,string).getBytes();
-
         DatagramPacket datagramPacket = new DatagramPacket(data,data.length);
         socket.send(datagramPacket);
       }
@@ -261,47 +304,29 @@ class Message
     }
   }
 
-  /** create message
-   * @param message message text
-   */
-  Message(String message)
-  {
-    this.message = message.trim();
-    try
-    {
-      tmpFile = File.createTempFile("msg",".tmp",new File(Settings.tmpDirectory));
-
-      PrintWriter output = new PrintWriter(new FileWriter(tmpFile.getPath()));
-      output.println(message);
-      output.close();
-    }
-    catch (IOException exception)
-    {
-Dprintf.dprintf("exception=%s",exception);
-    }
-  }
-
-  /** done message
-   */
-  public void done()
-  {
-    tmpFile.delete();
-  }
-
   /** check if message if empty
    * @return true iff message empty
    */
   public boolean isEmpty()
   {
-    return message.isEmpty();
+    return lines.length == 0;
   }
 
   /** get message text
+   * @param separator line separator
    * @return text
+   */
+  public String getMessage(String separator)
+  {
+    return StringUtils.join(lines,separator);
+  }
+
+  /** get message text
+   * @return text (separated with \n, terminated with \n)
    */
   public String getMessage()
   {
-    return message+"\n";
+    return getMessage("\n")+"\n";
   }
 
   /** get message file name
@@ -313,6 +338,54 @@ Dprintf.dprintf("exception=%s",exception);
   }
 
   //-----------------------------------------------------------------------
+
+  /** compare lines if they are equal (ignore empty lines, space and case)
+   * @param otherLines lines to compare with
+   * @return true iff lines are equal  (ignore empty lines, space and case)
+   */
+  protected static boolean equalLines(String[] lines0, String[] lines1)
+  {
+    boolean equal = true;
+
+    if ((lines0 != null) && (lines1 != null))
+    {
+      int i0 = 0;
+      int i1 = 0;
+      while ((i0 < lines0.length) && (i1 < lines1.length) && equal)
+      {
+        // skip empty lines
+        while ((i0 < lines0.length) && lines0[i0].trim().isEmpty())
+        {
+          i0++;
+        }
+        while ((i1 < lines1.length) && lines1[i1].trim().isEmpty())
+        {
+          i1++;
+        }
+
+        // compare lines, skipping spaces, ignore case
+        if ((i0 < lines0.length) && (i1 < lines1.length))
+        {
+          String line0 = lines0[i0].replace("\\s","");
+          String line1 = lines1[i1].replace("\\s","");
+          if (!line0.equalsIgnoreCase(line1))
+          {
+            equal = false;
+          }
+        }
+
+        // next line
+        i0++;
+        i1++;
+      }
+    }
+    else
+    {
+      equal = false;
+    }
+
+    return equal;
+  }
 
   /** open history database
    * @return database
@@ -381,10 +454,10 @@ exception.printStackTrace();
   {
     synchronized(history)
     {
-      if (!history.peekLast().equals(message))
+      if (!equalLines(lines,history.peekLast()))
       {
         // add to history
-        history.addLast(message);
+        history.addLast(lines);
 
         // shorten history
         while (history.size() > Settings.maxMessageHistory)
@@ -404,7 +477,7 @@ exception.printStackTrace();
 
           // add to database
           preparedStatement = database.connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
-          preparedStatement.setString(1,message);
+          preparedStatement.setString(1,Database.linesToData(lines));
           preparedStatement.execute();
 
           // shorten message table size
