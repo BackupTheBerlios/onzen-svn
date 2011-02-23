@@ -155,6 +155,7 @@ class Preferences
   private final Button        widgetHGUseForestExtension;
   private final Button        widgetHGUpdateWithFetch;
   private final Button        widgetHGSafeUpdate;
+  private final Button        widgetHGSingleLineCommitMessages;
 
   private final Text          widgetGitCommand;
 
@@ -690,6 +691,11 @@ class Preferences
             widgetHGSafeUpdate.setSelection(Settings.hgSafeUpdate);
             Widgets.layout(widgetHGSafeUpdate,2,0,TableLayoutData.WE);
             widgetHGSafeUpdate.setToolTipText("Do 'safe' update. Allow fetch update with not-commited local changes: save local changes, revert, update and restore local changes with merge if needed.");
+
+            widgetHGSingleLineCommitMessages = Widgets.newCheckbox(subSubComposite,"single-line commit messages");
+            widgetHGSingleLineCommitMessages.setSelection(Settings.hgSingleLineCommitMessages);
+            Widgets.layout(widgetHGSingleLineCommitMessages,3,0,TableLayoutData.WE);
+            widgetHGSingleLineCommitMessages.setToolTipText("Concat commit message into single-line to make commit message visiable in the one-line-only commit message log of Mercurial.");
           }
         }
 
@@ -1004,6 +1010,7 @@ class Preferences
           Settings.hgUseForestExtension                   = widgetHGUseForestExtension.getSelection();
           Settings.hgUpdateWithFetch                      = widgetHGUpdateWithFetch.getSelection();
           Settings.hgSafeUpdate                           = widgetHGSafeUpdate.getSelection();
+          Settings.hgSingleLineCommitMessages             = widgetHGSingleLineCommitMessages.getSelection();
 
           Settings.gitCommand                             = widgetGitCommand.getText();
 
