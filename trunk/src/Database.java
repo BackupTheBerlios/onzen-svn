@@ -138,9 +138,12 @@ class Database
   public static String linesToData(String[] lines)
   {
     StringBuilder buffer = new StringBuilder();
-    for (String line : lines)
+    if (lines != null)
     {
-      buffer.append(line); buffer.append('\n');
+      for (String line : lines)
+      {
+        buffer.append(line); buffer.append('\n');
+      }
     }
 
     return buffer.toString();
