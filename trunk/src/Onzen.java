@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -94,6 +95,9 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Widget;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 
 /****************************** Classes ********************************/
 
@@ -2445,7 +2449,7 @@ new Message("Und nun?").addToHistory();
 
   /** edit repository
    */
-  private void editRepository(RepositoryTab repositoryTab)
+  private void editRepository(final RepositoryTab repositoryTab)
   {
     /** dialog data
      */
@@ -2476,15 +2480,18 @@ new Message("Und nun?").addToHistory();
     final Data  data = new Data();
     final Shell dialog;
     Composite   composite,subComposite,subSubComposite;
+    TabFolder   tabFolder;
     Label       label;
     Button      button;
+    Spinner     spinner;
+    Text        text;
 
     // repository edit dialog
     dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
 
     final Text   widgetTitle;
     final Text   widgetRootPath;
-//      final Text   widgetMasterRepository;
+    final HashMap<Field,Widget> widgetFieldMap = new HashMap<Field,Widget>();
     final List   widgetPatchTests;
     final Text   widgetPatchMailTo;
     final Text   widgetPatchMailCC;
@@ -2492,13 +2499,17 @@ new Message("Und nun?").addToHistory();
     final Text   widgetPatchMailText;
     final Button widgetSave;
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(1.0,1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,0,0,TableLayoutData.WE);
+      tabFolder = Widgets.newTabFolder(composite);
+      Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
+
+      subComposite = Widgets.addTab(tabFolder,"Repository");
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0},2));
+      Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
+        // common values
         label = Widgets.newLabel(subComposite,"Type:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
@@ -2545,11 +2556,141 @@ new Message("Und nun?").addToHistory();
             }
           });
         }
+
+        // additional values
+        int row = 3;
+        for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
+        {
+          for (Annotation annotation : field.getDeclaredAnnotations())
+          {
+            if (annotation instanceof RepositoryValue)
+            {
+              try
+              {
+                RepositoryValue repositoryValue = (RepositoryValue)annotation;
+
+                label = Widgets.newLabel(subComposite,repositoryValue.title());
+                Widgets.layout(label,row,0,TableLayoutData.W);
+
+                Class type = field.getType();
+                if      (type == int.class)
+                {
+                  // int value -> spinner input
+                  int value = field.getInt(repositoryTab.repository);
+
+                  spinner = Widgets.newSpinner(subComposite);
+                  spinner.setSelection(value);
+                  spinner.setMinimum(repositoryValue.min());
+                  spinner.setMaximum(repositoryValue.max());
+                  Widgets.layout(spinner,row,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+                  spinner.setToolTipText(repositoryValue.tooltip());
+                  widgetFieldMap.put(field,spinner);
+                }
+                else if (type == long.class)
+                {
+                  // long value -> spinner input
+                  long value = field.getLong(repositoryTab.repository);
+
+                  spinner = Widgets.newSpinner(subComposite);
+                  spinner.setSelection((int)value);
+                  spinner.setMinimum(repositoryValue.min());
+                  spinner.setMaximum(repositoryValue.max());
+                  Widgets.layout(spinner,row,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+                  spinner.setToolTipText(repositoryValue.tooltip());
+                  widgetFieldMap.put(field,spinner);
+                }
+                else if (type == float.class)
+                {
+throw new Error("Internal error: NYI");
+                }
+                else if (type == double.class)
+                {
+throw new Error("Internal error: NYI");
+                }
+                else if (type == boolean.class)
+                {
+                  // boolean value -> checkbox
+                  boolean value = field.getBoolean(repositoryTab.repository);
+
+                  button = Widgets.newCheckbox(subComposite,repositoryValue.text());
+                  button.setSelection(value);
+                  Widgets.layout(button,row,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+                  button.setToolTipText(repositoryValue.tooltip());
+                  widgetFieldMap.put(field,button);
+                }
+                else if (type == String.class)
+                {
+                  // string value -> text input without/with path selector
+                  String value = (type != null) ? (String)field.get(repositoryTab.repository) : repositoryValue.defaultValue();
+
+                  if (repositoryValue.pathSelector())
+                  {
+                    subSubComposite = Widgets.newComposite(subComposite);
+                    subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+                    Widgets.layout(subSubComposite,row,1,TableLayoutData.WE);
+                    {
+                      text = Widgets.newText(subSubComposite);
+                      if (value != null) text.setText(value);
+                      Widgets.layout(text,0,0,TableLayoutData.WE);
+                      text.setToolTipText(repositoryValue.tooltip());
+                      widgetFieldMap.put(field,text);
+
+                      button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
+                      Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+                      button.addSelectionListener(new SelectionListener()
+                      {
+                        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                        {
+                        }
+                        public void widgetSelected(SelectionEvent selectionEvent)
+                        {
+                          Text widget = (Text)widgetFieldMap.get(field);
+
+                          String directoryPath = Dialogs.directory(shell,
+                                                                   "Select directory",
+                                                                   widget.getText()
+                                                                  );
+                          if (directoryPath != null)
+                          {
+                            widget.setText(directoryPath);
+                          }
+                        }
+                      });
+                    }
+                  }
+                  else
+                  {
+                    text = Widgets.newText(subComposite);
+                    text.setText(value);
+                    Widgets.layout(text,row,1,TableLayoutData.WE);
+                    text.setToolTipText(repositoryValue.tooltip());
+                    widgetFieldMap.put(field,text);
+                  }
+                }
+                else if (type.isEnum())
+                {                            
+throw new Error("Internal error: NYI");
+                }
+                else
+                {
+                  throw new Error("Internal error: unsupported type '"+type+"'");
+                }
+
+                row++;
+              }
+              catch (Exception exception)
+              {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+              }
+            }
+          }
+        }
       }
 
-      subComposite = Widgets.newGroup(composite,"Patch mail");
+      subComposite = Widgets.addTab(tabFolder,"Patch mail");
       subComposite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(subComposite,"Tests:");
         Widgets.layout(label,0,0,TableLayoutData.NW);
@@ -2569,8 +2710,36 @@ new Message("Und nun?").addToHistory();
           Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,3);
           widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch mail.");
 
+          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
+          Widgets.layout(button,1,1,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+Dprintf.dprintf("");
+            }
+          });
+          button.setToolTipText("Add new test description.");
+
+          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
+          Widgets.layout(button,1,2,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+Dprintf.dprintf("");
+            }
+          });
+          button.setToolTipText("Add new test description.");
+
           button = Widgets.newButton(subSubComposite,"Add");
-          Widgets.layout(button,1,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          Widgets.layout(button,1,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2588,7 +2757,7 @@ new Message("Und nun?").addToHistory();
           button.setToolTipText("Add new test description.");
 
           button = Widgets.newButton(subSubComposite,"Remove");
-          Widgets.layout(button,1,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          Widgets.layout(button,1,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2663,12 +2832,70 @@ new Message("Und nun?").addToHistory();
 
           data.title            = widgetTitle.getText();
           data.rootPath         = widgetRootPath.getText();
-//            data.masterRepository = widgetMasterRepository.getText();
           data.patchMailTests   = widgetPatchTests.getItems();
           data.patchMailTo      = widgetPatchMailTo.getText();
           data.patchMailCC      = widgetPatchMailCC.getText();
           data.patchMailSubject = widgetPatchMailSubject.getText();
           data.patchMailText    = widgetPatchMailText.getText();
+
+          for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
+          {
+            for (Annotation annotation : field.getDeclaredAnnotations())
+            {
+Dprintf.dprintf("annotation=%s",annotation);
+              if (annotation instanceof RepositoryValue)
+              {
+                try
+                {
+                  RepositoryValue repositoryValue = (RepositoryValue)annotation;
+
+                  Class type = field.getType();
+                  if      (type == int.class)
+                  {
+                    Spinner spinner = (Spinner)widgetFieldMap.get(field);
+                    field.setInt(repositoryTab.repository,spinner.getSelection());
+                  }
+                  else if (type == long.class)
+                  {
+                    Spinner spinner = (Spinner)widgetFieldMap.get(field);
+                    field.setLong(repositoryTab.repository,spinner.getSelection());
+                  }
+                  else if (type == float.class)
+                  {
+throw new Error("Internal error: NYI");
+                  }
+                  else if (type == double.class)
+                  {
+throw new Error("Internal error: NYI");
+                  }
+                  else if (type == boolean.class)
+                  {
+                    Button button = (Button)widgetFieldMap.get(field);
+                    field.setBoolean(repositoryTab.repository,button.getSelection());
+                  }
+                  else if (type == String.class)
+                  {
+                    Text text = (Text)widgetFieldMap.get(field);
+                    field.set(repositoryTab.repository,text.getText());
+                  }
+                  else if (type.isEnum())
+                  {                            
+throw new Error("Internal error: NYI");
+                  }
+                  else
+                  {
+                    throw new Error("Internal error: unsupported type '"+type+"'");
+                  }
+                }
+                catch (Exception exception)
+                {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+                }
+              }
+            }
+          }
+
 
           Settings.geometryEditRepository = dialog.getSize();
 
