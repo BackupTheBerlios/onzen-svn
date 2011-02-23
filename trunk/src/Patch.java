@@ -96,7 +96,7 @@ class Patch
   public  States   state;                  // patch state; see States
   public  String[] fileNames;              // files belonging to patch
   public  String   summary;                // summary comment
-  public  String   message;                // commit message
+  public  String[] message;                // commit message
   public  String[] lines;                  // patch lines
 
   private int      databaseId;             // id in database or Database.ID_NONE
@@ -162,7 +162,7 @@ class Patch
           int      databaseId = resultSet1.getInt("databaseId");
           States   state      = States.toEnum(resultSet1.getInt("state"));
           String   summary    = resultSet1.getString("summary"); if (summary == null) summary = "";
-          String   message    = resultSet1.getString("message"); if (message == null) message = "";
+          String[] message    = Database.dataToLines(resultSet1.getString("message"));
           String[] lines      = Database.dataToLines(resultSet1.getString("data"));
           int      number     = resultSet1.getInt("number");
 //Dprintf.dprintf("databaseId=%d state=%s summary=%s number=%d",databaseId,state,summary,number);
@@ -227,12 +227,12 @@ class Patch
    * @param databaseId database id
    * @param state state
    * @param summary summary text
-   * @param message message text
+   * @param message message text lines
    * @param lines patch lines
    * @param fileNames file names
    * @param patch number
    */
-  private Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames, int number)
+  private Patch(String rootPath, int databaseId, States state, String summary, String message[], String[] lines, String[] fileNames, int number)
   {
     this.rootPath   = rootPath;
     this.state      = state;
@@ -251,11 +251,11 @@ class Patch
    * @param databaseId database id
    * @param state state
    * @param summary summary text
-   * @param message message text
+   * @param message message text lines
    * @param lines patch lines
    * @param fileNames file names
    */
-  public Patch(String rootPath, int databaseId, States state, String summary, String message, String[] lines, String[] fileNames)
+  public Patch(String rootPath, int databaseId, States state, String summary, String[] message, String[] lines, String[] fileNames)
   {
     this(rootPath,databaseId,state,summary,message,lines,fileNames,Database.ID_NONE);
   }
@@ -267,7 +267,7 @@ class Patch
    */
   public Patch(String rootPath, HashSet<FileData> fileDataSet, String[] lines)
   {
-    this(rootPath,Database.ID_NONE,States.NONE,"","",lines,null);
+    this(rootPath,Database.ID_NONE,States.NONE,"",null,lines,null);
 
     if (fileDataSet != null)
     {
@@ -296,7 +296,7 @@ class Patch
    */
   public Patch(String rootPath, int databaseId)
   {
-    this(rootPath,databaseId,States.NONE,"","",null,null);
+    this(rootPath,databaseId,States.NONE,"",null,null,null);
   }
 
   /** create patch
@@ -304,7 +304,7 @@ class Patch
    */
   public Patch(int databaseId)
   {
-    this(null,databaseId,States.NONE,"","",null,null);
+    this(null,databaseId,States.NONE,"",null,null,null);
   }
 
   /** done patch
@@ -458,7 +458,7 @@ Dprintf.dprintf("");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
-        preparedStatement.setString(4,message);
+        preparedStatement.setString(4,Database.linesToData(message));
         preparedStatement.setString(5,Database.linesToData(lines));
         preparedStatement.setInt(6,databaseId);
         preparedStatement.executeUpdate();
@@ -470,7 +470,7 @@ Dprintf.dprintf("");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
-        preparedStatement.setString(4,message);
+        preparedStatement.setString(4,Database.linesToData(message));
         preparedStatement.setString(5,Database.linesToData(lines));
         preparedStatement.executeUpdate();
         databaseId = database.getLastInsertId();
@@ -550,8 +550,8 @@ Dprintf.dprintf("");
 Dprintf.dprintf("rootPath=%s",rootPath);
             state    = States.toEnum(resultSet.getInt("state"));
             summary  = resultSet.getString("summary"); if (summary == null) summary = "";
-            message  = resultSet.getString("message"); if (message == null) message = "";
-            lines    = resultSet.getString("data").split("\n");
+            message  = Database.dataToLines(resultSet.getString("message"));
+            lines    = Database.dataToLines(resultSet.getString("data"));
           }
           else
           {
