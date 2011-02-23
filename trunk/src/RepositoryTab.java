@@ -177,27 +177,34 @@ class RepositoryTab
      */
     public int compare(FileData fileData1, FileData fileData2)
     {
-      if (fileData1.type == FileData.Types.DIRECTORY)
+      if ((fileData1 != null) && (fileData2 != null))
       {
-        if (fileData2.type == FileData.Types.DIRECTORY)
+        if (fileData1.type == FileData.Types.DIRECTORY)
         {
-          return compareWithoutType(fileData1,fileData2);
+          if (fileData2.type == FileData.Types.DIRECTORY)
+          {
+            return compareWithoutType(fileData1,fileData2);
+          }
+          else
+          {
+            return -1;
+          }
         }
         else
         {
-          return -1;
+          if (fileData2.type == FileData.Types.DIRECTORY)
+          {
+            return 1;
+          }
+          else
+          {
+            return compareWithoutType(fileData1,fileData2);
+          }
         }
       }
       else
       {
-        if (fileData2.type == FileData.Types.DIRECTORY)
-        {
-          return 1;
-        }
-        else
-        {
-          return compareWithoutType(fileData1,fileData2);
-        }
+        return 0;
       }
     }
 
