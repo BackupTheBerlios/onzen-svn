@@ -294,7 +294,7 @@ class CommandPatches
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,0.0,1.0}));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       button = Widgets.newButton(composite,"Save as file");
@@ -410,7 +410,7 @@ class CommandPatches
 
       button = Widgets.newButton(composite,"Commit");
       button.setEnabled(false);
-      Widgets.layout(button,0,1,TableLayoutData.W);
+      Widgets.layout(button,0,2,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
       {
         public void modified(Control control)
@@ -456,7 +456,7 @@ class CommandPatches
 
       button = Widgets.newButton(composite,"Apply");
       button.setEnabled(false);
-      Widgets.layout(button,0,2,TableLayoutData.W);
+      Widgets.layout(button,0,3,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
       {
         public void modified(Control control)
@@ -497,7 +497,7 @@ Dprintf.dprintf("");
 
       button = Widgets.newButton(composite,"Unapply");
       button.setEnabled(false);
-      Widgets.layout(button,0,3,TableLayoutData.W);
+      Widgets.layout(button,0,4,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
       {
         public void modified(Control control)
@@ -538,7 +538,7 @@ Dprintf.dprintf("");
 
       button = Widgets.newButton(composite,"Discard");
       button.setEnabled(false);
-      Widgets.layout(button,0,4,TableLayoutData.W);
+      Widgets.layout(button,0,5,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
       {
         public void modified(Control control)
@@ -576,7 +576,7 @@ Dprintf.dprintf("");
 
       button = Widgets.newButton(composite,"Delete");
       button.setEnabled(false);
-      Widgets.layout(button,0,5,TableLayoutData.W);
+      Widgets.layout(button,0,6,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
       {
         public void modified(Control control)
