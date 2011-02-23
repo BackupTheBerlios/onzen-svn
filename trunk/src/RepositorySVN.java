@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import java.text.DateFormat;
+
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,9 +26,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -825,92 +824,148 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*)",Pattern.CASE_INSENSITIVE);
 
     ArrayList<String> patchLineList = new ArrayList<String>();
-    try
+
+    // get existing/new files
+    HashSet<FileData> existFileDataSet = new HashSet<FileData>();
+    HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
+    if (fileDataSet != null)
     {
-      Command command = new Command();
-      Exec    exec;
-      String  line;
-
-      // get patch
-      command.clear();
-      command.append(Settings.svnCommand,"diff");
-      if (!Settings.svnDiffCommand.isEmpty())
+      for (FileData fileData : fileDataSet)
       {
-        // use external diff command
-        command.append("--diff-cmd",Settings.svnDiffCommand);
-        if (ignoreWhitespaces)
+        if (fileData.state != FileData.States.UNKNOWN)
         {
-          if (!Settings.svnDiffCommandOptionsIgnoreWhitespaces.isEmpty())
-          {
-            command.append("-x",Settings.svnDiffCommandOptionsIgnoreWhitespaces);
-          }
-        }
+          existFileDataSet.add(fileData);
+       }
         else
         {
-          if (!Settings.svnDiffCommandOptions.isEmpty())
-          {
-            command.append("-x",Settings.svnDiffCommandOptions);
-          }
+          newFileDataSet.add(fileData);
         }
       }
-      else
-      {
-        // use internal diff
-      }
-      command.append("--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
-      command.append("--");
-      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
-
-      // read patch data
-      Matcher matcher;
-      while ((line = exec.getStdout()) != null)
-      {
-        // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
-        if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
-        {
-          String fileName = matcher.group(1);
-          if (fileName.startsWith(rootPath))
-          {
-            // absolute path -> convert to relative path
-            fileName = matcher.group(1).substring(rootPath.length()+1);
-          }
-          else
-          {
-            // relative path -> strip out first path in name
-            int index = fileName.indexOf(File.separator);
-            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
-          }
-          patchLineList.add("--- "+fileName);
-        }
-        else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
-        {
-          String fileName = matcher.group(1);
-          if (fileName.startsWith(rootPath))
-          {
-            // absolute path -> convert to relative path
-            fileName = matcher.group(1).substring(rootPath.length()+1);
-          }
-          else
-          {
-            // relative path -> strip out first path in name
-            int index = fileName.indexOf(File.separator);
-            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
-          }
-          patchLineList.add("+++ "+fileName);
-        }
-        else
-        {
-          patchLineList.add(line);
-        }
-      }
-
-      // done
-      exec.done();
     }
-    catch (IOException exception)
+
+    // get patch for existing files
+    if ((fileDataSet == null) || (existFileDataSet.size() > 0))
     {
-      throw new RepositoryException(exception);
+      try
+      {
+        Command command = new Command();
+        Exec    exec;
+        String  line;
+
+        // get patch
+        command.clear();
+        command.append(Settings.svnCommand,"diff");
+        if (!Settings.svnDiffCommand.isEmpty())
+        {
+          // use external diff command
+          command.append("--diff-cmd",Settings.svnDiffCommand);
+          if (ignoreWhitespaces)
+          {
+            if (!Settings.svnDiffCommandOptionsIgnoreWhitespaces.isEmpty())
+            {
+              command.append("-x",Settings.svnDiffCommandOptionsIgnoreWhitespaces);
+            }
+          }
+          else
+          {
+            if (!Settings.svnDiffCommandOptions.isEmpty())
+            {
+              command.append("-x",Settings.svnDiffCommandOptions);
+            }
+          }
+        }
+        else
+        {
+          // use internal diff
+        }
+        command.append("--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
+        command.append("--");
+        if (fileDataSet != null) command.append(getFileDataNames(existFileDataSet));
+        exec = new Exec(rootPath,command);
+
+        // read patch data
+        Matcher matcher;
+        while ((line = exec.getStdout()) != null)
+        {
+          // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
+          if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
+          {
+            String fileName = matcher.group(1);
+            if (fileName.startsWith(rootPath))
+            {
+              // absolute path -> convert to relative path
+              fileName = matcher.group(1).substring(rootPath.length()+1);
+            }
+            else
+            {
+              // relative path -> strip out first path in name
+              int index = fileName.indexOf(File.separator);
+              fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+            }
+            patchLineList.add("--- "+fileName);
+          }
+          else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
+          {
+            String fileName = matcher.group(1);
+            if (fileName.startsWith(rootPath))
+            {
+              // absolute path -> convert to relative path
+              fileName = matcher.group(1).substring(rootPath.length()+1);
+            }
+            else
+            {
+              // relative path -> strip out first path in name
+              int index = fileName.indexOf(File.separator);
+              fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+            }
+            patchLineList.add("+++ "+fileName);
+          }
+          else
+          {
+            patchLineList.add(line);
+          }
+        }
+
+        // done
+        exec.done();
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
+    }
+
+    // get complete patches for new files
+    for (FileData fileData : newFileDataSet)
+    {
+      try
+      {
+        // open file
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+
+        // read content
+        ArrayList<String> lineList = new ArrayList<String>();
+        String line;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+          lineList.add("+"+line);
+        }
+
+        // close file
+        bufferedReader.close();
+
+        // add patch
+        String dateString = DateFormat.getDateInstance().format(new Date());
+        patchLineList.add(String.format("diff -u %s",fileData.getFileName()));
+        patchLineList.add(String.format("--- /dev/null\t%s",dateString));
+        patchLineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+        patchLineList.add(String.format("@@ -1,%d +1,%d %s",lineList.size(),lineList.size(),dateString));
+        patchLineList.addAll(lineList);
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
     }
 
     return patchLineList.toArray(new String[patchLineList.size()]);

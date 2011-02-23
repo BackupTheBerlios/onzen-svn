@@ -159,7 +159,7 @@ class RepositoryCVS extends Repository
 
     Command         command            = new Command();
     Exec            exec;                      
-    String          line;                      
+    String          line;
     Matcher         matcher;                   
     FileData        fileData;                  
     String          baseName           = null;
@@ -664,8 +664,8 @@ class RepositoryCVS extends Repository
     {
       Command command = new Command();
       Exec    exec;
-      Matcher matcher;
       String  line;
+      Matcher matcher;
 
       // get list of files which may be updated or which are locally changed
       command.clear();
@@ -759,8 +759,8 @@ Dprintf.dprintf("unknown %s",line);
     {
       Command command = new Command();
       Exec    exec;
-      Matcher matcher;
       String  line;
+      Matcher matcher;
 
       String[] newFileLines = null;
       if (newRevision != null)
@@ -977,7 +977,7 @@ else {
     return diffDataList.toArray(new DiffData[diffDataList.size()]);
   }
 
-  /** get patch lines for file
+  /** get unified patch lines for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
@@ -987,40 +987,96 @@ else {
     throws RepositoryException
   {
     ArrayList<String> patchLineList = new ArrayList<String>();
-    try
+
+    // get existing/new files
+    HashSet<FileData> existFileDataSet = new HashSet<FileData>();
+    HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
+    if (fileDataSet != null)
     {
-      Command command = new Command();
-      Exec    exec;
-      String  line;
-
-      // get patch
-      command.clear();
-      if (ignoreWhitespaces)
+      for (FileData fileData : fileDataSet)
       {
-        command.append(Settings.cvsCommand,"diff","-u","-w","-b","-B");
+        if (fileData.state != FileData.States.UNKNOWN)
+        {
+          existFileDataSet.add(fileData);
+       }
+        else
+        {
+          newFileDataSet.add(fileData);
+        }
       }
-      else
-      {
-        command.append(Settings.cvsCommand,"diff","-u");
-      }
-      if (revision1 != null) command.append("-r",revision1);
-      if (revision2 != null) command.append("-r",revision2);
-      command.append("--");
-      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
-
-      // read patch data
-      while ((line = exec.getStdout()) != null)
-      {
-        patchLineList.add(line);
-      }
-
-      // done
-      exec.done();
     }
-    catch (IOException exception)
+
+    // get patch for existing files
+    if ((fileDataSet == null) || (existFileDataSet.size() > 0))
     {
-      throw new RepositoryException(exception);
+      try
+      {
+        Command command = new Command();
+        Exec    exec;
+        String  line;
+
+        // get patch
+        command.clear();
+        if (ignoreWhitespaces)
+        {
+          command.append(Settings.cvsCommand,"diff","-u","-w","-b","-B");
+        }
+        else
+        {
+          command.append(Settings.cvsCommand,"diff","-u");
+        }
+        if (revision1 != null) command.append("-r",revision1);
+        if (revision2 != null) command.append("-r",revision2);
+        command.append("--");
+        if (fileDataSet != null) command.append(getFileDataNames(existFileDataSet));
+        exec = new Exec(rootPath,command);
+
+        // read patch data
+        while ((line = exec.getStdout()) != null)
+        {
+          patchLineList.add(line);
+        }
+
+        // done
+        exec.done();
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
+    }
+
+    // get complete patches for new files
+    for (FileData fileData : newFileDataSet)
+    {
+      try
+      {
+        // open file
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+
+        // read content
+        ArrayList<String> lineList = new ArrayList<String>();
+        String line;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+          lineList.add("+"+line);
+        }
+
+        // close file
+        bufferedReader.close();
+
+        // add patch
+        String dateString = DateFormat.getDateInstance().format(new Date());
+        patchLineList.add(String.format("diff -u %s",fileData.getFileName()));
+        patchLineList.add(String.format("--- /dev/null\t%s",dateString));
+        patchLineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+        patchLineList.add(String.format("@@ -1,%d +1,%d %s",lineList.size(),lineList.size(),dateString));
+        patchLineList.addAll(lineList);
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
     }
 
     return patchLineList.toArray(new String[patchLineList.size()]);
@@ -1137,8 +1193,8 @@ else {
     {
       Command command = new Command();
       Exec    exec;
-      Matcher matcher;
       String  line;
+      Matcher matcher;
 
       // get annotations
       command.clear();

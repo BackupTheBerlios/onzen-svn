@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
+import java.text.DateFormat;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -29,10 +31,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Stack;
 
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
 /****************************** Classes ********************************/
 
 /** Mercurial (hg) repository
  */
+@XmlType(propOrder={"masterRepository"})
+@XmlAccessorType(XmlAccessType.NONE)
 class RepositoryHG extends Repository
 {
   /** HG revision data
@@ -126,6 +135,10 @@ class RepositoryHG extends Repository
   private final String LOG_TEMPLATE       = "{rev} {node|short} {date|isodate} {author|user}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
 
   // --------------------------- variables --------------------------------
+  @XmlElement(name = "masterRepository")
+  @RepositoryValue(title = "Master repository:", pathSelector=true, tooltip="Path to master repository.")
+  public String masterRepository;
+
   private HashMap<Integer,ParentData> parentMap = null;
 
   // ------------------------ native functions ----------------------------
@@ -931,102 +944,158 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*)",Pattern.CASE_INSENSITIVE);
 
     ArrayList<String> patchLineList = new ArrayList<String>();
-    try
+
+    // get existing/new files
+    HashSet<FileData> existFileDataSet = new HashSet<FileData>();
+    HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
+    if (fileDataSet != null)
     {
-      Command command = new Command();
-      Exec    exec;
-      String  line;
-
-      // get patch
-      command.clear();
-      command.append(Settings.hgCommand);
-      if (!Settings.hgDiffCommand.isEmpty())
+      for (FileData fileData : fileDataSet)
       {
-        // use external diff command
-        command.append("extdiff","-p",Settings.hgDiffCommand);
-        if (ignoreWhitespaces)
+        if (fileData.state != FileData.States.UNKNOWN)
         {
-          if (!Settings.hgDiffCommandOptionsIgnoreWhitespaces.isEmpty())
-          {
-            command.append("-o",Settings.hgDiffCommandOptionsIgnoreWhitespaces);
-          }
-        }
+          existFileDataSet.add(fileData);
+       }
         else
         {
-          if (!Settings.hgDiffCommandOptions.isEmpty())
-          {
-            command.append("-o",Settings.hgDiffCommandOptions);
-          }
+          newFileDataSet.add(fileData);
         }
       }
-      else
-      {
-        // use internal diff
-        command.append("diff");
-        if (ignoreWhitespaces)
-        {
-          command.append("-w","-b","-B","--git");
-        }
-        else
-        {
-          command.append("--git");
-        }
-      }
-      if (revision1 != null) command.append("-r",revision1);
-      if (revision2 != null) command.append("-r",revision2);
-      command.append("--");
-      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
-
-      // read patch data
-      Matcher matcher;
-      while ((line = exec.getStdout()) != null)
-      {
-        // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
-        if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
-        {
-          String fileName = matcher.group(1);
-          if (fileName.startsWith(rootPath))
-          {
-            // absolute path -> convert to relative path
-            fileName = matcher.group(1).substring(rootPath.length()+1);
-          }
-          else
-          {
-            // relative path -> strip out first path in name
-            int index = fileName.indexOf(File.separator);
-            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
-          }
-          patchLineList.add("--- "+fileName);
-        }
-        else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
-        {
-          String fileName = matcher.group(1);
-          if (fileName.startsWith(rootPath))
-          {
-            // absolute path -> convert to relative path
-            fileName = matcher.group(1).substring(rootPath.length()+1);
-          }
-          else
-          {
-            // relative path -> strip out first path in name
-            int index = fileName.indexOf(File.separator);
-            fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
-          }
-          patchLineList.add("+++ "+fileName);
-        }
-        else
-        {
-          patchLineList.add(line);
-        }
-      }
-
-      // done
-      exec.done();
     }
-    catch (IOException exception)
+
+    // get patch for existing files
+    if ((fileDataSet == null) || (existFileDataSet.size() > 0))
     {
-      throw new RepositoryException(exception);
+      try
+      {
+        Command command = new Command();
+        Exec    exec;
+        String  line;
+
+        // get patch
+        command.clear();
+        command.append(Settings.hgCommand);
+        if (!Settings.hgDiffCommand.isEmpty())
+        {
+          // use external diff command
+          command.append("extdiff","-p",Settings.hgDiffCommand);
+          if (ignoreWhitespaces)
+          {
+            if (!Settings.hgDiffCommandOptionsIgnoreWhitespaces.isEmpty())
+            {
+              command.append("-o",Settings.hgDiffCommandOptionsIgnoreWhitespaces);
+            }
+          }
+          else
+          {
+            if (!Settings.hgDiffCommandOptions.isEmpty())
+            {
+              command.append("-o",Settings.hgDiffCommandOptions);
+            }
+          }
+        }
+        else
+        {
+          // use internal diff
+          command.append("diff");
+          if (ignoreWhitespaces)
+          {
+            command.append("-w","-b","-B","--git");
+          }
+          else
+          {
+            command.append("--git");
+          }
+        }
+        if (revision1 != null) command.append("-r",revision1);
+        if (revision2 != null) command.append("-r",revision2);
+        command.append("--");
+        if (fileDataSet != null) command.append(getFileDataNames(existFileDataSet));
+        exec = new Exec(rootPath,command);
+
+        // read patch data
+        Matcher matcher;
+        while ((line = exec.getStdout()) != null)
+        {
+          // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
+          if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
+          {
+            String fileName = matcher.group(1);
+            if (fileName.startsWith(rootPath))
+            {
+              // absolute path -> convert to relative path
+              fileName = matcher.group(1).substring(rootPath.length()+1);
+            }
+            else
+            {
+              // relative path -> strip out first path in name
+              int index = fileName.indexOf(File.separator);
+              fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+            }
+            patchLineList.add("--- "+fileName);
+          }
+          else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
+          {
+            String fileName = matcher.group(1);
+            if (fileName.startsWith(rootPath))
+            {
+              // absolute path -> convert to relative path
+              fileName = matcher.group(1).substring(rootPath.length()+1);
+            }
+            else
+            {
+              // relative path -> strip out first path in name
+              int index = fileName.indexOf(File.separator);
+              fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+            }
+            patchLineList.add("+++ "+fileName);
+          }
+          else
+          {
+            patchLineList.add(line);
+          }
+        }
+
+        // done
+        exec.done();
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
+    }
+
+    // get complete patches for new files
+    for (FileData fileData : newFileDataSet)
+    {
+      try
+      {
+        // open file
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+
+        // read content
+        ArrayList<String> lineList = new ArrayList<String>();
+        String line;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+          lineList.add("+"+line);
+        }
+
+        // close file
+        bufferedReader.close();
+
+        // add patch
+        String dateString = DateFormat.getDateInstance().format(new Date());
+        patchLineList.add(String.format("diff -u %s",fileData.getFileName()));
+        patchLineList.add(String.format("--- /dev/null\t%s",dateString));
+        patchLineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+        patchLineList.add(String.format("@@ -1,%d +1,%d %s",lineList.size(),lineList.size(),dateString));
+        patchLineList.addAll(lineList);
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
     }
 
     return patchLineList.toArray(new String[patchLineList.size()]);
@@ -1984,28 +2053,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     throws IOException
   {
     return parseLogData(exec,null,null);
-  }
-
-  /** do immediate push if enabled in settings
-   */
-  private void immediatePush()
-    throws IOException,RepositoryException
-  {
-    if (Settings.hgImmediatePush)
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      // push changes to master repository
-      command.clear();
-      command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpush":"push");
-      command.append("--");
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-      }
-    }
   }
 }
 
