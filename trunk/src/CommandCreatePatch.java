@@ -373,7 +373,7 @@ class CommandCreatePatch
       {
         public void modified(Control control)
         {
-//          if (!control.isDisposed()) control.setEnabled(data.lines != null);
+          if (!control.isDisposed()) control.setEnabled(data.lines != null);
         }
       });
       button.addSelectionListener(new SelectionListener()
@@ -383,15 +383,33 @@ class CommandCreatePatch
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-Dprintf.dprintf("");
+          String[] patchLines = widgetIgnoreWhitespaces.getSelection() ? data.linesNoWhitespaces : data.lines;
 
-                // close dialog
-                Dialogs.close(dialog,true);
+          // create patch
+          Patch patch = new Patch(repositoryTab.repository.rootPath,
+                                  fileDataSet,
+                                  patchLines
+                                 );
+          try
+          {
+            // save patch in database
+            patch.save();
 
+            // close dialog
+            Dialogs.close(dialog,true);
+          }
+          catch (SQLException exception)
+          {
+            Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+            return;
+          }
+          finally
+          {
+            patch.done();
+          }
         }
       });
-      button.setToolTipText("NYI");
+      button.setToolTipText("Store patch into database.");
 
       button = Widgets.newButton(composite,"Mail for review");
       button.setEnabled(false);
@@ -414,13 +432,15 @@ Dprintf.dprintf("");
 
           if (patchLines != null)
           {
-            // create patch
-            Patch patch = new Patch(repositoryTab.repository.rootPath,
-                                    fileDataSet,
-                                    patchLines
-                                   );
+            Patch patch = null;
             try
             {
+              // create patch
+              patch = new Patch(repositoryTab.repository.rootPath,
+                                fileDataSet,
+                                patchLines
+                               );
+
               // mail patch
               CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
                                                                        repositoryTab,
@@ -446,10 +466,13 @@ Dprintf.dprintf("");
                   return;
                 }
               }
+
+              // free resources
+              patch.done(); patch = null;
             }
             finally
             {
-              patch.done();
+              if (patch != null) patch.done();
             }
           }
         }
