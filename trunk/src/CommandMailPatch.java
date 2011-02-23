@@ -102,7 +102,7 @@ class CommandMailPatch
     String[]        lines;                // patch lines
     String[]        linesNoWhitespaces;   // patch lines (without whitespaces)
     String          summary;              // summary for patch
-    String          message;              // message for patch (without mail prefix/postfix etc.)
+    String[]        message;              // message for patch (without mail prefix/postfix etc.)
     HashSet<String> tests;                // test infos
 
     Data()
@@ -123,7 +123,7 @@ class CommandMailPatch
 
   // --------------------------- variables --------------------------------
   public String               summary;
-  public String               message;
+  public String[]             message;
 
   // global variable references
   private final RepositoryTab repositoryTab;
@@ -159,9 +159,9 @@ class CommandMailPatch
    * @param fileDataSet file data set
    * @param patch patch
    * @param summary summary text
-   * @param message message text
+   * @param message message text lines
    */
-  CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String message)
+  CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message)
   {
     Composite         composite,subComposite,subSubComposite,subSubSubComposite;
     Label             label;
@@ -217,7 +217,7 @@ class CommandMailPatch
           Widgets.layout(label,1,0,TableLayoutData.NW);
 
           widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-          widgetMessage.setText(message);
+          widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
           Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
         }
 
@@ -318,7 +318,7 @@ class CommandMailPatch
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.summary = widgetSummary.getText();
-          data.message = widgetMessage.getText();
+          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
 
           File tmpFile = null;
           try
@@ -504,7 +504,7 @@ class CommandMailPatch
    */
   CommandMailPatch(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, Patch patch)
   {
-    this(shell,repositoryTab,fileDataSet,patch,"","");
+    this(shell,repositoryTab,fileDataSet,patch,"",null);
   }
 
   /** run dialog
