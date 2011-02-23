@@ -198,11 +198,7 @@ class CommandCommit
               if (patchLines != null)
               {
                 // set new text
-                setPatchText(patchLines,
-                             widgetChanges,
-                             widgetHorizontalScrollBar,
-                             widgetVerticalScrollBar
-                            );
+                setChangesText(patchLines);
               }
             }
           });
@@ -409,11 +405,7 @@ class CommandCommit
                    )
                 {
                   // set new text
-                  setPatchText(data.patchLinesNoWhitespaces,
-                               widgetChanges,
-                               widgetHorizontalScrollBar,
-                               widgetVerticalScrollBar
-                              );
+                  setChangesText(data.patchLinesNoWhitespaces);
                 }
               }
             });
@@ -434,11 +426,7 @@ class CommandCommit
                    )
                 {
                   // set new text
-                  setPatchText(data.patchLines,
-                               widgetChanges,
-                               widgetHorizontalScrollBar,
-                               widgetVerticalScrollBar
-                              );
+                  setChangesText(data.patchLines);
 
                 }
               }
@@ -533,19 +521,12 @@ class CommandCommit
 
   //-----------------------------------------------------------------------
 
-  /** set patch text
-   * @param lines lines
-   * @param widgetText text widget
-   * @param widgetHorizontalScrollBar horizontal scrollbar widget
-   * @param widgetVerticalScrollBar horizontal scrollbar widget
+  /** set changes text
+   * @param lines changes lines
    */
-  private void setPatchText(String[]   lines,
-                            StyledText widgetText,
-                            ScrollBar  widgetHorizontalScrollBar,
-                            ScrollBar  widgetVerticalScrollBar
-                           )
+  private void setChangesText(String[] lines)
   {
-    if (   !widgetText.isDisposed()
+    if (   !widgetChanges.isDisposed()
         && !widgetVerticalScrollBar.isDisposed()
         && !widgetHorizontalScrollBar.isDisposed()
        )
@@ -563,15 +544,15 @@ class CommandCommit
       }
 
       // set text
-      widgetText.setText(text.toString());
+      widgetChanges.setText(text.toString());
 
       // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
-      widgetText.redraw();
-      widgetText.update();
+      widgetChanges.redraw();
+      widgetChanges.update();
 
       // show top
-      widgetText.setTopIndex(0);
-      widgetText.setCaretOffset(0);
+      widgetChanges.setTopIndex(0);
+      widgetChanges.setCaretOffset(0);
       widgetVerticalScrollBar.setSelection(0);
     }
   }
