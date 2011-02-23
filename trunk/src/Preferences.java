@@ -1110,8 +1110,8 @@ class Preferences
     try
     {
       // instantiate config adapter class
-      Constructor        constructor        = Settings.ConfigValueAdapterKey.class.getDeclaredConstructor(Settings.class);
-      ConfigValueAdapter configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+      Constructor         constructor         = Settings.SettingValueAdapterKey.class.getDeclaredConstructor(Settings.class);
+      SettingValueAdapter settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
 
       // get setting classes
       Class[] settingClasses = Settings.getSettingClasses();
@@ -1121,10 +1121,10 @@ class Preferences
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
-              if (Settings.ConfigValueAdapterKey.class.isAssignableFrom(configValue.type()))
+              SettingValue configValue = (SettingValue)annotation;
+              if (Settings.SettingValueAdapterKey.class.isAssignableFrom(configValue.type()))
               {
                 // get key
                 int key = field.getInt(null);
@@ -1133,7 +1133,7 @@ class Preferences
                 String name = (!configValue.name().isEmpty()) ? configValue.name() : field.getName();
 
                 // convert to string
-                String string = (String)configValueAdapter.toString(field.get(null));
+                String string = (String)settingValueAdapter.toString(field.get(null));
 
                 // add entry
                 Widgets.addTableEntry(widgetKeys,new int[]{key},name.substring(3),string);
@@ -1157,8 +1157,8 @@ class Preferences
     try
     {
       // instantiate config adapter class
-      Constructor        constructor        = Settings.ConfigValueAdapterColor.class.getDeclaredConstructor(Settings.class);
-      ConfigValueAdapter configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+      Constructor         constructor         = Settings.SettingValueAdapterColor.class.getDeclaredConstructor(Settings.class);
+      SettingValueAdapter settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
 
       // get setting classes
       Class[] settingClasses = Settings.getSettingClasses();
@@ -1168,10 +1168,10 @@ class Preferences
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
-              if (Settings.ConfigValueAdapterColor.class.isAssignableFrom(configValue.type()))
+              SettingValue configValue = (SettingValue)annotation;
+              if (Settings.SettingValueAdapterColor.class.isAssignableFrom(configValue.type()))
               {
                 // get color
                 Settings.Color color = (Settings.Color)field.get(null);
@@ -1180,7 +1180,7 @@ class Preferences
                 String name = (!configValue.name().isEmpty()) ? configValue.name() : field.getName();
 
                 // convert to string
-                String string = (String)configValueAdapter.toString(color);
+                String string = (String)settingValueAdapter.toString(color);
 
                 // add entry
                 color = color.clone();
@@ -1207,8 +1207,8 @@ class Preferences
     try
     {
       // instantiate config adapter class
-      Constructor        constructor        = Settings.ConfigValueAdapterFontData.class.getDeclaredConstructor(Settings.class);
-      ConfigValueAdapter configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+      Constructor         constructor         = Settings.SettingValueAdapterFontData.class.getDeclaredConstructor(Settings.class);
+      SettingValueAdapter settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
 
       // get setting classes
       Class[] settingClasses = Settings.getSettingClasses();
@@ -1218,10 +1218,10 @@ class Preferences
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
-              if (Settings.ConfigValueAdapterFontData.class.isAssignableFrom(configValue.type()))
+              SettingValue configValue = (SettingValue)annotation;
+              if (Settings.SettingValueAdapterFontData.class.isAssignableFrom(configValue.type()))
               {
                 // get font data
                 FontData fontData = (FontData)field.get(null);
@@ -1230,7 +1230,7 @@ class Preferences
                 String name = (!configValue.name().isEmpty()) ? configValue.name() : field.getName();
 
                 // convert to string
-                String string = (String)configValueAdapter.toString(field.get(null));
+                String string = (String)settingValueAdapter.toString(field.get(null));
 
                 // add entry
                 fontData = (fontData != null)?new FontData(fontData.name,(int)fontData.height,fontData.style):new FontData();
@@ -1254,8 +1254,8 @@ class Preferences
     try
     {
       // instantiate config adapter class
-      Constructor        constructor        = Settings.ConfigValueAdapterKey.class.getDeclaredConstructor(Settings.class);
-      ConfigValueAdapter configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+      Constructor         constructor         = Settings.SettingValueAdapterKey.class.getDeclaredConstructor(Settings.class);
+      SettingValueAdapter settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
 
       // get setting classes
       Class[] settingClasses = Settings.getSettingClasses();
@@ -1265,10 +1265,10 @@ class Preferences
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
-              if (Settings.ConfigValueAdapterKey.class.isAssignableFrom(configValue.type()))
+              SettingValue configValue = (SettingValue)annotation;
+              if (Settings.SettingValueAdapterKey.class.isAssignableFrom(configValue.type()))
               {
                 // get key
                 int key = field.getInt(null);
@@ -1310,8 +1310,8 @@ class Preferences
     try
     {
       // instantiate config adapter class
-      Constructor        constructor        = Settings.ConfigValueAdapterColor.class.getDeclaredConstructor(Settings.class);
-      ConfigValueAdapter configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+      Constructor         constructor         = Settings.SettingValueAdapterColor.class.getDeclaredConstructor(Settings.class);
+      SettingValueAdapter settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
 
       // get setting classes
       Class[] settingClasses = Settings.getSettingClasses();
@@ -1321,10 +1321,10 @@ class Preferences
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
-              if (Settings.ConfigValueAdapterColor.class.isAssignableFrom(configValue.type()))
+              SettingValue configValue = (SettingValue)annotation;
+              if (Settings.SettingValueAdapterColor.class.isAssignableFrom(configValue.type()))
               {
                 // get color
                 Settings.Color color = (Settings.Color)field.get(null);
@@ -1366,8 +1366,8 @@ class Preferences
     try
     {
       // instantiate config adapter class
-      Constructor        constructor        = Settings.ConfigValueAdapterFontData.class.getDeclaredConstructor(Settings.class);
-      ConfigValueAdapter configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+      Constructor         constructor         = Settings.SettingValueAdapterFontData.class.getDeclaredConstructor(Settings.class);
+      SettingValueAdapter settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
 
       // get setting classes
       Class[] settingClasses = Settings.getSettingClasses();
@@ -1377,10 +1377,10 @@ class Preferences
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
-              if (Settings.ConfigValueAdapterFontData.class.isAssignableFrom(configValue.type()))
+              SettingValue configValue = (SettingValue)annotation;
+              if (Settings.SettingValueAdapterFontData.class.isAssignableFrom(configValue.type()))
               {
                 // get font data
                 FontData fontData = (FontData)field.get(null);
