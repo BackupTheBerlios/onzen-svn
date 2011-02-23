@@ -1751,10 +1751,13 @@ Dprintf.dprintf("");
   private void clearFileTree()
   {
     // close all directories
-    for (TreeItem treeItem : widgetFileTree.getItems())
+    synchronized(widgetFileTree)
     {
-      treeItem.removeAll();
-      new TreeItem(treeItem,SWT.NONE);
+      for (TreeItem treeItem : widgetFileTree.getItems())
+      {
+        treeItem.removeAll();
+        new TreeItem(treeItem,SWT.NONE);
+      }
     }
   }
 
@@ -1786,14 +1789,17 @@ Dprintf.dprintf("");
   {
     int index = 0;
 
-    TreeItem           subTreeItems[]     = treeItem.getItems();
-    FileDataComparator fileDataComparator = new FileDataComparator(widgetFileTree);
-
-    while (   (index < subTreeItems.length)
-           && (fileDataComparator.compare(fileData,(FileData)subTreeItems[index].getData()) > 0)
-          )
+    synchronized(widgetFileTree)
     {
-      index++;
+      TreeItem           subTreeItems[]     = treeItem.getItems();
+      FileDataComparator fileDataComparator = new FileDataComparator(widgetFileTree);
+
+      while (   (index < subTreeItems.length)
+             && (fileDataComparator.compare(fileData,(FileData)subTreeItems[index].getData()) > 0)
+            )
+      {
+        index++;
+      }
     }
 
     return index;
@@ -2353,33 +2359,36 @@ Dprintf.dprintf("");
         {
           public void run()
           {
-            if (!widgetFileTree.isDisposed())
+            synchronized(widgetFileTree)
             {
-              // find parent tree item to insert new tree item
-              TreeItem treeItem = null;
-              for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
+              if (!widgetFileTree.isDisposed())
               {
-                FileData fileData = (FileData)rootTreeItem.getData();
-  //Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
-                if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
+                // find parent tree item to insert new tree item
+                TreeItem treeItem = null;
+                for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
                 {
-                  treeItem = rootTreeItem;
-                  break;
+                  FileData fileData = (FileData)rootTreeItem.getData();
+    //Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
+                  if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
+                  {
+                    treeItem = rootTreeItem;
+                    break;
+                  }
                 }
-              }
 
-              if ((treeItem != null) && !treeItem.isDisposed())
-              {
-                // create tree item
-                TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
-                newTreeItem.setText(0,newFileData.getBaseName());
-                newTreeItem.setImage(getFileDataImage(newFileData));
-                updateTreeItem(newTreeItem,newFileData);
+                if ((treeItem != null) && !treeItem.isDisposed())
+                {
+                  // create tree item
+                  TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
+                  newTreeItem.setText(0,newFileData.getBaseName());
+                  newTreeItem.setImage(getFileDataImage(newFileData));
+                  updateTreeItem(newTreeItem,newFileData);
 
-                // store tree item reference
-                fileNameMap.put(newFileData.getFileName(),newTreeItem);
+                  // store tree item reference
+                  fileNameMap.put(newFileData.getFileName(),newTreeItem);
+                }
+  //else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
               }
-//else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
             }
           }
         });
