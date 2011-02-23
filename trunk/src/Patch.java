@@ -686,29 +686,32 @@ Dprintf.dprintf("rootPath=%s",rootPath);
     ArrayList<String> newLineList = new ArrayList<String>();
     while (patchChunk.nextFile())
     {
-      File file = new File(rootPath,patchChunk.fileName);
+      File file = new File(rootPath,patchChunk.newFileName);
 
-      // load old file lines
+      // load old file lines (if not /dev/null == file is new)
       oldLineList.clear();
-      BufferedReader input = null;
-      try
+      if (!patchChunk.oldFileName.equals("/dev/null"))
       {
-        input = new BufferedReader(new FileReader(file));
-        String line;
-        while ((line = input.readLine()) != null)
+        BufferedReader input = null;
+        try
         {
-          oldLineList.add(line);
+          input = new BufferedReader(new FileReader(file));
+          String line;
+          while ((line = input.readLine()) != null)
+          {
+            oldLineList.add(line);
+          }
+          input.close(); input = null;
         }
-        input.close(); input = null;
-      }
-      catch (IOException exception)
-      {
-Dprintf.dprintf("exception=%s",exception);
-        return false;
-      }
-      finally
-      {
-        try { if (input != null) input.close(); } catch (IOException exception) { /* ignored */ }
+        catch (IOException exception)
+        {
+  Dprintf.dprintf("exception=%s",exception);
+          return false;
+        }
+        finally
+        {
+          try { if (input != null) input.close(); } catch (IOException exception) { /* ignored */ }
+        }
       }
 
       // apply patch lines and create new file
@@ -924,7 +927,8 @@ Dprintf.dprintf("exception=%s",exception);
     // --------------------------- constants --------------------------------
 
     // --------------------------- variables --------------------------------
-    String                fileName;
+    String                oldFileName;
+    String                newFileName;
     int                   lineNb;
     ArrayList<PatchLines> patchLineList;
 
@@ -938,7 +942,8 @@ Dprintf.dprintf("exception=%s",exception);
      */
     PatchChunk()
     {
-      this.fileName      = null;
+      this.oldFileName   = null;
+      this.newFileName   = null;
       this.lineNb        = 0;
       this.patchLineList = new ArrayList<PatchLines>();
       this.index         = 0;
@@ -949,31 +954,41 @@ Dprintf.dprintf("exception=%s",exception);
      */
     public boolean nextFile()
     {
-      final Pattern PATTERN_FILENAME = Pattern.compile("^\\+\\+\\+\\s+(.*)\\s+(\\S+\\s+\\S+\\s+).*",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_OLD_FILENAME = Pattern.compile("^\\-\\-\\-\\s+(.*)\\s+(.*)",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_NEW_FILENAME = Pattern.compile("^\\+\\+\\+\\s+(.*)\\s+(.*)",Pattern.CASE_INSENSITIVE);
 
-      fileName = null;
-
-      // find +++ <file name> <date> <time> <time zone>
       Matcher matcher = null;
+
+      oldFileName = null;
+      newFileName = null;
+
+      // find --- <old file name> <date/time>
       while (   (index < lines.length)
-             && !(matcher = PATTERN_FILENAME.matcher(lines[index])).matches()
+             && !(matcher = PATTERN_OLD_FILENAME.matcher(lines[index])).matches()
             )
       {
         index++;
       }
-
-      // get file name
       if (index < lines.length)
       {
-        fileName = matcher.group(1);
+        oldFileName = matcher.group(1);
         index++;
+      }
 
-        return true;
-      }
-      else
+      // find +++ <new file name> <date/time>
+      while (   (index < lines.length)
+             && !(matcher = PATTERN_NEW_FILENAME.matcher(lines[index])).matches()
+            )
       {
-        return false;
+        index++;
       }
+      if (index < lines.length)
+      {
+        newFileName = matcher.group(1);
+        index++;
+      }
+
+      return (oldFileName != null) && (newFileName != null);
     }
 
     /** parse next chunk in patch
