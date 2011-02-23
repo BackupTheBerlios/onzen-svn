@@ -121,7 +121,7 @@ class CommandCommit
   private final StyledText        widgetChanges;
   private final ScrollBar         widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final Button            widgetIgnoreWhitespaces;
-  private final List              widgetFiles;
+  private final List              widgetFileNames;
   private final List              widgetHistory; 
   private final Text              widgetMessage; 
   private final Button            widgetCommit;     
@@ -171,7 +171,6 @@ class CommandCommit
           widgetChanges.setBackground(Onzen.COLOR_GRAY);
           Widgets.layout(widgetChanges,0,0,TableLayoutData.NSWE);
           widgetChanges.setToolTipText("Changes to commit.");
-
           widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
           widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
 
@@ -207,17 +206,16 @@ class CommandCommit
               }
             }
           });
-
         }
 
         subComposite = Widgets.addTab(tabFolder,"Files");
         subComposite.setLayout(new TableLayout(1.0,1.0,2));
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
-          widgetFiles = Widgets.newList(subComposite);
-          widgetFiles.setBackground(Onzen.COLOR_GRAY);
-          Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
-          widgetFiles.setToolTipText("Files to commit.");
+          widgetFileNames = Widgets.newList(subComposite);
+          widgetFileNames.setBackground(Onzen.COLOR_GRAY);
+          Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
+          widgetFileNames.setToolTipText("Files to commit.");
         }
       }
 
@@ -368,11 +366,11 @@ class CommandCommit
     Dialogs.show(dialog,Settings.geometryCommit);
 
     // add files
-    if (!widgetFiles.isDisposed())
+    if (!widgetFileNames.isDisposed())
     {
       for (FileData fileData : fileDataSet)
       {
-        widgetFiles.add(fileData.getFileName());
+        widgetFileNames.add(fileData.getFileName());
       }
     }
 
