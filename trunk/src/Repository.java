@@ -46,6 +46,15 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
+import static java.lang.annotation.ElementType.FIELD; 
+import static java.lang.annotation.ElementType.TYPE; 
+
 /****************************** Classes ********************************/
 
 /** file data
@@ -1380,6 +1389,27 @@ exception.printStackTrace();
 
 // ------------------------------------------------------------------------
 
+/** config value annotation
+ */
+@Target({TYPE,FIELD}) 
+@Retention(RetentionPolicy.RUNTIME)
+@interface RepositoryValue
+{
+  String  name()         default "";                 // name of value
+  String  defaultValue() default "";                 // default value
+  Class   type()         default DEFAULT.class;      // adapter class
+  boolean pathSelector() default false;              // true for path selector widget
+  int     min()          default Integer.MIN_VALUE;  // min. value
+  int     max()          default Integer.MAX_VALUE;  // max. value
+  String  title()        default "";                 // title of value
+  String  text()         default "";                 // text of value (boolean)
+  String  tooltip()      default "";                 // tooltip for value
+
+  static final class DEFAULT
+  {
+  }
+}
+
 /** repository
  */
 @XmlType(propOrder={"title","rootPath","openDirectories","patchMailTests","patchMailTo","patchMailCC","patchMailSubject","patchMailText"})
@@ -1950,7 +1980,7 @@ abstract class Repository implements Serializable
     return getDiff(fileData,revision,null);
   }
 
-  /** get patch lines for file
+  /** get unified patch lines for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
@@ -1959,7 +1989,7 @@ abstract class Repository implements Serializable
   abstract public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException;
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
@@ -1971,7 +2001,7 @@ abstract class Repository implements Serializable
     return getPatchLines(fileDataSet,revision1,revision2,false);
   }
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileDataSet file data set
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
@@ -1982,7 +2012,7 @@ abstract class Repository implements Serializable
     return getPatchLines(fileDataSet,getLastRevision(),null,ignoreWhitespaces);
   }
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileDataSet file data set
    * @return patch data lines
    */
@@ -2001,7 +2031,7 @@ abstract class Repository implements Serializable
     return getPatchLines((HashSet<FileData>)null);
   }
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileData file data
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
@@ -2016,7 +2046,7 @@ abstract class Repository implements Serializable
     return getPatchLines(fileDataSet,revision1,revision2,false);
   }
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileData file data
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
@@ -2031,7 +2061,7 @@ abstract class Repository implements Serializable
     return getPatchLines(fileDataSet,revision1,revision2,false);
   }
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileData file data
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
@@ -2042,7 +2072,7 @@ abstract class Repository implements Serializable
     return getPatchLines(fileData,getLastRevision(),null,ignoreWhitespaces);
   }
 
-  /** get patch for file
+  /** get unified patch for file
    * @param fileData file data
    * @return patch data lines
    */
