@@ -27,9 +27,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-//import java.util.LinkedHashSet;
 import java.util.Stack;
-//import java.util.StringTokenizer;
 
 /****************************** Classes ********************************/
 
@@ -1363,7 +1361,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(Settings.hgCommand,"commit");
       if (!commitMessage.isEmpty())
       {
-        command.append("-l",commitMessage.getFileName());
+        if (Settings.hgSingleLineCommitMessages)
+        {
+          command.append("-m",commitMessage.getMessage(", "));
+        }
+        else
+        {
+          command.append("-l",commitMessage.getFileName());
+        }
       }
       else
       {
