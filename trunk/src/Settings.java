@@ -41,20 +41,20 @@ import org.eclipse.swt.graphics.RGB;
 
 /****************************** Classes ********************************/
 
-/** config comment annotation
+/** setting comment annotation
  */
 @Target({TYPE,FIELD}) 
 @Retention(RetentionPolicy.RUNTIME)
-@interface ConfigComment
+@interface SettingComment
 {
   String[] text() default {""};                  // comment before value
 }
 
-/** config value annotation
+/** setting value annotation
  */
 @Target({TYPE,FIELD}) 
 @Retention(RetentionPolicy.RUNTIME)
-@interface ConfigValue
+@interface SettingValue
 {
   String name()         default "";              // name of value
   String defaultValue() default "";              // default value
@@ -65,9 +65,9 @@ import org.eclipse.swt.graphics.RGB;
   }
 }
 
-/** config value adapter
+/** setting value adapter
  */
-abstract class ConfigValueAdapter<String,Value>
+abstract class SettingValueAdapter<String,Value>
 {
   /** convert to value
    * @param string string
@@ -130,7 +130,7 @@ public class Settings
 
   /** config value adapter String <-> file pattern
    */
-  class ConfigValueAdapterFilePattern extends ConfigValueAdapter<String,FilePattern>
+  class SettingValueAdapterFilePattern extends SettingValueAdapter<String,FilePattern>
   {
     public FilePattern toValue(String string) throws Exception
     {
@@ -150,7 +150,7 @@ public class Settings
 
   /** config value adapter String <-> size
    */
-  class ConfigValueAdapterSize extends ConfigValueAdapter<String,Point>
+  class SettingValueAdapterSize extends SettingValueAdapter<String,Point>
   {
     public Point toValue(String string) throws Exception
     {
@@ -228,7 +228,7 @@ public class Settings
 
   /** config value adapter String <-> column width array
    */
-  class ConfigValueAdapterWidthArray extends ConfigValueAdapter<String,ColumnSizes>
+  class SettingValueAdapterWidthArray extends SettingValueAdapter<String,ColumnSizes>
   {
     public ColumnSizes toValue(String string) throws Exception
     {
@@ -301,7 +301,7 @@ public class Settings
 
   /** config value adapter String <-> editor
    */
-  class ConfigValueAdapterColor extends ConfigValueAdapter<String,Color>
+  class SettingValueAdapterColor extends SettingValueAdapter<String,Color>
   {
     public Color toValue(String string) throws Exception
     {
@@ -354,7 +354,7 @@ public class Settings
 
   /** config value adapter String <-> editor
    */
-  class ConfigValueAdapterKey extends ConfigValueAdapter<String,Integer>
+  class SettingValueAdapterKey extends SettingValueAdapter<String,Integer>
   {
     public Integer toValue(String string) throws Exception
     {
@@ -422,7 +422,7 @@ public class Settings
 
   /** config value adapter String <-> editor
    */
-  class ConfigValueAdapterEditor extends ConfigValueAdapter<String,Editor>
+  class SettingValueAdapterEditor extends SettingValueAdapter<String,Editor>
   {
     public Editor toValue(String string) throws Exception
     {
@@ -456,7 +456,7 @@ public class Settings
   /** config value adapter String <-> file data state set
    */
 /* obsolete, replaced by generic EnumSet type
-  class ConfigValueAdapterDiffTypes extends ConfigValueAdapter<String,EnumSet<DiffData.Types>>
+  class SettingValueAdapterDiffTypes extends SettingValueAdapter<String,EnumSet<DiffData.Types>>
   {
     public EnumSet<DiffData.Types> toValue(String string) throws Exception
     {
@@ -493,7 +493,7 @@ public class Settings
   /** config value adapter String <-> file data state set
    */
 /* obsolete, replaced by generic EnumSet type
-  class ConfigValueAdapterFileDataStates extends ConfigValueAdapter<String,EnumSet<FileData.States>>
+  class SettingValueAdapterFileDataStates extends SettingValueAdapter<String,EnumSet<FileData.States>>
   {
     public EnumSet<FileData.States> toValue(String string) throws Exception
     {
@@ -529,7 +529,7 @@ public class Settings
 
   /** config value adapter String <-> font data
    */
-  class ConfigValueAdapterFontData extends ConfigValueAdapter<String,FontData>
+  class SettingValueAdapterFontData extends SettingValueAdapter<String,FontData>
   {
     public FontData toValue(String string) throws Exception
     {
@@ -574,37 +574,37 @@ public class Settings
 
   private static long lastModified = 0L;
 
-  @ConfigComment(text={"Onzen configuration",""})
+  @SettingComment(text={"Onzen configuration",""})
 
   // program settings
   public static HostSystems              hostSystem                     = HostSystems.LINUX;
-  @ConfigValue
+  @SettingValue
   public static String                   tmpDirectory                   = "/tmp";
 
-  @ConfigValue
+  @SettingValue
   public static String                   dateFormat                     = "yyyy-MM-dd";
-  @ConfigValue
+  @SettingValue
   public static String                   timeFormat                     = "HH:mm:ss";
-  @ConfigValue
+  @SettingValue
   public static String                   dateTimeFormat                 = "yyyy-MM-dd HH:mm:ss";
 
-  @ConfigValue
+  @SettingValue
   public static int                      maxBackgroundTasks             = 8;
 
-  @ConfigValue
+  @SettingValue
   public static int                      maxMessageHistory              = 50;
 
-  @ConfigComment(text={"","UDP message broadcasting"})
-  @ConfigValue
+  @SettingComment(text={"","UDP message broadcasting"})
+  @SettingValue
   public static String                   messageBroadcastAddress        = "192.168.11.255";
-  @ConfigValue
+  @SettingValue
   public static int                      messageBroadcastPort           = 9583;
 
-  @ConfigComment(text={"","Hidden files in file tree: <pattern>"})
-  @ConfigValue(name="hiddenFilePattern", type=ConfigValueAdapterFilePattern.class)
+  @SettingComment(text={"","Hidden files in file tree: <pattern>"})
+  @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
   public static FilePattern[]            hiddenFilePatterns             = new FilePattern[]{new FilePattern(".*")};
-  @ConfigComment(text={"","Hidden directories in file tree: <pattern>"})
-  @ConfigValue(name="hiddenDirectoryPattern", type=ConfigValueAdapterFilePattern.class)
+  @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
+  @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
   public static FilePattern[]            hiddenDirectoryPatterns        = new FilePattern[]
                                                                           {
                                                                             new FilePattern("CVS"),
@@ -613,276 +613,276 @@ public class Settings
                                                                             new FilePattern(".git")
                                                                           };
 
-  @ConfigComment(text={"","Geometry: <width>x<height>"})
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingComment(text={"","Geometry: <width>x<height>"})
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryMain                   = new Point(900,600);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepositoryList     = new Point(400,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepository         = new Point(500,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryCommit                 = new Point(500,500);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryAdd                    = new Point(500,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRename                 = new Point(500,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRemove                 = new Point(500,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevert                 = new Point(500,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometrySetFileMode            = new Point(500,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryDiff                   = new Point(800,600);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisions              = new Point(800,400);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisionBox            = new Point(200, 70);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisionInfo           = new Point(500,300);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryView                   = new Point(500,600);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryNewFile                = new Point(300,200);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryNewDirectory           = new Point(300,200);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRenameLocalFile        = new Point(400,200);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryDeleteLocalFiles       = new Point(300,200);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryChangedFiles           = new Point(600,500); 
-  @ConfigValue(type=ConfigValueAdapterWidthArray.class)
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryChangedFilesColumn     = new ColumnSizes(600,100);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryAnnotations            = new Point(800,500); 
-  @ConfigValue(type=ConfigValueAdapterWidthArray.class)
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryAnnotationsColumn      = new ColumnSizes(60,60,80,60,100);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
-  public static Point                    geometryPatches                = new Point(500,600);
-  @ConfigValue(type=ConfigValueAdapterWidthArray.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryPatches                = new Point(800,600);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(50,100,300);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryCreatePatch            = new Point(500,600);
-  @ConfigValue(type=ConfigValueAdapterSize.class)
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryMailPatch              = new Point(500,600);
 
-  @ConfigComment(text={"","Colors: <rgb foreground>:<rgb background> or  <rgb foreground>"})
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingComment(text={"","Colors: <rgb foreground>:<rgb background> or  <rgb foreground>"})
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorDiffAdded                  = new Color(null,new RGB(128,255,128));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorDiffDeleted                = new Color(null,new RGB(128,128,255));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorDiffChanged                = new Color(null,new RGB(255,  0,  0));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorDiffChangedWhitespaces     = new Color(null,new RGB(255,128,128));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorDiffSearchText             = new Color(new RGB(  0,  0,255),null);
 
-  @ConfigComment(text={""})
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingComment(text={""})
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusOK                   = new Color(null,new RGB(255,255,255));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusUnknown              = new Color(new RGB(196,196,196),null);
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusUpdate               = new Color(null,new RGB(255, 255, 0));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusCheckout             = new Color(null,new RGB(  0,  0,255));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusModified             = new Color(null,new RGB(  0,255,  0));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusMerge                = new Color(null,new RGB(128,128,  0));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusConflict             = new Color(null,new RGB(255,128,128));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusAdded                = new Color(null,new RGB(255,160,160));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusRemoved              = new Color(null,new RGB( 64, 64,128));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusNotExists            = new Color(null,new RGB(192,192,192));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusWaiting              = new Color(null,new RGB(220,220,220));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusError                = new Color(null,new RGB(255,  0,  0));
-  @ConfigValue(type=ConfigValueAdapterColor.class)
+  @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusUpdateStatus         = new Color(new RGB(128,128,128),null);
 
-  @ConfigComment(text={"","Fonts: <name>,<height>,normal|bold|italic|bold italic"})
-  @ConfigValue(type=ConfigValueAdapterFontData.class)
+  @SettingComment(text={"","Fonts: <name>,<height>,normal|bold|italic|bold italic"})
+  @SettingValue(type=SettingValueAdapterFontData.class)
   public static FontData                fontDiff                        = null;
-  @ConfigValue(type=ConfigValueAdapterFontData.class)
+  @SettingValue(type=SettingValueAdapterFontData.class)
   public static FontData                fontDiffLine                    = null;
 
-  @ConfigComment(text={"","shown diff types"})
-//  @ConfigValue(type=ConfigValueAdapterDiffTypes.class)
-  @ConfigValue(type=DiffData.Types.class)
+  @SettingComment(text={"","shown diff types"})
+//  @SettingValue(type=SettingValueAdapterDiffTypes.class)
+  @SettingValue(type=DiffData.Types.class)
   public static EnumSet<DiffData.Types> diffShowTypes                   = EnumSet.allOf(DiffData.Types.class);
 
-  @ConfigComment(text={"","shown file states in changed file list"})
-//  @ConfigValue(type=ConfigValueAdapterFileDataStates.class)
-  @ConfigValue(type=FileData.States.class)
+  @SettingComment(text={"","shown file states in changed file list"})
+//  @SettingValue(type=SettingValueAdapterFileDataStates.class)
+  @SettingValue(type=FileData.States.class)
   public static EnumSet<FileData.States> changedFilesShowStates         = EnumSet.allOf(FileData.States.class);
 
-  @ConfigComment(text={"","shown patch states in patch list"})
-  @ConfigValue(type=Patch.States.class)
+  @SettingComment(text={"","shown patch states in patch list"})
+  @SettingValue(type=Patch.States.class)
   public static EnumSet<Patch.States>    patchShowStates                = EnumSet.allOf(Patch.States.class);
 
-  @ConfigComment(text={"","Accelerator keys"})
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingComment(text={"","Accelerator keys"})
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyOpenRepository              = SWT.CTRL+'O';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyEditRepositoryList          = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyEditRepository              = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCloseRepository             = SWT.CTRL+'W';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyStatus                      = SWT.F5;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyUpdate                      = SWT.CTRL+'U';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCommit                      = SWT.CTRL+'X';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCreatePatch                 = SWT.CTRL+'P';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyPatches                     = SWT.CTRL+'E';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyAdd                         = '+';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRemove                      = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRename                      = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keySetFileMode                 = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevert                      = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyApplyPatches                = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyUnapplyPatches              = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyPullChanges                 = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyPushChanges                 = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyDiff                        = SWT.CTRL+'D';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevisionInfo                = SWT.CTRL+'I';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevisions                   = SWT.CTRL+'R';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keySolve                       = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyChangedFiles                = SWT.CTRL+'L';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyAnnotations                 = SWT.CTRL+'A';
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyReread                      = SWT.F5;
 
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyOpenFileWith                = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyNewFile                     = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyNewDirectory                = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRenameLocal                 = SWT.NONE;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyDeleteLocal                 = SWT.NONE;
 
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindPrev                    = SWT.CTRL+SWT.ARROW_LEFT;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindNext                    = SWT.CTRL+SWT.ARROW_RIGHT;
-  @ConfigValue(type=ConfigValueAdapterKey.class)
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindNextDiff                = ' ';
 
 
 /*
-  @ConfigComment(text={"Geometry (<width>x<height>)")
+  @SettingComment(text={"Geometry (<width>x<height>)")
   static class geometry
   {
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   commit                 = new Point(500,300);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   add                    = new Point(500,300);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   remove                 = new Point(500,300);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   revert                 = new Point(500,300);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   rename                 = new Point(500,300);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   diff                   = new Point(800,600);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   revisions              = new Point(800,400);
-    @ConfigValue(type=ConfigValueAdapterSize.class)
+    @SettingValue(type=SettingValueAdapterSize.class)
     public static Point                   revisionBox            = new Point(200, 70);
   };
 
-  @ConfigComment(text={"Colors (RGB)")
+  @SettingComment(text={"Colors (RGB)")
   static class color
   {
   }
 */
 
-  @ConfigComment(text={"","Editors: <mime type>:<command>","Macros %name%:","  file - file name"})
-  @ConfigValue(type=ConfigValueAdapterEditor.class)
+  @SettingComment(text={"","Editors: <mime type>:<command>","Macros %name%:","  file - file name"})
+  @SettingValue(type=SettingValueAdapterEditor.class)
   public static Editor[]         editors                                = new Editor[0];
 
-  @ConfigComment(text={"","Mail commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
-  @ConfigValue
+  @SettingComment(text={"","Mail commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
+  @SettingValue
   public static String           commandMail                            = "mail -s '${subject}' ${to} ${cc}";
-  @ConfigValue
+  @SettingValue
   public static String           commandMailAttachment                  = "mail -s '${subject}' -a ${file} ${to} ${cc}";
 
   // general flags
-  @ConfigComment(text={"","flags"})
-  @ConfigValue
+  @SettingComment(text={"","flags"})
+  @SettingValue
   public static boolean          immediateCommit                        = true;
 
   // CVS
-  @ConfigComment(text={"","CVS specific settings"})
-  @ConfigValue
+  @SettingComment(text={"","CVS specific settings"})
+  @SettingValue
   public static String           cvsCommand                             = "cvs";
-  @ConfigValue
+  @SettingValue
   public static boolean          cvsPruneEmtpyDirectories               = false;
 
   // SVN
-  @ConfigComment(text={"","SVN specific settings"})
-  @ConfigValue
+  @SettingComment(text={"","SVN specific settings"})
+  @SettingValue
   public static String           svnCommand                             = "svn";
-  @ConfigValue
+  @SettingValue
   public static String           svnDiffCommand                         = "";
-  @ConfigValue
+  @SettingValue
   public static String           svnDiffCommandOptions                  = "-ur";
-  @ConfigValue
+  @SettingValue
   public static String           svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdur";
 
   // HG
-  @ConfigComment(text={"","HG specific settings"})
-  @ConfigValue
+  @SettingComment(text={"","HG specific settings"})
+  @SettingValue
   public static String           hgCommand                              = "hg";
-  @ConfigValue
+  @SettingValue
   public static String           hgDiffCommand                          = "";
-  @ConfigValue
+  @SettingValue
   public static String           hgDiffCommandOptions                   = "-ur";
-  @ConfigValue
+  @SettingValue
   public static String           hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdur";
-  @ConfigValue
+  @SettingValue
   public static boolean          hgImmediatePush                        = false;
-  @ConfigValue
+  @SettingValue
   public static boolean          hgUseForestExtension                   = false;
-  @ConfigValue
+  @SettingValue
   public static boolean          hgUpdateWithFetch                      = false;
-  @ConfigValue
+  @SettingValue
   public static boolean          hgSafeUpdate                           = false;
-  @ConfigValue
+  @SettingValue
   public static boolean          hgSingleLineCommitMessages             = false;
 
   // Git
-  @ConfigComment(text={"","Git specific settings"})
-  @ConfigValue
+  @SettingComment(text={"","Git specific settings"})
+  @SettingValue
   public static String           gitCommand                             = "git";
 
   // debug
@@ -939,11 +939,11 @@ public class Settings
               {
                 for (Annotation annotation : field.getDeclaredAnnotations())
                 {
-                  if (annotation instanceof ConfigValue)
+                  if (annotation instanceof SettingValue)
                   {
-                    ConfigValue configValue = (ConfigValue)annotation;
+                    SettingValue settingValue = (SettingValue)annotation;
 
-                    if (((!configValue.name().isEmpty()) ? configValue.name() : field.getName()).equals(name))
+                    if (((!settingValue.name().isEmpty()) ? settingValue.name() : field.getName()).equals(name))
                     {
                       try
                       {
@@ -951,24 +951,24 @@ public class Settings
                         if (type.isArray())
                         {
                           type = type.getComponentType();
-                          if      (ConfigValueAdapter.class.isAssignableFrom(configValue.type()))
+                          if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
                           {
                             // instantiate config adapter class
-                            ConfigValueAdapter configValueAdapter;
-                            Class enclosingClass = configValue.type().getEnclosingClass();
+                            SettingValueAdapter settingValueAdapter;
+                            Class enclosingClass = settingValue.type().getEnclosingClass();
                             if (enclosingClass == Settings.class)
                             {
-                              Constructor constructor = configValue.type().getDeclaredConstructor(Settings.class);
-                              configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+                              Constructor constructor = settingValue.type().getDeclaredConstructor(Settings.class);
+                              settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
                             }
                             else
                             {
-                              configValueAdapter = (ConfigValueAdapter)configValue.type().newInstance();
+                              settingValueAdapter = (SettingValueAdapter)settingValue.type().newInstance();
                             }
 
                             // convert to value
-                            Object value = configValueAdapter.toValue(string);
-                            field.set(null,addArrayUniq((Object[])field.get(null),value,configValueAdapter));
+                            Object value = settingValueAdapter.toValue(string);
+                            field.set(null,addArrayUniq((Object[])field.get(null),value,settingValueAdapter));
                           }
                           else if (type == int.class)
                           {
@@ -1004,23 +1004,23 @@ Dprintf.dprintf("field.getType()=%s",type);
                         }
                         else
                         {
-                          if      (ConfigValueAdapter.class.isAssignableFrom(configValue.type()))
+                          if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
                           {
                             // instantiate config adapter class
-                            ConfigValueAdapter configValueAdapter;
-                            Class enclosingClass = configValue.type().getEnclosingClass();
+                            SettingValueAdapter settingValueAdapter;
+                            Class enclosingClass = settingValue.type().getEnclosingClass();
                             if (enclosingClass == Settings.class)
                             {
-                              Constructor constructor = configValue.type().getDeclaredConstructor(Settings.class);
-                              configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+                              Constructor constructor = settingValue.type().getDeclaredConstructor(Settings.class);
+                              settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
                             }
                             else
                             {
-                              configValueAdapter = (ConfigValueAdapter)configValue.type().newInstance();
+                              settingValueAdapter = (SettingValueAdapter)settingValue.type().newInstance();
                             }
 
                             // convert to value
-                            Object value = configValueAdapter.toValue(string);
+                            Object value = settingValueAdapter.toValue(string);
                             field.set(null,value);
                           }
                           else if (type == int.class)
@@ -1048,7 +1048,7 @@ Dprintf.dprintf("field.getType()=%s",type);
                           }
                           else if (type == EnumSet.class)
                           {
-                            Class enumClass = configValue.type();
+                            Class enumClass = settingValue.type();
                             if (!enumClass.isEnum())
                             {
                               throw new Error(enumClass+" is not an enum class!");
@@ -1153,37 +1153,37 @@ exception.printStackTrace();
 //Dprintf.dprintf("field=%s",field);
           for (Annotation annotation : field.getDeclaredAnnotations())
           {
-            if      (annotation instanceof ConfigValue)
+            if      (annotation instanceof SettingValue)
             {
-              ConfigValue configValue = (ConfigValue)annotation;
+              SettingValue settingValue = (SettingValue)annotation;
 
               // get value and write to file
-              String name = (!configValue.name().isEmpty()) ? configValue.name() : field.getName();
+              String name = (!settingValue.name().isEmpty()) ? settingValue.name() : field.getName();
               try
               {
                 Class type = field.getType();
                 if (type.isArray())
                 {
                   type = type.getComponentType();
-                  if      (ConfigValueAdapter.class.isAssignableFrom(configValue.type()))
+                  if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
                   {
                     // instantiate config adapter class
-                    ConfigValueAdapter configValueAdapter;
-                    Class enclosingClass = configValue.type().getEnclosingClass();
+                    SettingValueAdapter settingValueAdapter;
+                    Class enclosingClass = settingValue.type().getEnclosingClass();
                     if (enclosingClass == Settings.class)
                     {
-                      Constructor constructor = configValue.type().getDeclaredConstructor(Settings.class);
-                      configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+                      Constructor constructor = settingValue.type().getDeclaredConstructor(Settings.class);
+                      settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
                     }
                     else
                     {
-                      configValueAdapter = (ConfigValueAdapter)configValue.type().newInstance();
+                      settingValueAdapter = (SettingValueAdapter)settingValue.type().newInstance();
                     }
 
                     // convert to string
                     for (Object object : (Object[])field.get(null))
                     {
-                      String value = (String)configValueAdapter.toString(object);
+                      String value = (String)settingValueAdapter.toString(object);
                       output.printf("%s = %s\n",name,value);
                     }
                   }
@@ -1236,23 +1236,23 @@ Dprintf.dprintf("field.getType()=%s",type);
                 }
                 else
                 {
-                  if      (ConfigValueAdapter.class.isAssignableFrom(configValue.type()))
+                  if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
                   {
                     // instantiate config adapter class
-                    ConfigValueAdapter configValueAdapter;
-                    Class enclosingClass = configValue.type().getEnclosingClass();
+                    SettingValueAdapter settingValueAdapter;
+                    Class enclosingClass = settingValue.type().getEnclosingClass();
                     if (enclosingClass == Settings.class)
                     {
-                      Constructor constructor = configValue.type().getDeclaredConstructor(Settings.class);
-                      configValueAdapter = (ConfigValueAdapter)constructor.newInstance(new Settings());
+                      Constructor constructor = settingValue.type().getDeclaredConstructor(Settings.class);
+                      settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
                     }
                     else
                     {
-                      configValueAdapter = (ConfigValueAdapter)configValue.type().newInstance();
+                      settingValueAdapter = (SettingValueAdapter)settingValue.type().newInstance();
                     }
 
                     // convert to string
-                    String value = (String)configValueAdapter.toString(field.get(null));
+                    String value = (String)settingValueAdapter.toString(field.get(null));
                     output.printf("%s = %s\n",name,value);
                   }
                   else if (type == int.class)
@@ -1272,7 +1272,7 @@ Dprintf.dprintf("field.getType()=%s",type);
                   }
                   else if (type == String.class)
                   {
-                    String value = (type != null) ? (String)field.get(null) : configValue.defaultValue();
+                    String value = (type != null) ? (String)field.get(null) : settingValue.defaultValue();
                     output.printf("%s = %s\n",name,StringUtils.escape(value));
                   }
                   else if (type.isEnum())
@@ -1297,11 +1297,11 @@ Dprintf.dprintf("exception=%s",exception);
 exception.printStackTrace();
               }
             }
-            else if (annotation instanceof ConfigComment)
+            else if (annotation instanceof SettingComment)
             {
-              ConfigComment configComment = (ConfigComment)annotation;
+              SettingComment settingComment = (SettingComment)annotation;
 
-              for (String line : configComment.text())
+              for (String line : settingComment.text())
               {
                 if (!line.isEmpty())
                 {
@@ -1510,10 +1510,10 @@ exception.printStackTrace();
    * @param settingAdapter setting adapter (use equals() function)
    * @return extended array or array
    */
-  private static Object[] addArrayUniq(Object[] array, Object object, ConfigValueAdapter configValueAdapter)
+  private static Object[] addArrayUniq(Object[] array, Object object, SettingValueAdapter settingValueAdapter)
   {
     int z = 0;
-    while ((z < array.length) && !configValueAdapter.equals(array[z],object))
+    while ((z < array.length) && !settingValueAdapter.equals(array[z],object))
     {
       z++;
     }
