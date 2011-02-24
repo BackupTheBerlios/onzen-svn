@@ -94,10 +94,12 @@ class Patch
   // --------------------------- variables --------------------------------
   public  String   rootPath;               // root path
   public  States   state;                  // patch state; see States
-  public  String[] fileNames;              // files belonging to patch
   public  String   summary;                // summary comment
   public  String[] message;                // commit message
+  public  String   revision1,revision2;    // revision
+  public  boolean  ignoreWhitespaces;      // true when whitespaces are ignored
   public  String[] lines;                  // patch lines
+  public  String[] fileNames;              // files belonging to patch
 
   private int      databaseId;             // id in database or Database.ID_NONE
   private int      number;                 // patch number or Database.ID_NONE
@@ -137,6 +139,9 @@ class Patch
                                             "  patches.state, "+
                                             "  patches.summary, "+
                                             "  patches.message, "+
+                                            "  patches.revision1, "+
+                                            "  patches.revision2, "+
+                                            "  patches.ignoreWhitespaces, "+
                                             "  patches.data, "+
                                             "  numbers.id AS number "+
                                             "FROM patches "+
@@ -159,12 +164,15 @@ class Patch
         while (resultSet1.next())
         {
           // get patch data
-          int      databaseId = resultSet1.getInt("databaseId");
-          States   state      = States.toEnum(resultSet1.getInt("state"));
-          String   summary    = resultSet1.getString("summary"); if (summary == null) summary = "";
-          String[] message    = Database.dataToLines(resultSet1.getString("message"));
-          String[] lines      = Database.dataToLines(resultSet1.getString("data"));
-          int      number     = resultSet1.getInt("number");
+          int      databaseId        = resultSet1.getInt("databaseId");
+          States   state             = States.toEnum(resultSet1.getInt("state"));
+          String   summary           = resultSet1.getString("summary"); if (summary == null) summary = "";
+          String[] message           = Database.dataToLines(resultSet1.getString("message"));
+          String   revision1         = resultSet1.getString("revision1");
+          String   revision2         = resultSet1.getString("revision2");
+          boolean  ignoreWhitespaces = resultSet1.getInt("ignoreWhitespaces") == 1;
+          String[] lines             = Database.dataToLines(resultSet1.getString("data"));
+          int      number            = resultSet1.getInt("number");
 //Dprintf.dprintf("databaseId=%d state=%s summary=%s number=%d",databaseId,state,summary,number);
 
           // get file names
@@ -192,6 +200,9 @@ class Patch
                                   state,
                                   summary,
                                   message,
+                                  revision1,
+                                  revision2,
+                                  ignoreWhitespaces,
                                   lines,
                                   fileNames,
                                   number
@@ -228,22 +239,38 @@ class Patch
    * @param state state
    * @param summary summary text
    * @param message message text lines
+   * @param revision1,revision2 revisions
+   * @param ignoreWhitespaces true iff whitespaces are ignored
    * @param lines patch lines
    * @param fileNames file names
    * @param patch number
    */
-  private Patch(String rootPath, int databaseId, States state, String summary, String message[], String[] lines, String[] fileNames, int number)
+  private Patch(String   rootPath,
+                int      databaseId,
+                States   state,
+                String   summary,
+                String   message[],
+                String   revision1,
+                String   revision2,
+                boolean  ignoreWhitespaces,
+                String[] lines,
+                String[] fileNames,
+                int      number
+               )
   {
-    this.rootPath   = rootPath;
-    this.state      = state;
-    this.summary    = summary;
-    this.message    = message;
-    this.fileNames  = fileNames;
+    this.rootPath          = rootPath;
+    this.state             = state;
+    this.summary           = summary;
+    this.message           = message;
+    this.revision1         = revision1;
+    this.revision2         = revision2;
+    this.ignoreWhitespaces = ignoreWhitespaces;
+    this.lines             = lines;
+    this.fileNames         = fileNames;
 
-    this.databaseId = databaseId;
-    this.number     = number;
-    this.lines      = lines;
-    this.tmpFile    = null;
+    this.databaseId        = databaseId;
+    this.number            = number;
+    this.tmpFile           = null;
   }
 
   /** create patch
@@ -252,23 +279,63 @@ class Patch
    * @param state state
    * @param summary summary text
    * @param message message text lines
+   * @param revision1,revision2 revisions
+   * @param ignoreWhitespaces true iff whitespaces are ignored
    * @param lines patch lines
    * @param fileNames file names
    */
-  public Patch(String rootPath, int databaseId, States state, String summary, String[] message, String[] lines, String[] fileNames)
+  public Patch(String   rootPath,
+               int      databaseId,
+               States   state,
+               String   summary,
+               String[] message,
+               String   revision1,
+               String   revision2,
+               boolean  ignoreWhitespaces,
+               String[] lines,
+               String[] fileNames
+              )
   {
-    this(rootPath,databaseId,state,summary,message,lines,fileNames,Database.ID_NONE);
+    this(rootPath,
+         databaseId,
+         state,
+         summary,
+         message,
+         revision1,
+         revision2,
+         ignoreWhitespaces,
+         lines,
+         fileNames,
+         Database.ID_NONE
+        );
   }
 
   /** create patch
    * @param rootPath root path
    * @param fileDataSet file data set
+   * @param revision1,revision2 revisions
+   * @param ignoreWhitespaces true iff whitespaces are ignored
    * @param lines patch lines
    */
-  public Patch(String rootPath, HashSet<FileData> fileDataSet, String[] lines)
+  public Patch(String            rootPath,
+               HashSet<FileData> fileDataSet,
+               String            revision1,
+               String            revision2,
+               boolean           ignoreWhitespaces,
+               String[]          lines
+              )
   {
-    this(rootPath,Database.ID_NONE,States.NONE,"",null,lines,null);
-
+    this(rootPath,
+         Database.ID_NONE,
+         States.NONE,
+         "",
+         null,
+         revision1,
+         revision2,
+         ignoreWhitespaces,
+         lines,
+         null
+        );
     if (fileDataSet != null)
     {
       // set file names
@@ -279,6 +346,16 @@ class Patch
       }
       this.fileNames = fileList.toArray(new String[fileList.size()]);
     }
+  }
+
+  /** create patch
+   * @param rootPath root path
+   * @param fileDataSet file data set
+   * @param lines patch lines
+   */
+  public Patch(String rootPath, HashSet<FileData> fileDataSet, String[] lines)
+  {
+    this(rootPath,fileDataSet,null,null,false,lines);
   }
 
   /** create patch
@@ -296,7 +373,7 @@ class Patch
    */
   public Patch(String rootPath, int databaseId)
   {
-    this(rootPath,databaseId,States.NONE,"",null,null,null);
+    this(rootPath,databaseId,States.NONE,"",null,null,null,false,null,null);
   }
 
   /** create patch
@@ -304,7 +381,7 @@ class Patch
    */
   public Patch(int databaseId)
   {
-    this(null,databaseId,States.NONE,"",null,null,null);
+    this(null,databaseId);
   }
 
   /** done patch
@@ -547,7 +624,6 @@ Dprintf.dprintf("");
           if (resultSet.next())
           {
             rootPath = resultSet.getString("rootPath");
-Dprintf.dprintf("rootPath=%s",rootPath);
             state    = States.toEnum(resultSet.getInt("state"));
             summary  = resultSet.getString("summary"); if (summary == null) summary = "";
             message  = Database.dataToLines(resultSet.getString("message"));
@@ -705,7 +781,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
         }
         catch (IOException exception)
         {
-  Dprintf.dprintf("exception=%s",exception);
+Dprintf.dprintf("exception=%s",exception);
           return false;
         }
         finally
@@ -719,7 +795,7 @@ Dprintf.dprintf("rootPath=%s",rootPath);
       newLineList.clear();
       while (patchChunk.nextChunk())
       {
-//Dprintf.dprintf("file '%s', line #%d",patchChunk.fileName,patchChunk.lineNb);
+//Dprintf.dprintf("file '%s' -> '%s', line #%d",patchChunk.oldFileName,patchChunk.newFileName,patchChunk.lineNb);
 //for (PatchLines patchLines : patchChunk.patchLineList) Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
 
         // add not changed lines
@@ -954,8 +1030,8 @@ Dprintf.dprintf("exception=%s",exception);
      */
     public boolean nextFile()
     {
-      final Pattern PATTERN_OLD_FILENAME = Pattern.compile("^\\-\\-\\-\\s+(.*)\\s+(.*)",Pattern.CASE_INSENSITIVE);
-      final Pattern PATTERN_NEW_FILENAME = Pattern.compile("^\\+\\+\\+\\s+(.*)\\s+(.*)",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_OLD_FILENAME = Pattern.compile("^\\-\\-\\-\\s+(.*)\\t\\s*(.*)",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_NEW_FILENAME = Pattern.compile("^\\+\\+\\+\\s+(.*)\\t\\s*(.*)",Pattern.CASE_INSENSITIVE);
 
       Matcher matcher = null;
 
@@ -1079,6 +1155,14 @@ Dprintf.dprintf("exception=%s",exception);
         return false;
       }
     }
+
+    /** convert data to string
+     * @return string
+     */
+    public String toString()
+    {
+      return "PatchChunk {"+oldFileName+", "+newFileName+", line #: "+lineNb+"}";
+    }
   }
 
   /** open patches database
@@ -1105,13 +1189,16 @@ Dprintf.dprintf("exception=%s",exception);
                              );
       statement = database.connection.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS patches ( "+
-                              "  id       INTEGER PRIMARY KEY, "+
-                              "  datetime INTEGER DEFAULT (DATETIME('now')), "+
-                              "  rootPath TEXT, "+
-                              "  state    INTEGER, "+
-                              "  summary  TEXT, "+
-                              "  message  TEXT, "+
-                              "  data     TEXT "+
+                              "  id                INTEGER PRIMARY KEY, "+
+                              "  datetime          INTEGER DEFAULT (DATETIME('now')), "+
+                              "  rootPath          TEXT, "+
+                              "  state             INTEGER, "+
+                              "  summary           TEXT, "+ 
+                              "  message           TEXT, "+ 
+                              "  data              TEXT,"+  
+                              "  revision1         TEXT, "+
+                              "  revision2         TEXT, "+
+                              "  ignoreWhitespaces INTEGER "+
                               ");"
                              );
       statement = database.connection.createStatement();
