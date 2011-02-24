@@ -27,6 +27,7 @@ import java.text.ParseException;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
@@ -315,6 +316,14 @@ class FileData
   public FileData(String name, States state)
   {
     this(name,state,Modes.UNKNOWN);
+  }
+
+  /** create file data
+   * @param name file name
+   */
+  public FileData(String name)
+  {
+    this(name,States.UNKNOWN);
   }
 
   /** get file name
@@ -1597,6 +1606,7 @@ abstract class Repository implements Serializable
    * @return repository or null if no repository found
    */
   public static Repository newInstance(String rootPath)
+    throws RepositoryException
   {
     switch (Repository.getType(rootPath))
     {
@@ -1604,7 +1614,7 @@ abstract class Repository implements Serializable
       case SVN: return new RepositorySVN(rootPath);
       case HG:  return new RepositoryHG(rootPath);
       case GIT: return new RepositoryGit(rootPath);
-      default:  return null;
+      default:  throw new RepositoryException("no repository (CVS/SVN/HG/Git) found");
     }
   }
 
@@ -1989,6 +1999,44 @@ abstract class Repository implements Serializable
   abstract public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
     throws RepositoryException;
 
+  /** get unified patch lines for file
+   * @param fileNameSet file name set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatchLines(Collection<String> fileNameSet, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNameSet)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
+    updateStates(fileDataSet);
+
+    return getPatchLines(fileDataSet,revision1,revision2,ignoreWhitespaces);
+  }
+
+  /** get unified patch lines for file
+   * @param fileNames file names
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return patch data lines
+   */
+  public String[] getPatchLines(String[] fileNames, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNames)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
+    updateStates(fileDataSet);
+
+    return getPatchLines(fileDataSet,revision1,revision2,ignoreWhitespaces);
+  }
+
   /** get unified patch for file
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
@@ -2159,6 +2207,41 @@ abstract class Repository implements Serializable
    */
   abstract public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
     throws RepositoryException;
+
+  /** add files
+   * @param fileNameSet file name set
+   * @param commitMessage commit message
+   * @param binaryFlag true to add file as binary files, false otherwise
+   */
+  public void add(Collection<String> fileNameSet, Message commitMessage, boolean binaryFlag)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNameSet)
+    {
+Dprintf.dprintf("fileName=%s",fileName);
+      fileDataSet.add(new FileData(fileName));
+    }
+
+    add(fileDataSet,commitMessage,binaryFlag);
+  }
+
+  /** add files
+   * @param fileNames file names
+   * @param commitMessage commit message
+   * @param binaryFlag true to add file as binary files, false otherwise
+   */
+  public void add(String[] fileNames, Message commitMessage, boolean binaryFlag)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNames)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
+
+    add(fileDataSet,commitMessage,binaryFlag);
+  }
 
   /** add file
    * @param fileData file data
