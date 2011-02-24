@@ -2481,7 +2481,7 @@ new Message("Und nun?").addToHistory();
 
     final Data  data = new Data();
     final Shell dialog;
-    Composite   composite,subComposite,subSubComposite;
+    Composite   composite,subComposite,subSubComposite,subSubSubComposite;
     TabFolder   tabFolder;
     Label       label;
     Button      button;
@@ -2712,73 +2712,100 @@ exception.printStackTrace();
           Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,3);
           widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch mail.");
 
-          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
-          Widgets.layout(button,1,1,TableLayoutData.E);
-          button.addSelectionListener(new SelectionListener()
+          subSubSubComposite = Widgets.newComposite(subSubComposite);
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+          Widgets.layout(subSubSubComposite,1,0,TableLayoutData.WE);
           {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            button = Widgets.newButton(subSubSubComposite,Onzen.IMAGE_ARROW_UP);
+            Widgets.layout(button,0,0,TableLayoutData.E);
+            button.addSelectionListener(new SelectionListener()
             {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-Dprintf.dprintf("");
-            }
-          });
-          button.setToolTipText("Add new test description.");
-
-          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
-          Widgets.layout(button,1,2,TableLayoutData.E);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-Dprintf.dprintf("");
-            }
-          });
-          button.setToolTipText("Add new test description.");
-
-          button = Widgets.newButton(subSubComposite,"Add");
-          Widgets.layout(button,1,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              String test = Dialogs.string(dialog,"Edit test","Test:","","Add","Cancel");
-              if (test != null)
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
               {
-                widgetPatchTests.add(test);
               }
-            }
-          });
-          button.setToolTipText("Add new test description.");
-
-          button = Widgets.newButton(subSubComposite,"Remove");
-          Widgets.layout(button,1,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              int index = widgetPatchTests.getSelectionIndex();
-              if (index >= 0)
+              public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String test = widgetPatchTests.getItem(index);
-                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove test '%s'?",test)))
+                int index = widgetPatchTests.getSelectionIndex();
+                if (index >= 0)
                 {
-                  widgetPatchTests.remove(index);
+                  if (index > 0)
+                  {
+                    String test0 = widgetPatchTests.getItem(index-1);
+                    String test1 = widgetPatchTests.getItem(index  );
+                    widgetPatchTests.setItem(index-1,test1);
+                    widgetPatchTests.setItem(index  ,test0);
+                    widgetPatchTests.setSelection(index-1);
+                  }
                 }
               }
-            }
-          });
-          button.setToolTipText("Remove selected test description.");
+            });
+            button.setToolTipText("Move test description up.");
+
+            button = Widgets.newButton(subSubSubComposite,Onzen.IMAGE_ARROW_DOWN);
+            Widgets.layout(button,0,1,TableLayoutData.E);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetPatchTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  if (index < widgetPatchTests.getItemCount()-1)
+                  {
+                    String test0 = widgetPatchTests.getItem(index  );
+                    String test1 = widgetPatchTests.getItem(index+1);
+                    widgetPatchTests.setItem(index  ,test1);
+                    widgetPatchTests.setItem(index+1,test0);
+                    widgetPatchTests.setSelection(index+1);
+                  }
+                }
+              }
+            });
+            button.setToolTipText("Move test description down.");
+
+            button = Widgets.newButton(subSubSubComposite,"Add");
+            Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String test = Dialogs.string(dialog,"Edit test","Test:","","Add","Cancel");
+                if (test != null)
+                {
+                  widgetPatchTests.add(test);
+                }
+              }
+            });
+            button.setToolTipText("Add new test description.");
+
+            button = Widgets.newButton(subSubSubComposite,"Remove");
+            Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetPatchTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  String test = widgetPatchTests.getItem(index);
+                  if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove test '%s'?",test)))
+                  {
+                    widgetPatchTests.remove(index);
+                  }
+                }
+              }
+            });
+            button.setToolTipText("Remove selected test description.");
+          }
         }
 
         label = Widgets.newLabel(subComposite,"To:");
