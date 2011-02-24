@@ -325,7 +325,7 @@ public class Onzen
 
   private Button                            widgetButtonUpdate;
   private Button                            widgetButtonCommit;
-  private Button                            widgetButtonPatch;
+  private Button                            widgetButtonCreatePatch;
   private Button                            widgetButtonAdd;
   private Button                            widgetButtonRemove;
   private Button                            widgetButtonRevert;
@@ -734,9 +734,9 @@ exception.printStackTrace();
       });
       widgetButtonCommit.setToolTipText("Commit selected entries.");
 
-      widgetButtonPatch = Widgets.newButton(composite,"Patch");
-      Widgets.layout(widgetButtonPatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonPatch.addSelectionListener(new SelectionListener()
+      widgetButtonCreatePatch = Widgets.newButton(composite,"Patch");
+      Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetButtonCreatePatch.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -749,7 +749,7 @@ exception.printStackTrace();
           }
         }
       });
-      widgetButtonPatch.setToolTipText("Create patch for selected entries.");
+      widgetButtonCreatePatch.setToolTipText("Create patch for selected entries.");
 
       widgetButtonAdd = Widgets.newButton(composite,"Add");
       Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
