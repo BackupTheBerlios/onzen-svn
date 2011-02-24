@@ -22,10 +22,10 @@ LAUNCH4J_DIR       =
 #--------------------------------- tool chain --------------------------------
 
 JAVA               = /usr/local/bin/java
-JAVA_FLAGS         =  -Xmx128m
+JAVA_FLAGS         = -Xmx256m
 
 JAVAC              = /usr/local/bin/javac
-JAVAC_FLAGS        =  -source 1.5
+JAVAC_FLAGS        = -source 1.5
 # -Xlint
 
 JAR                = /usr/bin/jar
