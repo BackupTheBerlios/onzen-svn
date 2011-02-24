@@ -128,6 +128,7 @@ class CommandCreatePatch
   private final RepositoryTab     repositoryTab;
   private final Display           display;
   private final HashSet<FileData> fileDataSet;
+  private final String            revision1,revision2;
 
   // dialog
   private final Data              data = new Data();
@@ -140,7 +141,6 @@ class CommandCreatePatch
   private final Text              widgetFind;
   private final Button            widgetFindPrev;
   private final Button            widgetFindNext;
-  private final Text              widgetMessage = null;
   private final Button            widgetIgnoreWhitespaces;
   private final Button            widgetButtonClose;
 
@@ -152,9 +152,9 @@ class CommandCreatePatch
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileDataSet files to add
-   * @param revision revision to view
+   * @param revision1,revisions2 patch revision
    */
-  CommandCreatePatch(final Shell shell, final RepositoryTab repositoryTab, final HashSet<FileData> fileDataSet, final String revision)
+  CommandCreatePatch(final Shell shell, final RepositoryTab repositoryTab, final HashSet<FileData> fileDataSet, final String revision1, final String revision2)
   {
     Composite composite,subComposite;
     Label     label;
@@ -164,6 +164,8 @@ class CommandCreatePatch
     // initialize variables
     this.repositoryTab = repositoryTab;
     this.fileDataSet   = fileDataSet;
+    this.revision1     = revision1;
+    this.revision2     = revision2;
 
     // get display
     display = shell.getDisplay();
@@ -339,6 +341,9 @@ class CommandCreatePatch
             // create patch
             Patch patch = new Patch(repositoryTab.repository.rootPath,
                                     fileDataSet,
+                                    revision1,
+                                    revision2,
+                                    widgetIgnoreWhitespaces.getSelection(),
                                     patchLines
                                    );
             try
@@ -649,7 +654,18 @@ Dprintf.dprintf("");
     Dialogs.show(dialog,Settings.geometryCreatePatch);
 
     // start show file
-    show(revision,null);
+    show(revision1,revision2);
+  }
+
+  /** patch command
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param fileDataSet files to add
+   * @param revision revisions patch revision
+   */
+  CommandCreatePatch(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, String revision)
+  {
+    this(shell,repositoryTab,fileDataSet,revision,null);
   }
 
   /** create patch command
