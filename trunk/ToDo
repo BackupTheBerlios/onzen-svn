@@ -18,3 +18,4 @@ ToDo
 - integrate JavaMail
 - add refresh shortcut key
 - change mime macro %file% to ${file}?
+- write manual
