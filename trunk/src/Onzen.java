@@ -2430,17 +2430,19 @@ new Message("Und nun?").addToHistory();
    */
   private Repository openRepository(String rootPath)
   {
-    // open repository
-    Repository repository = Repository.newInstance(rootPath);
-    if (repository != null)
+    Repository repository = null;
+
+    try
     {
+      // open repository
+      repository = Repository.newInstance(rootPath);
+
       // add and select new repository
       selectRepositoryTab(addRepositoryTab(repository));
     }
-    else
+    catch (RepositoryException exception)
     {
-// NYI: add git
-      Dialogs.error(shell,"'%s'\n\ndoes not contain a known repository (CVS,SVN,HG)",rootPath);
+      Dialogs.error(shell,"Cannot open repository '%s' (error: %s)",rootPath,exception.getMessage());
       return null;
     }
 
