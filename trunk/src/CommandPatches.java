@@ -103,14 +103,14 @@ class CommandPatches
     HashSet<FileData>     fileDataSet;
     EnumSet<Patch.States> showStates;
     Patch                 patch;
-    String[]              message;
+    String                oldMessage;
 
     Data()
     {
       this.fileDataSet = new HashSet<FileData>();
       this.showStates  = EnumSet.copyOf(Settings.patchShowStates);
       this.patch       = null;
-      this.message     = null;
+      this.oldMessage  = null;
     }
   };
 
@@ -135,6 +135,7 @@ class CommandPatches
   private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final List          widgetFileNames;
   private final Text          widgetMessage;
+  private final Button        widgetMessageSave;
   private final Button        widgetClose;
 
   // ------------------------ native functions ----------------------------
@@ -292,6 +293,64 @@ class CommandPatches
           widgetChanges.setToolTipText("Changes to commit.");
           widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
           widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
+
+          button = Widgets.newButton(subComposite,"Refresh");
+          button.setEnabled(false);
+          Widgets.layout(button,1,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          Widgets.addModifyListener(new WidgetListener(button,data)
+          {
+            public void modified(Control control)
+            {
+              Widgets.setEnabled(control,(data.patch != null));
+            }
+          });
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              if (data.patch != null)
+              {
+                if (Dialogs.confirm(dialog,"Confirmation","Really refresh patch?"))
+                {
+                  repositoryTab.setStatusText("Refresh patch...");
+                  try
+                  {
+                    // get repository instance
+                    Repository repository = Repository.newInstance(data.patch.rootPath);
+
+                    // refresh patch
+                    data.patch.lines = repository.getPatchLines(data.patch.fileNames,
+                                                                data.patch.revision1,
+                                                                data.patch.revision2,
+                                                                data.patch.ignoreWhitespaces
+                                                               );
+                    setChangesText(data.patch.lines);
+
+                    // save
+                    data.patch.save();
+                  }
+                  catch (RepositoryException exception)
+                  {
+                    Dialogs.error(dialog,"Cannot get patch (error: %s)",exception.getMessage());
+                    return;
+                  }
+                  catch (SQLException exception)
+                  {
+                    Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                    return;
+                  }
+                  finally
+                  {
+                    repositoryTab.clearStatusText();
+                  }
+                }
+              }
+            }
+          });
+          button.setToolTipText("Refresh patch.");
         }
 
         subComposite = Widgets.addTab(tabFolder,"Files");
@@ -311,6 +370,49 @@ class CommandPatches
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
       widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Return to commit patch.");
+
+      widgetMessageSave = Widgets.newButton(composite,"Save");
+      widgetMessageSave.setEnabled(false);
+      Widgets.layout(widgetMessageSave,5,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetListener(widgetMessageSave,data)
+      {
+        public void modified(Control control)
+        {
+          String text = widgetMessage.getText().trim();
+          Widgets.setEnabled(control,(data.oldMessage != null) && !data.oldMessage.equals(text));
+        }
+      });
+      widgetMessageSave.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (data.patch != null)
+          {
+            try
+            {
+              // get text
+              String text = widgetMessage.getText().trim();
+
+              // save patch
+              data.patch.message = StringUtils.split(text,widgetMessage.DELIMITER);
+              data.patch.save();
+
+              // update
+              data.oldMessage = text;
+              Widgets.modified(data);
+            }
+            catch (SQLException exception)
+            {
+              Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+              return;
+            }
+          }
+        }
+      });
+      button.setToolTipText("Save patch message.");
     }
 
     // buttons
@@ -637,7 +739,7 @@ Dprintf.dprintf("");
       button.setToolTipText("Delete patch from database.");
 
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,6,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,7,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -668,6 +770,15 @@ Dprintf.dprintf("");
         TableItem tableItem = (TableItem)selectionEvent.item;
 
         setSelectedPatch((Patch)tableItem.getData());
+      }
+    });
+    widgetMessage.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        Widgets.setEnabled(widgetMessageSave,(data.oldMessage != null) && !data.oldMessage.equals(widget.getText().trim()));
       }
     });
 
@@ -752,20 +863,8 @@ Dprintf.dprintf("");
         && !widgetHorizontalScrollBar.isDisposed()
        )
     {
-      StringBuilder text     = new StringBuilder();
-      int           lineNb   = 1;
-      int           maxWidth = 0;
-
-      // get text
-      for (String line : lines)
-      {
-        text.append(line); text.append('\n');
-
-        maxWidth = Math.max(maxWidth,line.length());
-      }
-
       // set text
-      widgetChanges.setText(text.toString());
+      widgetChanges.setText(StringUtils.join(lines,"\n"));
 
       // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
       widgetChanges.redraw();
@@ -802,20 +901,30 @@ Dprintf.dprintf("");
   private void setSelectedPatch(Patch patch)
   {
     data.patch = patch;
-    widgetChanges.setText("");
-    widgetFileNames.removeAll();
-    widgetMessage.setText("");
 
-    if (patch != null)
+    if (data.patch != null)
     {
+      // set changes text
       setChangesText(data.patch.lines);
+
+      // set file names
       for (String fileName : data.patch.fileNames)
       {
         widgetFileNames.add(fileName);
       }
-      widgetMessage.setText(StringUtils.join(data.patch.message,widgetMessage.DELIMITER));
-    }
 
+      // set message
+      String text = StringUtils.join(data.patch.message,widgetMessage.DELIMITER);
+      widgetMessage.setText(text);
+      data.oldMessage = text;
+    }
+    else
+    {
+      // clear changes text, file names, message
+      widgetChanges.setText("");
+      widgetFileNames.removeAll();
+      widgetMessage.setText("");
+    }
     Widgets.modified(data);
   } 
 
@@ -824,29 +933,20 @@ Dprintf.dprintf("");
    */
   private void setSelectedPatch(int patchNumber)
   {
-    data.patch = null;
-    widgetFileNames.removeAll();
-    widgetMessage.setText("");
+    Patch patch = null;
 
+    // search patch
     for (TableItem tableItem : widgetPatches.getItems())
     {
-      Patch patch = (Patch)tableItem.getData();
-      if (patch.getNumber() == patchNumber)
+      if (((Patch)tableItem.getData()).getNumber() == patchNumber)
       {
-        data.patch = patch;
-
-        setChangesText(data.patch.lines);
-        for (String fileName : data.patch.fileNames)
-        {
-          widgetFileNames.add(fileName);
-        }
-        widgetMessage.setText(StringUtils.join(data.patch.message,widgetMessage.DELIMITER));
-
+        patch = (Patch)tableItem.getData();
         break;
       }
     }
 
-    Widgets.modified(data);
+    // select patch
+    setSelectedPatch(patch);
   }
 
   private void commit(Patch patch)
@@ -854,16 +954,26 @@ Dprintf.dprintf("");
   {
     // get repository instance
     Repository repository = Repository.newInstance(patch.rootPath);
-    if (repository == null)
-    {
-      throw new RepositoryException("cannot access repository '"+patch.rootPath+"'");
-    }
 
     // get patches files
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     for (String fileName : patch.fileNames)
     {
-      fileDataSet.add(new FileData(fileName,FileData.Types.FILE));
+      fileDataSet.add(new FileData(fileName));
+    }
+    repository.update(fileDataSet);
+
+    // get new files
+    HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
+    if (fileDataSet != null)
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        if (fileData.state == FileData.States.UNKNOWN)
+        {
+          newFileDataSet.add(fileData);
+        }
+      }
     }
 
     // save files
@@ -874,10 +984,12 @@ Dprintf.dprintf("");
       repository.revert(fileDataSet);
 
       // apply patch
+Dprintf.dprintf("");
       if (!patch.apply())
       {
         throw new RepositoryException("applying patch fail");
       }
+Dprintf.dprintf("");
 
       // commit patch
       Message message = null;
@@ -887,11 +999,17 @@ Dprintf.dprintf("");
         message = new Message(patch.message);
         message.addToHistory();
 
+        // add new files
+        if (newFileDataSet.size() > 0)
+        {
+          repository.add(newFileDataSet,null,false);
+        }
+
         // commit files
         repository.commit(fileDataSet,message);
 
         // update file states
-  // ???
+        repositoryTab.asyncUpdateFileStates(fileDataSet);
       }
       catch (IOException exception)
       {
@@ -901,7 +1019,6 @@ Dprintf.dprintf("");
       {
         message.done();
       }
-Dprintf.dprintf("");
 
       // restore files
       if (!storedFiles.restore())
