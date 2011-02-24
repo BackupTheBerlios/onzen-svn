@@ -67,7 +67,7 @@ class MessageReceiveBroadcast extends Thread
    */
   public void run()
   {
-    Object[] data = new Object[3];
+//    Object[] data = new Object[3];
     for (;;)
     {
       try
@@ -78,13 +78,14 @@ class MessageReceiveBroadcast extends Thread
 //Dprintf.dprintf("line=#%s#",line);
 
         // parse
-        if (!StringParser.parse(line,"%s %s % s",data))
+        String[] data = line.split("\\s",3);
+        if (data.length != 3)
         {
           continue;
         }
-        String userName = (String)data[0];
-        String id       = (String)data[1];
-        String message  = (String)data[2];
+        String userName = data[0];
+        String id       = data[1];
+        String message  = data[2];
 
         // filter out own messages
         if (userName.equals(Message.USER_NAME) && id.equals(Message.ID))
@@ -94,7 +95,7 @@ class MessageReceiveBroadcast extends Thread
 
         // convert message
         ArrayList<String> lineList = new ArrayList<String>();
-        for (String string : StringUtils.split(message,"\\n"))
+        for (String string : message.split("\\\\n"))
         {
           lineList.add(string.replace("\\\\","\\"));
         }
