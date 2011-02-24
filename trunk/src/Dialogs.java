@@ -110,7 +110,7 @@ class BusyDialog
    */
   public void animate()
   {
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {
