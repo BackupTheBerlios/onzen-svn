@@ -955,7 +955,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         if (fileData.state != FileData.States.UNKNOWN)
         {
           existFileDataSet.add(fileData);
-       }
+        }
         else
         {
           newFileDataSet.add(fileData);
@@ -1089,7 +1089,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         patchLineList.add(String.format("diff -u %s",fileData.getFileName()));
         patchLineList.add(String.format("--- /dev/null\t%s",dateString));
         patchLineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
-        patchLineList.add(String.format("@@ -1,%d +1,%d %s",lineList.size(),lineList.size(),dateString));
+        patchLineList.add(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
         patchLineList.addAll(lineList);
       }
       catch (IOException exception)
