@@ -470,7 +470,7 @@ class CommandView
         if (data.revisionNames.length > 0)
         {
           // add revisions
-          if (!display.isDisposed())
+          if (!dialog.isDisposed())
           {
             display.syncExec(new Runnable()
             {
@@ -671,7 +671,7 @@ class CommandView
   private void show(String revision)
   {
     // clear
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {
@@ -710,7 +710,7 @@ class CommandView
           repositoryTab.clearStatusText();
         }
 
-        if (!display.isDisposed())
+        if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {

@@ -280,7 +280,7 @@ class CommandRevert
           if (data.revisionNames.length > 0)
           {
             // add revisions
-            if (!display.isDisposed())
+            if (!dialog.isDisposed())
             {
               display.syncExec(new Runnable()
               {

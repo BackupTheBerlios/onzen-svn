@@ -317,7 +317,7 @@ class CommandRevisionInfo
         }
 
         // show
-        if (!display.isDisposed())
+        if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {
@@ -393,7 +393,7 @@ class CommandRevisionInfo
    */
   private void show()
   {
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {

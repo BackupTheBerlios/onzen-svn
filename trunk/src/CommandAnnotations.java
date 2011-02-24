@@ -401,7 +401,7 @@ class CommandAnnotations
         if (data.revisionNames.length > 0)
         {
           // add revisions
-          if (!display.isDisposed())
+          if (!dialog.isDisposed())
           {
             display.syncExec(new Runnable()
             {
@@ -604,7 +604,7 @@ class CommandAnnotations
   private void show(String revision)
   {
     // clear
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {
@@ -642,7 +642,7 @@ class CommandAnnotations
         repositoryTab.clearStatusText();
 
         // show
-        if (!display.isDisposed())
+        if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {

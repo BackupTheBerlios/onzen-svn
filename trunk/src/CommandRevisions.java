@@ -947,7 +947,7 @@ throw new RepositoryException("NYI");
   private void show(String revision)
   {
     // clear
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {

@@ -1341,7 +1341,7 @@ Dprintf.dprintf("");
           if (data.revisionNames.length > 0)
           {
             // add revisions
-            if (!display.isDisposed())
+            if (!dialog.isDisposed())
             {
               display.syncExec(new Runnable()
               {
@@ -2113,7 +2113,7 @@ Dprintf.dprintf("");
   private void show(String revisionLeft, String revisionRight)
   {
     // clear
-    if (!display.isDisposed())
+    if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
       {
