@@ -77,6 +77,15 @@ which can be found here:
 
   http://www.eclipse.org/org/documents/epl-v10.php
 
+Onzen is SQLite and SQLiteJDBC. SQLite is public domain. The copyright
+information can be found here:
+
+  http://www.sqlite.org/copyright.html
+
+SQLiteJDBC is under the "BSD License" which can be found here:
+
+  http://zentus.com/sqlitejdbc/license.html
+
 --- Contact
 
 Send an email to
