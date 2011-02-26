@@ -11,15 +11,13 @@
 /****************************** Imports ********************************/
 // base
 import java.io.File;
+import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
@@ -30,7 +28,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Enumeration;
+import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 import javax.activation.MimetypesFileTypeMap;
 
@@ -186,6 +189,18 @@ class FileData
       }
     }
   };
+
+  final static EnumSet<States> STATES_ALL   = EnumSet.allOf(States.class);
+  final static EnumSet<States> STATES_KNOWN = EnumSet.of(States.OK,
+                                                         States.MODIFIED,
+                                                         States.CHECKOUT,
+                                                         States.UPDATE,
+                                                         States.MERGE,
+                                                         States.CONFLICT,
+                                                         States.ADDED,
+                                                         States.REMOVED
+                                                        );
+  final static EnumSet<States> STATES_NONE  = EnumSet.allOf(States.class);
 
   /** file modes
    */
@@ -1136,9 +1151,9 @@ class StoredFiles
   private static final String FILES_DATABASE_NAME    = "files";
   private static final int    FILES_DATABASE_VERSION = 1;
 
-  // --------------------------- variables --------------------------------
+  // --------------------------- variables --------------------------------  
   private String rootPath;
-  private int    databaseId;
+  private File   file;
 
   // ------------------------ native functions ----------------------------
 
@@ -1152,57 +1167,49 @@ class StoredFiles
     throws RepositoryException
   {
     this.rootPath = rootPath;
+    this.file     = null;
 
-    Database database = null;
+    ZipOutputStream output = null;
     try
     {
-      Statement         statement;
-      PreparedStatement preparedStatement;
+      // create temporary file
+      file = File.createTempFile("onzen",".zip",new File(Settings.tmpDirectory));
 
-      // open database
-      database = openFilesDatabase();
-
-      // create storage
-      preparedStatement = database.connection.prepareStatement("INSERT INTO storage (rootPath) VALUES (?);");
-      preparedStatement.setString(1,rootPath);
-      preparedStatement.executeUpdate();    
-      databaseId = database.getLastInsertId();
+      // create ZIP
+      output = new ZipOutputStream(new FileOutputStream(file));
+      output.setLevel(ZipOutputStream.STORED);
 
       // store files
-      preparedStatement = database.connection.prepareStatement("INSERT INTO files (storageId,fileName,data) VALUES (?,?,?);");
+      byte[] buffer = new byte[64*1024];
       for (FileData fileData : fileDataSet)
       {
-        // read file as byte array
-        File file = new File(rootPath,fileData.getFileName());
-        byte[] data = new byte[(int)file.length()];
-        FileInputStream input = new FileInputStream(file);
-        input.read(data,0,data.length);
-        input.close();
-//Dprintf.dprintf("stored file %s, %d bytes",file.getName(),file.length());
 
-        // store in database
-        preparedStatement.setInt(1,databaseId);
-        preparedStatement.setString(2,fileData.getFileName());
-        preparedStatement.setBytes(3,data);
-        preparedStatement.executeUpdate();    
+        // add ZIP entry to output stream.
+        output.putNextEntry(new ZipEntry(fileData.getFileName(rootPath)));
+
+        // store file data
+        FileInputStream input = new FileInputStream(fileData.getFileName(rootPath));
+        int n;
+        while ((n = input.read(buffer)) > 0)
+        {
+          output.write(buffer,0,n);
+        }
+        input.close();
+
+        // close ZIP entry
+        output.closeEntry();
       }
 
-      // close database
-      closeFilesDatabase(database);
-    }
-    catch (SQLException exception)
-    {
-Dprintf.dprintf("");
-      throw new RepositoryException(exception);
+      // close ZIP
+      output.close(); output = null;
     }
     catch (IOException exception)
     {
-Dprintf.dprintf("");
       throw new RepositoryException(exception);
     }
     finally
     {
-      try { if (database != null) closeFilesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+      try { if (output != null) output.close(); } catch (IOException exception) { /* ignored */ }
     }
   }
 
@@ -1212,67 +1219,41 @@ Dprintf.dprintf("");
   protected boolean restore()
     throws RepositoryException
   {
-    Database database = null;
+    ZipFile zipFile = null;
     try
     {
-      Statement         statement;
-      PreparedStatement preparedStatement;
-      ResultSet         resultSet;
+      // open ZIP
+      zipFile = new ZipFile(file);
 
-      // open database
-      database = openFilesDatabase();
-
-      // restore files
-      preparedStatement = database.connection.prepareStatement("SELECT "+
-                                                               "  fileName, "+
-                                                               "  data "+
-                                                               "FROM files "+
-                                                               "WHERE storageId=? "+
-                                                               ";"
-                                                              );
-      preparedStatement.setInt(1,databaseId);
-      resultSet = null;
-      try
+      // read entries
+      byte[] buffer = new byte[64*1024];
+      Enumeration zipEntries = zipFile.entries();
+      while (zipEntries.hasMoreElements())
       {
-        resultSet = preparedStatement.executeQuery();
-        while (resultSet.next())
+        // get entry
+        ZipEntry zipEntry = (ZipEntry)zipEntries.nextElement();
+
+        // restore file data
+        InputStream      input  = zipFile.getInputStream(zipEntry);
+        FileOutputStream output = new FileOutputStream(zipEntry.getName());
+        int n;
+        while ((n = input.read(buffer)) > 0)
         {
-          // get file name
-          String fileName = resultSet.getString("fileName");
-
-          try
-          {
-            // write file
-            File file = new File(rootPath,fileName);
-            FileOutputStream output = new FileOutputStream(file);
-            output.write(resultSet.getBytes("data"));
-            output.close();
-//Dprintf.dprintf("restored file %s, %d bytes",file.getName(),file.length());
-          }
-          catch (IOException exception)
-          {
-Dprintf.dprintf("");
-            throw new RepositoryException(exception);
-          }
+          output.write(buffer,0,n);
         }
-        resultSet.close(); resultSet = null;
-      }
-      finally
-      {
-        if (resultSet != null) resultSet.close();
+        input.close();
       }
 
-      // close database
-      closeFilesDatabase(database);
+      // close ZIP
+      zipFile.close();
     }
-    catch (SQLException exception)
+    catch (IOException exception)
     {
-Dprintf.dprintf("");
       throw new RepositoryException(exception);
     }
     finally
     {
-      try { if (database != null) closeFilesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+      try { if (zipFile != null) zipFile.close(); } catch (IOException exception) { /* ignored */ }
     }
 
     return true;
@@ -1283,116 +1264,7 @@ Dprintf.dprintf("");
   protected void discard()
     throws RepositoryException
   {
-    Database database = null;
-    try
-    {
-      Statement         statement;
-      PreparedStatement preparedStatement;
-      ResultSet         resultSet;
-
-      // open database
-      database = openFilesDatabase();
-
-      // delete files
-      preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE storageId=?;");
-      preparedStatement.setInt(1,databaseId);
-      preparedStatement.executeUpdate();
-
-      // delete storage
-      preparedStatement = database.connection.prepareStatement("DELETE FROM storage WHERE id=?;");
-      preparedStatement.setInt(1,databaseId);
-      preparedStatement.executeUpdate();
-
-      // close database
-      closeFilesDatabase(database);
-    }
-    catch (SQLException exception)
-    {
-Dprintf.dprintf("");
-      throw new RepositoryException(exception);
-    }
-    finally
-    {
-      try { if (database != null) closeFilesDatabase(database); } catch (SQLException exception) { /* ignored */ }
-    }
-  }
-
-  /** open files database
-   * @return database
-   */
-  private static Database openFilesDatabase()
-    throws SQLException
-  {
-    Database database = null;
-    try
-    {
-      Statement         statement;
-      ResultSet         resultSet;
-      PreparedStatement preparedStatement;
-
-      // open database
-      database = new Database(FILES_DATABASE_NAME);
-
-      // create tables if needed
-      statement = database.connection.createStatement();
-      statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
-                              "  name  TEXT, "+
-                              "  value TEXT "+
-                              ");"
-                             );
-      statement = database.connection.createStatement();
-      statement.executeUpdate("CREATE TABLE IF NOT EXISTS storage ( "+
-                              "  id       INTEGER PRIMARY KEY, "+
-                              "  rootPath TEXT "+
-                              ");"
-                             );
-      statement = database.connection.createStatement();
-      statement.executeUpdate("CREATE TABLE IF NOT EXISTS files ( "+
-                              "  id        INTEGER PRIMARY KEY, "+
-                              "  storageId INTEGER, "+
-                              "  fileName  TEXT, "+
-                              "  data      BLOB "+
-                              ");"
-                             );
-
-      // init meta data (if not already initialized)
-      statement = database.connection.createStatement();
-      resultSet = null;
-      try
-      {
-        resultSet = statement.executeQuery("SELECT name,value FROM meta;");
-
-        if (!resultSet.next())
-        {
-          preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
-          preparedStatement.setString(1,Integer.toString(FILES_DATABASE_VERSION));
-          preparedStatement.executeUpdate();
-        }
-
-        resultSet.close(); resultSet = null;
-      }
-      finally
-      {
-        if (resultSet != null) resultSet.close();
-      }
-    }
-    catch (SQLException exception)
-    {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-      throw exception;
-    }
-
-    return database;
-  }
-
-  /** close files database
-   * @param database database
-   */
-  private static void closeFilesDatabase(Database database)
-    throws SQLException
-  {
-    database.close();
+    file.delete();
   }
 }
 
@@ -1426,14 +1298,14 @@ exception.printStackTrace();
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
 {
-  /** store local changes into database (as a patch)
+  /** store local changes into into a temporary patch file
    */
   class StoredChanges
   {
     // --------------------------- constants --------------------------------
 
     // --------------------------- variables --------------------------------
-    private int databaseId;
+    private File patchFile;
 
     // ------------------------ native functions ----------------------------
 
@@ -1446,20 +1318,7 @@ abstract class Repository implements Serializable
     public StoredChanges(HashSet<FileData> fileDataSet)
       throws RepositoryException
     {
-      try
-      {
-        // get patch lines for all changed files
-        String[] lines = getPatchLines(fileDataSet);
-
-        // store into database
-        Patch patch = new Patch(rootPath,lines);
-        databaseId = patch.save();
-      }
-      catch (SQLException exception)
-      {
-  Dprintf.dprintf("");
-        throw new RepositoryException(exception);
-      }
+      patchFile = getPatchFile(fileDataSet);
     }
 
     /** create stored chnages of all local changes
@@ -1467,7 +1326,7 @@ abstract class Repository implements Serializable
     public StoredChanges()
       throws RepositoryException
     {
-      this(getChangedFiles());
+      this(getChangedFiles(FileData.STATES_KNOWN));
     }
 
     /** restore changes stored in database
@@ -1476,22 +1335,13 @@ abstract class Repository implements Serializable
     public boolean restore()
       throws RepositoryException
     {
-      try
-      {
-        // load patch from database
-        Patch patch = new Patch(databaseId);
-        patch.load();
+      // create patch from file
+      Patch patch = new Patch(rootPath,patchFile);
 
-        // apply patch to restore changes
-        if (!patch.apply())
-        {
-          return false;
-        }
-      }
-      catch (SQLException exception)
+      // apply patch to restore changes
+      if (!patch.apply())
       {
-  Dprintf.dprintf("");
-        throw new RepositoryException(exception);
+        return false;
       }
 
       return true;
@@ -1502,22 +1352,9 @@ abstract class Repository implements Serializable
     public void discard()
       throws RepositoryException
     {
-      if (databaseId != Database.ID_NONE)
+      if (patchFile != null)
       {
-        try
-        {
-          // delete patch from database
-          Patch patch = new Patch(databaseId);
-          patch.delete();
-
-          // mark stored changes deleted
-          databaseId = Database.ID_NONE;
-        }
-        catch (SQLException exception)
-        {
-    Dprintf.dprintf("");
-          throw new RepositoryException(exception);
-        }
+        patchFile.delete(); patchFile = null;
       }
     }
   }
@@ -1965,11 +1802,21 @@ abstract class Repository implements Serializable
     return getFileBytes(fileData,null);
   }
 
-  /** get all changed files
+  /** get all changed/unknown files
+   * @param stateSet state set
    * @return fileDataSet file data set with modified files
    */
-  abstract public HashSet<FileData> getChangedFiles()
+  abstract public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException;
+
+  /** get all changed/unknown files
+   * @return fileDataSet file data set with modified files
+   */
+  public HashSet<FileData> getChangedFiles()
+    throws RepositoryException
+  {
+    return getChangedFiles(FileData.STATES_ALL);
+  }
 
   /** get diff of file
    * @param fileData file data
@@ -1991,13 +1838,136 @@ abstract class Repository implements Serializable
   }
 
   /** get unified patch lines for file
+   * Note: must return unified patch data with file names relative to rootPath
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @param output patch output or null
+   * @param lineLine patch data lines or null
+   */
+  abstract public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
+    throws RepositoryException;
+
+  /** get unified patch lines for file
+   * Note: must return unified patch data with file names relative to rootPath
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return file with patch
+   */
+  public File getPatchFile(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    File file = null;
+    try
+    {
+      file = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
+      PrintWriter output = new PrintWriter(new FileWriter(file));
+      getPatch(fileDataSet,revision1,revision2,ignoreWhitespaces,output,null);
+      output.close();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return file;
+  }
+
+  /** get unified patch lines for file
+   * @param fileNameSet file name set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return file with patch
+   */
+  public File getPatchFile(Collection<String> fileNameSet, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNameSet)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
+    updateStates(fileDataSet);
+
+    return getPatchFile(fileDataSet,revision1,revision2,ignoreWhitespaces);
+  }
+
+  /** get unified patch lines for file
+   * @param fileNames file names
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return file with patch
+   */
+  public File getPatchFile(String[] fileNames, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNames)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
+    updateStates(fileDataSet);
+
+    return getPatchFile(fileDataSet,revision1,revision2,ignoreWhitespaces);
+  }
+
+  /** get unified patch for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return file with patch
+   */
+  public File getPatchFile(HashSet<FileData> fileDataSet, String revision1, String revision2)
+    throws RepositoryException
+  {
+    return getPatchFile(fileDataSet,revision1,revision2,false);
+  }
+
+  /** get unified patch for file
+   * @param fileDataSet file data set
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @return file with patch
+   */
+  public File getPatchFile(HashSet<FileData> fileDataSet, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    return getPatchFile(fileDataSet,getLastRevision(),null,ignoreWhitespaces);
+  }
+
+  /** get unified patch for file
+   * @param fileDataSet file data set
+   * @return file with patch
+   */
+  public File getPatchFile(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    return getPatchFile(fileDataSet,false);
+  }
+
+  /** get patch for all changed files
+   * @return file with patch
+   */
+  public File getPatchFile()
+    throws RepositoryException
+  {
+    return getPatchFile((HashSet<FileData>)null);
+  }
+
+  /** get unified patch lines for file
+   * Note: must return unified patch data with file names relative to rootPath
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
    * @return patch data lines
    */
-  abstract public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
-    throws RepositoryException;
+  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+    throws RepositoryException
+  {
+    ArrayList<String> lineList = new ArrayList<String>();
+    getPatch(fileDataSet,revision1,revision2,ignoreWhitespaces,null,lineList);
+    return lineList.toArray(new String[lineList.size()]);
+  }
 
   /** get unified patch lines for file
    * @param fileNameSet file name set
