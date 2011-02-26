@@ -90,6 +90,7 @@ RMF        = rm -f
 RMRF       = rm -rf
 SED        = sed
 TAR        = tar
+ZIP        = zip
 UNZIP      = unzip
 
 #------------------------ specific variables/settings ------------------------
@@ -414,10 +415,18 @@ install: onzen-linux.jar onzen
 .PHONY: dist clean_dist $(DISTRIBUTION_NAME).tar.bz2
 
 dist: \
-  $(DISTRIBUTION_NAME).tar.bz2
+  $(DISTRIBUTION_NAME).tar.bz2 \
+  $(DISTRIBUTION_NAME)-linux.tar.bz2 \
+  $(DISTRIBUTION_NAME)-solaris.tar.bz2 \
+  $(DISTRIBUTION_NAME)-macosx.tar.bz2 \
+  $(DISTRIBUTION_NAME)-windows.tar.bz2
 
 clean_dist:
 	$(RMF) $(DISTRIBUTION_NAME).tar.bz2
+	$(RMF) $(DISTRIBUTION_NAME)-linux.tar.bz2
+	$(RMF) $(DISTRIBUTION_NAME)-solaris.tar.bz2
+	$(RMF) $(DISTRIBUTION_NAME)-macosx.tar.bz2
+	$(RMF) $(DISTRIBUTION_NAME)-windows.zip
 
 # create distribution
 $(DISTRIBUTION_NAME).tar.bz2: \
@@ -492,5 +501,36 @@ $(DISTRIBUTION_NAME).tar.bz2: \
 ifneq ($(MD5SUM),)
 	$(MD5SUM) $@
 endif
+
+$(DISTRIBUTION_NAME)-linux.tar.bz2: \
+  onzen-linux.jar \
+  onzen-linux_64.jar \
+  onzen
+	$(TAR) cjf $@ \
+          onzen-linux.jar onzen-linux_64.jar \
+          onzen
+
+$(DISTRIBUTION_NAME)-solaris.tar.bz2: \
+  onzen-solaris.jar \
+  onzen
+	$(TAR) cjf $@ \
+          onzen-solaris.jar \
+          onzen
+
+$(DISTRIBUTION_NAME)-macosx.tar.bz2: \
+  onzen-macosx.jar \
+  onzen-macosx_64.jar \
+  onzen
+	$(TAR) cjf $@ \
+          onzen-macosx.jar onzen-macosx_64.jar \
+          onzen
+
+$(DISTRIBUTION_NAME)-windows.zip: \
+  onzen-windows.jar \
+  onzen-windows_64.jar \
+  onzen.bat
+	$(ZIP) $@ \
+          onzen-windows.jar onzen-windows_64.jar \
+          onzen.bat
 
 # end of file
