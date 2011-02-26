@@ -114,10 +114,10 @@ class RepositorySVN extends Repository
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
     Command         command            = new Command();
-    Exec            exec;                      
-    String          line;                      
-    Matcher         matcher;                   
-    FileData        fileData;                  
+    Exec            exec;
+    String          line;
+    Matcher         matcher;
+    FileData        fileData;
     String          name               = null;
     FileData.States state              = FileData.States.UNKNOWN;
     String          workingRevision    = "";
@@ -230,7 +230,7 @@ class RepositorySVN extends Repository
         // ignored
 Dprintf.dprintf("exception=%s",exception);
       }
-    } 
+    }
   }
 
   /** get last revision name
@@ -253,10 +253,10 @@ Dprintf.dprintf("exception=%s",exception);
     ArrayList<String> revisionList = new ArrayList<String>();
 
     // get revision info list
-    Command command = new Command(); 
-    Exec    exec;                    
-    String  line;                      
-    Matcher matcher;                   
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+    Matcher matcher;
     try
     {
       // get log
@@ -323,8 +323,8 @@ Dprintf.dprintf("exception=%s",exception);
     RevisionData revisionData = null;
 
     // get revision data
-    Command command = new Command(); 
-    Exec    exec;                    
+    Command command = new Command();
+    Exec    exec;
     try
     {
       // get single log entry
@@ -362,8 +362,8 @@ Dprintf.dprintf("exception=%s",exception);
     LinkedList<RevisionDataSVN> revisionDataList = new LinkedList<RevisionDataSVN>();
 
     // get revision info list
-    Command command = new Command(); 
-    Exec    exec;                    
+    Command command = new Command();
+    Exec    exec;
     try
     {
       // get log
@@ -497,7 +497,7 @@ Dprintf.dprintf("exception=%s",exception);
     {
       Command         command            = new Command();
       Exec            exec;
-      String          line;                  
+      String          line;
       Matcher         matcher;
       String          name               = null;
       FileData.States state              = FileData.States.UNKNOWN;
@@ -1045,8 +1045,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     // get revision info list
     HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
-    Command                command = new Command(); 
-    Exec                   exec;                    
+    Command                command = new Command();
+    Exec                   exec;
     try
     {
       // get log
@@ -1513,7 +1513,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
 
     boolean            dataDone          = false;
     Matcher            matcher;
-    String             line;                      
+    String             line;
     String             revision          = null;
     Date               date              = null;
     String             author            = null;

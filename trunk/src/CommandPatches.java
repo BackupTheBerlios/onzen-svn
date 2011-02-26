@@ -946,7 +946,7 @@ Dprintf.dprintf("");
       widgetMessage.setText("");
     }
     Widgets.modified(data);
-  } 
+  }
 
   /** set selected patch
    * @param patchNumber number of patch to select

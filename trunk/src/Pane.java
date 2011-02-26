@@ -86,7 +86,7 @@ class Pane extends Composite
     {
       this.cursor = new Cursor(getDisplay(),SWT.CURSOR_SIZENS);
     }
-   
+
     // add paint listener
     addPaintListener(new PaintListener()
     {
@@ -307,7 +307,7 @@ class Pane extends Composite
         bounds = getBounds();
         w      = bounds.width;
         h      = bounds.height;
-     
+
         if ((style & SWT.VERTICAL) == SWT.VERTICAL)
         {
           x = w-OFFSET_X-SLIDER_SIZE;

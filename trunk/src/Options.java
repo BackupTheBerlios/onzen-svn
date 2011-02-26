@@ -167,7 +167,7 @@ public class Options
                 break;
               case BOOLEAN:
                 field.setBoolean(null,
-                                    value.equals("1") 
+                                    value.equals("1")
                                  || value.equalsIgnoreCase("true")
                                  || value.equalsIgnoreCase("yes")
                                  || value.equalsIgnoreCase("on")

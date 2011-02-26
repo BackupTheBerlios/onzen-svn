@@ -56,8 +56,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
-import static java.lang.annotation.ElementType.FIELD; 
-import static java.lang.annotation.ElementType.TYPE; 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.TYPE;
 
 /****************************** Classes ********************************/
 
@@ -1151,7 +1151,7 @@ class StoredFiles
   private static final String FILES_DATABASE_NAME    = "files";
   private static final int    FILES_DATABASE_VERSION = 1;
 
-  // --------------------------- variables --------------------------------  
+  // --------------------------- variables --------------------------------
   private String rootPath;
   private File   file;
 
@@ -1272,7 +1272,7 @@ class StoredFiles
 
 /** config value annotation
  */
-@Target({TYPE,FIELD}) 
+@Target({TYPE,FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @interface RepositoryValue
 {
@@ -2352,7 +2352,7 @@ Dprintf.dprintf("fileName=%s",fileName);
     };
 
     Date date;
-    
+
     for (String format : FORMATS)
     {
       try

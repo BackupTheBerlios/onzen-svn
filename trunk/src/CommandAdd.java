@@ -114,19 +114,19 @@ class CommandAdd
   private final HashSet<FileData> fileDataSet;
   private final Shell             shell;
   private final Display           display;
-  private final String[][]        history;       
+  private final String[][]        history;
 
   // dialog
   private final Data              data = new Data();
-  private final Shell             dialog;        
+  private final Shell             dialog;
 
   // widgets
-  private final List              widgetFiles;   
-  private final List              widgetHistory; 
-  private final Text              widgetMessage; 
-  private final Button            widgetImmediateCommit;  
-  private final Button            widgetBinary;  
-  private final Button            widgetAdd;     
+  private final List              widgetFiles;
+  private final List              widgetHistory;
+  private final Text              widgetMessage;
+  private final Button            widgetImmediateCommit;
+  private final Button            widgetBinary;
+  private final Button            widgetAdd;
 
   // ------------------------ native functions ----------------------------
 

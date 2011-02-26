@@ -141,7 +141,7 @@ class CommandRevisions
       this.drawInfos                = null;
       this.containerResizeFlag      = false;
       this.containerResizeStart     = new Point(0,0);
-      this.containerResizeDelta     = new Point(0,0); 
+      this.containerResizeDelta     = new Point(0,0);
       this.containerResizeRectangle = new Rectangle(0,0,0,0);
       this.selectedRevisionData0    = null;
       this.selectedRevisionData1    = null;
@@ -561,7 +561,7 @@ throw new RepositoryException("NYI");
         if (data.drawInfos != null)
         {
           if (!data.containerResizeFlag)
-          {          
+          {
             for (DrawInfo drawInfo : data.drawInfos)
             {
               if      (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
@@ -726,7 +726,7 @@ throw new RepositoryException("NYI");
     final int FONT_HEIGHT  = Widgets.getTextHeight(widgetRevisions);
 
 //    Rectangle bounds = new Rectangle(x,y,0,0);
-    
+
     boolean firstFlag    = true;
     int     widthColumn0 = Widgets.getTextWidth(widgetRevisions,new String[]{"Revision:","Date:","Autor:"});
     int     prevY        = y;

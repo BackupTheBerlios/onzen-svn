@@ -1489,9 +1489,9 @@ Dprintf.dprintf("exception=%s",exception);
                               "  datetime          INTEGER DEFAULT (DATETIME('now')), "+
                               "  rootPath          TEXT, "+
                               "  state             INTEGER, "+
-                              "  summary           TEXT, "+ 
-                              "  message           TEXT, "+ 
-                              "  data              TEXT,"+  
+                              "  summary           TEXT, "+
+                              "  message           TEXT, "+
+                              "  data              TEXT,"+
                               "  revision1         TEXT, "+
                               "  revision2         TEXT, "+
                               "  ignoreWhitespaces INTEGER "+

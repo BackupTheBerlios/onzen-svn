@@ -605,10 +605,10 @@ exception.printStackTrace();
     COLOR_DARK_BLUE   = display.getSystemColor(SWT.COLOR_DARK_BLUE);
     COLOR_BLUE        = display.getSystemColor(SWT.COLOR_BLUE);
     COLOR_DARK_YELLOW = display.getSystemColor(SWT.COLOR_DARK_YELLOW);
-    COLOR_YELLOW      = display.getSystemColor(SWT.COLOR_YELLOW);    
+    COLOR_YELLOW      = display.getSystemColor(SWT.COLOR_YELLOW);
     COLOR_DARK_GRAY   = display.getSystemColor(SWT.COLOR_DARK_GRAY);
     COLOR_GRAY        = display.getSystemColor(SWT.COLOR_GRAY);
-    COLOR_MAGENTA     = new Color(null,0xFF,0xA0,0xA0);                         
+    COLOR_MAGENTA     = new Color(null,0xFF,0xA0,0xA0);
     COLOR_BACKGROUND  = display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
 
     // get images
@@ -1034,7 +1034,7 @@ Dprintf.dprintf("");
         {
         }
         public void widgetSelected(SelectionEvent selectionEvent)
-        {          
+        {
           // send close-event to shell
           Widgets.notify(shell,SWT.Close,0);
         }
@@ -1518,7 +1518,7 @@ new Message("Und nun?").addToHistory();
     shell.open();
 
     // listener
-    
+
     shell.addListener(SWT.Resize,new Listener()
     {
       public void handleEvent(Event event)
@@ -2670,7 +2670,7 @@ throw new Error("Internal error: NYI");
                   }
                 }
                 else if (type.isEnum())
-                {                            
+                {
 throw new Error("Internal error: NYI");
                 }
                 else
@@ -2908,7 +2908,7 @@ throw new Error("Internal error: NYI");
                     field.set(repositoryTab.repository,text.getText());
                   }
                   else if (type.isEnum())
-                  {                            
+                  {
 throw new Error("Internal error: NYI");
                   }
                   else

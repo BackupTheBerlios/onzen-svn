@@ -160,10 +160,10 @@ class RepositoryCVS extends Repository
     final Pattern PATTERN_EXISTING_TAGS       = Pattern.compile("^.*Existing Tags:.*",Pattern.CASE_INSENSITIVE);
 
     Command         command            = new Command();
-    Exec            exec;                      
+    Exec            exec;
     String          line;
-    Matcher         matcher;                   
-    FileData        fileData;                  
+    Matcher         matcher;
+    FileData        fileData;
     String          baseName           = null;
     FileData.States state              = FileData.States.UNKNOWN;
     FileData.Modes  mode               = FileData.Modes.UNKNOWN;
@@ -369,7 +369,7 @@ class RepositoryCVS extends Repository
           // find new files
           for (FileData newFileData : listFiles(directory))
           {
-                   
+
             if (   !isHiddenFile(newFileData.getFileName())
                 && !containFileData(fileDataSet,newFileData)
                 && !containFileData(newFileDataSet,newFileData)
@@ -384,7 +384,7 @@ class RepositoryCVS extends Repository
       {
         // ignored
       }
-    } 
+    }
   }
 
   /** get last revision name
@@ -406,8 +406,8 @@ class RepositoryCVS extends Repository
 
     // get revision info list
     HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command(); 
-    Exec                   exec;                    
+    Command                command        = new Command();
+    Exec                   exec;
     try
     {
       // get log
@@ -487,8 +487,8 @@ class RepositoryCVS extends Repository
 
     // get revision data
     HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command(); 
-    Exec                   exec;                    
+    Command                command        = new Command();
+    Exec                   exec;
     try
     {
       // get single log entry
@@ -527,8 +527,8 @@ class RepositoryCVS extends Repository
 
     // get revision info list
     HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command(); 
-    Exec                   exec;                    
+    Command                command        = new Command();
+    Exec                   exec;
     try
     {
       // get log
@@ -852,9 +852,9 @@ Dprintf.dprintf("unknown %s",line);
 
       /* parse diff output
            Format:
-             <i>a<j> - lines added 
-             <i>d<j> - lines delete 
-             <i>c<j> - lines changed 
+             <i>a<j> - lines added
+             <i>d<j> - lines delete
+             <i>c<j> - lines changed
       */
       int                lineNb = 1;
       DiffData           diffData;
@@ -895,7 +895,7 @@ Dprintf.dprintf("unknown %s",line);
           diffData = new DiffData(DiffData.Types.ADDED,addedLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
-        }        
+        }
         else if ((matcher = PATTERN_DIFF_DELETED.matcher(line)).matches())
         {
           // delete lines
@@ -924,7 +924,7 @@ Dprintf.dprintf("unknown %s",line);
           diffData = new DiffData(DiffData.Types.DELETED,deletedLinesList);
           diffDataList.add(diffData);
 //Dprintf.dprintf("diffData=%s",diffData);
-        }        
+        }
         else if ((matcher = PATTERN_DIFF_CHANGED.matcher(line)).matches())
         {
           // change lines
@@ -1175,8 +1175,8 @@ else {
 
     // get revision info list
     HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command(); 
-    Exec                   exec;                    
+    Command                command        = new Command();
+    Exec                   exec;
     try
     {
       // get log
@@ -1688,8 +1688,8 @@ Dprintf.dprintf("unknown %s",line);
 
     // parse header
     boolean headerDone = false;
-    Matcher matcher;                 
-    String  line;                    
+    Matcher matcher;
+    String  line;
     while (   !headerDone
            && ((line = exec.getStdout()) != null)
           )
@@ -1763,7 +1763,7 @@ Dprintf.dprintf("unknown %s",line);
 
     boolean            dataDone           = false;
     Matcher            matcher;
-    String             line;                    
+    String             line;
     String             revision           = null;
     ArrayList<Integer> revisionNumberList = new ArrayList<Integer>();
     Date               date               = null;
@@ -1931,9 +1931,9 @@ Dprintf.dprintf("unknown %s",line);
     return equal;
   }
 
-  /** 
-   * @param 
-   * @return 
+  /**
+   * @param
+   * @return
    */
   private boolean equalsRevisionNumbers(int[] numbers1, int delta1, int[] numbers2)
   {
@@ -1955,7 +1955,7 @@ Dprintf.dprintf("unknown %s",line);
   {
     LinkedList<RevisionDataCVS> revisionDataTreeList = new LinkedList<RevisionDataCVS>();
 
-    boolean  branchDone = false;  
+    boolean  branchDone = false;
     while (!revisionDataList.isEmpty() && !branchDone)
     {
       RevisionDataCVS revisionData = revisionDataList.getFirst();

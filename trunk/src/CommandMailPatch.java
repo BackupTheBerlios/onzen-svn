@@ -255,7 +255,7 @@ class CommandMailPatch
               }
             });
 
-            
+
             widgetAddNewTest = Widgets.newButton(subSubSubComposite,"Add");
             widgetAddNewTest.setEnabled(false);
             Widgets.layout(widgetAddNewTest,0,1,TableLayoutData.E);

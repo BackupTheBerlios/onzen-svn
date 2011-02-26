@@ -69,8 +69,8 @@ class BusyDialog
   // ---------------------------- methods ---------------------------------
 
   /** create busy dialog
-   * @param 
-   * @return 
+   * @param
+   * @return
    */
   BusyDialog(Shell parentShell, String title, Image image, Point imageSize, String message)
   {
@@ -105,8 +105,8 @@ class BusyDialog
   }
 
   /** animate dialog
-   * @param 
-   * @return 
+   * @param
+   * @return
    */
   public void animate()
   {
@@ -156,8 +156,8 @@ class BusyDialog
   }
 
   /** close busy dialog
-   * @param 
-   * @return 
+   * @param
+   * @return
    */
   public void close()
   {
@@ -1118,7 +1118,7 @@ class Dialogs
       dialog.setFilterExtensions(fileExtensionPatterns);
     }
 
-    return dialog.open();  
+    return dialog.open();
   }
 
   /** file dialog for open file
@@ -1181,7 +1181,7 @@ class Dialogs
       dialog.setFilterPath(pathName);
     }
 
-    return dialog.open();  
+    return dialog.open();
   }
 
   /** simple string dialog
@@ -1280,7 +1280,7 @@ class Dialogs
         }
       });
 
-      widgetString.setFocus();      
+      widgetString.setFocus();
       return (String)run(dialog,null);
     }
     else
@@ -1347,7 +1347,7 @@ class Dialogs
 
   public static void closeBusy(BusyDialog busyDialog)
   {
-    busyDialog.close();   
+    busyDialog.close();
   }
 }
 

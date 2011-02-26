@@ -123,7 +123,7 @@ class CommandAnnotations
 
   // dialog
   private final Data          data = new Data();
-  private final Shell         dialog;        
+  private final Shell         dialog;
 
   // widgets
   private final Table         widgetAnnotations;

@@ -697,7 +697,7 @@ if (debug) debugRecursion--;
     // normalize weights
     sum = 0.0;
     for (int i = 0; i < weights.length; i++) { sum += weights[i]; };
-    for (int i = 0; i < weights.length; i++) { weights[i] = ((sum > 0.0)?weights[i]/sum:weight); }; 
+    for (int i = 0; i < weights.length; i++) { weights[i] = ((sum > 0.0)?weights[i]/sum:weight); };
 //System.err.print(indent()+"weights sum="+sum+": "); for (int i = 0; i < weights.length; i++) { System.err.print(" "+weights[i]); }; System.err.println();
 
     return weights;

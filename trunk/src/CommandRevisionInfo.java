@@ -125,7 +125,7 @@ class CommandRevisionInfo
 
   // dialog
   private final Data          data = new Data();
-  private final Shell         dialog;        
+  private final Shell         dialog;
 
   // widgets
   private final Label         widgetRevision;

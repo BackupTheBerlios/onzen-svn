@@ -553,7 +553,7 @@ public class StringUtils
     }
   }
 
-  /** create n-concationation of string 
+  /** create n-concationation of string
    * @param string string to repeat
    * @param number of concatations
    * @return string+...+string (count times)
@@ -561,16 +561,16 @@ public class StringUtils
   public static String repeat(String string, int count)
   {
     StringBuilder buffer = new StringBuilder();
- 
+
     for (int z = 0; z < count; z++)
     {
       buffer.append(string);
     }
- 
+
     return buffer.toString();
   }
 
-  /** create n-concationation of string 
+  /** create n-concationation of string
    * @param ch charater to repeat
    * @param number of concatations
    * @return string+...+string (count times)
@@ -578,12 +578,12 @@ public class StringUtils
   public static String repeat(char ch, int count)
   {
     StringBuilder buffer = new StringBuilder();
- 
+
     for (int z = 0; z < count; z++)
     {
       buffer.append(ch);
     }
- 
+
     return buffer.toString();
   }
 
@@ -651,7 +651,7 @@ public class StringUtils
    */
   public static boolean parseBoolean(String string)
   {
-    final String TRUE_STRINGS[] = 
+    final String TRUE_STRINGS[] =
     {
       "1",
       "true",

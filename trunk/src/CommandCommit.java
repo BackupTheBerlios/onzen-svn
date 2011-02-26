@@ -111,20 +111,20 @@ class CommandCommit
   private final HashSet<FileData> fileDataSet;
   private final Shell             shell;
   private final Display           display;
-  private final String[][]        history;       
+  private final String[][]        history;
 
   // dialog
   private final Data              data = new Data();
-  private final Shell             dialog;        
+  private final Shell             dialog;
 
   // widgets
   private final StyledText        widgetChanges;
   private final ScrollBar         widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final Button            widgetIgnoreWhitespaces;
   private final List              widgetFileNames;
-  private final List              widgetHistory; 
-  private final Text              widgetMessage; 
-  private final Button            widgetCommit;     
+  private final List              widgetHistory;
+  private final Text              widgetMessage;
+  private final Button            widgetCommit;
 
   // ------------------------ native functions ----------------------------
 
@@ -483,7 +483,7 @@ class CommandCommit
   {
     widgetMessage.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
-    {      
+    {
       Background.run(new BackgroundRunnable()
       {
         public void run()

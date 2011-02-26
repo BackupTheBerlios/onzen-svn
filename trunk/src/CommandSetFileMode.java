@@ -113,16 +113,16 @@ class CommandSetFileMode
 
   // dialog
   private final Data          data = new Data();
-  private final Shell         dialog;        
-  private final String[][]    history;       
+  private final Shell         dialog;
+  private final String[][]    history;
 
   // widgets
   private final List          widgetFiles;
-  private final List          widgetHistory; 
-  private final Text          widgetMessage; 
+  private final List          widgetHistory;
+  private final Text          widgetMessage;
   private final Button        widgetFileModeText;
   private final Button        widgetFileModeBinary;
-  private final Button        widgetImmediateCommit;  
+  private final Button        widgetImmediateCommit;
   private final Button        widgetSetFileMode;
 
   // ------------------------ native functions ----------------------------

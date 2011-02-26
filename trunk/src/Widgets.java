@@ -329,7 +329,7 @@ class WidgetListener
 
   /** set variable
    * @param variable widget variable
-   * @return 
+   * @return
    */
   void setVariable(WidgetVariable variable)
   {
@@ -380,9 +380,9 @@ class WidgetListener
       {
         switch (variable.getType())
         {
-          case LONG:   text = Long.toString(variable.getLong()); break; 
-          case DOUBLE: text = Double.toString(variable.getDouble()); break; 
-          case STRING: text = variable.getString(); break; 
+          case LONG:   text = Long.toString(variable.getLong()); break;
+          case DOUBLE: text = Double.toString(variable.getDouble()); break;
+          case STRING: text = variable.getString(); break;
         }
       }
       if (!text.equals(cachedText))
@@ -403,9 +403,9 @@ class WidgetListener
         {
           switch (variable.getType())
           {
-            case LONG:   text = Long.toString(variable.getLong()); break; 
-            case DOUBLE: text = Double.toString(variable.getDouble()); break; 
-            case STRING: text = variable.getString(); break; 
+            case LONG:   text = Long.toString(variable.getLong()); break;
+            case DOUBLE: text = Double.toString(variable.getDouble()); break;
+            case STRING: text = variable.getString(); break;
           }
         }
 Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
@@ -423,8 +423,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
         switch (variable.getType())
         {
           case BOOLEAN: selection = variable.getBoolean(); break;
-          case LONG:    selection = (variable.getLong() != 0); break; 
-          case DOUBLE:  selection = (variable.getDouble() != 0); break; 
+          case LONG:    selection = (variable.getLong() != 0); break;
+          case DOUBLE:  selection = (variable.getDouble() != 0); break;
         }
         widgetButton.setSelection(selection);
       }
@@ -434,8 +434,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
         switch (variable.getType())
         {
           case BOOLEAN: selection = variable.getBoolean(); break;
-          case LONG:    selection = (variable.getLong() != 0); break; 
-          case DOUBLE:  selection = (variable.getDouble() != 0); break; 
+          case LONG:    selection = (variable.getLong() != 0); break;
+          case DOUBLE:  selection = (variable.getDouble() != 0); break;
         }
         widgetButton.setSelection(selection);
       }
@@ -450,8 +450,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
         switch (variable.getType())
         {
           case BOOLEAN:     text = Boolean.toString(variable.getBoolean()); break;
-          case LONG:        text = Long.toString(variable.getLong()); break; 
-          case DOUBLE:      text = Double.toString(variable.getDouble()); break; 
+          case LONG:        text = Long.toString(variable.getLong()); break;
+          case DOUBLE:      text = Double.toString(variable.getDouble()); break;
           case STRING:      text = variable.getString(); break;
           case ENUMERATION: text = variable.getString(); break;
         }
@@ -472,9 +472,9 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
       {
         switch (variable.getType())
         {
-          case LONG:   text = Long.toString(variable.getLong()); break; 
-          case DOUBLE: text = Double.toString(variable.getDouble()); break; 
-          case STRING: text = variable.getString(); break; 
+          case LONG:   text = Long.toString(variable.getLong()); break;
+          case DOUBLE: text = Double.toString(variable.getDouble()); break;
+          case STRING: text = variable.getString(); break;
         }
       }
       if (!text.equals(cachedText))
@@ -493,9 +493,9 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
       {
         switch (variable.getType())
         {
-          case LONG:   text = Long.toString(variable.getLong()); break; 
-          case DOUBLE: text = Double.toString(variable.getDouble()); break; 
-          case STRING: text = variable.getString(); break; 
+          case LONG:   text = Long.toString(variable.getLong()); break;
+          case DOUBLE: text = Double.toString(variable.getDouble()); break;
+          case STRING: text = variable.getString(); break;
         }
       }
       if (!text.equals(cachedText))
@@ -512,8 +512,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
       int n = 0;
       switch (variable.getType())
       {
-        case LONG:   n = (int)variable.getLong(); break; 
-        case DOUBLE: n = (int)variable.getDouble(); break; 
+        case LONG:   n = (int)variable.getLong(); break;
+        case DOUBLE: n = (int)variable.getDouble(); break;
       }
       widgetSpinner.setSelection(n);
     }
@@ -524,8 +524,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
       int n = 0;
       switch (variable.getType())
       {
-        case LONG:   n = (int)variable.getLong(); break; 
-        case DOUBLE: n = (int)variable.getDouble(); break; 
+        case LONG:   n = (int)variable.getLong(); break;
+        case DOUBLE: n = (int)variable.getDouble(); break;
       }
       widgetSlider.setSelection(n);
     }
@@ -536,8 +536,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
       int n = 0;
       switch (variable.getType())
       {
-        case LONG:   n = (int)variable.getLong(); break; 
-        case DOUBLE: n = (int)variable.getDouble(); break; 
+        case LONG:   n = (int)variable.getLong(); break;
+        case DOUBLE: n = (int)variable.getDouble(); break;
       }
       widgetScale.setSelection(n);
     }
@@ -548,8 +548,8 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
       double value = 0;
       switch (variable.getType())
       {
-        case LONG:   value = (double)variable.getLong(); break; 
-        case DOUBLE: value = variable.getDouble(); break; 
+        case LONG:   value = (double)variable.getLong(); break;
+        case DOUBLE: value = variable.getDouble(); break;
       }
       widgetProgressBar.setSelection(value);
     }
@@ -2565,7 +2565,7 @@ class Widgets
             else
               foundFlag = (comparator.compare(tableItems[index].getText(sortColumnIndex),data) < 0);
             break;
-        }       
+        }
         if (!foundFlag) index++;
       }
     }
@@ -2876,7 +2876,7 @@ class Widgets
   static void setTableEntryFont(final Table table, final Object data, final FontData fontData)
   {
     setTableEntryFont(table,data,new Font(table.getDisplay(),fontData));
-  } 
+  }
 
   /** set table entry font
    * @param table table
@@ -3304,7 +3304,7 @@ private static void printTree(Tree tree)
       // sort sub-tree
 //boolean xx = treeItem.getExpanded();
       for (int i = 0; i < subTreeItems.length; i++)
-      {     
+      {
         boolean sortedFlag = false;
         for (int j = 0; (j <= i) && !sortedFlag; j++)
         {
@@ -3348,7 +3348,7 @@ private static void printTree(Tree tree)
       // sort tree
 //boolean xx = treeItem.getExpanded();
       for (int i = 0; i < subTreeItems.length; i++)
-      {     
+      {
         boolean sortedFlag = false;
         for (int j = 0; (j <= i) && !sortedFlag; j++)
         {
@@ -3383,7 +3383,7 @@ private static void printTree(Tree tree)
         getExpandedTreeData(expandedDataSet,subTreeItem);
       }
     }
-  }  
+  }
 
   /** get expanded (open) tree items in tree
    * @param treeItemSet hash-set for expanded tree items
@@ -3397,7 +3397,7 @@ private static void printTree(Tree tree)
     {
       getTreeItems(treeItemSet,subTreeItem,rootItemsOnly);
     }
-  }  
+  }
 
   /** get tree items in tree
    * @param tree tree
@@ -3416,7 +3416,7 @@ private static void printTree(Tree tree)
     }
 
     return treeItemSet.toArray(new TreeItem[treeItemSet.size()]);
-  }  
+  }
 
   /** get tree items in tree
    * @param tree tree
@@ -3441,7 +3441,7 @@ private static void printTree(Tree tree)
         reExpandTreeItems(expandedEntrySet,subTreeItem);
       }
     }
-  }  
+  }
 
   /** sort tree column
    * @param tree tree
@@ -3503,7 +3503,7 @@ private static void printTree(Tree tree)
    * @return new sash widget
    */
   static Sash newSash(Composite composite, int style)
-  {    
+  {
     Sash sash = new Sash(composite,style);
 
     return sash;
@@ -3514,7 +3514,7 @@ private static void printTree(Tree tree)
    * @return new sash form widget
    */
   static SashForm newSashForm(Composite composite, int style)
-  {    
+  {
     SashForm sashForm = new SashForm(composite,style);
 
     return sashForm;
@@ -3529,7 +3529,7 @@ private static void printTree(Tree tree)
    * @return new pane widget
    */
   static Pane newPane(Composite composite, int style, Pane prevPane)
-  {    
+  {
     Pane pane = new Pane(composite,style,prevPane);
 
     return pane;
@@ -3541,7 +3541,7 @@ private static void printTree(Tree tree)
    * @return new pane widget
    */
   static Pane newPane(Composite composite, int style)
-  {    
+  {
     Pane pane = new Pane(composite,style,null);
 
     return pane;
@@ -3554,7 +3554,7 @@ private static void printTree(Tree tree)
    * @return new tab folder widget
    */
   static TabFolder newTabFolder(Composite composite)
-  {    
+  {
     TabFolder tabFolder = new TabFolder(composite,SWT.NONE);
     tabFolder.setLayoutData(new TableLayoutData(1,0,TableLayoutData.NSWE));
 
@@ -3792,7 +3792,7 @@ private static void printTree(Tree tree)
    * @return new canvas widget
    */
   static Canvas newCanvas(Composite composite)
-  {    
+  {
     return newCanvas(composite,SWT.NONE);
   }
 

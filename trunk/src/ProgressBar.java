@@ -96,7 +96,7 @@ class ProgressBar extends Canvas
     width  = 2+textSize.x+2;
     height = 2+textSize.y+2;
     if (wHint != SWT.DEFAULT) width  = wHint;
-    if (hHint != SWT.DEFAULT) height = hHint;         
+    if (hHint != SWT.DEFAULT) height = hHint;
 
     return new Point(width,height);
   }

@@ -15,8 +15,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
-import static java.lang.annotation.ElementType.FIELD; 
-import static java.lang.annotation.ElementType.TYPE; 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.TYPE;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,7 +43,7 @@ import org.eclipse.swt.graphics.RGB;
 
 /** setting comment annotation
  */
-@Target({TYPE,FIELD}) 
+@Target({TYPE,FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @interface SettingComment
 {
@@ -52,7 +52,7 @@ import org.eclipse.swt.graphics.RGB;
 
 /** setting value annotation
  */
-@Target({TYPE,FIELD}) 
+@Target({TYPE,FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @interface SettingValue
 {
@@ -651,11 +651,11 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryDeleteLocalFiles       = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryChangedFiles           = new Point(600,500); 
+  public static Point                    geometryChangedFiles           = new Point(600,500);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryChangedFilesColumn     = new ColumnSizes(600,100);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryAnnotations            = new Point(800,500); 
+  public static Point                    geometryAnnotations            = new Point(800,500);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryAnnotationsColumn      = new ColumnSizes(60,60,80,60,100);
   @SettingValue(type=SettingValueAdapterSize.class)
@@ -1043,7 +1043,7 @@ Dprintf.dprintf("field.getType()=%s",type);
                             field.set(null,StringUtils.unescape(string));
                           }
                           else if (type.isEnum())
-                          {                            
+                          {
                             field.set(null,StringUtils.parseEnum(type,string));
                           }
                           else if (type == EnumSet.class)

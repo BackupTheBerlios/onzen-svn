@@ -38,7 +38,7 @@ class StringParser
 
   /** boolean true/false values
    */
-  private static String trueStrings[] = 
+  private static String trueStrings[] =
   {
     "1",
     "true",
@@ -594,8 +594,8 @@ class StringParser
               }
 
               if (formatToken.enumClassName != null)
-              {          
-                // enum class      
+              {
+                // enum class
                 try
                 {
                   // find enum class
@@ -612,7 +612,7 @@ class StringParser
                 {
 //Dprintf.dprintf(""+exception);
                   throw new Error("Enumeration class '"+formatToken.enumClassName+"' not found",exception);
-                }               
+                }
                 catch (IllegalArgumentException exception)
                 {
 //Dprintf.dprintf(""+exception);

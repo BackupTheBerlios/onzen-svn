@@ -1207,7 +1207,7 @@ Dprintf.dprintf("");
         return;
       }
 */
-    
+
       // update file list
 Dprintf.dprintf("");
     }
@@ -1331,7 +1331,7 @@ Dprintf.dprintf("");
         Dialogs.error(shell,"Cannot create new directory '%s'",data.path);
         return;
       }
-      
+
       // update file list
 Dprintf.dprintf("");
     }
@@ -1489,7 +1489,7 @@ Dprintf.dprintf("");
       // delete dialog
       dialog = Dialogs.open(shell,"Delete files/directories",new double[]{1.0,0.0},1.0);
 
-      final List   widgetFiles;   
+      final List   widgetFiles;
       final Button widgetDelete;
       final Button widgetCancel;
       composite = Widgets.newComposite(dialog);
@@ -2150,7 +2150,7 @@ Dprintf.dprintf("");
     {
       case DIRECTORY:
         string = "";
-        break;     
+        break;
       case FILE:
       case LINK:
         string = fileData.state.toString();
@@ -2174,7 +2174,7 @@ Dprintf.dprintf("");
     {
       case DIRECTORY:
         color = COLOR_OK;
-        break;     
+        break;
       case FILE:
       case LINK:
         switch (fileData.state)

@@ -130,12 +130,12 @@ class CommandRevert
 
   // dialog
   private final Data              data = new Data();
-  private final Shell             dialog;        
+  private final Shell             dialog;
 
   // widgets
-  private final List              widgetFiles;   
-  private final Combo             widgetRevision; 
-  private final Button            widgetRevert;  
+  private final List              widgetFiles;
+  private final Combo             widgetRevision;
+  private final Button            widgetRevert;
 
   // ------------------------ native functions ----------------------------
 

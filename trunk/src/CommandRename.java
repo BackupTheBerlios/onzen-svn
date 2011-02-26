@@ -118,13 +118,13 @@ class CommandRename
 
   // dialog
   private final Data          data = new Data();
-  private final Shell         dialog;        
+  private final Shell         dialog;
 
   // widgets
   private final Text          widgetNewFileName;
-  private final List          widgetHistory; 
-  private final Text          widgetMessage; 
-  private final Button        widgetImmediateCommit;  
+  private final List          widgetHistory;
+  private final Text          widgetMessage;
+  private final Button        widgetImmediateCommit;
   private final Button        widgetRename;
 
   // ------------------------ native functions ----------------------------

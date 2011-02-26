@@ -1352,7 +1352,7 @@ Dprintf.dprintf("");
                     int selectedRevisionIndex = -1;
                     for (int z = 0; z < data.revisionNames.length; z++)
                     {
-                      String revision0 = (z   < data.revisionNames.length-1) ? data.revisionNames[z  ] : repositoryTab.repository.getLastRevision(); 
+                      String revision0 = (z   < data.revisionNames.length-1) ? data.revisionNames[z  ] : repositoryTab.repository.getLastRevision();
                       String revision1 = (z+1 < data.revisionNames.length  ) ? data.revisionNames[z+1] : "local";
                       widgetRevision.add(String.format("%s -> %s",revision0,revision1));
       //                if (revisionLeft != null)

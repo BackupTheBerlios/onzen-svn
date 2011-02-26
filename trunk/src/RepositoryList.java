@@ -122,7 +122,7 @@ Dprintf.dprintf("");
    */
   public boolean load(String name)
   {
-    try 
+    try
     {
       String fileName = Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+name;
 
@@ -146,11 +146,11 @@ Dprintf.dprintf("");
     }
     catch (FileNotFoundException exception)
     {
-      return false;      
+      return false;
     }
     catch (JAXBException exception)
     {
-      return false;      
+      return false;
     }
 
     return true;
@@ -308,7 +308,7 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
     {
       repositories.remove(repository);
       repositories.add(newIndex,repository);
-    }    
+    }
   }
 }
 

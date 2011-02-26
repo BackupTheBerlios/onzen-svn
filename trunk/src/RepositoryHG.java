@@ -209,9 +209,9 @@ class RepositoryHG extends Repository
     final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(.)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
 
     Command         command            = new Command();
-    Exec            exec;                      
-    String          line;                      
-    Matcher         matcher;                   
+    Exec            exec;
+    String          line;
+    Matcher         matcher;
     String          name               = null;
     FileData.States state              = FileData.States.UNKNOWN;
     FileData.Modes  mode               = FileData.Modes.UNKNOWN;
@@ -251,7 +251,7 @@ class RepositoryHG extends Repository
             else if (   (newFileDataSet != null)
                      && !isHiddenFile(name)
                     )
-            {           
+            {
               // check if file not in sub-directory (hg list all files :-()
               String parentDirectory = new File(name).getParent();
               if (   ((parentDirectory == null) && directory.isEmpty())
@@ -324,7 +324,7 @@ class RepositoryHG extends Repository
       {
         // ignored
       }
-    } 
+    }
   }
 
   /** get last revision name
@@ -347,10 +347,10 @@ class RepositoryHG extends Repository
     ArrayList<String> revisionList = new ArrayList<String>();
 
     // get revision info list
-    Command command = new Command(); 
-    Exec    exec;                    
-    String  line;                      
-    Matcher matcher;                   
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+    Matcher matcher;
     try
     {
       // get log
@@ -417,8 +417,8 @@ class RepositoryHG extends Repository
     RevisionData revisionData = null;
 
     // get revision data
-    Command command = new Command(); 
-    Exec    exec;                    
+    Command command = new Command();
+    Exec    exec;
     try
     {
       // get single log entry
@@ -456,8 +456,8 @@ class RepositoryHG extends Repository
     LinkedList<RevisionDataHG> revisionDataList = new LinkedList<RevisionDataHG>();
 
     // get revision info list
-    Command command = new Command(); 
-    Exec    exec;                    
+    Command command = new Command();
+    Exec    exec;
     try
     {
       // get log
@@ -486,7 +486,7 @@ class RepositoryHG extends Repository
           ParentData parentData = fileParentMap.get(parentRevisionData);
 
           RevisionData parentRevisionData1 = getParentRevisionData(parentData.revision1,revisionDataMap,fileParentMap);
-          RevisionData parentRevisionData2 = getParentRevisionData(parentData.revision2,revisionDataMap,fileParentMap);        
+          RevisionData parentRevisionData2 = getParentRevisionData(parentData.revision2,revisionDataMap,fileParentMap);
 
 /*
 if ((parentData.revision1 != 0) && (parentRevisionData1==null))
@@ -622,7 +622,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     {
       Command         command            = new Command();
       Exec            exec;
-      String          line;                  
+      String          line;
       Matcher         matcher;
       String          name               = null;
       FileData.States state              = FileData.States.UNKNOWN;
@@ -1193,8 +1193,8 @@ Dprintf.dprintf("add new file %s",fileData);
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
     // get revision info list
-    Command command = new Command(); 
-    Exec    exec;                    
+    Command command = new Command();
+    Exec    exec;
     try
     {
       // get log
@@ -1307,7 +1307,7 @@ Dprintf.dprintf("add new file %s",fileData);
     {
       Command command = new Command();
       int     exitCode;
-      
+
       String[] trees;
       if (Settings.hgUseForestExtension)
       {
@@ -1395,7 +1395,7 @@ Dprintf.dprintf("add new file %s",fileData);
             if (!storedChanges.restore())
             {
               throw new RepositoryException("restore local changes fail");
-            }          
+            }
 
             // discard changes patch
             storedChanges.discard(); storedChanges = null;
@@ -2041,7 +2041,7 @@ Dprintf.dprintf("add new file %s",fileData);
 
     boolean                 dataDone          = false;
     Matcher                 matcher;
-    String                  line;                      
+    String                  line;
     String                  revision          = null;
     String                  changeSet         = null;
     Date                    date              = null;
