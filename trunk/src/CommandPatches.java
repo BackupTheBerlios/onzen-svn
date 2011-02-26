@@ -322,12 +322,13 @@ class CommandPatches
                     Repository repository = Repository.newInstance(data.patch.rootPath);
 
                     // refresh patch
-                    data.patch.lines = repository.getPatchLines(data.patch.fileNames,
-                                                                data.patch.revision1,
-                                                                data.patch.revision2,
-                                                                data.patch.ignoreWhitespaces
-                                                               );
-                    setChangesText(data.patch.lines);
+                    String[] newLines = repository.getPatchLines(data.patch.fileNames,
+                                                                 data.patch.revision1,
+                                                                 data.patch.revision2,
+                                                                 data.patch.ignoreWhitespaces
+                                                                );
+                    data.patch.setLines(newLines);
+                    setChangesText(newLines);
 
                     // save
                     data.patch.save();
@@ -549,13 +550,33 @@ class CommandPatches
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           if (data.patch != null)
-          {            
+          {
+            // check state
+            switch (data.patch.state)
+            {
+              case COMMITED:
+                if (!Dialogs.confirm(dialog,"Confirmation","Patch is already commited. Commit again?"))
+                {
+                  return;
+                }
+                break;
+              case APPLIED:
+                if (!Dialogs.confirm(dialog,"Confirmation","Patch is applied. Commit anyway?"))
+                {
+                  return;
+                }
+                break;
+              default:
+                break;
+            }
+
+            // commit
             try
             {
               // commit patch
               commit(data.patch);
 
-              // save new state
+              // save new state in database
               data.patch.state = Patch.States.COMMITED;
               data.patch.save();
 
@@ -905,7 +926,7 @@ Dprintf.dprintf("");
     if (data.patch != null)
     {
       // set changes text
-      setChangesText(data.patch.lines);
+      setChangesText(data.patch.getLines());
 
       // set file names
       for (String fileName : data.patch.fileNames)
@@ -949,6 +970,9 @@ Dprintf.dprintf("");
     setSelectedPatch(patch);
   }
 
+  /** commit change in patch to repository
+   * @param patch patch to commit
+   */
   private void commit(Patch patch)
     throws RepositoryException
   {
@@ -961,18 +985,15 @@ Dprintf.dprintf("");
     {
       fileDataSet.add(new FileData(fileName));
     }
-    repository.update(fileDataSet);
+    repository.updateStates(fileDataSet);
 
     // get new files
-    HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
-    if (fileDataSet != null)
+    HashSet<FileData> newFileDataSet = new HashSet<FileData>();
+    for (FileData fileData : fileDataSet)
     {
-      for (FileData fileData : fileDataSet)
+      if (fileData.state == FileData.States.UNKNOWN)
       {
-        if (fileData.state == FileData.States.UNKNOWN)
-        {
-          newFileDataSet.add(fileData);
-        }
+        newFileDataSet.add(fileData);
       }
     }
 
@@ -984,12 +1005,10 @@ Dprintf.dprintf("");
       repository.revert(fileDataSet);
 
       // apply patch
-Dprintf.dprintf("");
       if (!patch.apply())
       {
         throw new RepositoryException("applying patch fail");
       }
-Dprintf.dprintf("");
 
       // commit patch
       Message message = null;
@@ -1017,7 +1036,7 @@ Dprintf.dprintf("");
       }
       finally
       {
-        message.done();
+        if (message != null) message.done();
       }
 
       // restore files
