@@ -10,27 +10,16 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.ByteArrayInputStream;
-//import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-//import java.io.ObjectInputStream;
-//import java.io.ObjectOutputStream;
-//import java.io.Serializable;
+import java.io.PrintWriter;
 
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.Comparator;
-//import java.util.Date;
-//import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
-
 
 /****************************** Classes ********************************/
 
@@ -131,10 +120,11 @@ class RepositoryGit extends Repository
     return null;
   }
 
-  /** get all changed files
+  /** get all changed/unknown files
+   * @param stateSet state set
    * @return fileDataSet file data set with modified files
    */
-  public HashSet<FileData> getChangedFiles()
+  public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException
   {
     return null;
@@ -155,12 +145,12 @@ class RepositoryGit extends Repository
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
-   * @return patch data lines
+   * @param output patch output or null
+   * @param lineLine patch data lines or null
    */
-  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
   {
-    return null;
   }
 
   /** get patch data for file

@@ -10,11 +10,12 @@
 
 /****************************** Imports ********************************/
 // base
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -25,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -643,10 +645,11 @@ class RepositoryCVS extends Repository
     return output.toByteArray();
   }
 
-  /** get all changed files
+  /** get all changed/unknown files
+   * @param stateSet state set
    * @return fileDataSet file data set with modified files
    */
-  public HashSet<FileData> getChangedFiles()
+  public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException
   {
     final Pattern PATTERN_UNKNOWN  = Pattern.compile("^\\?\\s+(.*)",Pattern.CASE_INSENSITIVE);
@@ -679,17 +682,26 @@ class RepositoryCVS extends Repository
       {
         if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
         {
-          fileDataSet.add(new FileData(matcher.group(1),FileData.States.UNKNOWN));
+          if (stateSet.contains(FileData.States.UNKNOWN))
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.UNKNOWN));
+          }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_UPDATE.matcher(line)).matches())
         {
-          fileDataSet.add(new FileData(matcher.group(1),FileData.States.UPDATE));
+          if (stateSet.contains(FileData.States.UPDATE))
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.UPDATE));
+          }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_MODIFIED.matcher(line)).matches())
         {
-          fileDataSet.add(new FileData(matcher.group(1),FileData.States.MODIFIED));
+          if (stateSet.contains(FileData.States.MODIFIED))
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.MODIFIED));
+          }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_MERGE.matcher(line)).matches())
@@ -700,22 +712,34 @@ class RepositoryCVS extends Repository
         {
           if (mergeFlag)
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.MERGE));
+            if (stateSet.contains(FileData.States.MERGE))
+            {
+              fileDataSet.add(new FileData(matcher.group(1),FileData.States.MERGE));
+            }
           }
           else
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.CONFLICT));
+            if (stateSet.contains(FileData.States.CONFLICT))
+            {
+              fileDataSet.add(new FileData(matcher.group(1),FileData.States.CONFLICT));
+            }
           }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_ADDED.matcher(line)).matches())
         {
-          fileDataSet.add(new FileData(matcher.group(1),FileData.States.ADDED));
+          if (stateSet.contains(FileData.States.ADDED))
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.ADDED));
+          }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_REMOVED.matcher(line)).matches())
         {
-          fileDataSet.add(new FileData(matcher.group(1),FileData.States.REMOVED));
+          if (stateSet.contains(FileData.States.REMOVED))
+          {
+            fileDataSet.add(new FileData(matcher.group(1),FileData.States.REMOVED));
+          }
           mergeFlag = false;
         }
         else if (PATTERN_EMPTY.matcher(line).matches())
@@ -981,13 +1005,12 @@ else {
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
-   * @return patch data lines
+   * @param output patch output or null
+   * @param lineLine patch data lines or null
    */
-  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
   {
-    ArrayList<String> patchLineList = new ArrayList<String>();
-
     // get existing/new files
     HashSet<FileData> existFileDataSet = new HashSet<FileData>();
     HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
@@ -1034,7 +1057,8 @@ else {
         // read patch data
         while ((line = exec.getStdout()) != null)
         {
-          patchLineList.add(line);
+          if      (output   != null) output.println(line);
+          else if (lineList != null) lineList.add(line);
         }
 
         // done
@@ -1051,35 +1075,50 @@ else {
     {
       try
       {
-        // open file
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+        BufferedReader bufferedReader;
+        String         line;
 
-        // read content
-        ArrayList<String> lineList = new ArrayList<String>();
-        String line;
+        // count number of lines in file
+        int lineCount = 0;
+        bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
         while ((line = bufferedReader.readLine()) != null)
         {
-          lineList.add("+"+line);
+          lineCount++;
         }
-
-        // close file
         bufferedReader.close();
 
-        // add patch
+        // add as patch
+        bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
         String dateString = DateFormat.getDateInstance().format(new Date());
-        patchLineList.add(String.format("diff -u %s",fileData.getFileName()));
-        patchLineList.add(String.format("--- /dev/null\t%s",dateString));
-        patchLineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
-        patchLineList.add(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
-        patchLineList.addAll(lineList);
+        if      (output   != null)
+        {
+          output.println(String.format("diff -u %s",fileData.getFileName()));
+          output.println(String.format("--- /dev/null\t%s",dateString));
+          output.println(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+          output.println(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
+          while ((line = bufferedReader.readLine()) != null)
+          {
+            output.println("+"+line);
+          }
+        }
+        else if (lineList != null)
+        {
+          lineList.add(String.format("diff -u %s",fileData.getFileName()));
+          lineList.add(String.format("--- /dev/null\t%s",dateString));
+          lineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+          lineList.add(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
+          while ((line = bufferedReader.readLine()) != null)
+          {
+            lineList.add("+"+line);
+          }
+        }
+        bufferedReader.close();
       }
       catch (IOException exception)
       {
         throw new RepositoryException(exception);
       }
     }
-
-    return patchLineList.toArray(new String[patchLineList.size()]);
   }
 
   /** get patch data for file

@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import java.text.DateFormat;
 
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -605,10 +607,11 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     return output.toByteArray();
   }
 
-  /** get all changed files
+  /** get all changed/unknown files
+   * @param stateSet state set
    * @return fileDataSet file data set with modified files
    */
-  public HashSet<FileData> getChangedFiles()
+  public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException
   {
     final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(.)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
@@ -645,11 +648,14 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
           state = parseState(matcher.group(1));
           name  = matcher.group(2);
 
-          fileDataSet.add(new FileData(name,
-                                       state,
-                                       FileData.Modes.BINARY
-                                      )
-                         );
+          if (stateSet.contains(state))
+          {
+            fileDataSet.add(new FileData(name,
+                                         state,
+                                         FileData.Modes.BINARY
+                                        )
+                           );
+          }
         }
         else
         {
@@ -935,15 +941,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
-   * @return patch data lines
+   * @param output patch output or null
+   * @param lineLine patch data lines or null
    */
-  public String[] getPatchLines(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces)
+  public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
   {
-    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(.*)",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*)",Pattern.CASE_INSENSITIVE);
-
-    ArrayList<String> patchLineList = new ArrayList<String>();
+    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
 
     // get existing/new files
     HashSet<FileData> existFileDataSet = new HashSet<FileData>();
@@ -971,6 +976,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         Command command = new Command();
         Exec    exec;
         String  line;
+
+        // get sub-directory relative to hg root path
+        String subDirectory = getSubDirectory();
 
         // get patch
         command.clear();
@@ -1017,30 +1025,43 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         Matcher matcher;
         while ((line = exec.getStdout()) != null)
         {
+//Dprintf.dprintf("line=%s",line);
           // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
           if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
           {
-            String fileName = matcher.group(1);
+            String fileName   = matcher.group(1);
+            String dateString = matcher.group(2);
+
+            // get file name
             if (fileName.startsWith(rootPath))
             {
               // absolute path -> convert to relative path
-              fileName = matcher.group(1).substring(rootPath.length()+1);
+              fileName = matcher.group(1).substring(rootPath.length());
+              if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
             }
             else
             {
-              // relative path -> strip out first path in name
+              // relative path -> strip out first path in name and sub-directory
               int index = fileName.indexOf(File.separator);
               fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
             }
-            patchLineList.add("--- "+fileName);
+
+            // remove sub-directory if needed
+            if ((subDirectory.length() > 0) && (fileName.length() > subDirectory.length()) && fileName.startsWith(subDirectory)) fileName = fileName.substring(subDirectory.length()+1);
+
+            line = "--- "+fileName+((dateString != null)?"\t"+dateString:"");
           }
           else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
           {
-            String fileName = matcher.group(1);
+            String fileName   = matcher.group(1);
+            String dateString = matcher.group(2);
+
+            // get file name
             if (fileName.startsWith(rootPath))
             {
               // absolute path -> convert to relative path
-              fileName = matcher.group(1).substring(rootPath.length()+1);
+              fileName = matcher.group(1).substring(rootPath.length());
+              if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
             }
             else
             {
@@ -1048,12 +1069,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
               int index = fileName.indexOf(File.separator);
               fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
             }
-            patchLineList.add("+++ "+fileName);
+            // remove sub-directory if needed
+            if ((subDirectory.length() > 0) && (fileName.length() > subDirectory.length()) && fileName.startsWith(subDirectory)) fileName = fileName.substring(subDirectory.length()+1);
+
+            line = "+++ "+fileName+((dateString != null)?"\t"+dateString:"");
           }
-          else
-          {
-            patchLineList.add(line);
-          }
+
+          if      (output   != null) output.println(line);
+          else if (lineList != null) lineList.add(line);
         }
 
         // done
@@ -1068,37 +1091,53 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     // get complete patches for new files
     for (FileData fileData : newFileDataSet)
     {
+Dprintf.dprintf("add new file %s",fileData);
       try
       {
-        // open file
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+        BufferedReader bufferedReader;
+        String         line;
 
-        // read content
-        ArrayList<String> lineList = new ArrayList<String>();
-        String line;
+        // count number of lines in file
+        int lineCount = 0;
+        bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
         while ((line = bufferedReader.readLine()) != null)
         {
-          lineList.add("+"+line);
+          lineCount++;
         }
-
-        // close file
         bufferedReader.close();
 
-        // add patch
+        // add as patch
+        bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
         String dateString = DateFormat.getDateInstance().format(new Date());
-        patchLineList.add(String.format("diff -u %s",fileData.getFileName()));
-        patchLineList.add(String.format("--- /dev/null\t%s",dateString));
-        patchLineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
-        patchLineList.add(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
-        patchLineList.addAll(lineList);
+        if      (output   != null)
+        {
+          output.println(String.format("diff -u %s",fileData.getFileName()));
+          output.println(String.format("--- /dev/null\t%s",dateString));
+          output.println(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+          output.println(String.format("@@ -1,%d +1,%d @@",lineCount,lineCount));
+          while ((line = bufferedReader.readLine()) != null)
+          {
+            output.println("+"+line);
+          }
+        }
+        else if (lineList != null)
+        {
+          lineList.add(String.format("diff -u %s",fileData.getFileName()));
+          lineList.add(String.format("--- /dev/null\t%s",dateString));
+          lineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+          lineList.add(String.format("@@ -1,%d +1,%d @@",lineCount,lineCount));
+          while ((line = bufferedReader.readLine()) != null)
+          {
+            lineList.add("+"+line);
+          }
+        }
+        bufferedReader.close();
       }
       catch (IOException exception)
       {
         throw new RepositoryException(exception);
       }
     }
-
-    return patchLineList.toArray(new String[patchLineList.size()]);
   }
 
   /** get patch data for file
@@ -1774,6 +1813,63 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     else if (string.equalsIgnoreCase("I")) return FileData.States.UNKNOWN;
     else if (string.equalsIgnoreCase("?")) return FileData.States.UNKNOWN;
     else                                   return FileData.States.UNKNOWN;
+  }
+
+  /** get sub-directory based on hg root path
+   * @return sub-directory or ""
+   */
+  private String getSubDirectory()
+    throws IOException,RepositoryException
+  {
+    String hgRootPath;
+
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+
+    // get hg root path
+    command.clear();
+    command.append(Settings.hgCommand,"root");
+    command.append("--");
+    exec = new Exec(rootPath,command);
+
+    // read
+    hgRootPath = exec.getStdout();
+
+    // done
+    exec.done();
+
+    // get sub-directory
+    return ((rootPath.length() > hgRootPath.length()) && rootPath.startsWith(hgRootPath))
+             ?rootPath.substring(hgRootPath.length()+1)
+             :"";
+  }
+
+  /** get HG root path
+   * @return root path
+   */
+  private String getRootPath()
+    throws IOException,RepositoryException
+  {
+    String hgRootPath;
+
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+
+    // get forest trees
+    command.clear();
+    command.append(Settings.hgCommand,"root");
+    command.append("--");
+    exec = new Exec(rootPath,command);
+
+    // read
+    hgRootPath = exec.getStdout();
+
+    // done
+    exec.done();
+
+    return hgRootPath;
   }
 
   /** get trees of hg forest
