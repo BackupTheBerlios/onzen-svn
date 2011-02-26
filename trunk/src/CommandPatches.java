@@ -841,8 +841,7 @@ Dprintf.dprintf("");
   {
     if (!dialog.isDisposed())
     {
-//      widgetSubject.setFocus();
-//      widgetSubject.setSelection(widgetSubject.getText().length(),widgetSubject.getText().length());
+      widgetPatches.setFocus();
       Dialogs.run(dialog);
     }
   }
@@ -1060,13 +1059,13 @@ Dprintf.dprintf("");
 
   private void apply()
   {
+Dprintf.dprintf("");
   }
 
   private void unapply()
   {
+Dprintf.dprintf("");
   }
-
-
 }
 
 /* end of file */
