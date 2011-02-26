@@ -229,7 +229,7 @@ class CommandChangedFiles
       subComposite.setLayout(new TableLayout(null,0.0));
       Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Hide:");
+        label = Widgets.newLabel(subComposite,"Show:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         button = Widgets.newCheckbox(subComposite,"OK");
@@ -616,7 +616,7 @@ menuItem.setEnabled(false);
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonUpdate.addSelectionListener(new SelectionListener()
@@ -650,7 +650,7 @@ menuItem.setEnabled(false);
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonCommit.addSelectionListener(new SelectionListener()
@@ -673,13 +673,14 @@ menuItem.setEnabled(false);
         }
       });
 
-      widgetButtonCreatePatch = Widgets.newButton(composite,"Create patch");
+      widgetButtonCreatePatch = Widgets.newButton(composite,"Patch");
+widgetButtonCreatePatch.setEnabled(false);
       Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonCreatePatch,data)
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+//          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonCreatePatch.addSelectionListener(new SelectionListener()
@@ -700,7 +701,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonAdd.addSelectionListener(new SelectionListener()
@@ -730,7 +731,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonRemove.addSelectionListener(new SelectionListener()
@@ -760,7 +761,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonRevert.addSelectionListener(new SelectionListener()
@@ -790,7 +791,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonDiff.addSelectionListener(new SelectionListener()
@@ -816,7 +817,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          control.setEnabled(widgetFiles.getSelectionCount() > 0);
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonRevisions.addSelectionListener(new SelectionListener()
@@ -1008,7 +1009,7 @@ Dprintf.dprintf("");
 
         // notity changed data
         // show
-        if (!display.isDisposed())
+        if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {
