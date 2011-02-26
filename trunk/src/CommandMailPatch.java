@@ -323,8 +323,6 @@ class CommandMailPatch
           File tmpFile = null;
           try
           {
-            PrintWriter output;
-
             // create mail attachment
             tmpFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
             patch.write(tmpFile);
@@ -489,7 +487,7 @@ class CommandMailPatch
     Dialogs.show(dialog,Settings.geometryMailPatch);
 
     // update
-    widgetPatch.setText(StringUtils.join(patch.lines,widgetPatch.DELIMITER));
+    widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.DELIMITER));
     widgetMailTo.setText(repositoryTab.repository.patchMailTo);
     widgetMailCC.setText(repositoryTab.repository.patchMailCC);
     updateMailSubject();
