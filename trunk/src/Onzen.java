@@ -10,6 +10,12 @@
 
 /****************************** Imports ********************************/
 // base
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidKeyException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -18,6 +24,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -34,6 +45,13 @@ import java.util.LinkedList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Iterator;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 // graphics
 import org.eclipse.swt.custom.SashForm;
@@ -95,9 +113,6 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Widget;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
 
 /****************************** Classes ********************************/
 
@@ -312,6 +327,7 @@ public class Onzen
   private HashMap<Repository,RepositoryTab> repositoryTabMap = new HashMap<Repository,RepositoryTab>();
   private RepositoryTab                     selectedRepositoryTab = null;
   private LinkedList<StatusText>            statusTextList = new LinkedList<StatusText>();
+  private String                            masterPassword = null;
 
   private MenuItem                          menuItemApplyPatches;
   private MenuItem                          menuItemUnapplyPatches;
@@ -421,6 +437,14 @@ repositoryX.title = "Ooooonzen";
 repositoryList.add(repositoryX);
 RepositoryTab repositoryTab = new RepositoryTab(widgetTabFolder,repositoryX);
 /**/
+
+/*
+String p = "Hello";
+String e = encodePassword(p);
+String d = decodePassword(e);
+Dprintf.dprintf("e=%s",e);
+Dprintf.dprintf("d=%s",d);
+*/
 
       // run
       exitcode = run();
@@ -533,6 +557,206 @@ exception.printStackTrace();
         widgetStatus.setText(string);
       }
     });
+  }
+
+  /** load and decode password with master password
+   * @param password password to encode
+   * @return encoded password or null
+   */
+  public String getPassword(String name)
+  {
+    String password = null;
+
+    // get master password
+    if (masterPassword == null)
+    {
+      masterPassword = Dialogs.password(shell,"Master password");
+      if (masterPassword == null) return null;
+    }
+
+    // read password from password database
+    Database database = null;
+    try
+    {
+      Statement         statement;
+      ResultSet         resultSet;
+      PreparedStatement preparedStatement;
+
+      database = openPasswordDatabase();
+
+      statement = database.connection.createStatement();
+      resultSet = null;
+      try
+      {
+        preparedStatement = database.connection.prepareStatement("SELECT data FROM passwords WHERE name=?;");
+        preparedStatement.setString(1,name);
+        resultSet = preparedStatement.executeQuery();
+
+        if (resultSet.next())
+        {
+          // read and decode password
+          password = decodePassword(masterPassword,resultSet.getBytes("data"));
+        }
+        else
+        {
+          // input password
+          password = Dialogs.password(shell,"Password for: "+name);
+          if (password == null) return null;
+
+          // encode and store password
+          preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
+          preparedStatement.setString(1,name);
+          preparedStatement.setBytes(2,encodePassword(masterPassword,password));
+          preparedStatement.executeUpdate();
+        }
+
+        resultSet.close(); resultSet = null;
+      }
+      finally
+      {
+        if (resultSet != null) resultSet.close();
+      }
+
+      // close datbase
+      closePasswordDatabase(database); database = null;
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+      return null;
+    }
+    finally
+    {
+      if (database != null) closePasswordDatabase(database);
+    }
+
+    return password;
+  }
+
+  /** load and decode password with master password
+   * @param password password to encode
+   * @return encoded password or null
+   */
+  public String getPassword(String name, String host)
+  {
+    return getPassword(name+"@"+host);
+  }
+
+  /** store password encode password with master password
+   * @param name name
+   * @param password to set
+   */
+  public void setPassword(String name, String password)
+  {
+    // get master password
+    if (masterPassword == null)
+    {
+      masterPassword = Dialogs.password(shell,"Master password");
+      if (masterPassword == null) return;
+    }
+
+    // store password into password database
+    Database database = null;
+    try
+    {
+      PreparedStatement preparedStatement;
+
+      database = openPasswordDatabase();
+
+      // delete old password
+      preparedStatement = database.connection.prepareStatement("DELETE FROM passwords WHERE name=?;");
+      preparedStatement.setString(1,name);
+      preparedStatement.executeUpdate();
+
+      // store password
+      preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
+      preparedStatement.setString(1,name);
+      preparedStatement.setBytes(2,encodePassword(masterPassword,password));
+      preparedStatement.executeUpdate();
+
+      // close datbase
+      closePasswordDatabase(database); database = null;
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+      return;
+    }
+    finally
+    {
+      if (database != null) closePasswordDatabase(database);
+    }
+  }
+
+  /** store password encode password with master password
+   * @param name name
+   * @param host host name
+   * @param password to set
+   */
+  public void setPassword(String name, String host, String password)
+  {
+    setPassword(name+"@"+host,password);
+  }
+
+  /** set new master password
+   * @param newMasterPassword new master password
+   */
+  public void setNewMasterPassword(String oldMasterPassword, String newMasterPassword)
+  {
+    Database database = null;
+    try
+    {
+      Statement         statement;
+      ResultSet         resultSet;
+      PreparedStatement preparedStatement;
+
+      database = openPasswordDatabase();
+
+      // get encoded password
+      statement = database.connection.createStatement();
+      resultSet = null;
+      try
+      {
+        preparedStatement = database.connection.prepareStatement("SELECT name,data FROM passwords;");
+        resultSet = preparedStatement.executeQuery();
+
+        preparedStatement = database.connection.prepareStatement("UPDATE passwords SET data=? WHERE name=?;");
+        while (resultSet.next())
+        {
+          // read and decode password
+          String name     = resultSet.getString("name");
+          String password = decodePassword(oldMasterPassword,resultSet.getBytes("data"));
+
+          // encode with new password and store
+          preparedStatement.setBytes(1,encodePassword(newMasterPassword,password));
+          preparedStatement.setString(2,name);
+          preparedStatement.executeUpdate();
+        }
+
+        resultSet.close(); resultSet = null;
+      }
+      finally
+      {
+        if (resultSet != null) resultSet.close();
+      }
+
+      // close datbase
+      closePasswordDatabase(database); database = null;
+    }
+    catch (SQLException exception)
+    {
+      Dialogs.error(shell,"Cannot set new master password (error: %s)",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      if (database != null) closePasswordDatabase(database);
+    }
+
+    // set new master password
+    masterPassword = newMasterPassword;
   }
 
   //-----------------------------------------------------------------------
@@ -1419,6 +1643,106 @@ Dprintf.dprintf("");
 
     menu = Widgets.addMenu(menuBar,"Options");
     {
+      menuItem = Widgets.addMenuItem(menu,"New master password...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Composite composite;
+          Label     label;
+          Button    button;
+
+          final Shell dialog = Dialogs.open(shell,"New master password",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+          final Text   widgetOldMasterPassword;
+          final Text   widgetNewMasterPassword1,widgetNewMasterPassword2;
+          final Button widgetSetPassword;
+
+          composite = Widgets.newComposite(dialog);
+          composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+          Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+          {
+            label = Widgets.newLabel(composite,"Old password:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetOldMasterPassword = Widgets.newPassword(composite);
+            Widgets.layout(widgetOldMasterPassword,0,1,TableLayoutData.WE);
+
+            label = Widgets.newLabel(composite,"New password:");
+            Widgets.layout(label,1,0,TableLayoutData.W);
+
+            widgetNewMasterPassword1 = Widgets.newPassword(composite);
+            Widgets.layout(widgetNewMasterPassword1,1,1,TableLayoutData.WE);
+
+            label = Widgets.newLabel(composite,"Verify password:");
+            Widgets.layout(label,2,0,TableLayoutData.W);
+
+            widgetNewMasterPassword2 = Widgets.newPassword(composite);
+            Widgets.layout(widgetNewMasterPassword2,2,1,TableLayoutData.WE);
+          }
+
+          // buttons
+          composite = Widgets.newComposite(dialog);
+          composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+          Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+          {
+            widgetSetPassword = Widgets.newButton(composite,"Set password");
+            Widgets.layout(widgetSetPassword,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            widgetSetPassword.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String oldMasterPassword  = widgetOldMasterPassword.getText();
+                String newMasterPassword1 = widgetNewMasterPassword1.getText();
+                String newMasterPassword2 = widgetNewMasterPassword2.getText();
+                if (!newMasterPassword1.equals(newMasterPassword2))
+                {
+                  Dialogs.error(dialog,"New passwords differ!");
+                  Widgets.setFocus(widgetNewMasterPassword1);
+                  return;
+                }
+
+                setNewMasterPassword(oldMasterPassword,newMasterPassword1);
+
+                Dialogs.close(dialog,true);
+              }
+            });
+
+            button = Widgets.newButton(composite,"Cancel");
+            Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Button widget = (Button)selectionEvent.widget;
+
+                Dialogs.close(dialog,false);
+              }
+            });
+          }
+
+          // listeners
+          Widgets.setNextFocus(widgetOldMasterPassword,widgetNewMasterPassword1);
+          Widgets.setNextFocus(widgetNewMasterPassword1,widgetNewMasterPassword2);
+          Widgets.setNextFocus(widgetNewMasterPassword2,widgetSetPassword);
+
+          // run dialog
+          Widgets.setFocus(widgetOldMasterPassword);
+          Dialogs.run(dialog,false);
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
       menuItem = Widgets.addMenuItem(menu,"Preferences");
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1478,13 +1802,8 @@ menuItem.addSelectionListener(new SelectionListener()
   private void initAll()
   {
     // load message history, start message broadcast
-    Message.loadHistory();
-    Message.startBroadcast();
-/*
-new Message("Hello 1").addToHistory();
-new Message("Tral\nlala").addToHistory();
-new Message("Und nun?").addToHistory();
-*/
+    CommitMessage.loadHistory();
+    CommitMessage.startBroadcast();
 
     // init display
     initDisplay();
@@ -1586,6 +1905,171 @@ new Message("Und nun?").addToHistory();
     }
 
     return result[0];
+  }
+
+  /** open/create password database
+   * @return database
+   */
+  private Database openPasswordDatabase()
+  {
+    Database database = null;
+    try
+    {
+      Statement         statement;
+      ResultSet         resultSet;
+      PreparedStatement preparedStatement;
+
+      database = new Database("passwords");
+
+      // create tables if needed
+      statement = database.connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
+                              "  name  TEXT, "+
+                              "  value TEXT "+
+                              ");"
+                             );
+      statement = database.connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS passwords ( "+
+                              "  id       INTEGER PRIMARY KEY, "+
+                              "  datetime INTEGER DEFAULT (DATETIME('now')), "+
+                              "  name     TEXT, "+
+                              "  data     BLOB "+
+                              ");"
+                             );
+
+      // init meta data (if not already initialized)
+      statement = database.connection.createStatement();
+      resultSet = null;
+      try
+      {
+        resultSet = statement.executeQuery("SELECT name,value FROM meta;");
+
+        if (!resultSet.next())
+        {
+          preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+          preparedStatement.setString(1,"1");
+          preparedStatement.executeUpdate();
+        }
+
+        resultSet.close(); resultSet = null;
+      }
+      finally
+      {
+        if (resultSet != null) resultSet.close();
+      }
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+      return null;
+    }
+
+    return database;
+  }
+
+  /** close password database
+   * @param database database
+   */
+  private void closePasswordDatabase(Database database)
+  {
+    try
+    {
+      database.close();
+    }
+    catch (SQLException exception)
+    {
+      // ignored
+    }
+  }
+
+  /** encode password with master password
+   * @param password password to encode
+   * @return encoded password bytess or null
+   */
+  private byte[] encodePassword(String masterPassword, String password)
+  {
+    if (masterPassword != null)
+    {
+      try
+      {
+        byte[] bytes;
+
+        // get secret key
+        byte[] masterPasswordBytes = masterPassword.getBytes();
+        bytes = new byte[128/8];
+        for (int z = 0; z < bytes.length; z++)
+        {
+          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
+        }
+        SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
+
+        // get cipher
+        Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE,secretKeySpec);
+
+        // encrypt password
+        byte[] passwordBytes = password.getBytes();
+        bytes = Arrays.copyOf(passwordBytes,(passwordBytes.length+15)/16*16);        
+        return cipher.doFinal(bytes);
+      }
+      catch (Exception exception)
+      {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+        return null;
+      }
+    }
+    else
+    {
+      return null;
+    }
+  }
+
+  /** decode password with master password
+   * @param encodedPassword encoded password bytes
+   * @return decoded password or null
+   */
+  private String decodePassword(String masterPassword, byte[] encodedPassword)
+  {
+    if (masterPassword == null)
+    {
+      masterPassword = Dialogs.password(shell,"Master password");
+    }
+
+    if (masterPassword != null)
+    {
+      try
+      {
+        byte[] bytes;
+
+        // get secret key
+        byte[] masterPasswordBytes = masterPassword.getBytes();
+        bytes = new byte[128/8];
+        for (int z = 0; z < bytes.length; z++)
+        {
+          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
+        }
+        SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
+
+        // get cipher
+        Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE,secretKeySpec);
+
+        // decrypt password
+        return new String(cipher.doFinal(encodedPassword));
+      }
+      catch (Exception exception)
+      {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+        return null;
+      }     
+    }
+    else
+    {
+      return null;
+    }
   }
 
   /** add empty "New" tab repository
@@ -2460,6 +2944,12 @@ new Message("Und nun?").addToHistory();
       String   title;
       String   rootPath;
       String   masterRepository;
+      String   mailSMTPHost;
+      int      mailSMTPPort;
+      boolean  mailSMTPSSL;
+      String   mailLogin;
+      String   mailPassword;
+      String   mailFrom;
       String[] patchMailTests;
       String   patchMailTo;
       String   patchMailCC;
@@ -2471,6 +2961,12 @@ new Message("Und nun?").addToHistory();
         this.title            = null;
         this.rootPath         = null;
         this.masterRepository = null;
+        this.mailSMTPHost     = null;
+        this.mailSMTPPort     = 0;
+        this.mailSMTPSSL      = false;
+        this.mailLogin        = null;
+        this.mailPassword     = null;
+        this.mailFrom         = null;
         this.patchMailTests   = null;
         this.patchMailTo      = null;
         this.patchMailCC      = null;
@@ -2491,15 +2987,21 @@ new Message("Und nun?").addToHistory();
     // repository edit dialog
     dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
 
-    final Text   widgetTitle;
-    final Text   widgetRootPath;
+    final Text                  widgetTitle;
+    final Text                  widgetRootPath;
     final HashMap<Field,Widget> widgetFieldMap = new HashMap<Field,Widget>();
-    final List   widgetPatchTests;
-    final Text   widgetPatchMailTo;
-    final Text   widgetPatchMailCC;
-    final Text   widgetPatchMailSubject;
-    final Text   widgetPatchMailText;
-    final Button widgetSave;
+    final Text                  widgetMailSMTPHost;
+    final Spinner               widgetMailSMTPPort;
+    final Button                widgetMailSMTPSSL;
+    final Text                  widgetMailLogin;
+    final Text                  widgetMailPassword;
+    final Text                  widgetMailFrom;
+    final List                  widgetPatchTests;
+    final Text                  widgetPatchMailTo;
+    final Text                  widgetPatchMailCC;
+    final Text                  widgetPatchMailSubject;
+    final Text                  widgetPatchMailText;
+    final Button                widgetSave;
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(1.0,1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
@@ -2690,16 +3192,79 @@ exception.printStackTrace();
         }
       }
 
-      subComposite = Widgets.addTab(tabFolder,"Patch mail");
-      subComposite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
+      subComposite = Widgets.addTab(tabFolder,"Mail");
+      subComposite.setLayout(new TableLayout(new double[]{0.0,0.3,0.7},1.0));
       Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
-        label = Widgets.newLabel(subComposite,"Tests:");
-        Widgets.layout(label,0,0,TableLayoutData.NW);
+        subSubComposite = Widgets.newGroup(subComposite,"Mail server");
+        subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,0,0,TableLayoutData.WE,0,0,2);
+        {
+          label = Widgets.newLabel(subSubComposite,"SMTP server:");
+          Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
-        subSubComposite = Widgets.newComposite(subComposite);
-        subSubComposite.setLayout(new TableLayout(new double[]{1.0,0},new double[]{1.0,0.0,0.0}));
-        Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
+          subSubSubComposite = Widgets.newComposite(subSubComposite);
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{0.0,0.7,0.0,0.3,0.0}));
+          Widgets.layout(subSubSubComposite,0,1,TableLayoutData.WE,0,0,2);
+          {
+            label = Widgets.newLabel(subSubSubComposite,"Name:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetMailSMTPHost = Widgets.newText(subSubSubComposite);
+            widgetMailSMTPHost.setText((repositoryTab.repository.mailSMTPHost != null)?repositoryTab.repository.mailSMTPHost:Settings.mailSMTPHost);
+            Widgets.layout(widgetMailSMTPHost,0,1,TableLayoutData.WE);
+            widgetMailSMTPHost.setToolTipText("Mail SMTP server host name.");
+
+            label = Widgets.newLabel(subSubSubComposite,"Port:");
+            Widgets.layout(label,0,2,TableLayoutData.W);
+
+            widgetMailSMTPPort = Widgets.newSpinner(subSubSubComposite,0,65535);
+            widgetMailSMTPPort.setTextLimit(5);
+            widgetMailSMTPPort.setSelection((repositoryTab.repository.mailSMTPPort != 0)?repositoryTab.repository.mailSMTPPort:Settings.mailSMTPPort);
+            Widgets.layout(widgetMailSMTPPort,0,3,TableLayoutData.WE);
+            widgetMailSMTPPort.setToolTipText("Mail SMTP server port number.");
+
+            widgetMailSMTPSSL = Widgets.newCheckbox(subSubSubComposite,"SSL");
+            widgetMailSMTPSSL.setSelection(repositoryTab.repository.mailSMTPSSL);
+            Widgets.layout(widgetMailSMTPSSL,0,4,TableLayoutData.E);
+            widgetMailSMTPSSL.setToolTipText("Use SMTP with SSL encryption.");
+          }
+
+          label = Widgets.newLabel(subSubComposite,"Login:");
+          Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
+
+          subSubSubComposite = Widgets.newComposite(subSubComposite);
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0,1.0}));
+          Widgets.layout(subSubSubComposite,1,1,TableLayoutData.WE,0,0,2);
+          {
+            label = Widgets.newLabel(subSubSubComposite,"Name:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetMailLogin = Widgets.newText(subSubSubComposite);
+            widgetMailLogin.setText((repositoryTab.repository.mailLogin != null)?repositoryTab.repository.mailLogin:Settings.mailLogin);
+            Widgets.layout(widgetMailLogin,0,1,TableLayoutData.WE);
+            widgetMailLogin.setToolTipText("Mail server login name.");
+
+            label = Widgets.newLabel(subSubSubComposite,"Password:");
+            Widgets.layout(label,0,2,TableLayoutData.W);
+
+            widgetMailPassword = Widgets.newPassword(subSubSubComposite);
+            Widgets.layout(widgetMailPassword,0,3,TableLayoutData.WE);
+            widgetMailPassword.setToolTipText("Mail server login password.");
+          }
+
+          label = Widgets.newLabel(subSubComposite,"From name:");
+          Widgets.layout(label,3,0,TableLayoutData.W,0,0,2);
+
+          widgetMailFrom = Widgets.newText(subSubComposite);
+          widgetMailFrom.setText((repositoryTab.repository.mailFrom != null)?repositoryTab.repository.mailFrom:Settings.mailFrom);
+          Widgets.layout(widgetMailFrom,3,1,TableLayoutData.WE,0,0,2);
+          widgetMailFrom.setToolTipText("Mail from address.");
+        }
+
+        subSubComposite = Widgets.newGroup(subComposite,"Tests");
+        subSubComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
         {
           widgetPatchTests = Widgets.newList(subSubComposite);
           if (repositoryTab.repository.patchMailTests != null)
@@ -2709,12 +3274,12 @@ exception.printStackTrace();
               widgetPatchTests.add(test);
             }
           }
-          Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,3);
+          Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,0,2);
           widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch mail.");
 
           subSubSubComposite = Widgets.newComposite(subSubComposite);
-          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-          Widgets.layout(subSubSubComposite,1,0,TableLayoutData.WE);
+          subSubSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubSubComposite,1,0,TableLayoutData.E,0,0,2);
           {
             button = Widgets.newButton(subSubSubComposite,Onzen.IMAGE_ARROW_UP);
             Widgets.layout(button,0,0,TableLayoutData.E);
@@ -2808,38 +3373,43 @@ exception.printStackTrace();
           }
         }
 
-        label = Widgets.newLabel(subComposite,"To:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+        subSubComposite = Widgets.newGroup(subComposite,"Patch mail");
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,2,0,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subSubComposite,"To:");
+          Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
-        widgetPatchMailTo = Widgets.newText(subComposite);
-        if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
-        Widgets.layout(widgetPatchMailTo,1,1,TableLayoutData.WE);
-        button.setToolTipText("Default to-address for patch mails.");
+          widgetPatchMailTo = Widgets.newText(subSubComposite);
+          if (repositoryTab.repository.patchMailTo != null) widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
+          Widgets.layout(widgetPatchMailTo,0,1,TableLayoutData.WE,0,0,2);
+          widgetPatchMailTo.setToolTipText("Default to-address for patch mails.");
 
-        label = Widgets.newLabel(subComposite,"CC:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
-        button.setToolTipText("Default CC-addresses for patch mails.");
+          label = Widgets.newLabel(subSubComposite,"CC:");
+          Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
+          button.setToolTipText("Default CC-addresses for patch mails.");
 
-        widgetPatchMailCC = Widgets.newText(subComposite);
-        if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
-        Widgets.layout(widgetPatchMailCC,2,1,TableLayoutData.WE);
-        widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
+          widgetPatchMailCC = Widgets.newText(subSubComposite);
+          if (repositoryTab.repository.patchMailCC != null) widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
+          Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE,0,0,2);
+          widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
 
-        label = Widgets.newLabel(subComposite,"Subject:");
-        Widgets.layout(label,3,0,TableLayoutData.W);
+          label = Widgets.newLabel(subSubComposite,"Subject:");
+          Widgets.layout(label,2,0,TableLayoutData.W,0,0,2);
 
-        widgetPatchMailSubject = Widgets.newText(subComposite);
-        if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
-        Widgets.layout(widgetPatchMailSubject,3,1,TableLayoutData.WE);
-        widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
+          widgetPatchMailSubject = Widgets.newText(subSubComposite);
+          if (repositoryTab.repository.patchMailSubject != null) widgetPatchMailSubject.setText(repositoryTab.repository.patchMailSubject);
+          Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE,0,0,2);
+          widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
 
-        label = Widgets.newLabel(subComposite,"Text:");
-        Widgets.layout(label,4,0,TableLayoutData.NW);
+          label = Widgets.newLabel(subSubComposite,"Text:");
+          Widgets.layout(label,3,0,TableLayoutData.NW,0,0,2);
 
-        widgetPatchMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-        if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
-        Widgets.layout(widgetPatchMailText,4,1,TableLayoutData.NSWE);
-        widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
+          widgetPatchMailText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
+          Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE,0,0,2);
+          widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
+        }
       }
     }
 
@@ -2861,6 +3431,12 @@ exception.printStackTrace();
 
           data.title            = widgetTitle.getText();
           data.rootPath         = widgetRootPath.getText();
+          data.mailSMTPHost     = widgetMailSMTPHost.getText();
+          data.mailSMTPPort     = widgetMailSMTPPort.getSelection();
+          data.mailSMTPSSL      = widgetMailSMTPSSL.getSelection();
+          data.mailLogin        = widgetMailLogin.getText();
+          data.mailPassword     = widgetMailPassword.getText();
+          data.mailFrom         = widgetMailFrom.getText();
           data.patchMailTests   = widgetPatchTests.getItems();
           data.patchMailTo      = widgetPatchMailTo.getText();
           data.patchMailCC      = widgetPatchMailCC.getText();
@@ -2871,7 +3447,6 @@ exception.printStackTrace();
           {
             for (Annotation annotation : field.getDeclaredAnnotations())
             {
-Dprintf.dprintf("annotation=%s",annotation);
               if (annotation instanceof RepositoryValue)
               {
                 try
@@ -2987,11 +3562,17 @@ exception.printStackTrace();
       // set data
       repositoryTab.setTitle(data.title);
       repositoryTab.repository.rootPath         = data.rootPath;
+      repositoryTab.repository.mailSMTPHost     = data.mailSMTPHost;
+      repositoryTab.repository.mailSMTPPort     = data.mailSMTPPort;
+      repositoryTab.repository.mailSMTPSSL      = data.mailSMTPSSL;
+      repositoryTab.repository.mailLogin        = data.mailLogin;
+      repositoryTab.repository.mailFrom         = data.mailFrom;
       repositoryTab.repository.patchMailTests   = data.patchMailTests;
       repositoryTab.repository.patchMailTo      = data.patchMailTo;
       repositoryTab.repository.patchMailCC      = data.patchMailCC;
       repositoryTab.repository.patchMailSubject = data.patchMailSubject;
       repositoryTab.repository.patchMailText    = data.patchMailText;
+      setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
 
       // save list
       try
