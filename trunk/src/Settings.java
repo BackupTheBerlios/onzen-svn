@@ -826,7 +826,7 @@ public class Settings
   }
 */
 
-  @SettingComment(text={"","Editors: <mime type>:<command>","Macros %name%:","  file - file name"})
+  @SettingComment(text={"","Editors: <mime type>:<command>","Macros %file%:","  file - file name"})
   @SettingValue(type=SettingValueAdapterEditor.class)
   public static Editor[]         editors                                = new Editor[0];
 
