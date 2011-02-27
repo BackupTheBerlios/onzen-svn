@@ -77,6 +77,7 @@ create:
           $(ECHO) "more text" >> modified; \
           ($(ECHO) "Hello World"; $(ECHO) ""; $(ECHO) "The end";) > merge; \
           $(ECHO) "more text" >> conflict; \
+          $(ECHO) "unknown" > unknown; \
         )
 	#
 	$(SVN) checkout file://$(SVNROOT)/test tmp

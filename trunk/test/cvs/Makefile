@@ -76,6 +76,7 @@ create:
           $(ECHO) "more text" >> modified; \
           ($(ECHO) "Hello World"; $(ECHO) ""; $(ECHO) "The end";) > merge; \
           $(ECHO) "more text" >> conflict; \
+          $(ECHO) "unknown" > unknown; \
         )
 	#
 	$(CVS) -d $(CVSROOT) get -d tmp test
