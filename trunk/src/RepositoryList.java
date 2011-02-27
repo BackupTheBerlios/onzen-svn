@@ -146,10 +146,15 @@ Dprintf.dprintf("");
     }
     catch (FileNotFoundException exception)
     {
+Dprintf.dprintf("exception=%s",exception);
       return false;
     }
     catch (JAXBException exception)
     {
+      if (Settings.debugFlag)
+      {
+        throw new Error(exception);
+      }
       return false;
     }
 

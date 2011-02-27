@@ -1293,7 +1293,23 @@ class StoredFiles
 
 /** repository
  */
-@XmlType(propOrder={"title","rootPath","openDirectories","patchMailTests","patchMailTo","patchMailCC","patchMailSubject","patchMailText"})
+@XmlType(propOrder={"title",
+                    "rootPath",
+                    "openDirectories",
+
+                    "mailSMTPHost",
+                    "mailSMTPPort",
+                    "mailSMTPSSL",
+                    "mailLogin",
+                    "mailFrom",
+
+                    "patchMailTests",
+                    "patchMailTo",
+                    "patchMailCC",
+                    "patchMailSubject",
+                    "patchMailText"
+                   }
+        )
 @XmlSeeAlso({RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
@@ -1386,6 +1402,17 @@ abstract class Repository implements Serializable
   @XmlElementWrapper(name = "patchMailTests")
   @XmlElement(name = "test", defaultValue = "")
   public String[] patchMailTests = new String[0];
+
+  @XmlElement(name = "mailSMTPHost")
+  public String  mailSMTPHost;
+  @XmlElement(name = "mailSMTPPort")
+  public int     mailSMTPPort;
+  @XmlElement(name = "mailSMTPSSL")
+  public boolean mailSMTPSSL;
+  @XmlElement(name = "mailLogin")
+  public String  mailLogin;
+  @XmlElement(name = "mailFrom")
+  public String  mailFrom;
 
   @XmlElement(name = "patchMailTo", defaultValue = "")
   public String patchMailTo = "";
@@ -2154,14 +2181,14 @@ abstract class Repository implements Serializable
    * @param fileDataSet file data set
    * @param commitMessage commit message
    */
-  abstract public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
+  abstract public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException;
 
   /** commit file
    * @param fileData file data
    * @param commitMessage commit message
    */
-  public void commit(FileData fileData, Message commitMessage)
+  public void commit(FileData fileData, CommitMessage commitMessage)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
@@ -2175,7 +2202,7 @@ abstract class Repository implements Serializable
    * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
-  abstract public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
+  abstract public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException;
 
   /** add files
@@ -2183,7 +2210,7 @@ abstract class Repository implements Serializable
    * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
-  public void add(Collection<String> fileNameSet, Message commitMessage, boolean binaryFlag)
+  public void add(Collection<String> fileNameSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
@@ -2201,7 +2228,7 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
-  public void add(String[] fileNames, Message commitMessage, boolean binaryFlag)
+  public void add(String[] fileNames, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
@@ -2218,7 +2245,7 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param commitMessage commit message
    * @param binaryFlag true to add file as binary file, false otherwise
    */
-  public void add(FileData fileData, Message commitMessage, boolean binaryFlag)
+  public void add(FileData fileData, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
@@ -2231,14 +2258,14 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param fileDataSet file data set
    * @param commitMessage commit message
    */
-  abstract public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
+  abstract public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException;
 
   /** remove file
    * @param fileData file data
    * @param commitMessage commit message
    */
-  public void remove(FileData fileData, Message commitMessage)
+  public void remove(FileData fileData, CommitMessage commitMessage)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
@@ -2281,7 +2308,7 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param newName new name
    * @param commitMessage commit message
    */
-  abstract public void rename(FileData fileData, String newName, Message commitMessage)
+  abstract public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException;
 
   /** set files mode
@@ -2289,7 +2316,7 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param mode file mode
    * @param commitMessage commit message
    */
-  abstract public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, Message commitMessage)
+  abstract public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException;
 
   /** set files mode
@@ -2297,7 +2324,7 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param mode file mode
    * @param commitMessage commit message
    */
-  public void setFileMode(FileData fileData, FileData.Modes mode, Message commitMessage)
+  public void setFileMode(FileData fileData, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();

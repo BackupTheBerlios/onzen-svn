@@ -151,7 +151,7 @@ class CommandCommit
     display = shell.getDisplay();
 
     // get history
-    history = Message.getHistory();
+    history = CommitMessage.getHistory();
 
     // commit files dialog
     dialog = Dialogs.open(shell,"Commit files",new double[]{1.0,0.0},1.0);
@@ -564,15 +564,15 @@ class CommandCommit
   private void commit()
   {
     repositoryTab.setStatusText("Commit files...");
-    Message message = null;
+    CommitMessage commitMessage = null;
     try
     {
       // create and add message to history
-      message = new Message(data.message);
-      message.addToHistory();
+      commitMessage = new CommitMessage(data.message);
+      commitMessage.addToHistory();
 
       // commit files
-      repositoryTab.repository.commit(fileDataSet,message);
+      repositoryTab.repository.commit(fileDataSet,commitMessage);
 
       // update file states
       repositoryTab.repository.updateStates(fileDataSet);
@@ -583,6 +583,9 @@ class CommandCommit
           repositoryTab.updateTreeItems(fileDataSet);
         }
       });
+
+      // free resources
+      commitMessage.done(); commitMessage = null;
     }
     catch (IOException exception)
     {
@@ -610,7 +613,7 @@ class CommandCommit
     }
     finally
     {
-      message.done();
+      if (commitMessage != null) commitMessage.done();
       repositoryTab.clearStatusText();
     }
   }

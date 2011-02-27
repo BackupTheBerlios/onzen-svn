@@ -151,7 +151,7 @@ class CommandRename
     display = shell.getDisplay();
 
     // get history
-    history = Message.getHistory();
+    history = CommitMessage.getHistory();
 
     // rename files dialog
     dialog = Dialogs.open(shell,"Rename file",new double[]{1.0,0.0},1.0);
@@ -435,18 +435,18 @@ class CommandRename
   private void rename()
   {
     repositoryTab.setStatusText("Rename file '%s' -> '%s'...",fileData.getFileName(),data.newFileName);
-    Message message = null;
+    CommitMessage commitMessage = null;
     try
     {
       // create and add message to history
       if (data.immediateCommitFlag)
       {
-        message = new Message(data.message);
-        message.addToHistory();
+        commitMessage = new CommitMessage(data.message);
+        commitMessage.addToHistory();
       }
 
       // rename file
-      repositoryTab.repository.rename(fileData,data.newFileName,message);
+      repositoryTab.repository.rename(fileData,data.newFileName,commitMessage);
 
       // update file states
       HashSet<FileData> fileDataSet = fileData.toSet();
@@ -459,6 +459,9 @@ class CommandRename
                                   )
                      );
       repositoryTab.updateFileStates(fileData.toSet());
+
+      // free resources
+      commitMessage.done(); commitMessage = null;
     }
     catch (IOException exception)
     {
@@ -496,7 +499,7 @@ class CommandRename
     }
     finally
     {
-      if (message != null) message.done();
+      if (commitMessage != null) commitMessage.done();
       repositoryTab.clearStatusText();
     }
   }

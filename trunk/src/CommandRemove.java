@@ -147,7 +147,7 @@ class CommandRemove
     display = shell.getDisplay();
 
     // get history
-    history = Message.getHistory();
+    history = CommitMessage.getHistory();
 
     // remove files dialog
     dialog = Dialogs.open(shell,"Remove files",new double[]{1.0,0.0},1.0);
@@ -425,21 +425,24 @@ class CommandRemove
   private void remove()
   {
     repositoryTab.setStatusText("Remove files...");
-    Message message = null;
+    CommitMessage commitMessage = null;
     try
     {
       // create and add message to history
       if (data.immediateCommitFlag)
       {
-        message = new Message(data.message);
-        message.addToHistory();
+        commitMessage = new CommitMessage(data.message);
+        commitMessage.addToHistory();
       }
 
       // remove files
-      repositoryTab.repository.remove(fileDataSet,message);
+      repositoryTab.repository.remove(fileDataSet,commitMessage);
 
       // update file states
       repositoryTab.updateFileStates(fileDataSet);
+
+      // free resources
+      commitMessage.done(); commitMessage = null;
     }
     catch (IOException exception)
     {
@@ -467,7 +470,7 @@ class CommandRemove
     }
     finally
     {
-      if (message != null) message.done();
+      if (commitMessage != null) commitMessage.done();
       repositoryTab.clearStatusText();
     }
   }

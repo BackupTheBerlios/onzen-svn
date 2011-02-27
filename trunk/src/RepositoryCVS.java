@@ -1312,7 +1312,7 @@ Dprintf.dprintf("unknown %s",line);
    * @param fileDataSet file data set
    * @param commitMessage commit message
    */
-  public void commit(HashSet<FileData> fileDataSet, Message commitMessage)
+  public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
     try
@@ -1342,7 +1342,7 @@ Dprintf.dprintf("unknown %s",line);
    * @param commitMessage commit message
    * @param binaryFlag true to add file as binary files, false otherwise
    */
-  public void add(HashSet<FileData> fileDataSet, Message commitMessage, boolean binaryFlag)
+  public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
     try
@@ -1386,7 +1386,7 @@ Dprintf.dprintf("unknown %s",line);
    * @param fileDataSet file data set
    * @param commitMessage commit message
    */
-  public void remove(HashSet<FileData> fileDataSet, Message commitMessage)
+  public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
     try
@@ -1466,7 +1466,7 @@ Dprintf.dprintf("unknown %s",line);
    * @param newName new name
    * @param commitMessage commit message
    */
-  public void rename(FileData fileData, String newName, Message commitMessage)
+  public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
     try
@@ -1552,7 +1552,7 @@ Dprintf.dprintf("unknown %s",line);
    * @param mode file mode
    * @param commitMessage commit message
    */
-  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, Message commitMessage)
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
     try

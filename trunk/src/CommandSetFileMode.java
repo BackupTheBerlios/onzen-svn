@@ -146,7 +146,7 @@ class CommandSetFileMode
     display = shell.getDisplay();
 
     // get history
-    history = Message.getHistory();
+    history = CommitMessage.getHistory();
 
     // add files dialog
     dialog = Dialogs.open(shell,"Set files mode",new double[]{1.0,0.0},1.0);
@@ -451,18 +451,18 @@ class CommandSetFileMode
   private void setFileMode()
   {
     repositoryTab.setStatusText("Set files mode to %s...",data.mode);
-    Message message = null;
+    CommitMessage commitMessage = null;
     try
     {
       // create and add message to history
       if (data.immediateCommitFlag)
       {
-        message = new Message(data.message);
-        message.addToHistory();
+        commitMessage = new CommitMessage(data.message);
+        commitMessage.addToHistory();
       }
 
       // set files mode
-      repositoryTab.repository.setFileMode(data.fileDataSet,data.mode,message);
+      repositoryTab.repository.setFileMode(data.fileDataSet,data.mode,commitMessage);
 
       // update file states
       repositoryTab.repository.updateStates(data.fileDataSet);
@@ -473,6 +473,9 @@ class CommandSetFileMode
           repositoryTab.updateTreeItems(data.fileDataSet);
         }
       });
+
+      // free resources
+      commitMessage.done(); commitMessage = null;
     }
     catch (IOException exception)
     {
@@ -500,7 +503,7 @@ class CommandSetFileMode
     }
     finally
     {
-      if (message != null) message.done();
+      if (commitMessage != null) commitMessage.done();
       repositoryTab.clearStatusText();
     }
   }

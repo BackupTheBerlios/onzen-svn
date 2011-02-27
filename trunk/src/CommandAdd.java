@@ -152,7 +152,7 @@ class CommandAdd
     display = shell.getDisplay();
 
     // get history
-    history = Message.getHistory();
+    history = CommitMessage.getHistory();
 
     // add files dialog
     dialog = Dialogs.open(shell,"Add files",new double[]{1.0,0.0},1.0);
@@ -435,18 +435,18 @@ class CommandAdd
   private void add()
   {
     repositoryTab.setStatusText("Add files...");
-    Message message = null;
+    CommitMessage commitMessage = null;
     try
     {
       // create and add message to history
       if (data.immediateCommitFlag)
       {
-        message = new Message(data.message);
-        message.addToHistory();
+        commitMessage = new CommitMessage(data.message);
+        commitMessage.addToHistory();
       }
 
       // add files
-      repositoryTab.repository.add(fileDataSet,message,data.binaryFlag);
+      repositoryTab.repository.add(fileDataSet,commitMessage,data.binaryFlag);
 
       // update file states
       repositoryTab.repository.updateStates(fileDataSet);
@@ -457,6 +457,9 @@ class CommandAdd
           repositoryTab.updateTreeItems(fileDataSet);
         }
       });
+
+      // free resources
+      commitMessage.done(); commitMessage = null;
     }
     catch (IOException exception)
     {
@@ -484,7 +487,7 @@ class CommandAdd
     }
     finally
     {
-      if (message != null) message.done();
+      if (commitMessage != null) commitMessage.done();
       repositoryTab.clearStatusText();
     }
   }
