@@ -81,7 +81,7 @@ public class Macro
       String        template = strings[z];
       while (!template.isEmpty())
       {
-  //Dprintf.dprintf("value=%s",value);
+//Dprintf.dprintf("value=%s",value);
         Matcher matcher = PATTERN_VARIABLE.matcher(template);
         if (matcher.matches())
         {
@@ -90,14 +90,14 @@ public class Macro
 
           String name    = matcher.group(2);
           String format  = matcher.group(3);
-  //Dprintf.dprintf("name=%s -- format=#%s#",name,format);
+//Dprintf.dprintf("name=%s -- format=#%s#",name,format);
 
           Object[] variable = variableSet.get(name);
           if (variable != null)
           {
             Object object    = (Object)variable[0];
             String separator = (String)variable[1];
-  //Dprintf.dprintf("object=%s -- %s",object,separator);
+//Dprintf.dprintf("object=%s -- %s",object,separator);
 
             if      (object instanceof Object[])
             {
