@@ -1010,12 +1010,12 @@ Dprintf.dprintf("");
       }
 
       // commit patch
-      Message message = null;
+      CommitMessage commitMessage = null;
       try
       {
         // add message to history
-        message = new Message(patch.message);
-        message.addToHistory();
+        commitMessage = new CommitMessage(patch.message);
+        commitMessage.addToHistory();
 
         // add new files
         if (newFileDataSet.size() > 0)
@@ -1024,10 +1024,13 @@ Dprintf.dprintf("");
         }
 
         // commit files
-        repository.commit(fileDataSet,message);
+        repository.commit(fileDataSet,commitMessage);
 
         // update file states
         repositoryTab.asyncUpdateFileStates(fileDataSet);
+
+        // free resources
+        commitMessage.done(); commitMessage = null;
       }
       catch (IOException exception)
       {
@@ -1035,7 +1038,7 @@ Dprintf.dprintf("");
       }
       finally
       {
-        if (message != null) message.done();
+        if (commitMessage != null) commitMessage.done();
       }
 
       // restore files
