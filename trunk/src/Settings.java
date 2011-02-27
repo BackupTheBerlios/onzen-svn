@@ -619,7 +619,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepositoryList     = new Point(400,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryEditRepository         = new Point(500,400);
+  public static Point                    geometryEditRepository         = new Point(800,400);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryCommit                 = new Point(500,500);
   @SettingValue(type=SettingValueAdapterSize.class)
@@ -829,6 +829,18 @@ public class Settings
   @SettingComment(text={"","Editors: <mime type>:<command>","Macros %name%:","  file - file name"})
   @SettingValue(type=SettingValueAdapterEditor.class)
   public static Editor[]         editors                                = new Editor[0];
+
+  @SettingComment(text={"","Default mail settings"})
+  @SettingValue
+  public static String  mailSMTPHost                                    = "";
+  @SettingValue
+  public static int     mailSMTPPort                                    = 25;
+  @SettingValue
+  public static boolean mailSMTPSSL                                     = false;
+  @SettingValue
+  public static String  mailLogin                                       = "";
+  @SettingValue
+  public static String  mailFrom                                        = "";
 
   @SettingComment(text={"","Mail commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
   @SettingValue
