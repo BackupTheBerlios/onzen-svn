@@ -3572,7 +3572,7 @@ exception.printStackTrace();
       repositoryTab.repository.patchMailCC      = data.patchMailCC;
       repositoryTab.repository.patchMailSubject = data.patchMailSubject;
       repositoryTab.repository.patchMailText    = data.patchMailText;
-      setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
+      if (!data.mailPassword.isEmpty()) setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
 
       // save list
       try
