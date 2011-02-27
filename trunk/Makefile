@@ -124,7 +124,7 @@ SOURCES        = src/Onzen.java \
                  src/RepositoryTab.java \
                  src/Exec.java \
                  src/Database.java \
-                 src/Message.java \
+                 src/CommitMessage.java \
                  src/Patch.java \
                  src/Background.java \
                  $(wildcard src/Command*.java) \
@@ -164,6 +164,7 @@ JARS           = onzen.jar \
                  onzen-macosx_64.jar \
 
 OTHER_JARS     = $(SQLITE_JAR) \
+                 $(MAIL_JAR) \
 
 TARGETS        = onzen \
                  $(if $(LAUNCH4J),onzen.exe,onzen.bat) \
@@ -212,6 +213,8 @@ ifneq ($(JAR),)
 	($(CD) tmp/jar; $(UNZIP) ../../$(SWT_JAR_LINUX) 1>/dev/null; $(RMRF) META-INF)
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -232,6 +235,8 @@ ifneq ($(JAR),)
 	$(CP) classes/*.class tmp/jar
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -252,6 +257,8 @@ ifneq ($(JAR),)
 	$(CP) classes/*.class tmp/jar
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -272,6 +279,8 @@ ifneq ($(JAR),)
 	$(CP) classes/*.class tmp/jar
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -292,6 +301,8 @@ ifneq ($(JAR),)
 	$(CP) classes/*.class tmp/jar
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -312,6 +323,8 @@ ifneq ($(JAR),)
 	$(CP) classes/*.class tmp/jar
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -332,6 +345,8 @@ ifneq ($(JAR),)
 	$(CP) classes/*.class tmp/jar
 	# add SQLite JAR
 	($(CD) tmp/jar; $(UNZIP) ../../$(SQLITE_JAR) 1>/dev/null; $(RMRF) META-INF)
+	# add mail JAR
+	($(CD) tmp/jar; $(UNZIP) ../../$(MAIL_JAR) 1>/dev/null; $(RMRF) META-INF)
 	# add images
 	$(INSTALL) -d tmp/jar/images
 	$(CP) images/*.png tmp/jar/images
@@ -419,7 +434,7 @@ dist: \
   $(DISTRIBUTION_NAME)-linux.tar.bz2 \
   $(DISTRIBUTION_NAME)-solaris.tar.bz2 \
   $(DISTRIBUTION_NAME)-macosx.tar.bz2 \
-  $(DISTRIBUTION_NAME)-windows.tar.bz2
+  $(DISTRIBUTION_NAME)-windows.zip
 
 clean_dist:
 	$(RMF) $(DISTRIBUTION_NAME).tar.bz2
