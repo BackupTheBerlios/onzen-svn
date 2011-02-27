@@ -2983,6 +2983,8 @@ exception.printStackTrace();
     Button      button;
     Spinner     spinner;
     Text        text;
+    Menu        menu,subMenu;
+    MenuItem    menuItem;
 
     // repository edit dialog
     dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
@@ -3194,7 +3196,7 @@ exception.printStackTrace();
 
       subComposite = Widgets.addTab(tabFolder,"Mail");
       subComposite.setLayout(new TableLayout(new double[]{0.0,0.3,0.7},1.0));
-      Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
       {
         subSubComposite = Widgets.newGroup(subComposite,"Mail server");
         subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -3261,6 +3263,38 @@ exception.printStackTrace();
           Widgets.layout(widgetMailFrom,3,1,TableLayoutData.WE,0,0,2);
           widgetMailFrom.setToolTipText("Mail from address.");
         }
+        menu = Widgets.newPopupMenu(dialog);
+        {
+          subMenu = Widgets.addMenu(menu,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
+                  if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
+                  widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
+                  widgetMailSMTPSSL.setSelection(repository.mailSMTPSSL);
+                  if (repository.mailLogin != null) widgetMailLogin.setText(repository.mailLogin);
+                  widgetMailPassword.setText(getPassword(repository.mailLogin,repository.mailSMTPHost));
+                  if (repository.mailFrom != null) widgetMailFrom.setText(repository.mailFrom);
+                }
+              });
+            }
+          }
+        }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Mail server settings.\nRight-click to open context menu.");
 
         subSubComposite = Widgets.newGroup(subComposite,"Tests");
         subSubComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
@@ -3372,6 +3406,40 @@ exception.printStackTrace();
             button.setToolTipText("Remove selected test description.");
           }
         }
+        menu = Widgets.newPopupMenu(dialog);
+        {
+          subMenu = Widgets.addMenu(menu,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
+                  widgetPatchTests.removeAll();
+                  if (repository.patchMailTests != null)
+                  {
+                    for (String test : repository.patchMailTests)
+                    {
+                      widgetPatchTests.add(test);
+                    }
+                  }
+                }
+              });
+            }
+          }
+        }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Test description settings.\nRight-click to open context menu.");
 
         subSubComposite = Widgets.newGroup(subComposite,"Patch mail");
         subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
@@ -3410,6 +3478,36 @@ exception.printStackTrace();
           Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE,0,0,2);
           widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
         }
+        menu = Widgets.newPopupMenu(dialog);
+        {
+          subMenu = Widgets.addMenu(menu,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
+                  if (repository.patchMailTo != null) widgetPatchMailTo.setText(repository.patchMailTo);
+                  if (repository.patchMailCC != null) widgetPatchMailCC.setText(repository.patchMailCC);
+                  if (repository.patchMailSubject != null) widgetPatchMailSubject.setText(repository.patchMailSubject);
+                  if (repository.patchMailText != null) widgetPatchMailText.setText(repository.patchMailText);
+                }
+              });
+            }
+          }
+        }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Patch mail settings.\nRight-click to open context menu.");
       }
     }
 
