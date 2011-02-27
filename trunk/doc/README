@@ -17,8 +17,7 @@ Onzen is reimplemented from scratch in Java SWT.
 * support the RCS: Concurrent Version System (CVS), Apache Subversion (SVN),
   Mercurial (HG), planned: also Git support
 * can show diff in two-columns, view file revisions tree, view files content
-* create patches, mail patches for review (with external mail program),
-  store patches in internal database
+* create patches, mail patches for review, store patches in internal database
 * can use internal/external diff commands
 * edit files with external program; select external program by MimeTypes
 * fast even with a slow remote connection: many operations are done
