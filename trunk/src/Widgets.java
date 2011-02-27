@@ -2159,18 +2159,29 @@ class Widgets
 
   /** create new spinner widget
    * @param composite composite widget
+   * @param style style
+   * @param min,max min./max. value
+   * @return new spinner widget
+   */
+  static Spinner newSpinner(Composite composite, int style, int min, int max)
+  {
+    Spinner spinner;
+
+    spinner = new Spinner(composite,style);
+    spinner.setMinimum(min);
+    spinner.setMaximum(max);
+
+    return spinner;
+  }
+
+  /** create new spinner widget
+   * @param composite composite widget
    * @param min,max min./max. value
    * @return new spinner widget
    */
   static Spinner newSpinner(Composite composite, int min, int max)
   {
-    Spinner spinner;
-
-    spinner = new Spinner(composite,SWT.READ_ONLY);
-    spinner.setMinimum(min);
-    spinner.setMaximum(max);
-
-    return spinner;
+    return newSpinner(composite,SWT.NONE,min,max);
   }
 
   /** create new spinner widget
