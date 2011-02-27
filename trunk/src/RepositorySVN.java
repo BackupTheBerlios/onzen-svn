@@ -1313,11 +1313,17 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       Command command = new Command();
       int     exitCode;
 
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
       // revert files
       command.clear();
       command.append(Settings.svnCommand,"update","-r",revision);
       command.append("--");
-      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
+      command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
