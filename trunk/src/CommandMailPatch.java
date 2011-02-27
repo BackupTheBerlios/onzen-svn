@@ -19,6 +19,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Properties;
+
+import javax.mail.Authenticator;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -323,33 +335,117 @@ class CommandMailPatch
           File tmpFile = null;
           try
           {
-            // create mail attachment
+            // create patch attachment file
             tmpFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
             patch.write(tmpFile);
 
-            // create command
-            Macro macro = new Macro(StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
-            macro.expand("to",     widgetMailTo.getText().trim()     );
-            macro.expand("cc",     widgetMailCC.getText().trim()     );
-            macro.expand("subject",widgetMailSubject.getText().trim());
-            macro.expand("file",   tmpFile.getAbsolutePath()         );
-            String[] commandArray = macro.getValueArray();
-//for (String s : command) Dprintf.dprintf("command=%s",s);
-
-            // execute and add text
-            Process process = Runtime.getRuntime().exec(commandArray);
-            PrintWriter processOutput = new PrintWriter(process.getOutputStream());
-            for (String line : StringUtils.split(widgetMailText.getText(),widgetMailText.DELIMITER))
+            if      (repositoryTab.repository.mailSMTPHost != null)
             {
-              processOutput.println(line);
+              // send mail with JavaMail
+  //int port = 587;
+  //int port = 25;
+              try
+              {
+                // create mail session
+                Properties properties = new Properties();
+                properties.put("mail.transport.protocol","smtp");
+                properties.put("mail.smtp.host",repositoryTab.repository.mailSMTPHost);
+                properties.put("mail.smtp.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
+                properties.put("mail.from",repositoryTab.repository.mailFrom);
+//properties.put("mail.smtp.starttls.enable","true");
+                properties.put("mail.smtp.auth","true");
+                if (repositoryTab.repository.mailSMTPSSL)
+                {
+                  properties.put("mail.smtp.socketFactory.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
+                  properties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+                  properties.put("mail.smtp.socketFactory.fallback","false");
+                }
+
+//properties.put("mail.smtps.starttls.enable","true");
+                if (Settings.debugFlag)
+                {
+                  properties.put("mail.debug","true");
+                }
+                Authenticator auth = new Authenticator()
+                {
+                  public PasswordAuthentication getPasswordAuthentication()
+                  {
+                    return new PasswordAuthentication(repositoryTab.repository.mailLogin,
+                                                      repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost)
+                                                     );
+                  }
+                };
+                Session session = Session.getInstance(properties,auth);
+
+                // create message
+                MimeMultipart mimeMultipart = new MimeMultipart();
+
+                MimeBodyPart text = new MimeBodyPart();
+                text.setText(widgetMailText.getText());
+                text.setDisposition(MimeBodyPart.INLINE);
+                mimeMultipart.addBodyPart(text);
+
+                MimeBodyPart attachment = new MimeBodyPart();
+                attachment.attachFile(tmpFile);
+                mimeMultipart.addBodyPart(attachment);
+
+                Message message = new MimeMessage(session);
+                message.setFrom(new InternetAddress(repositoryTab.repository.mailFrom));
+                message.setSubject(widgetMailSubject.getText().trim());
+                message.setRecipient(Message.RecipientType.TO,new InternetAddress(widgetMailTo.getText().trim()));
+                message.setSentDate(new Date());
+                message.setContent(mimeMultipart);
+                message.saveChanges();
+
+                // send message
+                Transport.send(message);
+              }
+              catch (MessagingException exception)
+              {
+                Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
+                return;
+              }
             }
-            processOutput.close();
-
-            // wait done
-            int exitcode = process.waitFor();
-            if (exitcode != 0)
+            else if (!Settings.commandMailAttachment.isEmpty())
             {
-              Dialogs.error(dialog,"Cannot send patch! (exitcode: %d)",exitcode);
+              // use external mail command
+              try
+              {
+                // create command
+                Macro macro = new Macro(StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+                macro.expand("to",     widgetMailTo.getText().trim()     );
+                macro.expand("cc",     widgetMailCC.getText().trim()     );
+                macro.expand("subject",widgetMailSubject.getText().trim());
+                macro.expand("file",   tmpFile.getAbsolutePath()         );
+                String[] commandArray = macro.getValueArray();
+    //for (String s : command) Dprintf.dprintf("command=%s",s);
+
+                // execute and add text
+                Process process = Runtime.getRuntime().exec(commandArray);
+                PrintWriter processOutput = new PrintWriter(process.getOutputStream());
+                for (String line : StringUtils.split(widgetMailText.getText(),widgetMailText.DELIMITER))
+                {
+                  processOutput.println(line);
+                }
+                processOutput.close();
+
+                // wait done
+                int exitcode = process.waitFor();
+                if (exitcode != 0)
+                {
+                  Dialogs.error(dialog,"Cannot send patch (exitcode: %d)",exitcode);
+                  return;
+                }
+              }
+              catch (InterruptedException exception)
+              {
+                Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+            else
+            {
+              Dialogs.error(dialog,"No mail command configured.\nPlease check settings.");
               return;
             }
 
@@ -358,12 +454,8 @@ class CommandMailPatch
           }
           catch (IOException exception)
           {
-            Dialogs.error(dialog,"Cannot send patch! (error: %s)",exception.getMessage());
+            Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
             return;
-          }
-          catch (InterruptedException exception)
-          {
-            Dialogs.error(dialog,"Cannot send patch! (error: %s)",exception.getMessage());
           }
           finally
           {
