@@ -236,7 +236,7 @@ class RepositoryTab
   public  final Repository    repository;           // repository instance of tab
 
   // global variable references
-  private final Onzen         onzen;
+  protected final Onzen       onzen;
   private final Shell         shell;
   private final Display       display;
 
