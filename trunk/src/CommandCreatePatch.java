@@ -390,27 +390,50 @@ class CommandCreatePatch
         {
           String[] patchLines = widgetIgnoreWhitespaces.getSelection() ? data.linesNoWhitespaces : data.lines;
 
-          // create patch
-          Patch patch = new Patch(repositoryTab.repository.rootPath,
-                                  fileDataSet,
-                                  patchLines
-                                 );
-          try
+          if (patchLines != null)
           {
-            // save patch in database
-            patch.save();
+            Patch patch = null;
+            try
+            {
+              // create patch
+              patch = new Patch(repositoryTab.repository.rootPath,
+                                fileDataSet,
+                                patchLines
+                               );
 
-            // close dialog
-            Dialogs.close(dialog,true);
-          }
-          catch (SQLException exception)
-          {
-            Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
-            return;
-          }
-          finally
-          {
-            patch.done();
+              // mail patch
+              CommandStorePatch commandStorePatch = new CommandStorePatch(dialog,
+                                                                          repositoryTab,
+                                                                          fileDataSet,
+                                                                          patch
+                                                                         );
+              if (commandStorePatch.execute())
+              {
+                try
+                {
+                  // save patch into database
+                  patch.state   = Patch.States.NONE;
+                  patch.summary = commandStorePatch.summary;
+                  patch.message = commandStorePatch.message;
+                  patch.save();
+
+                  // close dialog
+                  Dialogs.close(dialog,true);
+                }
+                catch (SQLException exception)
+                {
+                  Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                  return;
+                }
+              }
+
+              // free resources
+              patch.done(); patch = null;
+            }
+            finally
+            {
+              if (patch != null) patch.done();
+            }
           }
         }
       });
@@ -456,7 +479,7 @@ class CommandCreatePatch
               {
                 try
                 {
-                  // save patch in database
+                  // save patch into database
                   patch.state   = Patch.States.REVIEW;
                   patch.summary = commandMailPatch.summary;
                   patch.message = commandMailPatch.message;
