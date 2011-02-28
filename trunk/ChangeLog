@@ -1,5 +1,6 @@
 2011-03-xx
   * support sending mails with JavaMail
+  * store patches with summary and message, fix patch number
 
 2011-02-26
   * first public release of Java SWT version
