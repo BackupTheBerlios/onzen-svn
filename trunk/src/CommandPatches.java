@@ -330,7 +330,7 @@ class CommandPatches
                     data.patch.setLines(newLines);
                     setChangesText(newLines);
 
-                    // save
+                    // save new patch lines
                     data.patch.save();
                   }
                   catch (RepositoryException exception)
