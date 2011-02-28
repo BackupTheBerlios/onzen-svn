@@ -146,7 +146,7 @@ class Patch
                                             "  patches.revision2, "+
                                             "  patches.ignoreWhitespaces, "+
                                             "  patches.data, "+
-                                            "  numbers.id AS number "+
+                                            "  CASE WHEN numbers.id IS NOT NULL THEN numbers.id ELSE -1 END AS number "+
                                             "FROM patches "+
                                             "  LEFT JOIN numbers ON numbers.patchId=patches.id "+
                                             "WHERE     patches.rootPath='"+rootPath+"'"+
@@ -704,7 +704,7 @@ Dprintf.dprintf("");
         preparedStatement.executeUpdate();
         databaseId = database.getLastInsertId();
 
-        if (number >= 0)
+        if (number != Database.ID_NONE)
         {
           // update patch number entry
           preparedStatement = database.connection.prepareStatement("UPDATE numbers SET patchId=? WHERE id=?;");
