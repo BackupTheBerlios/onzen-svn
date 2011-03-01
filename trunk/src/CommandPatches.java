@@ -1000,8 +1000,23 @@ Dprintf.dprintf("");
     StoredFiles storedFiles = new StoredFiles(repository.rootPath,fileDataSet);
     try
     {
-      // revert local files changes
-      repository.revert(fileDataSet);
+      // get existing/new files
+      HashSet<FileData> existFileDataSet = new HashSet<FileData>();
+      if (fileDataSet != null)
+      {
+        for (FileData fileData : fileDataSet)
+        {
+          if (fileData.state != FileData.States.UNKNOWN)
+          {
+            existFileDataSet.add(fileData);
+          }
+        }
+      }
+      if (existFileDataSet.size() > 0)
+      {
+        // revert local changes of existing files
+        repository.revert(existFileDataSet);
+      }
 
       // apply patch
       if (!patch.apply())
