@@ -180,13 +180,13 @@ class CommandMailPatch
    */
   CommandMailPatch(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message)
   {
-    Composite         composite,subComposite,subSubComposite,subSubSubComposite;
-    Label             label;
-    TabFolder         tabFolder;
-    Button            button;
-    ScrolledComposite scrolledComposite;
-    SelectionListener selectionListener;
-    Listener          listener;
+    Composite composite,subComposite,subSubComposite,subSubSubComposite;
+    Label     label;
+    TabFolder tabFolder;
+    Button    button;
+    Menu      menu;
+    MenuItem  menuItem;
+    Listener  listener;
 
     // initialize variables
     this.summary       = summary;
@@ -254,6 +254,120 @@ class CommandMailPatch
               Widgets.addTableEntry(widgetTests,test,test);
             }
           }
+
+          menu = Widgets.newPopupMenu(dialog);
+          {
+            menuItem = Widgets.addMenuItem(menu,"Edit...");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  TableItem tableItem = widgetTests.getItem(index);
+
+                  String test = Dialogs.string(dialog,"Edit test description","Test:",(String)tableItem.getData());
+                  if (test != null)
+                  {
+                    tableItem.setText(test);
+                    tableItem.setData(test);
+                    updateMailText();
+                  }
+                }
+              }
+            });
+
+            menuItem = Widgets.addMenuItem(menu,"Move up");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  if (index > 0)
+                  {
+                    TableItem tableItem0 = widgetTests.getItem(index-1);
+                    TableItem tableItem1 = widgetTests.getItem(index  );
+
+                    String text0 = tableItem0.getText();
+                    Object data0 = tableItem0.getData();
+                    String text1 = tableItem1.getText();
+                    Object data1 = tableItem1.getData();
+
+                    tableItem0.setText(text1);
+                    tableItem0.setData(data1);
+                    tableItem1.setText(text0);
+                    tableItem1.setData(data0);
+                    updateMailText();
+
+                    widgetTests.setSelection(index-1);
+                  }
+                }
+              }
+            });
+
+            menuItem = Widgets.addMenuItem(menu,"Move down");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  if (index < widgetTests.getItemCount()-1)
+                  {
+                    TableItem tableItem0 = widgetTests.getItem(index  );
+                    TableItem tableItem1 = widgetTests.getItem(index+1);
+
+                    String text0 = tableItem0.getText();
+                    Object data0 = tableItem0.getData();
+                    String text1 = tableItem1.getText();
+                    Object data1 = tableItem1.getData();
+
+                    tableItem0.setText(text1);
+                    tableItem0.setData(data1);
+                    tableItem1.setText(text0);
+                    tableItem1.setData(data0);
+                    updateMailText();
+
+                    widgetTests.setSelection(index+1);
+                  }
+                }
+              }
+            });
+
+            menuItem = Widgets.addMenuSeparator(menu);
+
+            menuItem = Widgets.addMenuItem(menu,"Remove");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetTests.remove(index);
+                  updateMailText();
+                }
+              }
+            });
+          }
+          widgetTests.setMenu(menu);
+          widgetTests.setToolTipText("Executed tests for patch.\nRight-click to open context menu.");
 
           subSubSubComposite = Widgets.newComposite(subSubComposite,SWT.LEFT,2);
           subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
