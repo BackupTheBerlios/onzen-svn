@@ -948,7 +948,8 @@ Dprintf.dprintf("===============");
       while (patchChunk.nextFile())
       {
 //Dprintf.dprintf("patchChunk=%s",patchChunk);
-        File file = new File(rootPath,patchChunk.newFileName);
+        File oldFile = new File(rootPath,patchChunk.newFileName);
+        File newFile = new File(rootPath,patchChunk.newFileName);
 
         // load old file lines (if not /dev/null == file is new)
         oldLineList.clear();
@@ -957,7 +958,7 @@ Dprintf.dprintf("===============");
           BufferedReader input = null;
           try
           {
-            input = new BufferedReader(new FileReader(file));
+            input = new BufferedReader(new FileReader(oldFile));
             String line;
             while ((line = input.readLine()) != null)
             {
@@ -1071,7 +1072,7 @@ Dprintf.dprintf("exception=%s",exception);
         }
 
         // write new file
-        output = new PrintWriter(new FileWriter(file));
+        output = new PrintWriter(new FileWriter(newFile));
         for (String line : newLineList)
         {
           output.println(line);
@@ -1240,8 +1241,10 @@ Dprintf.dprintf("exception=%s",exception);
     public boolean nextFile()
       throws IOException
     {
-      final Pattern PATTERN_OLD_FILENAME = Pattern.compile("^\\-\\-\\-\\s+(.*)(\\t\\s*.*){0,1}",Pattern.CASE_INSENSITIVE);
-      final Pattern PATTERN_NEW_FILENAME = Pattern.compile("^\\+\\+\\+\\s+(.*)(\\t\\s*.*){0,1}",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_OLD_FILENAME1 = Pattern.compile("^\\-\\-\\-\\s+(.*?)\\t\\s*.*",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_OLD_FILENAME2 = Pattern.compile("^\\-\\-\\-\\s+([^\\s]*)\\s*.*",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_NEW_FILENAME1 = Pattern.compile("^\\+\\+\\+\\s+(.*?)\\t\\s*.*",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_NEW_FILENAME2 = Pattern.compile("^\\+\\+\\+\\s+([^\\s]*)\\s*.*",Pattern.CASE_INSENSITIVE);
 
       String  line;
       Matcher matcher = null;
@@ -1254,10 +1257,11 @@ Dprintf.dprintf("exception=%s",exception);
 
       // find "--- <old file name>[\t<date/time>]"
       while (   ((line = getLine()) != null)
-             && !(matcher = PATTERN_OLD_FILENAME.matcher(line)).matches()
+             && !(matcher = PATTERN_OLD_FILENAME1.matcher(line)).matches()
+             && !(matcher = PATTERN_OLD_FILENAME2.matcher(line)).matches()
             )
       {
-        Onzen.printWarning("unknown dif line '%s'",line);
+        Onzen.printWarning("unknown diff line '%s'",line);
       }
       if ((matcher != null) && matcher.matches())
       {
@@ -1266,10 +1270,11 @@ Dprintf.dprintf("exception=%s",exception);
 
       // find "+++ <new file name>[\t<date/time>]"
       while (   ((line = getLine()) != null)
-             && !(matcher = PATTERN_NEW_FILENAME.matcher(line)).matches()
+             && !(matcher = PATTERN_NEW_FILENAME1.matcher(line)).matches()
+             && !(matcher = PATTERN_NEW_FILENAME2.matcher(line)).matches()
             )
       {
-        Onzen.printWarning("Diff: unknown line '%s'",line);
+        Onzen.printWarning("unknown diff line '%s'",line);
       }
       if ((matcher != null) && matcher.matches())
       {
