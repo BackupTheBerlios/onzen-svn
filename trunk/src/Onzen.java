@@ -1766,7 +1766,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Dialogs.info(shell,"About","Onzen "+Config.VERSION_MAJOR+"."+Config.VERSION_MINOR+".\n\nWritten by Torsten Rupp.");
+          Dialogs.info(shell,"About","Onzen "+Config.VERSION_MAJOR+"."+Config.VERSION_MINOR+" (revision "+Config.VERSION_REVISION+").\n\nWritten by Torsten Rupp.");
         }
       });
     }
@@ -3251,6 +3251,8 @@ exception.printStackTrace();
             Widgets.layout(label,0,2,TableLayoutData.W);
 
             widgetMailPassword = Widgets.newPassword(subSubSubComposite);
+            String password = getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
+            if (password != null) widgetMailPassword.setText(password);
             Widgets.layout(widgetMailPassword,0,3,TableLayoutData.WE);
             widgetMailPassword.setToolTipText("Mail server login password.");
           }
@@ -3670,7 +3672,7 @@ exception.printStackTrace();
       repositoryTab.repository.patchMailCC      = data.patchMailCC;
       repositoryTab.repository.patchMailSubject = data.patchMailSubject;
       repositoryTab.repository.patchMailText    = data.patchMailText;
-      if (!data.mailPassword.isEmpty()) setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
+      setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
 
       // save list
       try
