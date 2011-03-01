@@ -1298,7 +1298,7 @@ class Dialogs
    */
   public static String string(Shell parentShell, String title, String text, String value)
   {
-    return string(parentShell,title,text,value);
+    return string(parentShell,title,text,value,"Save","Cancel");
   }
 
   /** simple string dialog
