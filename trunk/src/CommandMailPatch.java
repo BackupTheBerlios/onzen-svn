@@ -21,6 +21,10 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Properties;
 
+import javax.activation.CommandMap;
+import javax.activation.DataHandler;
+import javax.activation.FileDataSource;
+import javax.activation.MailcapCommandMap;
 import javax.mail.Authenticator;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -28,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Part;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -346,6 +351,17 @@ class CommandMailPatch
   //int port = 25;
               try
               {
+                final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
+
+                // mail mime type handlers
+                MailcapCommandMap mailcapCommandMap = (MailcapCommandMap) CommandMap.getDefaultCommandMap();
+                mailcapCommandMap.addMailcap("text/html;; x-java-content-handler=com.sun.mail.handlers.text_html");
+                mailcapCommandMap.addMailcap("text/xml;; x-java-content-handler=com.sun.mail.handlers.text_xml");
+                mailcapCommandMap.addMailcap("text/plain;; x-java-content-handler=com.sun.mail.handlers.text_plain");
+                mailcapCommandMap.addMailcap("multipart/*;; x-java-content-handler=com.sun.mail.handlers.multipart_mixed");
+                mailcapCommandMap.addMailcap("message/rfc822;; x-java-content-handler=com.sun.mail.handlers.message_rfc822");
+                CommandMap.setDefaultCommandMap(mailcapCommandMap);
+
                 // create mail session
                 Properties properties = new Properties();
                 properties.put("mail.transport.protocol","smtp");
@@ -353,7 +369,7 @@ class CommandMailPatch
                 properties.put("mail.smtp.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
                 properties.put("mail.from",repositoryTab.repository.mailFrom);
 //properties.put("mail.smtp.starttls.enable","true");
-                properties.put("mail.smtp.auth","true");
+                properties.put("mail.smtp.auth",(password != null) && !password.isEmpty());
                 if (repositoryTab.repository.mailSMTPSSL)
                 {
                   properties.put("mail.smtp.socketFactory.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
@@ -370,9 +386,7 @@ class CommandMailPatch
                 {
                   public PasswordAuthentication getPasswordAuthentication()
                   {
-                    return new PasswordAuthentication(repositoryTab.repository.mailLogin,
-                                                      repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost)
-                                                     );
+                    return new PasswordAuthentication(repositoryTab.repository.mailLogin,password);
                   }
                 };
                 Session session = Session.getInstance(properties,auth);
@@ -387,12 +401,30 @@ class CommandMailPatch
 
                 MimeBodyPart attachment = new MimeBodyPart();
                 attachment.attachFile(tmpFile);
+                attachment.setFileName("patch");
+                attachment.setDisposition(Part.ATTACHMENT);
+                attachment.setDescription("Attached File: "+"patch");
+                FileDataSource fileDataSource = new FileDataSource(tmpFile);
+                DataHandler dataHandler = new DataHandler(fileDataSource);
+// NYI: does datafile handle always work? how to try "text/plain"?
+//                DataHandler dataHandler = new DataHandler(tmpFile,"text/plain");
+                attachment.setDataHandler(dataHandler);
                 mimeMultipart.addBodyPart(attachment);
 
+                InternetAddress toAddress = new InternetAddress(widgetMailTo.getText().trim());
+                ArrayList<InternetAddress> ccAddressList = new ArrayList<InternetAddress>();
+                if (repositoryTab.repository.patchMailCC != null)
+                {
+                  for (String address : repositoryTab.repository.patchMailCC.split("\\s"))
+                  {
+                    ccAddressList.add(new InternetAddress(address));
+                  }
+                }
                 Message message = new MimeMessage(session);
                 message.setFrom(new InternetAddress(repositoryTab.repository.mailFrom));
                 message.setSubject(widgetMailSubject.getText().trim());
-                message.setRecipient(Message.RecipientType.TO,new InternetAddress(widgetMailTo.getText().trim()));
+                message.setRecipient(Message.RecipientType.TO,toAddress);
+                message.setRecipients(Message.RecipientType.TO,ccAddressList.toArray(new InternetAddress[ccAddressList.size()]));
                 message.setSentDate(new Date());
                 message.setContent(mimeMultipart);
                 message.saveChanges();
