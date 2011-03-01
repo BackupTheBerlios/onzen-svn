@@ -71,6 +71,8 @@ MAIL_JAR         = jars/mail.jar
 
 CLASSPATH        = classes:$(SWT_JAR):$(SQLITE_JAR):$(MAIL_JAR)
 
+SHELL = bash
+
 #---------------------------------- commands----------------------------------
 
 CAT        = cat
@@ -151,8 +153,7 @@ OTHER_SOURCES  = onzen.in \
                  jar.txt \
 
 OBJECTS        = $(foreach z,$(SOURCES),$(basename $(subst src/,classes/,$z)).class) \
-
-#                 classes/Config.class \
+                 classes/Config.class \
 
 JARS           = onzen.jar \
                  onzen-linux.jar \
@@ -176,6 +177,7 @@ all: $(TARGETS)
 
 clean: \
   clean_jars
+	$(RMF) src/Config.java
 	$(RMF) $(OBJECTS)
 	$(RMF) classes/*.class
 	$(RMF) $(TARGETS)
@@ -183,6 +185,19 @@ clean: \
 
 distclean: \
   clean
+
+# config
+src/Config.java: src/Config.java.in
+	$(CAT) src/Config.java.in | \
+        ( \
+          source version; \
+          while IFS="" read line; do \
+            line=$${line//@VERSION_MAJOR@/$$MAJOR}; \
+            line=$${line//@VERSION_MINOR@/$$MINOR}; \
+            line=$${line//@VERSION_REVISION@/$(shell svnversion .)}; \
+            $(ECHO) "$$line"; \
+          done; \
+        ) > $@       
 
 # JARs
 .PHONY: jars clean_jars
@@ -192,19 +207,7 @@ clean_jars:
 	$(RMF) $(JARS)
 
 # create JARs
-onzen.jar: jar.txt $(OBJECTS) images/*.png
-ifneq ($(JAR),)
-	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
-	$(CP) classes/*.class tmp/jar
-	$(INSTALL) -d tmp/jar/images
-	$(CP) images/*.png tmp/jar/images
-	($(CD) tmp/jar; $(JAR) cmf ../../jar.txt ../../$@ *)
-	$(RMRF) tmp/jar
-else
-	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
-endif
-
-onzen-linux.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX)
+onzen-linux.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -225,7 +228,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-linux_64.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX_64)
+onzen-linux_64.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX_64)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -247,7 +250,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-windows.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_WINDOWS)
+onzen-windows.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_WINDOWS)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -269,7 +272,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-windows_64.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_WINDOWS_64)
+onzen-windows_64.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_WINDOWS_64)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -291,7 +294,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-solaris.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_SOLARIS)
+onzen-solaris.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_SOLARIS)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -313,7 +316,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-macosx.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_MACOSX)
+onzen-macosx.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_MACOSX)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -335,7 +338,7 @@ else
 	@$(ECHO) "ERROR: no 'jar' command - cannot create $@"
 endif
 
-onzen-macosx_64.jar: jar.txt $(OBJECTS) images/*.png $(SWT_JAR_MACOSX_64)
+onzen-macosx_64.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_MACOSX_64)
 ifneq ($(JAR),)
 	$(RMRF) tmp/jar; $(INSTALL) -d tmp/jar
 	# add classes
@@ -473,6 +476,7 @@ $(DISTRIBUTION_NAME).tar.bz2: \
 	#
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/src
 	$(INSTALL) -m 664 \
+                   src/Config.java.in \
                    $(sort $(SOURCES)) \
                    tmp/$(DISTRIBUTION_NAME)/src
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/classes
