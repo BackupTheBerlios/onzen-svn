@@ -538,7 +538,7 @@ class CommandMailPatch
                 message.setFrom(new InternetAddress(repositoryTab.repository.mailFrom));
                 message.setSubject(widgetMailSubject.getText().trim());
                 message.setRecipient(Message.RecipientType.TO,toAddress);
-                message.setRecipients(Message.RecipientType.TO,ccAddressList.toArray(new InternetAddress[ccAddressList.size()]));
+                message.setRecipients(Message.RecipientType.CC,ccAddressList.toArray(new InternetAddress[ccAddressList.size()]));
                 message.setSentDate(new Date());
                 message.setContent(mimeMultipart);
                 message.saveChanges();
