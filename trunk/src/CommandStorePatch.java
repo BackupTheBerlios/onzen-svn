@@ -206,7 +206,7 @@ class CommandStorePatch
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetStore = Widgets.newButton(composite,"Store");
