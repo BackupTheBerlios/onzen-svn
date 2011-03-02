@@ -547,7 +547,6 @@ Dprintf.dprintf("");
         });
       }
       widgetFileTree.setMenu(menu);
-      widgetFileTree.setToolTipText("Tree representation of files.\nDouble-click to open sub-directories.\nRight-click to open context menu.");
     }
 
     // add root directory
