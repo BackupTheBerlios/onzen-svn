@@ -1444,9 +1444,16 @@ Dprintf.dprintf("unknown %s",line);
       Command command = new Command();
       int     exitCode;
 
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
       // revert files
       command.clear();
-      command.append(Settings.cvsCommand,"update","-r",revision);
+      command.append(Settings.cvsCommand,"update");
+      if (!revision.equals(LAST_REVISION_NAME)) command.append("-r",revision);
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
