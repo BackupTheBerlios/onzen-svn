@@ -1002,8 +1002,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           data.command = widgetCommand.getText();
 
           Dialogs.close(dialog,true);
@@ -1020,8 +1018,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           Dialogs.close(dialog,false);
         }
       });
@@ -1139,8 +1135,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           File file = new File(widgetFileName.getText());
           if      (file.exists())
           {
@@ -1170,8 +1164,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           Dialogs.close(dialog,false);
         }
       });
@@ -1266,8 +1258,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           File file = new File(widgetPath.getText());
           if      (file.exists())
           {
@@ -1297,8 +1287,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           Dialogs.close(dialog,false);
         }
       });
@@ -1399,8 +1387,6 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Button widget = (Button)selectionEvent.widget;
-
             data.newFileName                 = widgetNewFileName.getText();
             Settings.geometryRenameLocalFile = dialog.getSize();
 
@@ -1418,8 +1404,6 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Button widget = (Button)selectionEvent.widget;
-
             Dialogs.close(dialog,false);
           }
         });
@@ -1515,8 +1499,6 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Button widget = (Button)selectionEvent.widget;
-
             Settings.geometryDeleteLocalFiles = dialog.getSize();
 
             Dialogs.close(dialog,true);
@@ -1533,8 +1515,6 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Button widget = (Button)selectionEvent.widget;
-
             Dialogs.close(dialog,false);
           }
         });
@@ -1917,13 +1897,15 @@ Dprintf.dprintf("");
        */
       class Data
       {
-        String mimeType;
-        String command;
+        String  mimeType;
+        String  command;
+        boolean addNewCommand;
 
         Data()
         {
-          this.mimeType = null;
-          this.command  = null;
+          this.mimeType      = null;
+          this.command       = null;
+          this.addNewCommand = false;
         }
       };
 
@@ -1942,6 +1924,7 @@ Dprintf.dprintf("");
       final Table  widgetEditors;
       final Text   widgetMimeType;
       final Text   widgetCommand;
+      final Button widgetAddNewCommand;
       final Button widgetOpen;
       composite = Widgets.newComposite(dialog,SWT.NONE,4);
       composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
@@ -1996,6 +1979,9 @@ Dprintf.dprintf("");
               }
             });
           }
+
+          widgetAddNewCommand = Widgets.newCheckbox(subComposite,"add as new command");
+          Widgets.layout(widgetAddNewCommand,2,1,TableLayoutData.W);
         }
       }
 
@@ -2014,10 +2000,9 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Button widget = (Button)selectionEvent.widget;
-
-            data.mimeType = widgetMimeType.getText();
-            data.command  = widgetCommand.getText();
+            data.mimeType      = widgetMimeType.getText();
+            data.command       = widgetCommand.getText();
+            data.addNewCommand = widgetAddNewCommand.getSelection();
 
             Dialogs.close(dialog,true);
           }
@@ -2032,13 +2017,29 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Button widget = (Button)selectionEvent.widget;
             Dialogs.close(dialog,false);
           }
         });
       }
 
       // listeners
+      widgetEditors.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          int index = widgetEditors.getSelectionIndex();
+          if (index >= 0)
+          {
+            TableItem       tableItem = widgetEditors.getItem(index);
+            Settings.Editor editor    = (Settings.Editor)tableItem.getData();
+
+            widgetCommand.setText(editor.command);
+          }
+        }
+      });
       widgetEditors.addListener(SWT.MouseDoubleClick,new Listener()
       {
         public void handleEvent(final Event event)
@@ -2046,12 +2047,12 @@ Dprintf.dprintf("");
           int index = widgetEditors.getSelectionIndex();
           if (index >= 0)
           {
-            TableItem tableItem = widgetEditors.getItem(index);
+            TableItem       tableItem = widgetEditors.getItem(index);
+            Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
-            Settings.Editor editor = (Settings.Editor)tableItem.getData();
-
-            data.mimeType = null;
-            data.command  = editor.command;
+            data.mimeType      = null;
+            data.command       = editor.command;
+            data.addNewCommand = widgetAddNewCommand.getSelection();
 
             Dialogs.close(dialog,true);
           }
@@ -2086,10 +2087,13 @@ Dprintf.dprintf("");
         {
           if (data.mimeType != null)
           {
-            // add editor
-            Settings.Editor editor = new Settings.Editor(data.mimeType,data.command);
-            Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
-            Settings.editors[Settings.editors.length-1] = editor;
+            if (data.addNewCommand)
+            {
+              // add editor
+              Settings.Editor editor = new Settings.Editor(data.mimeType,data.command);
+              Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
+              Settings.editors[Settings.editors.length-1] = editor;
+            }
           }
 
           // get command
