@@ -18,3 +18,4 @@ ToDo
 - add refresh shortcut key
 - change mime macro %file% to ${file}?
 - write manual
+- CVS: show sticky tag/date somewhere
