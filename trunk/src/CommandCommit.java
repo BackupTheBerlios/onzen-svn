@@ -400,7 +400,8 @@ class CommandCommit
             {
               public void run()
               {
-                if (   (data.patchLinesNoWhitespaces != null)
+                if (   !widgetIgnoreWhitespaces.isDisposed()
+                    && (data.patchLinesNoWhitespaces != null)
                     && widgetIgnoreWhitespaces.getSelection()
                    )
                 {
@@ -421,13 +422,13 @@ class CommandCommit
             {
               public void run()
               {
-                if (   (data.patchLines != null)
+                if (   !widgetIgnoreWhitespaces.isDisposed()
+                    && (data.patchLines != null)
                     && !widgetIgnoreWhitespaces.getSelection()
                    )
                 {
                   // set new text
                   setChangesText(data.patchLines);
-
                 }
               }
             });
