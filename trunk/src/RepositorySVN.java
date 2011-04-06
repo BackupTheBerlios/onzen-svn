@@ -131,8 +131,8 @@ class RepositorySVN extends Repository
         command.clear();
         command.append(Settings.svnCommand,"status","-uvN");
         command.append("--");
-        if (!directory.isEmpty()) command.append(directory);
-        exec = new Exec(rootPath,command);
+//        if (!directory.isEmpty()) command.append(directory);
+        exec = new Exec(rootPath,directory,command);
 
         // parse status data
         while ((line = exec.getStdout()) != null)
@@ -141,7 +141,7 @@ class RepositorySVN extends Repository
           // match name, state
           if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
           {
-            name = matcher.group(1);
+            name = (!directory.isEmpty() ? directory+File.separator : "")+matcher.group(1);
 
             fileData = findFileData(fileDataSet,name);
             if      (fileData != null)
@@ -177,7 +177,7 @@ class RepositorySVN extends Repository
             workingRevision    = matcher.group(3);
             repositoryRevision = matcher.group(4);
             author             = matcher.group(5);
-            name               = matcher.group(6);
+            name               = (!directory.isEmpty() ? directory+File.separator : "")+matcher.group(6);
 
             fileData = findFileData(fileDataSet,name);
             if      (fileData != null)
