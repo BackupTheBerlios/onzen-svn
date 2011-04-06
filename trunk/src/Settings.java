@@ -685,7 +685,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusOK                   = new Color(null,new RGB(255,255,255));
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusUnknown              = new Color(new RGB(196,196,196),null);
+  public static Color                   colorStatusUnknown              = new Color(null,new RGB(196,196,196));
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusUpdate               = new Color(null,new RGB(255, 255, 0));
   @SettingValue(type=SettingValueAdapterColor.class)
