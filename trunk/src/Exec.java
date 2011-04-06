@@ -125,21 +125,26 @@ class Exec
 
   /** execute external command
    * @param path working directory or null
+   * @param subDirectory working subdirectory or null
    * @param command command to execute
    * @param binaryFlag true to read stdout in binary mode
    */
-  public Exec(String path, Command command, boolean binaryFlag)
+  public Exec(String path, String subDirectory, Command command, boolean binaryFlag)
     throws IOException
   {
     // get command array
     String[] commandArray = command.getCommandArray();
     if (Settings.debugFlag)
     {
-      System.err.println("DEBUG execute "+path+": "+StringUtils.join(commandArray));
+      System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+StringUtils.join(commandArray));
     }
 
     // start process
-    process = Runtime.getRuntime().exec(commandArray,null,(path != null) ? new File(path) : null);
+    File workingDirectory;
+    if      ((path != null) && (subDirectory != null)) workingDirectory = new File(path,subDirectory);
+    else if (path != null)                             workingDirectory = new File(path);
+    else                                               workingDirectory = null;
+    process = Runtime.getRuntime().exec(commandArray,null,workingDirectory);
     processHash.add(process);
     stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
     if (binaryFlag)
@@ -153,6 +158,28 @@ class Exec
       stdoutBinary = null;
     }
     stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param command command to execute
+   * @param binaryFlag true to read stdout in binary mode
+   */
+  public Exec(String path, Command command, boolean binaryFlag)
+    throws IOException
+  {
+    this(path,null,command,binaryFlag);
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param subDirectory working subdirectory or null
+   * @param command command to execute
+   */
+  public Exec(String path, String subDirectory, Command command)
+    throws IOException
+  {
+    this(path,subDirectory,command,false);
   }
 
   /** execute external command
