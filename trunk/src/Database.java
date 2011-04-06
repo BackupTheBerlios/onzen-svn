@@ -46,6 +46,10 @@ class Database
   Database(String name)
     throws SQLException
   {
+    // create directory
+    File directory = new File(Settings.ONZEN_DIRECTORY);
+    if ((directory != null) && !directory.exists()) directory.mkdirs();
+
     try
     {
       // load SQLite driver class
