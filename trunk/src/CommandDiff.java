@@ -2239,9 +2239,6 @@ Dprintf.dprintf("");
                       COLOR_DIFF_CHANGED_WHITESPACES
                      );
 
-Dprintf.dprintf("");
-widgetNext.setFocus();
-
               // notify modification
               Widgets.modified(data);
             }
