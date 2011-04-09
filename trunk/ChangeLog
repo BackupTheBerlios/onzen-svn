@@ -1,6 +1,9 @@
 2011-03-xx
   * support sending mails with JavaMail
   * store patches with summary and message, fix patch number
+  * CVS: fix revert, avoid sticky-tag for HEAD
+  * improve mime-type dialog: add "add new command" checkbox
+  * fix SWT synchronisation problem with some widgets
 
 2011-02-26
   * first public release of Java SWT version
