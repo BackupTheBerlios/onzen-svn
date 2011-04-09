@@ -10,18 +10,6 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
-//import java.io.IOException;
-
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.Date;
-//import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -127,6 +115,7 @@ class CommandAnnotations
 
   // widgets
   private final Table         widgetAnnotations;
+  private final TableColumn   widgetAnnotationLineColumn;
   private final Text          widgetFind;
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
@@ -197,7 +186,7 @@ class CommandAnnotations
       Widgets.addTableColumn(widgetAnnotations,1,"Author",  SWT.LEFT );
       Widgets.addTableColumn(widgetAnnotations,2,"Date",    SWT.LEFT );
       Widgets.addTableColumn(widgetAnnotations,3,"Line Nb.",SWT.RIGHT);
-      Widgets.addTableColumn(widgetAnnotations,4,"Line",    SWT.LEFT );
+      widgetAnnotationLineColumn = Widgets.addTableColumn(widgetAnnotations,4,"Line",SWT.LEFT);
       Widgets.setTableColumnWidth(widgetAnnotations,Settings.geometryAnnotationsColumn.width);
       widgetAnnotations.setToolTipText("File annotations. Double-click to view revision of line.");
 
@@ -482,7 +471,8 @@ class CommandAnnotations
     if (!widgetAnnotations.isDisposed())
     {
       widgetAnnotations.removeAll();
-      int lineNb = 1;
+      int maxWidth = 0;
+      int lineNb   = 1;
       for (AnnotationData annotation : annotations)
       {
         Widgets.addTableEntry(widgetAnnotations,
@@ -493,8 +483,10 @@ class CommandAnnotations
                               Integer.toString(lineNb),
                               annotation.line
                              );
+        maxWidth = Math.max(maxWidth,Widgets.getTextWidth(widgetAnnotations,annotation.line));
         lineNb++;
       }
+      widgetAnnotationLineColumn.setWidth(maxWidth);
     }
   }
 
