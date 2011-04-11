@@ -1754,6 +1754,26 @@ Dprintf.dprintf("");
           editPreferences();
         }
       });
+      menuItem = Widgets.addMenuItem(menu,"Preferences save...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          // save settings
+          boolean saveSettings = true;
+          if (Settings.isFileModified())
+          {
+            saveSettings = Dialogs.confirm(shell,"Confirmation","Settings were modified externally.","Overwrite","Cancel",false);
+          }
+          if (saveSettings)
+          {
+            Settings.save();
+          }
+        }
+      });
     }
 
     menu = Widgets.addMenu(menuBar,"Help");
