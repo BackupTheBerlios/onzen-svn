@@ -715,17 +715,17 @@ public class Settings
   @SettingValue(type=SettingValueAdapterFontData.class)
   public static FontData                fontDiffLine                    = null;
 
-  @SettingComment(text={"","shown diff types"})
+  @SettingComment(text={"","Shown diff types"})
 //  @SettingValue(type=SettingValueAdapterDiffTypes.class)
   @SettingValue(type=DiffData.Types.class)
   public static EnumSet<DiffData.Types> diffShowTypes                   = EnumSet.allOf(DiffData.Types.class);
 
-  @SettingComment(text={"","shown file states in changed file list"})
+  @SettingComment(text={"","Shown file states in changed file list"})
 //  @SettingValue(type=SettingValueAdapterFileDataStates.class)
   @SettingValue(type=FileData.States.class)
   public static EnumSet<FileData.States> changedFilesShowStates         = EnumSet.allOf(FileData.States.class);
 
-  @SettingComment(text={"","shown patch states in patch list"})
+  @SettingComment(text={"","Shown patch states in patch list"})
   @SettingValue(type=Patch.States.class)
   public static EnumSet<Patch.States>    patchShowStates                = EnumSet.allOf(Patch.States.class);
 
@@ -851,7 +851,7 @@ public class Settings
   public static String           commandMailAttachment                  = "mail -s '${subject}' -a ${file} ${to} ${cc}";
 
   // general flags
-  @SettingComment(text={"","flags"})
+  @SettingComment(text={"","Flags"})
   @SettingValue
   public static boolean          immediateCommit                        = true;
 
@@ -1333,6 +1333,9 @@ exception.printStackTrace();
 
       // close file
       output.close();
+
+      // save last modified time
+      lastModified = file.lastModified();
     }
     catch (IOException exception)
     {
