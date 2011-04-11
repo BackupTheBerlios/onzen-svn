@@ -134,7 +134,7 @@ class RepositoryHG extends Repository
     -----
     ...
   */
-  private final String LOG_TEMPLATE       = "{rev} {node|short} {date|isodate} {author|user}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
+  private final String LOG_TEMPLATE       = "{rev} {node|short} {date|isodate} {author}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
 
   // --------------------------- variables --------------------------------
   @XmlElement(name = "masterRepository")
@@ -2035,7 +2035,7 @@ Dprintf.dprintf("add new file %s",fileData);
   private RevisionDataHG parseLogData(Exec exec, HashMap<Integer,RevisionData> revisionDataMap, HashMap<RevisionData,ParentData> fileParentMap)
     throws IOException
   {
-    final Pattern PATTERN_REVISION = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(\\S+).*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_REVISION = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
 
     RevisionDataHG          revisionData      = null;
 
