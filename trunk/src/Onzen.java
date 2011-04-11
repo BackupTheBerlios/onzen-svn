@@ -2000,7 +2000,7 @@ exception.printStackTrace();
         bytes = new byte[128/8];
         for (int z = 0; z < bytes.length; z++)
         {
-          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
+          bytes[z] = (masterPasswordBytes.length > 0)?masterPasswordBytes[z%masterPasswordBytes.length]:0;
         }
         SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
 
@@ -2048,7 +2048,7 @@ exception.printStackTrace();
         bytes = new byte[128/8];
         for (int z = 0; z < bytes.length; z++)
         {
-          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
+          bytes[z] = (masterPasswordBytes.length > 0)?masterPasswordBytes[z%masterPasswordBytes.length]:0;
         }
         SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
 
