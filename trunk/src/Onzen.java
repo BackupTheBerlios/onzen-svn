@@ -2009,7 +2009,7 @@ exception.printStackTrace();
    */
   private byte[] encodePassword(String masterPassword, String password)
   {
-    if (masterPassword != null)
+    if ((masterPassword != null) && !masterPassword.isEmpty())
     {
       try
       {
@@ -2020,7 +2020,7 @@ exception.printStackTrace();
         bytes = new byte[128/8];
         for (int z = 0; z < bytes.length; z++)
         {
-          bytes[z] = (masterPasswordBytes.length > 0)?masterPasswordBytes[z%masterPasswordBytes.length]:0;
+          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
         }
         SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
 
@@ -2057,7 +2057,7 @@ exception.printStackTrace();
       masterPassword = Dialogs.password(shell,"Master password");
     }
 
-    if (masterPassword != null)
+    if ((masterPassword != null) && !masterPassword.isEmpty())
     {
       try
       {
@@ -2068,7 +2068,7 @@ exception.printStackTrace();
         bytes = new byte[128/8];
         for (int z = 0; z < bytes.length; z++)
         {
-          bytes[z] = (masterPasswordBytes.length > 0)?masterPasswordBytes[z%masterPasswordBytes.length]:0;
+          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
         }
         SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
 
