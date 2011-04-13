@@ -11,6 +11,7 @@
 #---------------------------------- settings ---------------------------------
 
 PLATFORM           = Linux
+JAVA_DATA_MODEL    := $(shell if test ! -f classes/DataModel.class; then javac -d classes src/DataModel.java; fi; java -cp classes DataModel)
 
 ENABLE_DEBUG       = no
 
@@ -28,7 +29,7 @@ JAVAC              = javac
 JAVAC_FLAGS        = -source 1.5
 # -Xlint
 
-JAR                = /usr/bin/jar
+JAR                = jar
 
 SWT_JAR_LINUX      = jars/linux/swt-3.6.1.jar
 SWT_JAR_LINUX_64   = jars/linux/swt-3.6.1_64.jar
