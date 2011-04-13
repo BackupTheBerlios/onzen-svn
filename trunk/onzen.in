@@ -34,7 +34,7 @@ case $HOST_PLATFORM in
   linux)
     JAVA_FLAGS="@JAVA_FLAGS@"
 
-    $JAVA $JAVA_FLAGS -cp $BASE_DIRECTORY/onzen-linux.jar DataModel
+    $JAVA $JAVA_FLAGS -cp $BASE_DIRECTORY/onzen-linux.jar DataModel > /dev/null
     rc=$?
     if   test $rc -eq 32; then
       ONZEN_JAR="$BASE_DIRECTORY/onzen-linux.jar"
@@ -53,7 +53,7 @@ case $HOST_PLATFORM in
   macos)
     JAVA_FLAGS="@JAVA_FLAGS@ -XstartOnFirstThread"
 
-    $JAVA $JAVA_FLAGS -cp $BASE_DIRECTORY/onzen-macosx.jar DataModel
+    $JAVA $JAVA_FLAGS -cp $BASE_DIRECTORY/onzen-macosx.jar DataModel > /dev/null
     rc=$?
     if   test $rc -eq 32; then
       ONZEN_JAR="$BASE_DIRECTORY/onzen-macosx.jar"
