@@ -129,7 +129,7 @@ class CommandSetFileMode
 
   // ---------------------------- methods ---------------------------------
 
-  /** set files mode command
+  /** set file mode command
    * @param shell shell
    * @param repositoryTab repository tab
    */
@@ -149,7 +149,7 @@ class CommandSetFileMode
     history = CommitMessage.getHistory();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Set files mode",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Set file mode",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0},1.0,4));
@@ -249,7 +249,7 @@ class CommandSetFileMode
           Dialogs.close(dialog,true);
         }
       });
-      widgetSetFileMode.setToolTipText("Set files mode.");
+      widgetSetFileMode.setToolTipText("Set file mode.");
 
       button = Widgets.newButton(composite,"Cancel");
       Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -371,7 +371,7 @@ class CommandSetFileMode
     // update
   }
 
-  /** set files mode command
+  /** set file mode command
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileDataSet files to set file mode
@@ -388,7 +388,7 @@ class CommandSetFileMode
     }
   }
 
-  /** set files mode command
+  /** set file mode command
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileData file to set file mode
@@ -450,7 +450,7 @@ class CommandSetFileMode
    */
   private void setFileMode()
   {
-    repositoryTab.setStatusText("Set files mode to %s...",data.mode);
+    repositoryTab.setStatusText("Set file mode to %s...",data.mode);
     CommitMessage commitMessage = null;
     try
     {
@@ -461,7 +461,7 @@ class CommandSetFileMode
         commitMessage.addToHistory();
       }
 
-      // set files mode
+      // set file mode
       repositoryTab.repository.setFileMode(data.fileDataSet,data.mode,commitMessage);
 
       // update file states
@@ -484,7 +484,7 @@ class CommandSetFileMode
       {
         public void run()
         {
-          Dialogs.error(dialog,"Cannot set files mode (error: %s)",exceptionMessage);
+          Dialogs.error(dialog,"Cannot set file mode (error: %s)",exceptionMessage);
         }
       });
       return;
@@ -496,7 +496,7 @@ class CommandSetFileMode
       {
         public void run()
         {
-          Dialogs.error(dialog,"Cannot set files mode (error: %s)",exceptionMessage);
+          Dialogs.error(dialog,"Cannot set file mode (error: %s)",exceptionMessage);
         }
       });
       return;
