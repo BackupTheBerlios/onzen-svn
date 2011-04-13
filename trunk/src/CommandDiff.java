@@ -10,26 +10,8 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
-//import java.io.IOException;
-
-//import java.text.SimpleDateFormat;
-
 import java.util.ArrayList;
 import java.util.EnumSet;
-//import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
-//import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -1297,11 +1279,8 @@ Dprintf.dprintf("");
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryDiff);
-//    widgetClose.setFocus();
-//widgetTextLeft.forceFocus();
-Dprintf.dprintf("");
 
-    // start get annotations of last revision
+    // start getting diff of last revision
     show(revisionLeft,revisionRight);
 
     // get revisions (if not selected revision left and right)
