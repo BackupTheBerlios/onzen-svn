@@ -378,6 +378,18 @@ class RepositoryTab
           }
         });
 
+        menuItem = Widgets.addMenuItem(menu,"Revert...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            revert();
+          }
+        });
+
         menuItem = Widgets.addMenuItem(menu,"Add...");
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -387,18 +399,6 @@ class RepositoryTab
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             add();
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Rename...");
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            rename();
           }
         });
 
@@ -414,7 +414,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revert...");
+        menuItem = Widgets.addMenuItem(menu,"Rename...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -422,11 +422,11 @@ class RepositoryTab
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            revert();
+            rename();
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Diff...");
+        menuItem = Widgets.addMenuItem(menu,"Set file mode...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -434,7 +434,19 @@ class RepositoryTab
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            diff();
+            setFileMode();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Revision info...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            revisionInfo();
           }
         });
 
@@ -450,7 +462,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revision info...");
+        menuItem = Widgets.addMenuItem(menu,"Diff...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -458,7 +470,19 @@ class RepositoryTab
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            revisionInfo();
+            diff();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Annotations...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            annotations();
           }
         });
 
