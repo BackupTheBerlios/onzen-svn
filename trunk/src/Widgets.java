@@ -920,7 +920,9 @@ class Widgets
    */
   static int getTextHeight(GC gc)
   {
-    return gc.getFontMetrics().getHeight();
+// NYI: does not work?
+//    return gc.getFontMetrics().getHeight();
+    return gc.textExtent("Hj").y;
   }
 
   /** get text height
