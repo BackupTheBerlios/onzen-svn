@@ -515,7 +515,7 @@ class CommandMailPatch
 
                 MimeBodyPart attachment = new MimeBodyPart();
                 attachment.attachFile(tmpFile);
-                attachment.setFileName("patch");
+                attachment.setFileName("file.patch");
                 attachment.setDisposition(Part.ATTACHMENT);
                 attachment.setDescription("Attached File: "+"patch");
                 FileDataSource fileDataSource = new FileDataSource(tmpFile);
