@@ -101,16 +101,18 @@ class CommandPatches
   class Data
   {
     HashSet<FileData>     fileDataSet;
+    boolean               showAllRepositories;
     EnumSet<Patch.States> showStates;
     Patch                 patch;
     String                oldMessage;
 
     Data()
     {
-      this.fileDataSet = new HashSet<FileData>();
-      this.showStates  = EnumSet.copyOf(Settings.patchShowStates);
-      this.patch       = null;
-      this.oldMessage  = null;
+      this.fileDataSet         = new HashSet<FileData>();
+      this.showAllRepositories = Settings.patchShowAllRepositories;
+      this.showStates          = EnumSet.copyOf(Settings.patchShowStates);
+      this.patch               = null;
+      this.oldMessage          = null;
     }
   };
 
@@ -175,9 +177,26 @@ class CommandPatches
         label = Widgets.newLabel(subComposite,"Patches:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
+        button = Widgets.newCheckbox(subComposite,"all repositories");
+        button.setSelection(data.showAllRepositories);
+        Widgets.layout(button,0,1,TableLayoutData.E);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            data.showAllRepositories = widget.getSelection();
+            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+
         button = Widgets.newCheckbox(subComposite,"review");
         button.setSelection(data.showStates.contains(Patch.States.REVIEW));
-        Widgets.layout(button,0,1,TableLayoutData.E);
+        Widgets.layout(button,0,2,TableLayoutData.E);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -201,7 +220,7 @@ class CommandPatches
 
         button = Widgets.newCheckbox(subComposite,"commited");
         button.setSelection(data.showStates.contains(Patch.States.COMMITED));
-        Widgets.layout(button,0,2,TableLayoutData.E);
+        Widgets.layout(button,0,3,TableLayoutData.E);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -225,7 +244,7 @@ class CommandPatches
 
         button = Widgets.newCheckbox(subComposite,"applied");
         button.setSelection(data.showStates.contains(Patch.States.APPLIED));
-        Widgets.layout(button,0,3,TableLayoutData.E);
+        Widgets.layout(button,0,4,TableLayoutData.E);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -249,7 +268,7 @@ class CommandPatches
 
         button = Widgets.newCheckbox(subComposite,"discarded");
         button.setSelection(data.showStates.contains(Patch.States.DISCARDED));
-        Widgets.layout(button,0,4,TableLayoutData.E);
+        Widgets.layout(button,0,5,TableLayoutData.E);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -770,9 +789,10 @@ Dprintf.dprintf("");
         {
           Button widget = (Button)selectionEvent.widget;
 
-          Settings.geometryPatches       = dialog.getSize();
-          Settings.geometryPatchesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetPatches));
-          Settings.patchShowStates       = data.showStates;
+          Settings.geometryPatches          = dialog.getSize();
+          Settings.geometryPatchesColumn    = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetPatches));
+          Settings.patchShowAllRepositories = data.showAllRepositories;
+          Settings.patchShowStates          = data.showStates;
 
           Dialogs.close(dialog,false);
         }
@@ -810,7 +830,7 @@ Dprintf.dprintf("");
         int id = getSelectedPatchId();
 
         widgetPatches.removeAll();
-        Patch[] patches = Patch.getPatches(repositoryTab.repository.rootPath,data.showStates,50);
+        Patch[] patches = Patch.getPatches(!data.showAllRepositories ? repositoryTab.repository.rootPath : null,data.showStates,50);
         if (patches != null)
         {
           for (Patch patch : patches)
