@@ -619,7 +619,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepositoryList     = new Point(400,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryEditRepository         = new Point(800,400);
+  public static Point                    geometryEditRepository         = new Point(800,600);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryCommit                 = new Point(500,500);
   @SettingValue(type=SettingValueAdapterSize.class)
@@ -725,7 +725,9 @@ public class Settings
   @SettingValue(type=FileData.States.class)
   public static EnumSet<FileData.States> changedFilesShowStates         = EnumSet.allOf(FileData.States.class);
 
-  @SettingComment(text={"","Shown patch states in patch list"})
+  @SettingComment(text={"","Shown patches in patch list"})
+  @SettingValue
+  public static boolean                  patchShowAllRepositories       = false;
   @SettingValue(type=Patch.States.class)
   public static EnumSet<Patch.States>    patchShowStates                = EnumSet.allOf(Patch.States.class);
 
