@@ -874,10 +874,10 @@ exception.printStackTrace();
       {
         TabFolder tabFolder = (TabFolder)mouseEvent.widget;
 
-        /* Note: it is not possible to add a mouse-double-click handle to
+        /* Note: it is not possible to add a mouse-double-click handler to
           a tab-item nor a tab-folder and the correct tab-item is returned
           when the tab-items a scrolled. Thus use the following work-around:
-            - get offset of first time = width of scroll buttons left and right
+            - get offset of first item = width of scroll buttons left and right
             - check mouse position with offset
             - currently selected tab-item is item with mouse-click
         */
@@ -3303,12 +3303,13 @@ exception.printStackTrace();
                 {
                   MenuItem   widget     = (MenuItem)selectionEvent.widget;
                   Repository repository = (Repository)widget.getData();
+                  String     password   = getPassword(repository.mailLogin,repository.mailSMTPHost);
 
                   if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
                   widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
                   widgetMailSMTPSSL.setSelection(repository.mailSMTPSSL);
                   if (repository.mailLogin != null) widgetMailLogin.setText(repository.mailLogin);
-                  widgetMailPassword.setText(getPassword(repository.mailLogin,repository.mailSMTPHost));
+                  if (password != null) widgetMailPassword.setText(password);
                   if (repository.mailFrom != null) widgetMailFrom.setText(repository.mailFrom);
                 }
               });
