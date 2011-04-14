@@ -113,7 +113,7 @@ class Patch
   // ---------------------------- methods ---------------------------------
 
   /** get patches from database
-   * @param rootPath root path of patches
+   * @param rootPath root path of patches or null for all repositories
    * @param filterStates states of patches
    * @param n max. number of patches to return
    * @return patches array
@@ -149,7 +149,7 @@ class Patch
                                             "  CASE WHEN numbers.id IS NOT NULL THEN numbers.id ELSE -1 END AS number "+
                                             "FROM patches "+
                                             "  LEFT JOIN numbers ON numbers.patchId=patches.id "+
-                                            "WHERE     patches.rootPath='"+rootPath+"'"+
+                                            "WHERE     "+((rootPath != null) ? "patches.rootPath='"+rootPath+"'" : "1")+
                                             "      AND (   patches.state="+Patch.States.NONE.ordinal()+" "+
                                             "           OR patches.state IN ("+StringUtils.join(filterStates,",",true)+") "+
                                             "          )"+
