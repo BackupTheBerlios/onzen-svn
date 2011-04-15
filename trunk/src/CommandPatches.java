@@ -152,6 +152,8 @@ class CommandPatches
   CommandPatches(final Shell shell, final RepositoryTab repositoryTab)
   {
     Composite composite,subComposite;
+    Menu      menu;
+    MenuItem  menuItem;
     Label     label;
     Button    button;
     TabFolder tabFolder;
@@ -298,6 +300,136 @@ class CommandPatches
       Widgets.addTableColumn(widgetPatches,1,"State",  SWT.LEFT );
       Widgets.addTableColumn(widgetPatches,2,"Summary",SWT.LEFT );
       Widgets.setTableColumnWidth(widgetPatches,Settings.geometryPatchesColumn.width);
+      menu = Widgets.newPopupMenu(dialog);
+      {
+        menuItem = Widgets.addMenuItem(menu,"Set state 'none'");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              Patch patch = (Patch)tableItem.getData();
+              try
+              {
+                patch.setState(Patch.States.NONE);
+                patch.save();
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Set state 'review'");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              Patch patch = (Patch)tableItem.getData();
+              try
+              {
+                patch.setState(Patch.States.REVIEW);
+                patch.save();
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Set state 'commited'");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              Patch patch = (Patch)tableItem.getData();
+              try
+              {
+                patch.setState(Patch.States.COMMITED);
+                patch.save();
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Set state 'applied'");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              Patch patch = (Patch)tableItem.getData();
+              try
+              {
+                patch.setState(Patch.States.APPLIED);
+                patch.save();
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Set state 'discarded'");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              Patch patch = (Patch)tableItem.getData();
+              try
+              {
+                patch.setState(Patch.States.DISCARDED);
+                patch.save();
+              }
+              catch (SQLException exception)
+              {
+                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                return;
+              }
+            }
+            Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+      }
+      widgetPatches.setMenu(menu);
+      widgetPatches.setToolTipText("Patches.\nRight-click to open context menu.");
 
       tabFolder = Widgets.newTabFolder(composite);
       Widgets.layout(tabFolder,2,0,TableLayoutData.NSWE);
@@ -830,7 +962,7 @@ Dprintf.dprintf("");
         int id = getSelectedPatchId();
 
         widgetPatches.removeAll();
-        Patch[] patches = Patch.getPatches(!data.showAllRepositories ? repositoryTab.repository.rootPath : null,data.showStates,50);
+        Patch[] patches = Patch.getPatches(repositoryTab.repository.rootPath,data.showAllRepositories,data.showStates,50);
         if (patches != null)
         {
           for (Patch patch : patches)
