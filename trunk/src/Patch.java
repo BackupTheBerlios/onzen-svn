@@ -113,12 +113,13 @@ class Patch
   // ---------------------------- methods ---------------------------------
 
   /** get patches from database
-   * @param rootPath root path of patches or null for all repositories
+   * @param path root path of patches or null for all repositories
+   * @param allRepositories TRUE for patches in all repositories
    * @param filterStates states of patches
    * @param n max. number of patches to return
    * @return patches array
    */
-  public static Patch[] getPatches(String rootPath, EnumSet<States> filterStates, int n)
+  public static Patch[] getPatches(String path, boolean allRepositories, EnumSet<States> filterStates, int n)
   {
     ArrayList<Patch> patchList = new ArrayList<Patch>();
 
@@ -139,6 +140,7 @@ class Patch
       {
         resultSet1 = statement.executeQuery("SELECT "+
                                             "  patches.id AS databaseId, "+
+                                            "  patches.rootPath, "+
                                             "  patches.state, "+
                                             "  patches.summary, "+
                                             "  patches.message, "+
@@ -149,7 +151,7 @@ class Patch
                                             "  CASE WHEN numbers.id IS NOT NULL THEN numbers.id ELSE -1 END AS number "+
                                             "FROM patches "+
                                             "  LEFT JOIN numbers ON numbers.patchId=patches.id "+
-                                            "WHERE     "+((rootPath != null) ? "patches.rootPath='"+rootPath+"'" : "1")+
+                                            "WHERE     "+(!allRepositories ? "patches.rootPath='"+path+"'" : "1")+
                                             "      AND (   patches.state="+Patch.States.NONE.ordinal()+" "+
                                             "           OR patches.state IN ("+StringUtils.join(filterStates,",",true)+") "+
                                             "          )"+
@@ -168,6 +170,7 @@ class Patch
         {
           // get patch data
           int      databaseId        = resultSet1.getInt("databaseId");
+          String   rootPath          = resultSet1.getString("rootPath");
           States   state             = States.toEnum(resultSet1.getInt("state"));
           String   summary           = resultSet1.getString("summary"); if (summary == null) summary = "";
           String[] message           = Database.dataToLines(resultSet1.getString("message"));
@@ -590,6 +593,14 @@ class Patch
   public String getNumberText()
   {
     return (number != Database.ID_NONE)?Integer.toString(number):"-";
+  }
+
+  /** set state
+   * @param state new state
+   */
+  public void setState(States state)
+  {
+    this.state = state;
   }
 
   /** get patch lines
