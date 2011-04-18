@@ -294,6 +294,9 @@ class RepositoryTab
 
     // create tab
     widgetTab = Widgets.addTab(parentTabFolder,repository.title,this);
+//Dprintf.dprintf("");
+//widgetTab.setBackground(Onzen.COLOR_YELLOW);
+//Dprintf.dprintf("");
     widgetTab.setLayout(new TableLayout(1.0,1.0,2));
     Widgets.layout(widgetTab,0,0,TableLayoutData.NSWE);
     {
@@ -542,7 +545,7 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            newDirectory();
+            newDirectory(getSelectedFileData());
           }
         });
 
@@ -1106,8 +1109,9 @@ Dprintf.dprintf("");
   }
 
   /** create new file
+   * @param fileData file data
    */
-  public void newFile()
+  public void newFile(FileData fileData)
   {
     /** dialog data
      */
@@ -1127,6 +1131,11 @@ Dprintf.dprintf("");
     Label       label;
     Button      button;
 
+    if (fileData != null)
+    {
+      data.fileName = fileData.getFileName();
+    }
+
     // new directory dialog
     dialog = Dialogs.open(shell,"New file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
@@ -1140,7 +1149,7 @@ Dprintf.dprintf("");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       widgetFileName = Widgets.newText(composite);
-      widgetFileName.setText(data.fileName);
+      if (data.fileName != null) widgetFileName.setText(data.fileName);
       widgetFileName.setSelection(data.fileName.length(),data.fileName.length());
       Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
     }
@@ -1228,9 +1237,17 @@ Dprintf.dprintf("");
     }
   }
 
-  /** create new directory
+  /** create new file
    */
-  public void newDirectory()
+  public void newFile()
+  {
+    newFile(null);
+  }
+
+  /** create new directory
+   * @param fileData file data for pre-set directory name
+   */
+  public void newDirectory(FileData fileData)
   {
     /** dialog data
      */
@@ -1250,6 +1267,11 @@ Dprintf.dprintf("");
     Label       label;
     Button      button;
 
+    if (fileData != null)
+    {
+      data.path = fileData.getDirectoryName();
+    }
+
     // new directory dialog
     dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
@@ -1263,7 +1285,7 @@ Dprintf.dprintf("");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       widgetPath = Widgets.newText(composite);
-      widgetPath.setText(data.path);
+      if (data.path != null) widgetPath.setText(data.path);
       widgetPath.setSelection(data.path.length(),data.path.length());
       Widgets.layout(widgetPath,1,1,TableLayoutData.WE);
     }
@@ -1346,6 +1368,13 @@ Dprintf.dprintf("");
       // update file list
 Dprintf.dprintf("");
     }
+  }
+
+  /** create new directory
+   */
+  public void newDirectory()
+  {
+    newDirectory(null);
   }
 
   /** rename local file/directory
