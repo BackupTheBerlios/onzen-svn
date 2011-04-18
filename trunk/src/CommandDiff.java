@@ -136,8 +136,8 @@ class CommandDiff
   // widgets
   private    final Label      widgetRevisionLeft;
   private    final Label      widgetRevisionRight;
-  private    final Text       widgetLineNumbersLeft;
-  private    final Text       widgetLineNumbersRight;
+  private    final StyledText widgetLineNumbersLeft;
+  private    final StyledText widgetLineNumbersRight;
   private    final StyledText widgetTextLeft;
   private    final StyledText widgetTextRight;
   private    final ScrollBar  widgetHorizontalScrollBarLeft,widgetVerticalScrollBarLeft;
@@ -234,7 +234,7 @@ class CommandDiff
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
-        widgetLineNumbersLeft = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbersLeft = Widgets.newStyledText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
         widgetLineNumbersLeft.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersLeft,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
@@ -268,7 +268,7 @@ class CommandDiff
       subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,2,TableLayoutData.NSWE);
       {
-        widgetLineNumbersRight = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbersRight = Widgets.newStyledText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
         widgetLineNumbersRight.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersRight,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
@@ -611,8 +611,8 @@ class CommandDiff
     {
       public void handleEvent(Event event)
       {
-        Text widget = (Text)event.widget;
-        int  topIndex = widget.getTopIndex();
+        StyledText widget = (StyledText)event.widget;
+        int        topIndex = widget.getTopIndex();
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         // sync left text widget
@@ -641,8 +641,8 @@ class CommandDiff
     {
       public void handleEvent(Event event)
       {
-        Text widget = (Text)event.widget;
-        int  topIndex = widget.getTopIndex();
+        StyledText widget   = (StyledText)event.widget;
+        int        topIndex = widget.getTopIndex();
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         // sync right text widget
@@ -1416,8 +1416,8 @@ Dprintf.dprintf("");
    * @return line block types array
    */
   private DiffData.Types[] setText(DiffData[] diffData_,
-                                   Text       widgetLineNumbersLeft,
-                                   Text       widgetLineNumbersRight,
+                                   StyledText widgetLineNumbersLeft,
+                                   StyledText widgetLineNumbersRight,
                                    StyledText widgetTextLeft,
                                    StyledText widgetTextRight,
                                    ScrollBar  widgetHorizontalScrollBarLeft,
