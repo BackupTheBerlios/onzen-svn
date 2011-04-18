@@ -716,12 +716,10 @@ public class Settings
   public static FontData                fontDiffLine                    = null;
 
   @SettingComment(text={"","Shown diff types"})
-//  @SettingValue(type=SettingValueAdapterDiffTypes.class)
   @SettingValue(type=DiffData.Types.class)
   public static EnumSet<DiffData.Types> diffShowTypes                   = EnumSet.allOf(DiffData.Types.class);
 
   @SettingComment(text={"","Shown file states in changed file list"})
-//  @SettingValue(type=SettingValueAdapterFileDataStates.class)
   @SettingValue(type=FileData.States.class)
   public static EnumSet<FileData.States> changedFilesShowStates         = EnumSet.allOf(FileData.States.class);
 
