@@ -396,6 +396,7 @@ public class StringUtils
         if      (chars[i] == '\\')
         {
           // escaped character
+          buffer.append('\\');
           if (i+1 < n) buffer.append(chars[i+1]);
           i += 2;
         }
@@ -409,6 +410,7 @@ public class StringUtils
             if      (chars[i] == '\\')
             {
               // escaped character
+              buffer.append('\\');
               if (i+1 < n) buffer.append(chars[i+1]);
               i += 2;
             }
