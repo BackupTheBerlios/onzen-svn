@@ -1594,7 +1594,9 @@ Dprintf.dprintf("add new file %s",fileData);
 
       // revert files
       command.clear();
-      command.append(Settings.hgCommand,"revert","--no-backup","-r",revision);
+      command.append(Settings.hgCommand,"revert","--no-backup");
+      // Note: hg revert to last pulled repository version when "tip" is given, not the local version
+      if (!revision.equals(LAST_REVISION_NAME)) command.append(Settings.hgCommand,"-r",revision);
       if (fileDataSet != null)
       {
         command.append("--");
