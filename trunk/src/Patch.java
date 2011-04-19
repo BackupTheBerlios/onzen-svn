@@ -156,6 +156,7 @@ class Patch
                                             "           OR patches.state IN ("+StringUtils.join(filterStates,",",true)+") "+
                                             "          )"+
                                             "GROUP BY databaseId "+
+                                            "ORDER BY datetime DESC "+
                                             "LIMIT 0,"+n+" "+
                                             ";"
                                            );
@@ -179,7 +180,7 @@ class Patch
           boolean  ignoreWhitespaces = resultSet1.getInt("ignoreWhitespaces") == 1;
           String[] lines             = Database.dataToLines(resultSet1.getString("data"));
           int      number            = resultSet1.getInt("number");
-//Dprintf.dprintf("databaseId=%d state=%s summary=%s number=%d",databaseId,state,summary,number);
+//Dprintf.dprintf("databaseId=%d rootPath=%s state=%s summary=%s number=%d",databaseId,rootPath,state,summary,number);
 
           // get file names
           ArrayList<String> fileNameList = new ArrayList<String>();
