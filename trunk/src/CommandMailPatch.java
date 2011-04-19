@@ -18,6 +18,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Properties;
 
@@ -115,6 +116,7 @@ class CommandMailPatch
    */
   class Data
   {
+    Patch[]         history;              // patch history
     String[]        revisionNames;        // revision names
     String[]        lines;                // patch lines
     String[]        linesNoWhitespaces;   // patch lines (without whitespaces)
@@ -154,7 +156,7 @@ class CommandMailPatch
 
   // widgets
   private final Text          widgetPatch;
-  private final Text          widgetSummary;
+  private final Combo         widgetSummary;
   private final Text          widgetMessage;
   private final Table         widgetTests;
   private final Text          widgetNewTest;
@@ -195,6 +197,9 @@ class CommandMailPatch
     this.patch         = patch;
     this.date          = new Date();
 
+    // get patch history
+    data.history = Patch.getPatches(repositoryTab.repository.rootPath,true,EnumSet.allOf(Patch.States.class),50);
+
     // get display
     display = shell.getDisplay();
 
@@ -226,7 +231,7 @@ class CommandMailPatch
           label = Widgets.newLabel(subSubComposite,"Summary:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
-          widgetSummary = Widgets.newText(subSubComposite);
+          widgetSummary = Widgets.newCombo(subSubComposite);
           widgetSummary.setText(summary);
           Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
 
@@ -647,6 +652,23 @@ class CommandMailPatch
     }
 
     // listeners
+    widgetSummary.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+        int   index  = widget.getSelectionIndex();
+
+        if (index >= 0)
+        {
+          widgetMessage.setText(StringUtils.join(data.history[index].message,widgetMessage.DELIMITER));
+          updateMailText();
+        }
+      }
+    });
     widgetSummary.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
@@ -725,6 +747,10 @@ class CommandMailPatch
     Dialogs.show(dialog,Settings.geometryMailPatch);
 
     // update
+    for (Patch history : data.history)
+    {
+      widgetSummary.add(history.summary);
+    }
     widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.DELIMITER));
     widgetMailTo.setText(repositoryTab.repository.patchMailTo);
     widgetMailCC.setText(repositoryTab.repository.patchMailCC);
