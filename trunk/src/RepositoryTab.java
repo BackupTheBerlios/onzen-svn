@@ -1133,7 +1133,7 @@ Dprintf.dprintf("");
 
     if (fileData != null)
     {
-      data.fileName = fileData.getFileName();
+      data.fileName = fileData.getFileName(repository.rootPath);
     }
 
     // new directory dialog
@@ -1174,7 +1174,7 @@ Dprintf.dprintf("");
             Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
             return;
           }
-          else if (!file.getParentFile().canWrite())
+          else if ((file.getParentFile() != null) && !file.getParentFile().canWrite())
           {
             Dialogs.error(shell,"Permission denied for parent directory '%s'!",file.getParentFile().getPath());
             return;
@@ -1269,7 +1269,7 @@ Dprintf.dprintf("");
 
     if (fileData != null)
     {
-      data.path = fileData.getDirectoryName();
+      data.path = fileData.getDirectoryName(repository.rootPath);
     }
 
     // new directory dialog
@@ -1310,7 +1310,7 @@ Dprintf.dprintf("");
             Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
             return;
           }
-          else if (!file.getParentFile().canWrite())
+          else if ((file.getParentFile() != null) && !file.getParentFile().canWrite())
           {
             Dialogs.error(shell,"Permission denied for parent directory '%s'!",file.getParentFile().getPath());
             return;
