@@ -160,11 +160,8 @@ class RepositoryHG extends Repository
       public void run()
       {
 // NYI: is the global parent map needed?
-//        synchronized(parentMap)
-//        {
-          parentMap = getParentMap();
+        parentMap = getParentMap();
 //for (int i : parentMap.keySet()) Dprintf.dprintf("%d -> %s",i,parentMap.get(i));
-//        }
       }
     });
   }
@@ -1367,6 +1364,7 @@ Dprintf.dprintf("add new file %s",fileData);
           command.clear();
           command.append(Settings.hgCommand,"fetch");
           command.append("--");
+          if (!masterRepository.isEmpty()) command.append(masterRepository);
           exitCode = new Exec(rootPath,command).waitFor();
           if (exitCode != 0)
           {
@@ -1379,6 +1377,7 @@ Dprintf.dprintf("add new file %s",fileData);
           command.clear();
           command.append(Settings.hgCommand,"fpush");
           command.append("--");
+          if (!masterRepository.isEmpty()) command.append(masterRepository);
           exitCode = new Exec(rootPath,command).waitFor();
           if (exitCode != 0)
           {
@@ -1704,6 +1703,7 @@ Dprintf.dprintf("add new file %s",fileData);
       command.clear();
       command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpush":"push");
       command.append("--");
+      if (!masterRepository.isEmpty()) command.append(masterRepository);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
@@ -1965,7 +1965,7 @@ Dprintf.dprintf("add new file %s",fileData);
   {
     RevisionData revisionData = null;
 
-    if (revision != 0)
+    if ((revision != 0) && (parentMap != null))
     {
       synchronized(parentMap)
       {
