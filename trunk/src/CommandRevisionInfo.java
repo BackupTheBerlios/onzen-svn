@@ -128,8 +128,8 @@ class CommandRevisionInfo
   private final Shell         dialog;
 
   // widgets
-  private final Label         widgetRevision;
-  private final Label         widgetAuthor;
+  private final Text          widgetRevision;
+  private final Text          widgetAuthor;
   private final Text          widgetCommitMessage;
   private final Text          widgetLog;
   private final Button        widgetButtonClose;
@@ -148,6 +148,7 @@ class CommandRevisionInfo
   {
     Composite         composite,subComposite;
     Label             label;
+    Text              text;
     ScrolledComposite scrolledComposite;
     Button            button;
 
@@ -168,22 +169,23 @@ class CommandRevisionInfo
       label = Widgets.newLabel(composite,"Name:");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
-      label = Widgets.newLabel(composite);
-      label.setText(fileData.getFileName());
-      Widgets.layout(label,0,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite,SWT.LEFT);
+      text.setText(fileData.getFileName());
+      Widgets.layout(text,0,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Revision:");
       Widgets.layout(label,1,0,TableLayoutData.W);
 
-      widgetRevision = Widgets.newLabel(composite);
+      widgetRevision = Widgets.newStringView(composite,SWT.LEFT);
+      widgetRevision.setBackground(composite.getBackground());
       Widgets.layout(widgetRevision,1,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Date:");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
-      label = Widgets.newLabel(composite);
-      label.setText(Onzen.DATETIME_FORMAT.format(fileData.datetime));
-      Widgets.layout(label,2,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite,SWT.LEFT);
+      text.setText(Onzen.DATETIME_FORMAT.format(fileData.datetime));
+      Widgets.layout(text,2,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Size:");
       Widgets.layout(label,3,0,TableLayoutData.W);
@@ -202,7 +204,7 @@ class CommandRevisionInfo
       label = Widgets.newLabel(composite,"Author:");
       Widgets.layout(label,5,0,TableLayoutData.W);
 
-      widgetAuthor = Widgets.newLabel(composite);
+      widgetAuthor = Widgets.newStringView(composite,SWT.LEFT);
       Widgets.layout(widgetAuthor,5,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Commit message:");
