@@ -13,23 +13,9 @@
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
-//import java.io.IOException;
 
 import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
-//import java.util.WeakHashMap;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -1481,6 +1467,7 @@ class Preferences
 
     Composite  composite,subComposite;
     Label      label;
+    Text       text;
     Button     button;
 
     // set data
@@ -1489,7 +1476,7 @@ class Preferences
     // add editor dialog
     final Shell dialog = Dialogs.open(this.dialog,"Edit keyboard shortcut",300,SWT.DEFAULT,new double[]{1.0,0.0,0.0},1.0);
 
-    final Label  widgetKey;
+    final Text   widgetKey;
     final Button widgetSave;
     Listener     keyFilter;
 
@@ -1499,9 +1486,9 @@ class Preferences
     {
       label = Widgets.newLabel(composite,"Name:");
       Widgets.layout(label,0,0,TableLayoutData.W);
-      label = Widgets.newStringView(composite);
-      label.setText(name);
-      Widgets.layout(label,0,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite);
+      text.setText(name);
+      Widgets.layout(text,0,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Key:");
       Widgets.layout(label,1,0,TableLayoutData.W);
@@ -1597,6 +1584,7 @@ class Preferences
   {
     Composite composite;
     Label     label;
+    Text      text;
     Button    button;
 
     // add editor dialog
@@ -1608,9 +1596,9 @@ class Preferences
     {
       label = Widgets.newLabel(composite,"Name:");
       Widgets.layout(label,0,0,TableLayoutData.W);
-      label = Widgets.newStringView(composite);
-      label.setText(name);
-      Widgets.layout(label,0,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite);
+      text.setText(name);
+      Widgets.layout(text,0,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Foreground:");
       Widgets.layout(label,1,0,TableLayoutData.W);
