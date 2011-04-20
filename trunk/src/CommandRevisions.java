@@ -176,14 +176,14 @@ class CommandRevisions
   private final Shell         dialog;
 
   // widgets
-  private final Label         widgetSelectedRevision0;
-  private final Label         widgetSelectedRevision1;
+  private final Text          widgetSelectedRevision0;
+  private final Text          widgetSelectedRevision1;
   private final Canvas        widgetRevisions;
   private final ScrollBar     widgetHorizontalScrollBar;
   private final ScrollBar     widgetVerticalScrollBar;
   private final Button        widgetDiff;
   private final Button        widgetPatch;
-  private final Label         widgetSelectedRevision;
+  private final Text          widgetSelectedRevision;
   private final Button        widgetView;
   private final Button        widgetSave;
   private final Button        widgetRevert;
