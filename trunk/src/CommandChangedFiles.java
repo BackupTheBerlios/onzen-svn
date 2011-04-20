@@ -15,13 +15,8 @@
 //import java.io.BufferedReader;
 //import java.io.IOException;
 
-//import java.util.ArrayList;
-//import java.util.Arrays;
 import java.util.EnumSet;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -500,7 +495,6 @@ class CommandChangedFiles
         });
 
         menuItem = Widgets.addMenuItem(menu,"Create patch",Settings.keyCreatePatch);
-menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -674,13 +668,13 @@ menuItem.setEnabled(false);
       });
 
       widgetButtonCreatePatch = Widgets.newButton(composite,"Patch");
-widgetButtonCreatePatch.setEnabled(false);
+      widgetButtonCreatePatch.setEnabled(false);
       Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonCreatePatch,data)
       {
         public void modified(Control control)
         {
-//          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
         }
       });
       widgetButtonCreatePatch.addSelectionListener(new SelectionListener()
@@ -690,7 +684,12 @@ widgetButtonCreatePatch.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
+          HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+          if (fileDataSet != null)
+          {
+            CommandCreatePatch commandCreatePatch = new CommandCreatePatch(shell,repositoryTab,fileDataSet);
+            commandCreatePatch.run();
+          }
         }
       });
 
