@@ -523,16 +523,16 @@ class CommandMailPatch
                 attachment.setFileName("file.patch");
                 attachment.setDisposition(Part.ATTACHMENT);
                 attachment.setDescription("Attached File: "+"patch");
-                FileDataSource fileDataSource = new FileDataSource(tmpFile);
-                DataHandler dataHandler = new DataHandler(fileDataSource);
-// NYI: does datafile handle always work? how to try "text/plain"?
-//                DataHandler dataHandler = new DataHandler(tmpFile,"text/plain");
+// detect mime type?
+//                FileDataSource fileDataSource = new FileDataSource(tmpFile);
+//                DataHandler dataHandler = new DataHandler(fileDataSource);
+                DataHandler dataHandler = new DataHandler(StringUtils.join(patch.getLines(),"\n"),"text/plain");
                 attachment.setDataHandler(dataHandler);
                 mimeMultipart.addBodyPart(attachment);
 
                 InternetAddress toAddress = new InternetAddress(widgetMailTo.getText().trim());
                 ArrayList<InternetAddress> ccAddressList = new ArrayList<InternetAddress>();
-                if (repositoryTab.repository.patchMailCC != null)
+                if ((repositoryTab.repository.patchMailCC != null) && !repositoryTab.repository.patchMailCC.trim().isEmpty())
                 {
                   for (String address : repositoryTab.repository.patchMailCC.split("\\s"))
                   {
@@ -569,7 +569,7 @@ class CommandMailPatch
                 macro.expand("subject",widgetMailSubject.getText().trim());
                 macro.expand("file",   tmpFile.getAbsolutePath()         );
                 String[] commandArray = macro.getValueArray();
-    //for (String s : command) Dprintf.dprintf("command=%s",s);
+//for (String s : command) Dprintf.dprintf("command=%s",s);
 
                 // execute and add text
                 Process process = Runtime.getRuntime().exec(commandArray);
