@@ -1563,32 +1563,54 @@ class Widgets
 
   /** create new number view
    * @param composite composite widget
+   * @param style view style
    * @return new view
    */
-  static Label newNumberView(Composite composite)
+  static Text newNumberView(Composite composite, int style)
   {
-    Label label;
+    Text text;
 
-    label = new Label(composite,SWT.RIGHT|SWT.BORDER);
-    label.setText("0");
+    text = new Text(composite,style|SWT.READ_ONLY);
+    text.setBackground(composite.getBackground());
+    text.setText("0");
 
-    return label;
+    return text;
+  }
+
+  /** create new number view
+   * @param composite composite widget
+   * @return new view
+   */
+  static Text newNumberView(Composite composite)
+  {
+    return newNumberView(composite,SWT.RIGHT|SWT.BORDER);
   }
 
   //-----------------------------------------------------------------------
 
   /** create new string view
    * @param composite composite widget
+   * @param style view style
    * @return new view
    */
-  static Label newStringView(Composite composite)
+  static Text newStringView(Composite composite, int style)
   {
-    Label label;
+    Text text;
 
-    label = new Label(composite,SWT.LEFT|SWT.BORDER);
-    label.setText("");
+    text = new Text(composite,style|SWT.READ_ONLY);
+    text.setBackground(composite.getBackground());
+    text.setText("");
 
-    return label;
+    return text;
+  }
+
+  /** create new string view
+   * @param composite composite widget
+   * @return new view
+   */
+  static Text newStringView(Composite composite)
+  {
+    return newStringView(composite,SWT.LEFT|SWT.BORDER);
   }
 
   //-----------------------------------------------------------------------
