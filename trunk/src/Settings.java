@@ -639,7 +639,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisionBox            = new Point(200, 70);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRevisionInfo           = new Point(500,300);
+  public static Point                    geometryRevisionInfo           = new Point(600,500);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryView                   = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
