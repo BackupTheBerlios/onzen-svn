@@ -116,8 +116,8 @@ class CommandCreatePatch
   // --------------------------- constants --------------------------------
 
   // colors
-  private final Color COLOR_VIEW_NONE        = Onzen.COLOR_WHITE;
-  private final Color COLOR_VIEW_SEARCH_TEXT = Onzen.COLOR_BLUE;
+  private final Color COLOR_TEXT;
+  private final Color COLOR_FIND_TEXT;
 
   // user events
   private final int USER_EVENT_FILTER_PATCHES  = 0xFFFF+0;
@@ -170,6 +170,10 @@ class CommandCreatePatch
     // get display
     display = shell.getDisplay();
 
+    // colors
+    COLOR_TEXT      = new Color(display,Settings.colorInactive.background);
+    COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
+
     // add files dialog
     dialog = Dialogs.open(shell,"Create patch",new double[]{1.0,0.0},1.0);
 
@@ -182,24 +186,26 @@ class CommandCreatePatch
       Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
         widgetLineNumbers = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
-        widgetLineNumbers.setForeground(Onzen.COLOR_GRAY);
+        widgetLineNumbers.setBackground(COLOR_TEXT);
+//        widgetLineNumbers.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbers,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbers,data)
         {
           public void modified(Control control)
           {
-            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : COLOR_TEXT);
           }
         });
 
         widgetText = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
-        widgetText.setForeground(Onzen.COLOR_GRAY);
+        widgetText.setBackground(COLOR_TEXT);
+//        widgetText.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetText,0,1,TableLayoutData.NSWE);
         Widgets.addModifyListener(new WidgetListener(widgetText,data)
         {
           public void modified(Control control)
           {
-            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : Onzen.COLOR_GRAY);
+            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : COLOR_TEXT);
           }
         });
       }
@@ -599,7 +605,7 @@ Dprintf.dprintf("");
            int                   index = 0;
            while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
            {
-             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_VIEW_SEARCH_TEXT,null));
+             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_FIND_TEXT,null));
              index += findTextLength;
            }
            lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
