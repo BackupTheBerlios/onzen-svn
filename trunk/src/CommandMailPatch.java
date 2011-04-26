@@ -137,6 +137,10 @@ class CommandMailPatch
 
   // --------------------------- constants --------------------------------
 
+  // colors
+  private final Color COLOR_TEXT;
+  private final Color COLOR_FIND_TEXT;
+
   // user events
   private final int USER_EVENT_ADD_NEW_TEST = 0xFFFF+0;
 
@@ -155,7 +159,10 @@ class CommandMailPatch
   private final Shell         dialog;
 
   // widgets
-  private final Text          widgetPatch;
+  private final StyledText    widgetPatch;
+  private final Text          widgetFind;
+  private final Button        widgetFindPrev;
+  private final Button        widgetFindNext;
   private final Combo         widgetSummary;
   private final Text          widgetMessage;
   private final Table         widgetTests;
@@ -203,22 +210,43 @@ class CommandMailPatch
     // get display
     display = shell.getDisplay();
 
+    // colors
+    COLOR_TEXT      = new Color(display,Settings.colorInactive.background);
+    COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
+
     // add files dialog
     dialog = Dialogs.open(shell,"Mail patch",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Patch:");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
-      widgetPatch = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
-      widgetPatch.setBackground(Onzen.COLOR_GRAY);
+      widgetPatch = Widgets.newStyledText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+      widgetPatch.setBackground(COLOR_TEXT);
       Widgets.layout(widgetPatch,1,0,TableLayoutData.NSWE);
 
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,2,0,TableLayoutData.WE);
+      {
+        label = Widgets.newLabel(subComposite,"Find:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
+
+        widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
+        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+
+        widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
+        Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+      }
+
       tabFolder = Widgets.newTabFolder(composite);
-      Widgets.layout(tabFolder,2,0,TableLayoutData.NSWE);
+      Widgets.layout(tabFolder,3,0,TableLayoutData.NSWE);
 
       subComposite = Widgets.addTab(tabFolder,"Message");
       subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
@@ -466,8 +494,8 @@ class CommandMailPatch
             if      (repositoryTab.repository.mailSMTPHost != null)
             {
               // send mail with JavaMail
-  //int port = 587;
-  //int port = 25;
+//int port = 587;
+//int port = 25;
               try
               {
                 final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
@@ -652,6 +680,62 @@ class CommandMailPatch
     }
 
     // listeners
+    widgetPatch.addLineStyleListener(new LineStyleListener()
+    {
+      public void lineGetStyle(LineStyleEvent lineStyleEvent)
+      {
+//Dprintf.dprintf("x %d %s",lineStyleEvent.lineOffset,lineStyleEvent.lineText);
+         String findText = widgetFind.getText().toLowerCase();
+         int    findTextLength = findText.length();
+         if (findTextLength > 0)
+         {
+           ArrayList<StyleRange> styleRangeList = new ArrayList<StyleRange>();
+           int                   index = 0;
+           while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
+           {
+             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_FIND_TEXT,null));
+             index += findTextLength;
+           }
+           lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
+//Dprintf.dprintf("lineStyleEvent.styles=%d",lineStyleEvent.styles.length);
+         }
+         else
+         {
+           lineStyleEvent.styles = null;
+         }
+      }
+    });
+    widgetFind.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        findNext(widgetPatch,widgetFind);
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetFindPrev.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        findPrev(widgetPatch,widgetFind);
+      }
+    });
+    widgetFindNext.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        findNext(widgetPatch,widgetFind);
+      }
+    });
+
     widgetSummary.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -751,7 +835,7 @@ class CommandMailPatch
     {
       widgetSummary.add(history.summary);
     }
-    widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.DELIMITER));
+    widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.getLineDelimiter()));
     widgetMailTo.setText(repositoryTab.repository.patchMailTo);
     widgetMailCC.setText(repositoryTab.repository.patchMailCC);
     updateMailSubject();
@@ -818,6 +902,65 @@ class CommandMailPatch
   }
 
   //-----------------------------------------------------------------------
+
+  /** search previous text in patch
+   * @param widgetPatch text widget
+   * @param widgetFind search text widget
+   */
+  private void findPrev(StyledText widgetPatch, Text widgetFind)
+  {
+    String findText = widgetFind.getText();
+    if (!findText.isEmpty())
+    {
+      // get cursor position, text before cursor
+      int cursorIndex = widgetPatch.getCaretOffset();
+
+      int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).lastIndexOf(findText) : -1;
+      if (offset >= 0)
+      {
+        int index = offset;
+Dprintf.dprintf("cursorIndex=%d index=%d",cursorIndex,index);
+
+        widgetPatch.setCaretOffset(index);
+        widgetPatch.setSelection(index);
+        widgetPatch.redraw();
+      }
+      else
+      {
+        Widgets.flash(widgetFind);
+      }
+    }
+  }
+
+  /** search next text in patch
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void findNext(StyledText widgetPatch, Text widgetFind)
+  {
+    String findText = widgetFind.getText();
+    if (!findText.isEmpty())
+    {
+      // get cursor position, text before cursor
+      int cursorIndex = widgetPatch.getCaretOffset();
+//Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
+
+      // search
+      int offset = widgetPatch.getText().substring(cursorIndex+1).indexOf(findText);
+      if (offset >= 0)
+      {
+        int index = cursorIndex+1+offset;
+
+        widgetPatch.setCaretOffset(index);
+        widgetPatch.setSelection(index);
+        widgetPatch.redraw();
+      }
+      else
+      {
+        Widgets.flash(widgetFind);
+      }
+    }
+  }
 
   /** update mail subject line
    */
