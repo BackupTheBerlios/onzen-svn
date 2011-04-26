@@ -709,6 +709,12 @@ public class Settings
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                   colorStatusUpdateStatus         = new Color(new RGB(128,128,128),null);
 
+  @SettingComment(text={""})
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                   colorInactive                   = new Color(null,new RGB(196,196,196));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                   colorFindText                   = new Color(new RGB(  0,  0,255),null);
+
   @SettingComment(text={"","Fonts: <name>,<height>,normal|bold|italic|bold italic"})
   @SettingValue(type=SettingValueAdapterFontData.class)
   public static FontData                fontDiff                        = null;
