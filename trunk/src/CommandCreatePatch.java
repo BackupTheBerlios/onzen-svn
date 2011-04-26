@@ -187,7 +187,6 @@ class CommandCreatePatch
       {
         widgetLineNumbers = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
         widgetLineNumbers.setBackground(COLOR_TEXT);
-//        widgetLineNumbers.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbers,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbers,data)
         {
@@ -199,7 +198,6 @@ class CommandCreatePatch
 
         widgetText = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
         widgetText.setBackground(COLOR_TEXT);
-//        widgetText.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetText,0,1,TableLayoutData.NSWE);
         Widgets.addModifyListener(new WidgetListener(widgetText,data)
         {
@@ -220,7 +218,6 @@ class CommandCreatePatch
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFind.setEnabled(false);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         Widgets.addModifyListener(new WidgetListener(widgetFind,data)
         {
@@ -648,6 +645,16 @@ Dprintf.dprintf("");
       }
     });
 
+    widgetFind.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent leyEvent)
+      {
+      }
+      public void keyReleased(KeyEvent leyEvent)
+      {
+        find(widgetText,widgetFind);
+      }
+    });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -791,6 +798,40 @@ Dprintf.dprintf("");
       widgetText.setTopIndex(0);
       widgetText.setCaretOffset(0);
       widgetVerticalScrollBar.setSelection(0);
+    }
+  }
+
+  /** search text
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void find(StyledText widgetText, Text widgetFind)
+  {
+    if (!widgetText.isDisposed())
+    {
+      String findText = widgetFind.getText();
+      if (!findText.isEmpty())
+      {
+        // get cursor position, text before cursor
+        int cursorIndex = widgetText.getCaretOffset();
+
+        // search
+        int offset = widgetText.getText().substring(cursorIndex).indexOf(findText);
+        if (offset >= 0)
+        {
+          widgetText.redraw();
+
+          widgetLineNumbers.setTopIndex(widgetText.getTopIndex());
+        }
+        else
+        {
+          Widgets.flash(widgetFind);
+        }
+      }
+      else
+      {
+        widgetText.redraw();
+      }
     }
   }
 

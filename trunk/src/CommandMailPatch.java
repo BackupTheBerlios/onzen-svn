@@ -705,6 +705,17 @@ class CommandMailPatch
          }
       }
     });
+
+    widgetFind.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent leyEvent)
+      {
+      }
+      public void keyReleased(KeyEvent leyEvent)
+      {
+        find(widgetPatch,widgetFind);
+      }
+    });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -902,6 +913,38 @@ class CommandMailPatch
   }
 
   //-----------------------------------------------------------------------
+
+  /** search text
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void find(StyledText widgetText, Text widgetFind)
+  {
+    if (!widgetText.isDisposed())
+    {
+      String findText = widgetFind.getText();
+      if (!findText.isEmpty())
+      {
+        // get cursor position, text before cursor
+        int cursorIndex = widgetPatch.getCaretOffset();
+
+        // search
+        int offset = widgetPatch.getText().substring(cursorIndex).indexOf(findText);
+        if (offset >= 0)
+        {
+          widgetPatch.redraw();
+        }
+        else
+        {
+          Widgets.flash(widgetFind);
+        }
+      }
+      else
+      {
+        widgetPatch.redraw();
+      }
+    }
+  }
 
   /** search previous text in patch
    * @param widgetPatch text widget
