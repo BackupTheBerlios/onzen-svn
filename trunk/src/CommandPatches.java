@@ -473,7 +473,7 @@ class CommandPatches
                     Repository repository = Repository.newInstance(data.patch.rootPath);
 
                     // refresh patch
-                    String[] newLines = repository.getPatchLines(data.patch.fileNames,
+                    String[] newLines = repository.getPatchLines(data.patch.getFileNames(),
                                                                  data.patch.revision1,
                                                                  data.patch.revision2,
                                                                  data.patch.ignoreWhitespaces
@@ -1080,7 +1080,8 @@ Dprintf.dprintf("");
       setChangesText(data.patch.getLines());
 
       // set file names
-      for (String fileName : data.patch.fileNames)
+      widgetFileNames.removeAll();
+      for (String fileName : data.patch.getFileNames())
       {
         widgetFileNames.add(fileName);
       }
@@ -1132,7 +1133,7 @@ Dprintf.dprintf("");
 
     // get patches files
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
-    for (String fileName : patch.fileNames)
+    for (String fileName : patch.getFileNames())
     {
       fileDataSet.add(new FileData(fileName));
     }
