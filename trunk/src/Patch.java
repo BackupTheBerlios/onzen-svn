@@ -100,8 +100,8 @@ class Patch
   public  String[] message;                // commit message
   public  String   revision1,revision2;    // revision
   public  boolean  ignoreWhitespaces;      // true when whitespaces are ignored
-  public  String[] fileNames;              // files belonging to patch
 
+  private String[] fileNames;              // files belonging to patch
   private String[] lines;                  // patch lines or null
   private File     file;                   // file with patch or null
   private int      databaseId;             // id in database or Database.ID_NONE
@@ -528,6 +528,14 @@ class Patch
 
     // delete tempory file
     if (tmpFile != null) tmpFile.delete();
+  }
+
+  /** get file names of patch
+   * @return file names
+   */
+  public String[] getFileNames()
+  {
+    return fileNames;
   }
 
   /** allocate a patch number
