@@ -1864,7 +1864,7 @@ abstract class Repository implements Serializable
     return getDiff(fileData,revision,null);
   }
 
-  /** get unified patch lines for file
+  /** get unified patch lines for files
    * Note: must return unified patch data with file names relative to rootPath
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
@@ -1875,7 +1875,7 @@ abstract class Repository implements Serializable
   abstract public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException;
 
-  /** get unified patch lines for file
+  /** get unified patch lines for files
    * Note: must return unified patch data with file names relative to rootPath
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions to get patch for
