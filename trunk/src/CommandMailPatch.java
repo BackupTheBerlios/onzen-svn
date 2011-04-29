@@ -138,6 +138,7 @@ class CommandMailPatch
   // --------------------------- constants --------------------------------
 
   // colors
+  private final Color COLOR_INACTIVE;
   private final Color COLOR_TEXT;
   private final Color COLOR_FIND_TEXT;
 
@@ -160,6 +161,7 @@ class CommandMailPatch
 
   // widgets
   private final StyledText    widgetPatch;
+  private final List          widgetFileNames;
   private final Text          widgetFind;
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
@@ -211,6 +213,7 @@ class CommandMailPatch
     display = shell.getDisplay();
 
     // colors
+    COLOR_INACTIVE  = new Color(display,Settings.colorInactive.background);
     COLOR_TEXT      = new Color(display,Settings.colorInactive.background);
     COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
 
@@ -218,252 +221,268 @@ class CommandMailPatch
     dialog = Dialogs.open(shell,"Mail patch",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(1.0,1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Patch:");
-      Widgets.layout(label,0,0,TableLayoutData.W);
-
-      widgetPatch = Widgets.newStyledText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
-      widgetPatch.setBackground(COLOR_TEXT);
-      Widgets.layout(widgetPatch,1,0,TableLayoutData.NSWE);
-
-      subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,2,0,TableLayoutData.WE);
+      tabFolder = Widgets.newTabFolder(composite);
+      Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
       {
-        label = Widgets.newLabel(subComposite,"Find:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+        subComposite = Widgets.addTab(tabFolder,"Patch");
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+        {
+          widgetPatch = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetPatch.setBackground(COLOR_TEXT);
+          Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
 
-        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.WE);
+          {
+            label = Widgets.newLabel(subSubComposite,"Find:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
-        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+            widgetFind = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+            Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
 
-        widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
-        Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+            widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+
+            widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+          }
+        }
+
+        subComposite = Widgets.addTab(tabFolder,"Files");
+        subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
+        Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
+        {
+          widgetFileNames = Widgets.newList(subComposite);
+          widgetFileNames.setBackground(COLOR_INACTIVE);
+          Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
+        }
       }
 
       tabFolder = Widgets.newTabFolder(composite);
-      Widgets.layout(tabFolder,3,0,TableLayoutData.NSWE);
-
-      subComposite = Widgets.addTab(tabFolder,"Message");
-      subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
-      Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+      Widgets.layout(tabFolder,1,0,TableLayoutData.NSWE);
       {
-        subSubComposite = Widgets.newComposite(subComposite);
-        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
-        Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
+        subComposite = Widgets.addTab(tabFolder,"Message");
+        subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
-          label = Widgets.newLabel(subSubComposite,"Summary:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          widgetSummary = Widgets.newCombo(subSubComposite);
-          widgetSummary.setText(summary);
-          Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
-
-          label = Widgets.newLabel(subSubComposite,"Message:");
-          Widgets.layout(label,1,0,TableLayoutData.NW);
-
-          widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-          widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
-          Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
-        }
-
-        subSubComposite = Widgets.newComposite(subComposite);
-        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0));
-        Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
-        {
-          label = Widgets.newLabel(subSubComposite,"Tests done:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK);
-          widgetTests.setHeaderVisible(false);
-          Widgets.layout(widgetTests,1,0,TableLayoutData.NSWE);
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+          Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
           {
-            for (String test : repositoryTab.repository.patchMailTests)
+            label = Widgets.newLabel(subSubComposite,"Summary:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetSummary = Widgets.newCombo(subSubComposite);
+            widgetSummary.setText(summary);
+            Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
+
+            label = Widgets.newLabel(subSubComposite,"Message:");
+            Widgets.layout(label,1,0,TableLayoutData.NW);
+
+            widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+            widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
+            Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0));
+          Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
+          {
+            label = Widgets.newLabel(subSubComposite,"Tests done:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK);
+            widgetTests.setHeaderVisible(false);
+            Widgets.layout(widgetTests,1,0,TableLayoutData.NSWE);
             {
-              Widgets.addTableEntry(widgetTests,test,test);
+              for (String test : repositoryTab.repository.patchMailTests)
+              {
+                Widgets.addTableEntry(widgetTests,test,test);
+              }
+            }
+
+            menu = Widgets.newPopupMenu(dialog);
+            {
+              menuItem = Widgets.addMenuItem(menu,"Edit...");
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  int index = widgetTests.getSelectionIndex();
+                  if (index >= 0)
+                  {
+                    TableItem tableItem = widgetTests.getItem(index);
+
+                    String test = Dialogs.string(dialog,"Edit test description","Test:",(String)tableItem.getData());
+                    if (test != null)
+                    {
+                      tableItem.setText(test);
+                      tableItem.setData(test);
+                      updateMailText();
+                    }
+                  }
+                }
+              });
+
+              menuItem = Widgets.addMenuItem(menu,"Move up");
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  int index = widgetTests.getSelectionIndex();
+                  if (index >= 0)
+                  {
+                    if (index > 0)
+                    {
+                      TableItem tableItem0 = widgetTests.getItem(index-1);
+                      TableItem tableItem1 = widgetTests.getItem(index  );
+
+                      String text0 = tableItem0.getText();
+                      Object data0 = tableItem0.getData();
+                      String text1 = tableItem1.getText();
+                      Object data1 = tableItem1.getData();
+
+                      tableItem0.setText(text1);
+                      tableItem0.setData(data1);
+                      tableItem1.setText(text0);
+                      tableItem1.setData(data0);
+                      updateMailText();
+
+                      widgetTests.setSelection(index-1);
+                    }
+                  }
+                }
+              });
+
+              menuItem = Widgets.addMenuItem(menu,"Move down");
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  int index = widgetTests.getSelectionIndex();
+                  if (index >= 0)
+                  {
+                    if (index < widgetTests.getItemCount()-1)
+                    {
+                      TableItem tableItem0 = widgetTests.getItem(index  );
+                      TableItem tableItem1 = widgetTests.getItem(index+1);
+
+                      String text0 = tableItem0.getText();
+                      Object data0 = tableItem0.getData();
+                      String text1 = tableItem1.getText();
+                      Object data1 = tableItem1.getData();
+
+                      tableItem0.setText(text1);
+                      tableItem0.setData(data1);
+                      tableItem1.setText(text0);
+                      tableItem1.setData(data0);
+                      updateMailText();
+
+                      widgetTests.setSelection(index+1);
+                    }
+                  }
+                }
+              });
+
+              menuItem = Widgets.addMenuSeparator(menu);
+
+              menuItem = Widgets.addMenuItem(menu,"Remove");
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  int index = widgetTests.getSelectionIndex();
+                  if (index >= 0)
+                  {
+                    widgetTests.remove(index);
+                    updateMailText();
+                  }
+                }
+              });
+            }
+            widgetTests.setMenu(menu);
+            widgetTests.setToolTipText("Executed tests for patch.\nRight-click to open context menu.");
+
+            subSubSubComposite = Widgets.newComposite(subSubComposite,SWT.LEFT,2);
+            subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+            Widgets.layout(subSubSubComposite,2,0,TableLayoutData.WE);
+            {
+              widgetNewTest = Widgets.newText(subSubSubComposite);
+              Widgets.layout(widgetNewTest,0,0,TableLayoutData.WE);
+              widgetNewTest.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                  Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                }
+              });
+
+
+              widgetAddNewTest = Widgets.newButton(subSubSubComposite,"Add");
+              widgetAddNewTest.setEnabled(false);
+              Widgets.layout(widgetAddNewTest,0,1,TableLayoutData.E);
+              widgetAddNewTest.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
+                }
+              });
             }
           }
-
-          menu = Widgets.newPopupMenu(dialog);
-          {
-            menuItem = Widgets.addMenuItem(menu,"Edit...");
-            menuItem.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  TableItem tableItem = widgetTests.getItem(index);
-
-                  String test = Dialogs.string(dialog,"Edit test description","Test:",(String)tableItem.getData());
-                  if (test != null)
-                  {
-                    tableItem.setText(test);
-                    tableItem.setData(test);
-                    updateMailText();
-                  }
-                }
-              }
-            });
-
-            menuItem = Widgets.addMenuItem(menu,"Move up");
-            menuItem.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  if (index > 0)
-                  {
-                    TableItem tableItem0 = widgetTests.getItem(index-1);
-                    TableItem tableItem1 = widgetTests.getItem(index  );
-
-                    String text0 = tableItem0.getText();
-                    Object data0 = tableItem0.getData();
-                    String text1 = tableItem1.getText();
-                    Object data1 = tableItem1.getData();
-
-                    tableItem0.setText(text1);
-                    tableItem0.setData(data1);
-                    tableItem1.setText(text0);
-                    tableItem1.setData(data0);
-                    updateMailText();
-
-                    widgetTests.setSelection(index-1);
-                  }
-                }
-              }
-            });
-
-            menuItem = Widgets.addMenuItem(menu,"Move down");
-            menuItem.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  if (index < widgetTests.getItemCount()-1)
-                  {
-                    TableItem tableItem0 = widgetTests.getItem(index  );
-                    TableItem tableItem1 = widgetTests.getItem(index+1);
-
-                    String text0 = tableItem0.getText();
-                    Object data0 = tableItem0.getData();
-                    String text1 = tableItem1.getText();
-                    Object data1 = tableItem1.getData();
-
-                    tableItem0.setText(text1);
-                    tableItem0.setData(data1);
-                    tableItem1.setText(text0);
-                    tableItem1.setData(data0);
-                    updateMailText();
-
-                    widgetTests.setSelection(index+1);
-                  }
-                }
-              }
-            });
-
-            menuItem = Widgets.addMenuSeparator(menu);
-
-            menuItem = Widgets.addMenuItem(menu,"Remove");
-            menuItem.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  widgetTests.remove(index);
-                  updateMailText();
-                }
-              }
-            });
-          }
-          widgetTests.setMenu(menu);
-          widgetTests.setToolTipText("Executed tests for patch.\nRight-click to open context menu.");
-
-          subSubSubComposite = Widgets.newComposite(subSubComposite,SWT.LEFT,2);
-          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-          Widgets.layout(subSubSubComposite,2,0,TableLayoutData.WE);
-          {
-            widgetNewTest = Widgets.newText(subSubSubComposite);
-            Widgets.layout(widgetNewTest,0,0,TableLayoutData.WE);
-            widgetNewTest.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-              }
-            });
-
-
-            widgetAddNewTest = Widgets.newButton(subSubSubComposite,"Add");
-            widgetAddNewTest.setEnabled(false);
-            Widgets.layout(widgetAddNewTest,0,1,TableLayoutData.E);
-            widgetAddNewTest.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
-              }
-            });
-          }
         }
-      }
 
-      subComposite = Widgets.addTab(tabFolder,"Mail");
-      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
-      Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
-      {
-        label = Widgets.newLabel(subComposite,"To:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+        subComposite = Widgets.addTab(tabFolder,"Mail");
+        subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subComposite,"To:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetMailTo = Widgets.newText(subComposite);
-        Widgets.layout(widgetMailTo,0,1,TableLayoutData.WE);
+          widgetMailTo = Widgets.newText(subComposite);
+          Widgets.layout(widgetMailTo,0,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(subComposite,"CC:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+          label = Widgets.newLabel(subComposite,"CC:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
 
-        widgetMailCC = Widgets.newText(subComposite);
-        Widgets.layout(widgetMailCC,1,1,TableLayoutData.WE);
+          widgetMailCC = Widgets.newText(subComposite);
+          Widgets.layout(widgetMailCC,1,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(subComposite,"Subject:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
+          label = Widgets.newLabel(subComposite,"Subject:");
+          Widgets.layout(label,2,0,TableLayoutData.W);
 
-        widgetMailSubject = Widgets.newText(subComposite);
-        Widgets.layout(widgetMailSubject,2,1,TableLayoutData.WE);
+          widgetMailSubject = Widgets.newText(subComposite);
+          Widgets.layout(widgetMailSubject,2,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(subComposite,"Text:");
-        Widgets.layout(label,3,0,TableLayoutData.NW);
+          label = Widgets.newLabel(subComposite,"Text:");
+          Widgets.layout(label,3,0,TableLayoutData.NW);
 
-        widgetMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-        Widgets.layout(widgetMailText,3,1,TableLayoutData.NSWE);
+          widgetMailText = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          Widgets.layout(widgetMailText,3,1,TableLayoutData.NSWE);
+        }
       }
     }
 
@@ -525,10 +544,7 @@ class CommandMailPatch
                 }
 
 //properties.put("mail.smtps.starttls.enable","true");
-                if (Settings.debugFlag)
-                {
-                  properties.put("mail.debug","true");
-                }
+//                if (Settings.debugFlag) properties.put("mail.debug","true");
                 Authenticator auth = new Authenticator()
                 {
                   public PasswordAuthentication getPasswordAuthentication()
@@ -840,6 +856,15 @@ class CommandMailPatch
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryMailPatch);
+
+    // add files
+    if (!widgetFileNames.isDisposed())
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        widgetFileNames.add(fileData.getFileName());
+      }
+    }
 
     // update
     for (Patch history : data.history)
