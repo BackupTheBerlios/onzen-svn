@@ -303,7 +303,6 @@ class CommandDiff
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFindLeft.setEnabled(false);
         Widgets.layout(widgetFindLeft,0,1,TableLayoutData.WE);
         Widgets.addModifyListener(new WidgetListener(widgetFindLeft,data)
         {
@@ -344,7 +343,6 @@ class CommandDiff
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFindRight.setEnabled(false);
         Widgets.layout(widgetFindRight,0,1,TableLayoutData.WE);
         Widgets.addModifyListener(new WidgetListener(widgetFindRight,data)
         {
@@ -1101,7 +1099,11 @@ Dprintf.dprintf("NYI");
         {
           topIndex--;
         }
-        while ((topIndex >= 0) && (data.lineTypes[topIndex] == DiffData.Types.NONE))
+        while (   (topIndex >= 0) 
+               && (   (data.lineTypes[topIndex] == DiffData.Types.NONE)
+                   || !data.showTypes.contains(data.lineTypes[topIndex])
+                  )
+              )
         {
           topIndex--;
         }
@@ -1136,7 +1138,11 @@ Dprintf.dprintf("NYI");
         {
           topIndex++;
         }
-        while ((topIndex < data.lineTypes.length) && (data.lineTypes[topIndex] == DiffData.Types.NONE))
+        while (   (topIndex < data.lineTypes.length)
+               && (   (data.lineTypes[topIndex] == DiffData.Types.NONE)
+                   || !data.showTypes.contains(data.lineTypes[topIndex])
+                  )
+              )
         {
           topIndex++;
         }
