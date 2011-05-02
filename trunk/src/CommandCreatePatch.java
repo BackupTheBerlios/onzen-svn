@@ -105,18 +105,18 @@ class CommandCreatePatch
 
     Data()
     {
-      this.revisionNames      = null;
-      this.patch              = null;
-      this.linesNoWhitespaces = null;
-      this.lines              = null;
-      this.message            = null;
+      this.revisionNames       = null;
+      this.patch               = null;
+      this.linesNoWhitespaces  = null;
+      this.lines               = null;
+      this.message             = null;
     }
   };
 
   // --------------------------- constants --------------------------------
 
   // colors
-  private final Color COLOR_TEXT;
+  private final Color COLOR_INACTIVE;
   private final Color COLOR_FIND_TEXT;
 
   // user events
@@ -135,13 +135,13 @@ class CommandCreatePatch
   private final Shell             dialog;
 
   // widgets
-  private final Text              widgetLineNumbers;
-  private final StyledText        widgetText;
+  private final StyledText        widgetPatch;
   private final ScrollBar         widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final Text              widgetFind;
   private final Button            widgetFindPrev;
   private final Button            widgetFindNext;
   private final Button            widgetIgnoreWhitespaces;
+  private final List              widgetFileNames;
   private final Button            widgetButtonClose;
 
   // ------------------------ native functions ----------------------------
@@ -156,7 +156,8 @@ class CommandCreatePatch
    */
   CommandCreatePatch(final Shell shell, final RepositoryTab repositoryTab, final HashSet<FileData> fileDataSet, final String revision1, final String revision2)
   {
-    Composite composite,subComposite;
+    Composite composite,subComposite,subSubComposite;
+    TabFolder tabFolder;
     Label     label;
     Button    button;
     Listener  listener;
@@ -171,7 +172,7 @@ class CommandCreatePatch
     display = shell.getDisplay();
 
     // colors
-    COLOR_TEXT      = new Color(display,Settings.colorInactive.background);
+    COLOR_INACTIVE  = new Color(display,Settings.colorInactive.background);
     COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
 
     // add files dialog
@@ -181,73 +182,67 @@ class CommandCreatePatch
     composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      subComposite = Widgets.newComposite(composite,SWT.H_SCROLL|SWT.V_SCROLL);
-      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
+      tabFolder = Widgets.newTabFolder(composite);
+      Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
       {
-        widgetLineNumbers = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
-        widgetLineNumbers.setBackground(COLOR_TEXT);
-        Widgets.layout(widgetLineNumbers,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
-        Widgets.addModifyListener(new WidgetListener(widgetLineNumbers,data)
+        subComposite = Widgets.addTab(tabFolder,"Changes");
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
-          public void modified(Control control)
+          widgetPatch = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetPatch.setBackground(COLOR_INACTIVE);
+          Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
+          Widgets.addModifyListener(new WidgetListener(widgetPatch,data)
           {
-            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : COLOR_TEXT);
-          }
-        });
+            public void modified(Control control)
+            {
+              if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : COLOR_INACTIVE);
+            }
+          });
+          widgetHorizontalScrollBar = widgetPatch.getHorizontalBar();
+          widgetVerticalScrollBar   = widgetPatch.getVerticalBar();
 
-        widgetText = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
-        widgetText.setBackground(COLOR_TEXT);
-        Widgets.layout(widgetText,0,1,TableLayoutData.NSWE);
-        Widgets.addModifyListener(new WidgetListener(widgetText,data)
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.WE);
+          {
+            label = Widgets.newLabel(subSubComposite,"Find:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetFind = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+            Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
+
+            widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
+            widgetFindPrev.setEnabled(false);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+            Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
+            {
+              public void modified(Control control)
+              {
+                Widgets.setEnabled(control,(data.lines != null));
+              }
+            });
+
+            widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
+            widgetFindNext.setEnabled(false);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+            Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
+            {
+              public void modified(Control control)
+              {
+                Widgets.setEnabled(control,(data.lines != null));
+              }
+            });
+          }
+        }
+
+        subComposite = Widgets.addTab(tabFolder,"Files");
+        subComposite.setLayout(new TableLayout(1.0,1.0,2));
+        Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
-          public void modified(Control control)
-          {
-            if (!control.isDisposed()) control.setForeground(((data.linesNoWhitespaces != null) || (data.lines != null)) ? null : COLOR_TEXT);
-          }
-        });
-      }
-      widgetHorizontalScrollBar = subComposite.getHorizontalBar();
-      widgetVerticalScrollBar   = subComposite.getVerticalBar();
-
-      subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
-      {
-        label = Widgets.newLabel(subComposite,"Find:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
-
-        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
-        Widgets.addModifyListener(new WidgetListener(widgetFind,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.lines != null));
-          }
-        });
-
-        widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
-        widgetFindPrev.setEnabled(false);
-        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
-        Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.lines != null));
-          }
-        });
-
-        widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
-        widgetFindNext.setEnabled(false);
-        Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
-        Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.lines != null));
-          }
-        });
+          widgetFileNames = Widgets.newList(subComposite);
+          Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
+        }
       }
 
       widgetIgnoreWhitespaces = Widgets.newCheckbox(composite,"Ignore whitespace changes");
@@ -274,8 +269,7 @@ class CommandCreatePatch
           {
             // set new text
             setText(lines,
-                    widgetLineNumbers,
-                    widgetText,
+                    widgetPatch,
                     widgetHorizontalScrollBar,
                     widgetVerticalScrollBar
                    );
@@ -553,43 +547,7 @@ Dprintf.dprintf("");
     }
 
     // listeners
-    listener = new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-        Text widget = (Text)event.widget;
-        int  topIndex = widget.getTopIndex();
-//Dprintf.dprintf("%d %d",widget.getTopPixel(),widgetText.getTopPixel());
-
-        widgetText.setTopIndex(topIndex);
-//        widgetText.setTopPixel(widget.getTopPixel());
-      }
-    };
-    widgetLineNumbers.addListener(SWT.KeyDown,listener);
-    widgetLineNumbers.addListener(SWT.KeyUp,listener);
-    widgetLineNumbers.addListener(SWT.MouseDown,listener);
-    widgetLineNumbers.addListener(SWT.MouseUp,listener);
-    widgetLineNumbers.addListener(SWT.MouseMove,listener);
-    widgetLineNumbers.addListener(SWT.Resize,listener);
-
-    listener = new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-        StyledText widget = (StyledText)event.widget;
-        int        topIndex = widget.getTopIndex();
-//Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
-
-        widgetLineNumbers.setTopIndex(topIndex);
-      }
-    };
-    widgetText.addListener(SWT.KeyDown,listener);
-    widgetText.addListener(SWT.KeyUp,listener);
-    widgetText.addListener(SWT.MouseDown,listener);
-    widgetText.addListener(SWT.MouseUp,listener);
-    widgetText.addListener(SWT.MouseMove,listener);
-    widgetText.addListener(SWT.Resize,listener);
-    widgetText.addLineStyleListener(new LineStyleListener()
+    widgetPatch.addLineStyleListener(new LineStyleListener()
     {
       public void lineGetStyle(LineStyleEvent lineStyleEvent)
       {
@@ -614,36 +572,6 @@ Dprintf.dprintf("");
          }
       }
     });
-    widgetHorizontalScrollBar.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        ScrollBar widget = (ScrollBar)selectionEvent.widget;
-        int       index = widget.getSelection();
-
-        // sync text widget
-        widgetText.setHorizontalIndex(index);
-      }
-    });
-    widgetVerticalScrollBar.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        ScrollBar widget = (ScrollBar)selectionEvent.widget;
-        int       index = widget.getSelection();
-//Dprintf.dprintf("widget=%s: %d %d %d",widget,widget.getSelection(),widget.getMinimum(),widget.getMaximum());
-
-        // sync  number text widget, text widget
-        widgetLineNumbers.setTopIndex(index);
-        widgetText.setTopIndex(index);
-      }
-    });
 
     widgetFind.addKeyListener(new KeyListener()
     {
@@ -652,14 +580,14 @@ Dprintf.dprintf("");
       }
       public void keyReleased(KeyEvent leyEvent)
       {
-        find(widgetText,widgetFind);
+        find(widgetPatch,widgetFind);
       }
     });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        findNext(widgetText,widgetFind);
+        findNext(widgetPatch,widgetFind);
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
@@ -672,7 +600,7 @@ Dprintf.dprintf("");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        findPrev(widgetText,widgetFind);
+        findPrev(widgetPatch,widgetFind);
       }
     });
     widgetFindNext.addSelectionListener(new SelectionListener()
@@ -682,12 +610,21 @@ Dprintf.dprintf("");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        findNext(widgetText,widgetFind);
+        findNext(widgetPatch,widgetFind);
       }
     });
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryCreatePatch);
+
+    // add files
+    if (!widgetFileNames.isDisposed())
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        widgetFileNames.add(fileData.getFileName());
+      }
+    }
 
     // start show file
     show(revision1,revision2);
@@ -744,20 +681,17 @@ Dprintf.dprintf("");
 
   /** set text
    * @param lines lines
-   * @param widgetLineNumbers number text widget
-   * @param widgetText text widget
+   * @param widgetPatch text widget
    * @param widgetHorizontalScrollBar horizontal scrollbar widget
    * @param widgetVerticalScrollBar horizontal scrollbar widget
    */
   private void setText(String[]   lines,
-                       Text       widgetLineNumbers,
-                       StyledText widgetText,
+                       StyledText widgetPatch,
                        ScrollBar  widgetHorizontalScrollBar,
                        ScrollBar  widgetVerticalScrollBar
                       )
   {
-    if (   !widgetLineNumbers.isDisposed()
-        && !widgetText.isDisposed()
+    if (   !widgetPatch.isDisposed()
         && !widgetVerticalScrollBar.isDisposed()
         && !widgetHorizontalScrollBar.isDisposed()
        )
@@ -777,8 +711,7 @@ Dprintf.dprintf("");
       }
 
       // set text
-      widgetLineNumbers.setText(lineNumbers.toString());
-      widgetText.setText(text.toString());
+      widgetPatch.setText(text.toString());
 
       // set scrollbars
       widgetHorizontalScrollBar.setMinimum(0);
@@ -787,41 +720,35 @@ Dprintf.dprintf("");
       widgetVerticalScrollBar.setMaximum(lineNb-1);
 
       // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
-      widgetLineNumbers.redraw();
-      widgetText.redraw();
-      widgetLineNumbers.update();
-      widgetText.update();
+      widgetPatch.redraw();
+      widgetPatch.update();
 
       // show top
-      widgetLineNumbers.setTopIndex(0);
-      widgetLineNumbers.setSelection(0);
-      widgetText.setTopIndex(0);
-      widgetText.setCaretOffset(0);
+      widgetPatch.setTopIndex(0);
+      widgetPatch.setCaretOffset(0);
       widgetVerticalScrollBar.setSelection(0);
     }
   }
 
   /** search text
-   * @param widgetText text widget
+   * @param widgetPatch text widget
    * @param widgetFind search text widget
    */
-  private void find(StyledText widgetText, Text widgetFind)
+  private void find(StyledText widgetPatch, Text widgetFind)
   {
-    if (!widgetText.isDisposed())
+    if (!widgetPatch.isDisposed())
     {
       String findText = widgetFind.getText();
       if (!findText.isEmpty())
       {
         // get cursor position, text before cursor
-        int cursorIndex = widgetText.getCaretOffset();
+        int cursorIndex = widgetPatch.getCaretOffset();
 
         // search
-        int offset = widgetText.getText().substring(cursorIndex).indexOf(findText);
+        int offset = widgetPatch.getText().substring(cursorIndex).indexOf(findText);
         if (offset >= 0)
         {
-          widgetText.redraw();
-
-          widgetLineNumbers.setTopIndex(widgetText.getTopIndex());
+          widgetPatch.redraw();
         }
         else
         {
@@ -830,35 +757,33 @@ Dprintf.dprintf("");
       }
       else
       {
-        widgetText.redraw();
+        widgetPatch.redraw();
       }
     }
   }
 
   /** search previous text
-   * @param widgetText text widget
+   * @param widgetPatch text widget
    * @param widgetFind search text widget
    */
-  private void findPrev(StyledText widgetText, Text widgetFind)
+  private void findPrev(StyledText widgetPatch, Text widgetFind)
   {
-    if (!widgetText.isDisposed())
+    if (!widgetPatch.isDisposed())
     {
       String findText = widgetFind.getText();
       if (!findText.isEmpty())
       {
         // get cursor position, text before cursor
-        int cursorIndex = widgetText.getCaretOffset();
+        int cursorIndex = widgetPatch.getCaretOffset();
 
-        int offset = (cursorIndex > 0) ? widgetText.getText(0,cursorIndex-1).lastIndexOf(findText) : -1;
+        int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).lastIndexOf(findText) : -1;
         if (offset >= 0)
         {
           int index = offset;
 
-          widgetText.setCaretOffset(index);
-          widgetText.setSelection(index);
-          widgetText.redraw();
-
-          widgetLineNumbers.setTopIndex(widgetText.getTopIndex());
+          widgetPatch.setCaretOffset(index);
+          widgetPatch.setSelection(index);
+          widgetPatch.redraw();
         }
         else
         {
@@ -869,30 +794,28 @@ Dprintf.dprintf("");
   }
 
   /** search next text
-   * @param widgetText text widget
+   * @param widgetPatch text widget
    * @param widgetFind search text widget
    */
-  private void findNext(StyledText widgetText, Text widgetFind)
+  private void findNext(StyledText widgetPatch, Text widgetFind)
   {
-    if (!widgetText.isDisposed())
+    if (!widgetPatch.isDisposed())
     {
       String findText = widgetFind.getText();
       if (!findText.isEmpty())
       {
         // get cursor position, text before cursor
-        int cursorIndex = widgetText.getCaretOffset();
+        int cursorIndex = widgetPatch.getCaretOffset();
 
         // search
-        int offset = widgetText.getText().substring(cursorIndex+1).indexOf(findText);
+        int offset = widgetPatch.getText().substring(cursorIndex+1).indexOf(findText);
         if (offset >= 0)
         {
           int index = cursorIndex+1+offset;
 
-          widgetText.setCaretOffset(index);
-          widgetText.setSelection(index);
-          widgetText.redraw();
-
-          widgetLineNumbers.setTopIndex(widgetText.getTopIndex());
+          widgetPatch.setCaretOffset(index);
+          widgetPatch.setSelection(index);
+          widgetPatch.redraw();
         }
         else
         {
@@ -944,8 +867,7 @@ Dprintf.dprintf("");
                 {
                   // set new text
                   setText(data.linesNoWhitespaces,
-                          widgetLineNumbers,
-                          widgetText,
+                          widgetPatch,
                           widgetHorizontalScrollBar,
                           widgetVerticalScrollBar
                          );
@@ -976,8 +898,7 @@ Dprintf.dprintf("");
                 {
                   // set new text
                   setText(data.lines,
-                          widgetLineNumbers,
-                          widgetText,
+                          widgetPatch,
                           widgetHorizontalScrollBar,
                           widgetVerticalScrollBar
                          );
