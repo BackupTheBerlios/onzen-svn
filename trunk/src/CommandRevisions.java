@@ -770,9 +770,10 @@ throw new RepositoryException("NYI");
         imageGC.drawRectangle(0,0,ENTRY_WIDTH-1,ENTRY_HEIGHT-1);
 
         imageGC.setForeground(Onzen.COLOR_BLACK);
-        imageGC.drawString("Revision:",CONTAINER_MARGIN+0,CONTAINER_MARGIN+0*FONT_HEIGHT,true); imageGC.drawString(revisionData.getRevisionText(),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+0*FONT_HEIGHT,true);
-        imageGC.drawString("Date:",    CONTAINER_MARGIN+0,CONTAINER_MARGIN+1*FONT_HEIGHT,true); imageGC.drawString(revisionData.date.toString(),  CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+1*FONT_HEIGHT,true);
-        imageGC.drawString("Autor:",   CONTAINER_MARGIN+0,CONTAINER_MARGIN+2*FONT_HEIGHT,true); imageGC.drawString(revisionData.author,           CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+2*FONT_HEIGHT,true);
+        imageGC.drawString("Revision:",CONTAINER_MARGIN+0,CONTAINER_MARGIN+0*FONT_HEIGHT,true); imageGC.drawString(revisionData.getRevisionText(),                 CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+0*FONT_HEIGHT,true);
+        imageGC.drawString("Date:",    CONTAINER_MARGIN+0,CONTAINER_MARGIN+1*FONT_HEIGHT,true); imageGC.drawString(revisionData.date.toString(),                   CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+1*FONT_HEIGHT,true);
+        imageGC.drawString("Autor:",   CONTAINER_MARGIN+0,CONTAINER_MARGIN+2*FONT_HEIGHT,true); imageGC.drawString(revisionData.author,                            CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+2*FONT_HEIGHT,true);
+        imageGC.drawString("Message:", CONTAINER_MARGIN+0,CONTAINER_MARGIN+3*FONT_HEIGHT,true); imageGC.drawText(StringUtils.join(revisionData.commitMessage,"\n"),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+3*FONT_HEIGHT,true);
       }
       gc.drawImage(image,x,y);
       dy += ENTRY_HEIGHT;
