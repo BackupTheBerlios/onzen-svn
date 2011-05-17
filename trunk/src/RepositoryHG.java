@@ -1364,7 +1364,7 @@ Dprintf.dprintf("add new file %s",fileData);
           command.clear();
           command.append(Settings.hgCommand,"fetch");
           command.append("--");
-          if (!masterRepository.isEmpty()) command.append(masterRepository);
+          if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
           exitCode = new Exec(rootPath,command).waitFor();
           if (exitCode != 0)
           {
@@ -1377,7 +1377,7 @@ Dprintf.dprintf("add new file %s",fileData);
           command.clear();
           command.append(Settings.hgCommand,"fpush");
           command.append("--");
-          if (!masterRepository.isEmpty()) command.append(masterRepository);
+          if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
           exitCode = new Exec(rootPath,command).waitFor();
           if (exitCode != 0)
           {
@@ -1703,7 +1703,7 @@ Dprintf.dprintf("add new file %s",fileData);
       command.clear();
       command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpush":"push");
       command.append("--");
-      if (!masterRepository.isEmpty()) command.append(masterRepository);
+      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
