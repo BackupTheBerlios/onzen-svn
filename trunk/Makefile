@@ -425,6 +425,7 @@ install: onzen-linux.jar onzen
 	$(INSTALL) -d $(HOME)/bin
 	$(INSTALL) -m 664 \
                    onzen-linux.jar \
+                   onzen-linux_64.jar \
                    $(HOME)/bin
 	$(INSTALL) -m 775 \
                    onzen \
