@@ -1590,7 +1590,12 @@ abstract class Repository implements Serializable
     FileData.Types type = FileData.Types.UNKNOWN;
     try
     {
-      if      (file.exists() && !file.getCanonicalFile().equals(file.getAbsoluteFile())) type = FileData.Types.LINK;
+      // get canonical path, file name
+      String path     = file.getParentFile().getCanonicalPath();
+      String fileName = file.getName();
+
+      // check if link, directory, file
+      if      (file.exists() && !new File(path,fileName).getCanonicalFile().equals(new File(path,fileName).getAbsoluteFile())) type = FileData.Types.LINK;
       else if (file.isDirectory())                                                       type = FileData.Types.DIRECTORY;
       else                                                                               type = FileData.Types.FILE;
     }
