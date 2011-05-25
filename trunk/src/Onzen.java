@@ -2464,7 +2464,7 @@ exception.printStackTrace();
           }
           else
           {
-            widgetNewName.setText(data.names[index]);
+            if (data.names[index] != null) widgetNewName.setText(data.names[index]);
             widgetNewName.setFocus();
           }
         }
@@ -2479,7 +2479,7 @@ exception.printStackTrace();
           if (openButton) widgetOpen.setEnabled(true);
           widgetNew.setEnabled(true);
           widgetDelete.setEnabled(true);
-          widgetNewName.setText(data.names[index]);
+          if (data.names[index] != null) widgetNewName.setText(data.names[index]);
         }
         else
         {
