@@ -430,7 +430,7 @@ public class Onzen
       initAll();
 
       // load repository list
-      loadRepositoryList(repositoryListName);
+      repositoryListName = loadRepositoryList(repositoryListName);
 /*
 Repository repositoryX = new RepositoryCVS("/home/torsten/projects/onzen");
 repositoryX.title = "Ooooonzen";
@@ -448,19 +448,6 @@ Dprintf.dprintf("d=%s",d);
 
       // run
       exitcode = run();
-
-      // save repository list
-      if (repositoryList != null)
-      {
-        try
-        {
-          repositoryList.save();
-        }
-        catch (IOException exception)
-        {
-          printError("Cannot store repository list (error: %s)",exception.getMessage());
-        }
-      }
 
       // done
       doneAll();
@@ -1232,7 +1219,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          loadRepositoryList();
+          repositoryListName = loadRepositoryList();
         }
       });
 
@@ -1870,20 +1857,7 @@ menuItem.addSelectionListener(new SelectionListener()
       public void handleEvent(Event event)
       {
         // save repository list
-        if (repositoryList != null)
-        {
-          try
-          {
-            repositoryList.save();
-          }
-          catch (IOException exception)
-          {
-            if (!Dialogs.confirm(shell,"Confirmation",String.format("Cannot store repository list (error: %s).\n\nQuit anyway?",exception.getMessage())))
-            {
-              return;
-            }
-          }
-        }
+        saveRepositoryList();
 
         // save settings
         boolean saveSettings = true;
@@ -2304,18 +2278,23 @@ exception.printStackTrace();
     }
   }
 
-  private void newRepositoryList()
+  /** get repository list name
+   * @param title title text
+   * @param openButton true to display "open" button
+   * @return repository list name or null
+   */
+  private String getRepositoryListName(String title, final boolean openButton)
   {
     /** dialog data
      */
     class Data
     {
       String[] names;
-      String   newName;
+      String   name;
 
       Data()
       {
-        this.newName = null;
+        this.name = null;
       }
     };
 
@@ -2329,10 +2308,11 @@ exception.printStackTrace();
     data.names = RepositoryList.listNames();
 
     // name dialog
-    dialog = Dialogs.open(shell,"New repository list",300,300,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,title,300,300,new double[]{1.0,0.0},1.0);
 
     final List   widgetNames;
     final Text   widgetNewName;
+    final Button widgetOpen;
     final Button widgetNew;
     final Button widgetDelete;
     composite = Widgets.newComposite(dialog);
@@ -2359,12 +2339,45 @@ exception.printStackTrace();
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,1.0));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
+      int column = 0;
+
+      if (openButton)
+      {
+        widgetOpen = Widgets.newButton(composite,"Open");
+        widgetOpen.setEnabled(false);
+        Widgets.layout(widgetOpen,0,column,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        widgetOpen.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            int index = widgetNames.getSelectionIndex();
+            if ((index >= 0) && (index < data.names.length))
+            {
+              data.name = data.names[index];
+
+              Dialogs.close(dialog,true);
+            }
+          }
+        });
+        widgetOpen.setToolTipText("Open selected repository list.");
+        column++;
+      }
+      else
+      {
+        widgetOpen = null;
+      }
+
       widgetNew = Widgets.newButton(composite,"New");
       widgetNew.setEnabled(false);
-      Widgets.layout(widgetNew,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetNew,0,column,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetNew.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2374,15 +2387,16 @@ exception.printStackTrace();
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.newName = widgetNewName.getText().trim();
+          data.name = widgetNewName.getText().trim();
 
           Dialogs.close(dialog,true);
         }
       });
+      column++;
 
       widgetDelete = Widgets.newButton(composite,"Delete");
       widgetDelete.setEnabled(false);
-      Widgets.layout(widgetDelete,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetDelete,0,column,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetDelete.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2408,14 +2422,17 @@ exception.printStackTrace();
 
               // update widgets
               widgetNames.remove(index);
+              if (openButton) widgetOpen.setEnabled(false);
+              widgetNew.setEnabled(false);
               widgetDelete.setEnabled(false);
             }
           }
         }
       });
+      column++;
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2428,6 +2445,7 @@ exception.printStackTrace();
           Dialogs.close(dialog,false);
         }
       });
+      column++;
     }
 
     // listeners
@@ -2440,8 +2458,15 @@ exception.printStackTrace();
         int index = widget.getSelectionIndex();
         if ((index >= 0) && (index < data.names.length))
         {
-          widgetNewName.setText(data.names[index]);
-          widgetNewName.setFocus();
+          if (openButton)
+          {
+            Widgets.invoke(widgetOpen);
+          }
+          else
+          {
+            widgetNewName.setText(data.names[index]);
+            widgetNewName.setFocus();
+          }
         }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
@@ -2449,8 +2474,19 @@ exception.printStackTrace();
         List widget = (List)selectionEvent.widget;
 
         int index = widget.getSelectionIndex();
-        widgetNew.setEnabled((index >= 0) && (index < data.names.length));
-        widgetDelete.setEnabled((index >= 0) && (index < data.names.length));
+        if ((index >= 0) && (index < data.names.length))
+        {
+          if (openButton) widgetOpen.setEnabled(true);
+          widgetNew.setEnabled(true);
+          widgetDelete.setEnabled(true);
+          widgetNewName.setText(data.names[index]);
+        }
+        else
+        {
+          if (openButton) widgetOpen.setEnabled(false);
+          widgetNew.setEnabled(false);
+          widgetDelete.setEnabled(false);
+        }
       }
     });
     widgetNewName.addKeyListener(new KeyListener()
@@ -2477,233 +2513,104 @@ exception.printStackTrace();
 
     // run
     widgetNewName.setFocus();
-    if ((Boolean)Dialogs.run(dialog,false) && !data.newName.isEmpty())
+    if ((Boolean)Dialogs.run(dialog,false) && (data.name != null) && !data.name.isEmpty())
     {
-      repositoryListName = data.newName;
+      return data.name;
+    }
+    else
+    {
+      return null;
+    }
+  }
+
+  /** get repository list name
+   * @return repository list name or null
+   */
+  private String getNewRepositoryListName()
+  {
+    return getRepositoryListName("New repository list",false);
+  }
+
+  /** get repository list name
+   * @return repository list name or null
+   */
+  private String getRepositoryListName()
+  {
+    return getRepositoryListName("Select repository list",true);
+  }
+
+  /** create new repository list
+   */
+  private void newRepositoryList()
+  {
+    String name = getNewRepositoryListName();
+    if (repositoryListName != null)
+    {
+      repositoryListName = name;
       setRepositoryList(new RepositoryList(repositoryListName));
     }
   }
 
   /** load repository list from file
    * @param repositoryListName name of repository list
+   * @return repository list name or null
    */
-  private void loadRepositoryList(String repositoryListName)
+  private String loadRepositoryList(String repositoryListName)
   {
+    // get repository list name (if not already specified)
     if (repositoryListName == null)
     {
-      /** dialog data
-       */
-      class Data
-      {
-        String[] names;
-        String   name;
-
-        Data()
-        {
-          this.name = null;
-        }
-      };
-
-      final Data  data = new Data();
-      final Shell dialog;
-      Composite   composite,subComposite;
-      Label       label;
-      Button      button;
-
-      // get names
-      data.names = RepositoryList.listNames();
-
-      // name dialog
-      dialog = Dialogs.open(shell,"Select repository list",300,300,new double[]{1.0,0.0},1.0);
-
-      final List   widgetNames;
-      final Text   widgetNewName;
-      final Button widgetOpen;
-      final Button widgetNew;
-      final Button widgetDelete;
-      composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
-      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
-      {
-        widgetNames = Widgets.newList(composite);
-        widgetNames.setBackground(Onzen.COLOR_GRAY);
-        Widgets.layout(widgetNames,0,0,TableLayoutData.NSWE);
-        widgetNames.setToolTipText("Repository list names.");
-
-        subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
-        {
-          label = Widgets.newLabel(subComposite,"New:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          widgetNewName = Widgets.newText(subComposite);
-          Widgets.layout(widgetNewName,0,1,TableLayoutData.WE);
-          widgetNewName.setToolTipText("New repository list name.");
-        }
-      }
-
-      // buttons
-      composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(0.0,1.0));
-      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
-      {
-        widgetOpen = Widgets.newButton(composite,"Open");
-        widgetOpen.setEnabled(false);
-        Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-        widgetOpen.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-
-            int index = widgetNames.getSelectionIndex();
-            if ((index >= 0) && (index < data.names.length))
-            {
-              data.name = data.names[index];
-
-              Dialogs.close(dialog,true);
-            }
-          }
-        });
-        widgetOpen.setToolTipText("Open selected repository list.");
-
-        widgetNew = Widgets.newButton(composite,"New");
-        widgetNew.setEnabled(false);
-        Widgets.layout(widgetNew,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-        widgetNew.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-
-            data.name = widgetNewName.getText();
-
-            Dialogs.close(dialog,true);
-          }
-        });
-
-        widgetDelete = Widgets.newButton(composite,"Delete");
-        widgetDelete.setEnabled(false);
-        Widgets.layout(widgetDelete,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-        widgetDelete.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-
-            int index = widgetNames.getSelectionIndex();
-            if ((index >= 0) && (index < data.names.length))
-            {
-              if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",data.names[index])))
-              {
-                // delete repository list
-                RepositoryList.delete(data.names[index]);
-
-                // remove name from array
-                String[] newNames = new String[data.names.length-1];
-                System.arraycopy(data.names,0,newNames,0,index);
-                System.arraycopy(data.names,index+1,newNames,0,data.names.length-1-index);
-                data.names = newNames;
-
-                // update widgets
-                widgetNames.remove(index);
-                widgetOpen.setEnabled(false);
-                widgetDelete.setEnabled(false);
-              }
-            }
-          }
-        });
-
-        button = Widgets.newButton(composite,"Cancel");
-        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-
-            Dialogs.close(dialog,false);
-          }
-        });
-      }
-
-      // listeners
-      widgetNames.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-          List widget = (List)selectionEvent.widget;
-
-          int index = widget.getSelectionIndex();
-          if ((index >= 0) && (index < data.names.length))
-          {
-            Widgets.invoke(widgetOpen);
-          }
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          List widget = (List)selectionEvent.widget;
-
-          int index = widget.getSelectionIndex();
-          widgetOpen.setEnabled((index >= 0) && (index < data.names.length));
-          widgetDelete.setEnabled((index >= 0) && (index < data.names.length));
-        }
-      });
-      widgetNewName.addKeyListener(new KeyListener()
-      {
-        public void keyPressed(KeyEvent keyEvent)
-        {
-        }
-        public void keyReleased(KeyEvent keyEvent)
-        {
-          Text widget = (Text)keyEvent.widget;
-
-          widgetNew.setEnabled(!widget.getText().isEmpty());
-        }
-      });
-
-      // show dialog
-      Dialogs.show(dialog);
-
-      // add names
-      for (String name : data.names)
-      {
-        widgetNames.add(name);
-      }
-
-      // run
-      widgetNames.setFocus();
-      if ((Boolean)Dialogs.run(dialog,false))
-      {
-        repositoryListName = data.name;
-      }
+      repositoryListName = getRepositoryListName();
     }
 
-    if (repositoryListName != null)
-    {
-      // add repositories from list
-      setRepositoryList(new RepositoryList(repositoryListName));
-    }
+    // add repositories from list
+    setRepositoryList(new RepositoryList(repositoryListName));
+
+    return repositoryListName;
   }
 
   /** load repository list from file
+   * @return repository list name or null
    */
-  private void loadRepositoryList()
+  private String loadRepositoryList()
   {
-    loadRepositoryList(null);
+    return loadRepositoryList(null);
+  }
+
+  /** save repository list to file
+   */
+  private void saveRepositoryList()
+  {
+    // get repository list name
+    if ((repositoryListName == null) && (repositoryList.size() > 0))
+    {
+      boolean retryFlag = true;
+      do
+      {
+        if (Dialogs.confirm(shell,"Respository list is not empty and not stored. Store it?",true))
+        {
+          repositoryListName = getNewRepositoryListName();
+        }
+        else
+        {
+          retryFlag = false;
+        }
+      }
+      while ((repositoryListName == null) && retryFlag);
+    }
+
+    // store repository list
+    if (repositoryListName != null)
+    {
+      try
+      {
+         repositoryList.save(repositoryListName);
+      }
+      catch (IOException exception)
+      {
+        printError("Cannot store repository list (error: %s)",exception.getMessage());
+      }
+    }
   }
 
   /** edit repository list
