@@ -899,6 +899,8 @@ public class Settings
   public static boolean          hgSafeUpdate                           = false;
   @SettingValue
   public static boolean          hgSingleLineCommitMessages             = false;
+  @SettingValue
+  public static boolean          hgRemovePatchPrefixPath                = false;
 
   // Git
   @SettingComment(text={"","Git specific settings"})

@@ -142,6 +142,7 @@ class Preferences
   private final Button        widgetHGUpdateWithFetch;
   private final Button        widgetHGSafeUpdate;
   private final Button        widgetHGSingleLineCommitMessages;
+  private final Button        widgetHGRemovePatchPrefixPath;
 
   private final Text          widgetGitCommand;
 
@@ -682,6 +683,11 @@ class Preferences
             widgetHGSingleLineCommitMessages.setSelection(Settings.hgSingleLineCommitMessages);
             Widgets.layout(widgetHGSingleLineCommitMessages,3,0,TableLayoutData.WE);
             widgetHGSingleLineCommitMessages.setToolTipText("Concat commit message into single-line to make commit message visiable in the one-line-only commit message log of Mercurial.");
+
+            widgetHGRemovePatchPrefixPath = Widgets.newCheckbox(subSubComposite,"remove patch prefix paths 'a/'+'b/'");
+            widgetHGRemovePatchPrefixPath.setSelection(Settings.hgSingleLineCommitMessages);
+            Widgets.layout(widgetHGRemovePatchPrefixPath,4,0,TableLayoutData.WE);
+            widgetHGRemovePatchPrefixPath.setToolTipText("Remove path prefixes 'a/' and 'b/' Mercurial is adding to file names in patches.");
           }
         }
 
@@ -997,6 +1003,7 @@ class Preferences
           Settings.hgUpdateWithFetch                      = widgetHGUpdateWithFetch.getSelection();
           Settings.hgSafeUpdate                           = widgetHGSafeUpdate.getSelection();
           Settings.hgSingleLineCommitMessages             = widgetHGSingleLineCommitMessages.getSelection();
+          Settings.hgRemovePatchPrefixPath                = widgetHGRemovePatchPrefixPath.getSelection();
 
           Settings.gitCommand                             = widgetGitCommand.getText();
 
