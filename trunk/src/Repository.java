@@ -1329,7 +1329,6 @@ abstract class Repository implements Serializable
     // ---------------------------- methods ---------------------------------
 
     /** create stored chnages of local changes
-     * @param rootPath root path
      * @param fileDataSet file data set to store changes
      */
     public StoredChanges(HashSet<FileData> fileDataSet)
