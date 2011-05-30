@@ -900,7 +900,7 @@ public class Settings
   @SettingValue
   public static boolean          hgSingleLineCommitMessages             = false;
   @SettingValue
-  public static boolean          hgRemovePatchPrefixPath                = false;
+  public static boolean          hgRelativePatchPaths                   = false;
 
   // Git
   @SettingComment(text={"","Git specific settings"})
