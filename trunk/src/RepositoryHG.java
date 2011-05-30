@@ -944,19 +944,19 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
   {
-    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(a[/\\\\])(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(b[/\\\\])(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
 
     // get existing/new files
-    HashSet<FileData> existFileDataSet = new HashSet<FileData>();
-    HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
+    HashMap<String,FileData> existingFileDataMap = new HashMap<String,FileData>();
+    HashSet<FileData>        newFileDataSet      = new HashSet<FileData>();
     if (fileDataSet != null)
     {
       for (FileData fileData : fileDataSet)
       {
         if (fileData.state != FileData.States.UNKNOWN)
         {
-          existFileDataSet.add(fileData);
+          existingFileDataMap.put(getFileDataName(fileData),fileData);
         }
         else
         {
@@ -966,7 +966,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
 
     // get patch for existing files
-    if ((fileDataSet == null) || (existFileDataSet.size() > 0))
+    if ((fileDataSet == null) || (existingFileDataMap.size() > 0))
     {
       try
       {
@@ -1015,10 +1015,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         if (revision1 != null) command.append("-r",revision1);
         if (revision2 != null) command.append("-r",revision2);
         command.append("--");
-        if (fileDataSet != null) command.append(getFileDataNames(existFileDataSet));
+        if (fileDataSet != null) command.append(getFileDataNames(existingFileDataMap));
         exec = new Exec(rootPath,command);
 
         // read patch data
+        HashSet<FileData> patchFileDataSet = new HashSet<FileData>();
         Matcher matcher;
         while ((line = exec.getStdout()) != null)
         {
@@ -1026,21 +1027,30 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
           if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
           {
-            String fileName   = matcher.group(1);
-            String dateString = matcher.group(2);
+            String prefix     = matcher.group(1);
+            String name       = matcher.group(2);
+            String dateString = matcher.group(3);
+
+            // store
+            patchFileDataSet.add(existingFileDataMap.get(name));
 
             // get file name
-            if (fileName.startsWith(rootPath))
+            String fileName;
+            if      (name.startsWith(rootPath))
             {
-              // absolute path -> convert to relative path
-              fileName = matcher.group(1).substring(rootPath.length());
+              // absolute path -> convert to relative path to root path
+              fileName = name.substring(rootPath.length());
               if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
+            }
+            else if (Settings.hgRemovePatchPrefixPath)
+            {
+              // relative path -> strip out first path in name and sub-directory
+              fileName = name;
             }
             else
             {
-              // relative path -> strip out first path in name and sub-directory
-              int index = fileName.indexOf(File.separator);
-              fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+              // use original name
+              fileName = prefix+name;
             }
 
             // remove sub-directory if needed
@@ -1050,22 +1060,32 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           }
           else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
           {
-            String fileName   = matcher.group(1);
-            String dateString = matcher.group(2);
+            String prefix     = matcher.group(1);
+            String name       = matcher.group(2);
+            String dateString = matcher.group(3);
+
+            // store
+            patchFileDataSet.add(existingFileDataMap.get(name));
 
             // get file name
-            if (fileName.startsWith(rootPath))
+            String fileName;
+            if      (name.startsWith(rootPath))
             {
               // absolute path -> convert to relative path
-              fileName = matcher.group(1).substring(rootPath.length());
+              fileName = name.substring(rootPath.length());
               if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
+            }
+            else if (Settings.hgRemovePatchPrefixPath)
+            {
+              // relative path -> strip out first path in name
+              fileName = name;
             }
             else
             {
-              // relative path -> strip out first path in name
-              int index = fileName.indexOf(File.separator);
-              fileName = (index >= 0) ? fileName.substring(index+1) : fileName;
+              // use original name
+              fileName = prefix+name;
             }
+
             // remove sub-directory if needed
             if ((subDirectory.length() > 0) && (fileName.length() > subDirectory.length()) && fileName.startsWith(subDirectory)) fileName = fileName.substring(subDirectory.length()+1);
 
@@ -1074,6 +1094,16 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
           if      (output   != null) output.println(line);
           else if (lineList != null) lineList.add(line);
+        }
+
+        // get file names for not modified files
+        for (FileData fileData : existingFileDataMap.values())
+        {
+          if (!patchFileDataSet.contains(fileData))
+          {
+            if      (output   != null) output.println("File: "+getFileDataName(fileData));
+            else if (lineList != null) lineList.add("File: "+getFileDataName(fileData));
+          }
         }
 
         // done

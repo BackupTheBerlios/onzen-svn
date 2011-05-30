@@ -30,6 +30,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -2438,6 +2439,22 @@ Dprintf.dprintf("fileName=%s",fileName);
   protected boolean containFileData(HashSet<FileData> fileDataSet, FileData fileData)
   {
     return findFileData(fileDataSet,fileData.getFileName()) != null;
+  }
+
+  /** get file names from file data map
+   * @param fileDataMap file data map
+   * @return file names array
+   */
+  protected String[] getFileDataNames(HashMap<String,FileData> fileDataMap)
+  {
+    ArrayList<String> fileNameList = new ArrayList<String>(fileDataMap.size());
+
+    for (FileData fileData : fileDataMap.values())
+    {
+      fileNameList.add(fileData.name);
+    }
+
+    return fileNameList.toArray(new String[fileNameList.size()]);
   }
 
   /** get file names from file data set
