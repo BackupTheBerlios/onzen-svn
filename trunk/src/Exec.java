@@ -246,6 +246,13 @@ class Exec
     if (line != null) stdoutStack.push(line);
   }
 
+  public boolean eofStdout()
+  {
+    String line = getStdout();
+    ungetStdout(line);
+    return line != null;
+  }
+
   /** get next line from stderr
    * @return line or null
    */
@@ -278,6 +285,13 @@ class Exec
   public void ungetStderr(String line)
   {
     if (line != null) stderrStack.push(line);
+  }
+
+  public boolean eofStderr()
+  {
+    String line = getStderr();
+    ungetStderr(line);
+    return line != null;
   }
 
   /** read data from stdout
