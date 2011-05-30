@@ -12,6 +12,7 @@
 // base
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -176,7 +177,7 @@ class CommandDiff
    * @param revisionLeft left revision or null
    * @param revisionRight right revision or null
    */
-  CommandDiff(Shell shell, final RepositoryTab repositoryTab, FileData fileData, String revisionLeft, String revisionRight)
+  CommandDiff(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData, String revisionLeft, String revisionRight)
   {
     Composite composite,subComposite;
     Label     label;
@@ -530,6 +531,7 @@ class CommandDiff
           Widgets.setEnabled(control,(data.revisionNames != null));
         }
       });
+      widgetRevisionPrev.setToolTipText("Show previous revision.");
 
       widgetRevision = Widgets.newSelect(composite);
       widgetRevisionPrev.setEnabled(false);
@@ -553,6 +555,7 @@ class CommandDiff
           Widgets.setEnabled(control,(data.revisionNames != null));
         }
       });
+      widgetRevisionNext.setToolTipText("Show next revision.");
 
       widgetPatch = Widgets.newButton(composite,"Patch");
       widgetPatch.setEnabled(false);
@@ -564,6 +567,7 @@ class CommandDiff
           Widgets.setEnabled(control,(data.diffData != null));
         }
       });
+      widgetPatch.setToolTipText("Create a patch.");
 
       widgetPrev = Widgets.newButton(composite,"Prev");
       widgetPrev.setEnabled(false);
@@ -575,6 +579,7 @@ class CommandDiff
           Widgets.setEnabled(control,(data.diffData != null));
         }
       });
+      widgetPrev.setToolTipText("Goto previous difference.");
 
       widgetNext = Widgets.newButton(composite,"Next");
       widgetNext.setEnabled(false);
@@ -586,6 +591,7 @@ class CommandDiff
           Widgets.setEnabled(control,(data.diffData != null));
         }
       });
+      widgetNext.setToolTipText("Goto next difference.");
 
       widgetClose = Widgets.newButton(composite,"Close");
       Widgets.layout(widgetClose,0,11,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -602,6 +608,7 @@ class CommandDiff
           Dialogs.close(dialog);
         }
       });
+      widgetClose.setToolTipText("Close the window.");
     }
 
     // listeners
@@ -1038,7 +1045,13 @@ class CommandDiff
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-Dprintf.dprintf("NYI");
+        HashSet<FileData> fileDataSet = new HashSet<FileData>();
+        fileDataSet.add(fileData);
+        if (fileDataSet != null)
+        {
+          CommandCreatePatch commandCreatePatch = new CommandCreatePatch(shell, repositoryTab, fileDataSet);
+          commandCreatePatch.run();
+        }
       }
     });
 
