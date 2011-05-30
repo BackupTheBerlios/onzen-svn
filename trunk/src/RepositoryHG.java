@@ -1024,7 +1024,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         while ((line = exec.getStdout()) != null)
         {
 //Dprintf.dprintf("line=%s",line);
-          // fix +++/--- lines: strip out first part in name, e. g. "a/"/"b/", check if absolute path and convert
+          // fix +++/--- lines: check if absolute path and convert or remove prefixes
           if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
           {
             String prefix     = matcher.group(1);
@@ -1042,10 +1042,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
               fileName = name.substring(rootPath.length());
               if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
             }
-            else if (Settings.hgRemovePatchPrefixPath)
+            else if (Settings.hgRelativePatchPaths)
             {
-              // relative path -> strip out first path in name and sub-directory
-              fileName = name;
+              // relative hg path -> convert to relative path to root path
+              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()+1):name;
             }
             else
             {
@@ -1071,14 +1071,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             String fileName;
             if      (name.startsWith(rootPath))
             {
-              // absolute path -> convert to relative path
+              // absolute path -> convert to relative path to root path
               fileName = name.substring(rootPath.length());
               if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
             }
-            else if (Settings.hgRemovePatchPrefixPath)
+            else if (Settings.hgRelativePatchPaths)
             {
-              // relative path -> strip out first path in name
-              fileName = name;
+              // relative hg path -> convert to relative path to root path
+              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()+1):name;
             }
             else
             {
@@ -1847,40 +1847,10 @@ Dprintf.dprintf("add new file %s",fileData);
     else                                   return FileData.States.UNKNOWN;
   }
 
-  /** get sub-directory based on hg root path
-   * @return sub-directory or ""
-   */
-  private String getSubDirectory()
-    throws IOException,RepositoryException
-  {
-    String hgRootPath;
-
-    Command command = new Command();
-    Exec    exec;
-    String  line;
-
-    // get hg root path
-    command.clear();
-    command.append(Settings.hgCommand,"root");
-    command.append("--");
-    exec = new Exec(rootPath,command);
-
-    // read
-    hgRootPath = exec.getStdout();
-
-    // done
-    exec.done();
-
-    // get sub-directory
-    return ((rootPath.length() > hgRootPath.length()) && rootPath.startsWith(hgRootPath))
-             ?rootPath.substring(hgRootPath.length()+1)
-             :"";
-  }
-
   /** get HG root path
    * @return root path
    */
-  private String getRootPath()
+  private String getHGRootPath()
     throws IOException,RepositoryException
   {
     String hgRootPath;
@@ -1902,6 +1872,21 @@ Dprintf.dprintf("add new file %s",fileData);
     exec.done();
 
     return hgRootPath;
+  }
+
+  /** get sub-directory based on hg root path
+   * @return sub-directory or ""
+   */
+  private String getSubDirectory()
+    throws IOException,RepositoryException
+  {
+    // get hg root path
+    String hgRootPath = getHGRootPath();
+
+    // get sub-directory
+    return ((rootPath.length() > hgRootPath.length()) && rootPath.startsWith(hgRootPath))
+             ?rootPath.substring(hgRootPath.length()+1)
+             :"";
   }
 
   /** get trees of hg forest
