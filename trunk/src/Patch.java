@@ -968,8 +968,13 @@ Dprintf.dprintf("===============");
       while (patchChunk.nextFile())
       {
 //Dprintf.dprintf("patchChunk=%s",patchChunk);
-        File oldFile = new File(rootPath,patchChunk.newFileName);
+        File oldFile = new File(rootPath,patchChunk.oldFileName);
         File newFile = new File(rootPath,patchChunk.newFileName);
+        if (!oldFile.exists() && patchChunk.oldFileName.startsWith("a/") && patchChunk.newFileName.startsWith("b/"))
+        {
+          oldFile = new File(rootPath,patchChunk.oldFileName.substring(2));
+          newFile = new File(rootPath,patchChunk.newFileName.substring(2));
+        }
 
         // load old file lines (if not /dev/null == file is new)
         oldLineList.clear();
@@ -1016,7 +1021,7 @@ Dprintf.dprintf("exception=%s",exception);
           int lineNbOffset;
           for (PatchLines patchLines : patchChunk.patchLineList)
           {
-  //Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
+//Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
             switch (patchLines.type)
             {
               case CONTEXT:
@@ -1051,20 +1056,20 @@ Dprintf.dprintf("exception=%s",exception);
                  for (String line : patchLines.lines)
                  {
                    newLineList.add(line);
-  //Dprintf.dprintf("cont %d %d %s",lineNb,patchLines.lines.length,line);
+//Dprintf.dprintf("cont %d %d %s",lineNb,patchLines.lines.length,line);
                  }
                  lineNb += patchLines.lines.length;
                }
                else
                {
                  // context not found -> unsolved merge
-  newLineList.add("<<<< unsolved begin >>>>");
+newLineList.add("<<<< unsolved begin >>>>");
                  for (String line : patchLines.lines)
                  {
                    newLineList.add(line);
-  Dprintf.dprintf("unsolved %s",line);
+Dprintf.dprintf("unsolved %s",line);
                  }
-  newLineList.add("<<<< unsolved end >>>>");
+newLineList.add("<<<< unsolved end >>>>");
                }
                break;
               case ADD:
@@ -1072,7 +1077,7 @@ Dprintf.dprintf("exception=%s",exception);
                for (String line : patchLines.lines)
                {
                  newLineList.add(line);
-  //Dprintf.dprintf("add %s",line);
+//Dprintf.dprintf("add %s",line);
                }
                break;
               case REMOVE:
@@ -1087,7 +1092,7 @@ Dprintf.dprintf("exception=%s",exception);
         while (lineNb <= oldLineList.size())
         {
           newLineList.add(oldLineList.get(lineNb-1));
-  //Dprintf.dprintf("rest %s",oldLineList.get(lineNb-1));
+//Dprintf.dprintf("rest %s",oldLineList.get(lineNb-1));
           lineNb++;
         }
 
