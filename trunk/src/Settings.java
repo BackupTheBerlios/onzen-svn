@@ -373,7 +373,7 @@ public class Settings
 
     public String toString(Integer accelerator) throws Exception
     {
-      return Widgets.acceleratorToText(accelerator);
+      return Widgets.menuAcceleratorToText(accelerator);
     }
   }
 
