@@ -1238,7 +1238,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Quit",SWT.CTRL+'Q');
+      menuItem = Widgets.addMenuItem(menu,"Quit",Settings.keyQuit);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1528,7 +1528,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"View/Solve conflict...",Settings.keySolve);
+      menuItem = Widgets.addMenuItem(menu,"Solve conflict...",Settings.keySolve);
 menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {

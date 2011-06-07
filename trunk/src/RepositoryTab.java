@@ -333,7 +333,7 @@ class RepositoryTab
 
       menu = Widgets.newPopupMenu(shell);
       {
-        menuItem = Widgets.addMenuItem(menu,"Update");
+        menuItem = Widgets.addMenuItem(menu,"Update",Settings.keyUpdate);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -345,7 +345,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Commit...");
+        menuItem = Widgets.addMenuItem(menu,"Commit...",Settings.keyCommit);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -357,7 +357,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Create patch...");
+        menuItem = Widgets.addMenuItem(menu,"Create patch...",Settings.keyCreatePatch);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -369,7 +369,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Patches...");
+        menuItem = Widgets.addMenuItem(menu,"Patches...",Settings.keyPatches);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -381,7 +381,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revert...");
+        menuItem = Widgets.addMenuItem(menu,"Revert...",Settings.keyRevert);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -393,7 +393,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Add...");
+        menuItem = Widgets.addMenuItem(menu,"Add...",Settings.keyAdd);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -405,7 +405,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Remove...");
+        menuItem = Widgets.addMenuItem(menu,"Remove...",Settings.keyRemove);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -417,7 +417,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Rename...");
+        menuItem = Widgets.addMenuItem(menu,"Rename...",Settings.keyRename);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -429,7 +429,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Set file mode...");
+        menuItem = Widgets.addMenuItem(menu,"Set file mode...",Settings.keySetFileMode);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -441,7 +441,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revision info...");
+        menuItem = Widgets.addMenuItem(menu,"Revision info...",Settings.keyRevisionInfo);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -453,7 +453,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Revisions...");
+        menuItem = Widgets.addMenuItem(menu,"Revisions...",Settings.keyRevisions);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -465,7 +465,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Diff...");
+        menuItem = Widgets.addMenuItem(menu,"Diff...",Settings.keyDiff);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -477,7 +477,19 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Annotations...");
+        menuItem = Widgets.addMenuItem(menu,"Changed files...",Settings.keyChangedFiles);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            changedFiles();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Annotations...",Settings.keyAnnotations);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -489,7 +501,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Solve...");
+        menuItem = Widgets.addMenuItem(menu,"Solve...",Settings.keySolve);
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -521,7 +533,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Open with...");
+        menuItem = Widgets.addMenuItem(menu,"Open with...",Settings.keyOpenFileWith);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -537,7 +549,21 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"New directory...");
+        menuItem = Widgets.addMenuItem(menu,"New file...",Settings.keyNewFile);
+menuItem.setEnabled(false);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+Dprintf.dprintf("");
+            newFile();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"New directory...",Settings.keyNewDirectory);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -549,7 +575,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Rename local...");
+        menuItem = Widgets.addMenuItem(menu,"Rename local...",Settings.keyRenameLocal);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -561,7 +587,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Delete local...");
+        menuItem = Widgets.addMenuItem(menu,"Delete local...",Settings.keyDeleteLocal);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)

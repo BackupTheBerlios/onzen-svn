@@ -805,6 +805,9 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindNextDiff                = ' ';
 
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyQuit                       = SWT.CTRL+'Q';
+
 
 /*
   @SettingComment(text={"Geometry (<width>x<height>)")
