@@ -211,7 +211,7 @@ class Preferences
               int[]     key       = (int[])tableItem.getData();
 
               key[0] = editKey(name,key[0]);
-              Widgets.updateTableEntry(widgetKeys,key,null,Widgets.acceleratorToText(key[0]));
+              Widgets.updateTableEntry(widgetKeys,key,null,Widgets.menuAcceleratorToText(key[0]));
             }
           }
           public void mouseDown(MouseEvent mouseEvent)
@@ -1504,7 +1504,7 @@ class Preferences
       Widgets.layout(subComposite,1,1,TableLayoutData.WE);
       {
         widgetKey = Widgets.newStringView(subComposite);
-        widgetKey.setText(Widgets.acceleratorToText(key));
+        widgetKey.setText(Widgets.menuAcceleratorToText(key));
         Widgets.layout(widgetKey,0,0,TableLayoutData.WE);
 
         button = Widgets.newButton(subComposite,"Clear");
@@ -1564,7 +1564,7 @@ class Preferences
       public void handleEvent(Event event)
       {
         data.key = event.stateMask+event.keyCode;
-        widgetKey.setText(Widgets.acceleratorToText(data.key));
+        widgetKey.setText(Widgets.menuAcceleratorToText(data.key));
       }
     };
     display.addFilter(SWT.KeyDown,keyFilter);
