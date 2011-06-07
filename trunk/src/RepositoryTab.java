@@ -139,7 +139,7 @@ class RepositoryTab
       this(tree,tree.getSortColumn());
     }
 
-    /** compare file tree data without take care about type
+    /** compare file tree data without taking care about type
      * @param fileData1, fileData2 file tree data to compare
      * @return -1 iff fileData1 < fileData2,
                 0 iff fileData1 = fileData2,
