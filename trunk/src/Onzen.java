@@ -911,7 +911,7 @@ exception.printStackTrace();
     composite.setLayout(new TableLayout(0.0,1.0,2));
     Widgets.layout(composite,1,0,TableLayoutData.WE);
     {
-      widgetButtonUpdate = Widgets.newButton(composite,"Update");
+      widgetButtonUpdate = Widgets.newButton(composite,"Update",Settings.keyUpdate);
       Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonUpdate.addSelectionListener(new SelectionListener()
       {
@@ -928,7 +928,7 @@ exception.printStackTrace();
       });
       widgetButtonUpdate.setToolTipText("Update selected entries with revisions from repository.");
 
-      widgetButtonCommit = Widgets.newButton(composite,"Commit");
+      widgetButtonCommit = Widgets.newButton(composite,"Commit",Settings.keyCommit);
       Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonCommit.addSelectionListener(new SelectionListener()
       {
@@ -945,7 +945,7 @@ exception.printStackTrace();
       });
       widgetButtonCommit.setToolTipText("Commit selected entries.");
 
-      widgetButtonCreatePatch = Widgets.newButton(composite,"Patch");
+      widgetButtonCreatePatch = Widgets.newButton(composite,"Patch",Settings.keyCreatePatch);
       Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonCreatePatch.addSelectionListener(new SelectionListener()
       {
@@ -962,7 +962,7 @@ exception.printStackTrace();
       });
       widgetButtonCreatePatch.setToolTipText("Create patch for selected entries.");
 
-      widgetButtonAdd = Widgets.newButton(composite,"Add");
+      widgetButtonAdd = Widgets.newButton(composite,"Add",Settings.keyAdd);
       Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonAdd.addSelectionListener(new SelectionListener()
       {
@@ -979,7 +979,7 @@ exception.printStackTrace();
       });
       widgetButtonAdd.setToolTipText("Add selected entries to repository.");
 
-      widgetButtonRemove = Widgets.newButton(composite,"Remove");
+      widgetButtonRemove = Widgets.newButton(composite,"Remove",Settings.keyRemove);
       Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonRemove.addSelectionListener(new SelectionListener()
       {
@@ -997,7 +997,7 @@ exception.printStackTrace();
       });
       widgetButtonRemove.setToolTipText("Remove selected entries from repository.");
 
-      widgetButtonRevert = Widgets.newButton(composite,"Revert");
+      widgetButtonRevert = Widgets.newButton(composite,"Revert",Settings.keyRevert);
       Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonRevert.addSelectionListener(new SelectionListener()
       {
@@ -1014,7 +1014,7 @@ exception.printStackTrace();
       });
       widgetButtonRevert.setToolTipText("Revert local changes of selected entires.");
 
-      widgetButtonDiff = Widgets.newButton(composite,"Diff");
+      widgetButtonDiff = Widgets.newButton(composite,"Diff",Settings.keyDiff);
       Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonDiff.addSelectionListener(new SelectionListener()
       {
@@ -1031,7 +1031,7 @@ exception.printStackTrace();
       });
       widgetButtonDiff.setToolTipText("Show differences of selected entry with revision in repository.");
 
-      widgetButtonRevisions = Widgets.newButton(composite,"Revisions");
+      widgetButtonRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
       Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT);
       widgetButtonRevisions.addSelectionListener(new SelectionListener()
       {
@@ -1048,7 +1048,7 @@ exception.printStackTrace();
       });
       widgetButtonRevisions.setToolTipText("Show revisions of selected entry.");
 
-      widgetButtonSolve = Widgets.newButton(composite,"Solve");
+      widgetButtonSolve = Widgets.newButton(composite,"Solve",Settings.keySolve);
 widgetButtonSolve.setEnabled(false);
       Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonSolve.addSelectionListener(new SelectionListener()
