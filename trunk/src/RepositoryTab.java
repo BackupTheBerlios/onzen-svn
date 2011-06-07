@@ -952,6 +952,257 @@ Dprintf.dprintf("");
     }
   }
 
+  /** open file (with external command)
+   * @param fileData file to open
+   */
+  public void openFile(FileData fileData)
+  {
+    // find editor command with file mime-type
+    String command = null;
+    String mimeType = fileData.getMimeType(repository.rootPath);
+    for (Settings.Editor editor : Settings.editors)
+    {
+      if (editor.pattern.matcher(mimeType).matches())
+      {
+        command = editor.command;
+        break;
+      }
+    }
+
+    // if no editor command found -> ask for command
+    if (command == null)
+    {
+      /** dialog data
+       */
+      class Data
+      {
+        String  mimeType;
+        String  command;
+        boolean addNewCommand;
+
+        Data()
+        {
+          this.mimeType      = null;
+          this.command       = null;
+          this.addNewCommand = false;
+        }
+      };
+
+      final Data data = new Data();
+
+      Composite composite,subComposite,subSubComposite;
+      Label     label;
+      Button    button;
+
+      data.mimeType = mimeType;
+
+      // command selection dialog
+      final Shell dialog = Dialogs.open(shell,"Select command to open file",300,200,new double[]{1.0,0.0},1.0);
+
+      // create widgets
+      final Table  widgetEditors;
+      final Text   widgetMimeType;
+      final Text   widgetCommand;
+      final Button widgetAddNewCommand;
+      final Button widgetOpen;
+      composite = Widgets.newComposite(dialog,SWT.NONE,4);
+      composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
+      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+      {
+        widgetEditors = Widgets.newTable(composite);
+        Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
+        Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
+        Widgets.addTableColumn(widgetEditors,1,"Command",  SWT.LEFT,250,true );
+
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+        {
+          label = Widgets.newLabel(subComposite,"Mime type:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          widgetMimeType = Widgets.newText(subComposite);
+          widgetMimeType.setText(mimeType);
+          Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
+
+          label = Widgets.newLabel(subComposite,"Command:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+          Widgets.layout(subSubComposite,1,1,TableLayoutData.WE);
+          {
+            widgetCommand = Widgets.newText(subSubComposite);
+            Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
+            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%file% - file name");
+
+            button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
+            Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String fileName = Dialogs.fileOpen(shell,
+                                                   "Select program",
+                                                   widgetCommand.getText(),
+                                                   new String[]{"All files","*",
+                                                               }
+                                                  );
+                if (fileName != null)
+                {
+                  widgetCommand.setText(fileName);
+                }
+              }
+            });
+          }
+
+          widgetAddNewCommand = Widgets.newCheckbox(subComposite,"add as new command");
+          Widgets.layout(widgetAddNewCommand,2,1,TableLayoutData.W);
+        }
+      }
+
+      // buttons
+      composite = Widgets.newComposite(dialog,SWT.NONE,4);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      {
+        widgetOpen = Widgets.newButton(composite,"Open");
+        widgetOpen.setEnabled(false);
+        Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
+        widgetOpen.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            data.mimeType      = widgetMimeType.getText();
+            data.command       = widgetCommand.getText();
+            data.addNewCommand = widgetAddNewCommand.getSelection();
+
+            Dialogs.close(dialog,true);
+          }
+        });
+
+        button = Widgets.newButton(composite,"Cancel");
+        Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,60,SWT.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Dialogs.close(dialog,false);
+          }
+        });
+      }
+
+      // listeners
+      widgetEditors.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          int index = widgetEditors.getSelectionIndex();
+          if (index >= 0)
+          {
+            TableItem       tableItem = widgetEditors.getItem(index);
+            Settings.Editor editor    = (Settings.Editor)tableItem.getData();
+
+            widgetCommand.setText(editor.command);
+          }
+        }
+      });
+      widgetEditors.addListener(SWT.MouseDoubleClick,new Listener()
+      {
+        public void handleEvent(final Event event)
+        {
+          int index = widgetEditors.getSelectionIndex();
+          if (index >= 0)
+          {
+            TableItem       tableItem = widgetEditors.getItem(index);
+            Settings.Editor editor    = (Settings.Editor)tableItem.getData();
+
+            data.mimeType      = null;
+            data.command       = editor.command;
+            data.addNewCommand = widgetAddNewCommand.getSelection();
+
+            Dialogs.close(dialog,true);
+          }
+        }
+      });
+      Widgets.setNextFocus(widgetMimeType,widgetCommand);
+      widgetCommand.addModifyListener(new ModifyListener()
+      {
+        public void modifyText(ModifyEvent modifyEvent)
+        {
+          Text widget = (Text)modifyEvent.widget;
+
+          widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
+        }
+      });
+      Widgets.setNextFocus(widgetCommand,widgetOpen);
+
+      // add editors
+      for (Settings.Editor editor : Settings.editors)
+      {
+        TableItem tableItem = new TableItem(widgetEditors,SWT.NONE);
+        tableItem.setData(editor);
+        tableItem.setText(0,editor.mimeTypePattern);
+        tableItem.setText(1,editor.command);
+      }
+
+      // run
+      widgetCommand.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        if (!data.command.isEmpty())
+        {
+          if (data.mimeType != null)
+          {
+            if (data.addNewCommand)
+            {
+              // add editor
+              Settings.Editor editor = new Settings.Editor(data.mimeType,data.command);
+              Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
+              Settings.editors[Settings.editors.length-1] = editor;
+            }
+          }
+
+          // get command
+          command = data.command;
+        }
+      }
+    }
+//Dprintf.dprintf("command=%s",command);
+
+    // execute external command
+    if (command != null)
+    {
+      // expand command
+      command = (command.indexOf("%file%") >= 0)
+                  ?command.replace("%file%",fileData.getFileName(repository.rootPath))
+                  :command+" "+fileData.getFileName(repository.rootPath);
+
+      // run command
+      try
+      {
+        Runtime.getRuntime().exec(command);
+      }
+      catch (IOException exception)
+      {
+        Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",command,exception.getMessage());
+        return;
+      }
+    }
+  }
+
   /** open file with external program
    * @param fileData file data
    */
@@ -976,7 +1227,7 @@ Dprintf.dprintf("");
     Button      button;
 
     // new directory dialog
-    dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Open file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetCommand;
     final Button widgetOpen;
@@ -1924,257 +2175,6 @@ Dprintf.dprintf("");
     }
 
     return false;
-  }
-
-  /** open file (with external command)
-   * @param fileData file to open
-   */
-  private void openFile(FileData fileData)
-  {
-    // find editor command with file mime-type
-    String command = null;
-    String mimeType = fileData.getMimeType(repository.rootPath);
-    for (Settings.Editor editor : Settings.editors)
-    {
-      if (editor.pattern.matcher(mimeType).matches())
-      {
-        command = editor.command;
-        break;
-      }
-    }
-
-    // if no editor command found -> ask for command
-    if (command == null)
-    {
-      /** dialog data
-       */
-      class Data
-      {
-        String  mimeType;
-        String  command;
-        boolean addNewCommand;
-
-        Data()
-        {
-          this.mimeType      = null;
-          this.command       = null;
-          this.addNewCommand = false;
-        }
-      };
-
-      final Data data = new Data();
-
-      Composite composite,subComposite,subSubComposite;
-      Label     label;
-      Button    button;
-
-      data.mimeType = mimeType;
-
-      // command selection dialog
-      final Shell dialog = Dialogs.open(shell,"Select command to open file",300,200,new double[]{1.0,0.0},1.0);
-
-      // create widgets
-      final Table  widgetEditors;
-      final Text   widgetMimeType;
-      final Text   widgetCommand;
-      final Button widgetAddNewCommand;
-      final Button widgetOpen;
-      composite = Widgets.newComposite(dialog,SWT.NONE,4);
-      composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
-      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
-      {
-        widgetEditors = Widgets.newTable(composite);
-        Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,1,"Command",  SWT.LEFT,250,true );
-
-        subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
-        {
-          label = Widgets.newLabel(subComposite,"Mime type:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          widgetMimeType = Widgets.newText(subComposite);
-          widgetMimeType.setText(mimeType);
-          Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
-
-          label = Widgets.newLabel(subComposite,"Command:");
-          Widgets.layout(label,1,0,TableLayoutData.W);
-
-          subSubComposite = Widgets.newComposite(subComposite);
-          subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-          Widgets.layout(subSubComposite,1,1,TableLayoutData.WE);
-          {
-            widgetCommand = Widgets.newText(subSubComposite);
-            Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
-            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%file% - file name");
-
-            button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
-            Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String fileName = Dialogs.fileOpen(shell,
-                                                   "Select program",
-                                                   widgetCommand.getText(),
-                                                   new String[]{"All files","*",
-                                                               }
-                                                  );
-                if (fileName != null)
-                {
-                  widgetCommand.setText(fileName);
-                }
-              }
-            });
-          }
-
-          widgetAddNewCommand = Widgets.newCheckbox(subComposite,"add as new command");
-          Widgets.layout(widgetAddNewCommand,2,1,TableLayoutData.W);
-        }
-      }
-
-      // buttons
-      composite = Widgets.newComposite(dialog,SWT.NONE,4);
-      composite.setLayout(new TableLayout(0.0,1.0));
-      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
-      {
-        widgetOpen = Widgets.newButton(composite,"Open");
-        widgetOpen.setEnabled(false);
-        Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
-        widgetOpen.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            data.mimeType      = widgetMimeType.getText();
-            data.command       = widgetCommand.getText();
-            data.addNewCommand = widgetAddNewCommand.getSelection();
-
-            Dialogs.close(dialog,true);
-          }
-        });
-
-        button = Widgets.newButton(composite,"Cancel");
-        Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,60,SWT.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Dialogs.close(dialog,false);
-          }
-        });
-      }
-
-      // listeners
-      widgetEditors.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          int index = widgetEditors.getSelectionIndex();
-          if (index >= 0)
-          {
-            TableItem       tableItem = widgetEditors.getItem(index);
-            Settings.Editor editor    = (Settings.Editor)tableItem.getData();
-
-            widgetCommand.setText(editor.command);
-          }
-        }
-      });
-      widgetEditors.addListener(SWT.MouseDoubleClick,new Listener()
-      {
-        public void handleEvent(final Event event)
-        {
-          int index = widgetEditors.getSelectionIndex();
-          if (index >= 0)
-          {
-            TableItem       tableItem = widgetEditors.getItem(index);
-            Settings.Editor editor    = (Settings.Editor)tableItem.getData();
-
-            data.mimeType      = null;
-            data.command       = editor.command;
-            data.addNewCommand = widgetAddNewCommand.getSelection();
-
-            Dialogs.close(dialog,true);
-          }
-        }
-      });
-      Widgets.setNextFocus(widgetMimeType,widgetCommand);
-      widgetCommand.addModifyListener(new ModifyListener()
-      {
-        public void modifyText(ModifyEvent modifyEvent)
-        {
-          Text widget = (Text)modifyEvent.widget;
-
-          widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
-        }
-      });
-      Widgets.setNextFocus(widgetCommand,widgetOpen);
-
-      // add editors
-      for (Settings.Editor editor : Settings.editors)
-      {
-        TableItem tableItem = new TableItem(widgetEditors,SWT.NONE);
-        tableItem.setData(editor);
-        tableItem.setText(0,editor.mimeTypePattern);
-        tableItem.setText(1,editor.command);
-      }
-
-      // run
-      widgetCommand.setFocus();
-      if ((Boolean)Dialogs.run(dialog,false))
-      {
-        if (!data.command.isEmpty())
-        {
-          if (data.mimeType != null)
-          {
-            if (data.addNewCommand)
-            {
-              // add editor
-              Settings.Editor editor = new Settings.Editor(data.mimeType,data.command);
-              Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
-              Settings.editors[Settings.editors.length-1] = editor;
-            }
-          }
-
-          // get command
-          command = data.command;
-        }
-      }
-    }
-//Dprintf.dprintf("command=%s",command);
-
-    // execute external command
-    if (command != null)
-    {
-      // expand command
-      command = (command.indexOf("%file%") >= 0)
-                  ?command.replace("%file%",fileData.getFileName(repository.rootPath))
-                  :command+" "+fileData.getFileName(repository.rootPath);
-
-      // run command
-      try
-      {
-        Runtime.getRuntime().exec(command);
-      }
-      catch (IOException exception)
-      {
-        Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",command,exception.getMessage());
-        return;
-      }
-    }
   }
 
   /** get file data image
