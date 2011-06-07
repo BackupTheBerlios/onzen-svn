@@ -2509,9 +2509,9 @@ class Widgets
             TableItem tableItem = new TableItem(table,SWT.NONE,j);
             tableItem.setData(data);
             tableItem.setText(texts);
-            tableItem.setChecked(checked);
             tableItem.setForeground(foregroundColor);
             tableItem.setBackground(backgroundColor);
+            tableItem.setChecked(checked);
 
             tableItems = table.getItems();
           }
@@ -3244,6 +3244,8 @@ private static void printTree(Tree tree)
       {
         texts[z] = treeItem.getText(z);
       }
+      Color foregroundColor = treeItem.getForeground();
+      Color backgroundColor = treeItem.getBackground();
       boolean checked = treeItem.getChecked();
       Image image = treeItem.getImage();
 
@@ -3252,6 +3254,8 @@ private static void printTree(Tree tree)
       else                        newTreeItem = new TreeItem(tree,SWT.NONE,index);
       newTreeItem.setData(data);
       newTreeItem.setText(texts);
+      newTreeItem.setForeground(foregroundColor);
+      newTreeItem.setBackground(backgroundColor);
       newTreeItem.setChecked(checked);
       newTreeItem.setImage(image);
       for (TreeItem subTreeItem : treeItem.getItems())
