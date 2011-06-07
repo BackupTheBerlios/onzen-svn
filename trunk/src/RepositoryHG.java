@@ -1118,7 +1118,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     // get complete patches for new files
     for (FileData fileData : newFileDataSet)
     {
-Dprintf.dprintf("add new file %s",fileData);
       try
       {
         BufferedReader bufferedReader;
