@@ -968,6 +968,7 @@ Dprintf.dprintf("===============");
       while (patchChunk.nextFile())
       {
 //Dprintf.dprintf("patchChunk=%s",patchChunk);
+        // get old, new file
         File oldFile = new File(rootPath,patchChunk.oldFileName);
         File newFile = new File(rootPath,patchChunk.newFileName);
         if (!oldFile.exists() && patchChunk.oldFileName.startsWith("a/") && patchChunk.newFileName.startsWith("b/"))
