@@ -470,6 +470,42 @@ class CommandChangedFiles
 
       menu = Widgets.newPopupMenu(dialog);
       {
+        menuItem = Widgets.addMenuItem(menu,"Open file",Settings.keyUpdate);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+
+            if (fileData != null)
+            {
+              repositoryTab.openFile(fileData);
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyUpdate);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+
+            if (fileData != null)
+            {
+              repositoryTab.openFileWith(fileData);
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
         menuItem = Widgets.addMenuItem(menu,"Update",Settings.keyUpdate);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -902,6 +938,10 @@ Dprintf.dprintf("");
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
+        TableItem tableItem = (TableItem)selectionEvent.item;
+        FileData  fileData  = (FileData)tableItem.getData();
+
+        repositoryTab.openFile(fileData);
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
