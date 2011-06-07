@@ -493,18 +493,22 @@ $(DISTRIBUTION_NAME).tar.bz2: \
 	$(INSTALL) -m 664 \
                    $(OTHER_JARS) \
                    tmp/$(DISTRIBUTION_NAME)/jars
+	#
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/linux
 	$(INSTALL) -m 664 \
                    jars/linux/*.jar \
                    tmp/$(DISTRIBUTION_NAME)/jars/linux
+	#
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/solaris
 	$(INSTALL) -m 664 \
                    jars/solaris/*.jar \
                    tmp/$(DISTRIBUTION_NAME)/jars/solaris
+	#
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/macosx
 	$(INSTALL) -m 664 \
                    jars/macosx/*.jar \
                    tmp/$(DISTRIBUTION_NAME)/jars/macosx
+	#
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/jars/windows
 	$(INSTALL) -m 664 \
                    jars/windows/*.jar \
