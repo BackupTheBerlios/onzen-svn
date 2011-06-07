@@ -1045,7 +1045,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             else if (Settings.hgRelativePatchPaths)
             {
               // relative hg path -> convert to relative path to root path
-              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()+1):name;
+              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()):name;
             }
             else
             {
@@ -1078,7 +1078,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             else if (Settings.hgRelativePatchPaths)
             {
               // relative hg path -> convert to relative path to root path
-              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()+1):name;
+              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()):name;
             }
             else
             {
