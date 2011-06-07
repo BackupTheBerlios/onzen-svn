@@ -118,7 +118,8 @@ class RepositorySVN extends Repository
     String          line;
     Matcher         matcher;
     FileData        fileData;
-    String          name               = null;
+    String          name;
+    String          fileName;
     FileData.States state              = FileData.States.UNKNOWN;
     String          workingRevision    = "";
     String          repositoryRevision = "";
@@ -141,9 +142,10 @@ class RepositorySVN extends Repository
           // match name, state
           if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
           {
-            name = (!directory.isEmpty() ? directory+File.separator : "")+matcher.group(1);
+            name     = matcher.group(1);
+            fileName = (!directory.isEmpty() ? directory+File.separator : "")+name;
 
-            fileData = findFileData(fileDataSet,name);
+            fileData = findFileData(fileDataSet,fileName);
             if      (fileData != null)
             {
               fileData.state = FileData.States.UNKNOWN;
@@ -155,13 +157,13 @@ class RepositorySVN extends Repository
                     )
             {
               // get file type, size, date/time
-              File file = new File(rootPath,name);
+              File file = new File(rootPath,fileName);
               FileData.Types type     = getFileType(file);
               long           size     = file.length();
               Date           datetime = new Date(file.lastModified());
 
               // create file data
-              newFileDataSet.add(new FileData(name,
+              newFileDataSet.add(new FileData(fileName,
                                               FileData.Types.FILE,
                                               state,
                                               FileData.Modes.BINARY,
@@ -177,9 +179,10 @@ class RepositorySVN extends Repository
             workingRevision    = matcher.group(3);
             repositoryRevision = matcher.group(4);
             author             = matcher.group(5);
-            name               = (!directory.isEmpty() ? directory+File.separator : "")+matcher.group(6);
+            name               = matcher.group(6);
+            fileName           = (!directory.isEmpty() ? directory+File.separator : "")+name;
 
-            fileData = findFileData(fileDataSet,name);
+            fileData = findFileData(fileDataSet,fileName);
             if      (fileData != null)
             {
               fileData.state              = state;
@@ -193,13 +196,13 @@ class RepositorySVN extends Repository
                     )
             {
               // get file type, size, date/time
-              File file = new File(rootPath,name);
+              File file = new File(rootPath,fileName);
               FileData.Types type     = getFileType(file);
               long           size     = file.length();
               Date           datetime = new Date(file.lastModified());
 
               // create file data
-              newFileDataSet.add(new FileData(name,
+              newFileDataSet.add(new FileData(fileName,
                                               FileData.Types.FILE,
                                               state,
                                               FileData.Modes.BINARY,
