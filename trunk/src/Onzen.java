@@ -1544,6 +1544,21 @@ menuItem.setEnabled(false);
 
     menu = Widgets.addMenu(menuBar,"File/Directory");
     {
+      menuItem = Widgets.addMenuItem(menu,"Open file...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.openFile();
+          }
+        }
+      });
+
       menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
       menuItem.addSelectionListener(new SelectionListener()
       {
