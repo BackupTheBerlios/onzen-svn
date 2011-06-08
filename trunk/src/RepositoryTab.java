@@ -517,7 +517,7 @@ Dprintf.dprintf("");
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Open...");
+        menuItem = Widgets.addMenuItem(menu,"Open file...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -533,7 +533,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Open with...",Settings.keyOpenFileWith);
+        menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1226,6 +1226,17 @@ Dprintf.dprintf("");
         Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",command,exception.getMessage());
         return;
       }
+    }
+  }
+
+  /** open file (with external command)
+   */
+  public void openFile()
+  {
+    final FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      openFileWith(fileData);
     }
   }
 
