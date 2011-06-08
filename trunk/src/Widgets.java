@@ -1259,15 +1259,19 @@ class Widgets
 
       if ((accelerator & SWT.MODIFIER_MASK) != 0)
       {
+        // accelerator has a modified -> match modifier+key code
         return    (((accelerator & SWT.MODIFIER_MASK) & stateMask) == (accelerator & SWT.MODIFIER_MASK))
                && ((accelerator & SWT.KEY_MASK) == keyCode);
       }
       else
       {
-        return    (   ((stateMask & SWT.MODIFIER_MASK) == 0)
-                   || ((stateMask & SWT.MODIFIER_MASK) == SWT.SHIFT)
+        // accelerator has no modified -> accept no modifier/shift+character or match key code
+        return    (   (   ((stateMask & SWT.MODIFIER_MASK) == 0)
+                       || ((stateMask & SWT.MODIFIER_MASK) == SWT.SHIFT)
+                      )
+                   && ((accelerator & SWT.KEY_MASK) == character)
                   )
-               && ((accelerator & SWT.KEY_MASK) == character);
+               || ((accelerator & SWT.KEY_MASK) == keyCode);
       }
     }
     else
