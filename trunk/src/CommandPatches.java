@@ -445,7 +445,7 @@ class CommandPatches
           widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
           widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
 
-          button = Widgets.newButton(subComposite,"Refresh");
+          button = Widgets.newButton(subComposite,"Refresh...");
           button.setEnabled(false);
           Widgets.layout(button,1,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           Widgets.addModifyListener(new WidgetListener(button,data)
