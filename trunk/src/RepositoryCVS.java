@@ -1453,7 +1453,14 @@ Dprintf.dprintf("unknown %s",line);
       // revert files
       command.clear();
       command.append(Settings.cvsCommand,"update");
-      if (!revision.equals(LAST_REVISION_NAME)) command.append("-r",revision);
+      if (revision.equals(LAST_REVISION_NAME))
+      {
+        command.append("-A");
+      }
+      else
+      {
+        command.append("-r",revision);
+      }
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
