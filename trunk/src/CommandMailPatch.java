@@ -674,13 +674,53 @@ class CommandMailPatch
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Settings.geometryMailPatch = dialog.getSize();
+Dprintf.dprintf("");
 
           Dialogs.close(dialog,true);
         }
       });
 
+      button = Widgets.newButton(composite,"Refresh...");
+      Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (Dialogs.confirm(dialog,"Confirmation","Really refresh patch?"))
+          {
+            repositoryTab.setStatusText("Refresh patch...");
+            try
+            {
+              // get repository instance
+              Repository repository = Repository.newInstance(patch.rootPath);
+
+              // refresh patch
+              String[] newLines = repository.getPatchLines(patch.getFileNames(),
+                                                           patch.revision1,
+                                                           patch.revision2,
+                                                           patch.ignoreWhitespaces
+                                                          );
+              patch.setLines(newLines);
+              widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.getLineDelimiter()));
+            }
+            catch (RepositoryException exception)
+            {
+              Dialogs.error(dialog,"Cannot get patch (error: %s)",exception.getMessage());
+              return;
+            }
+            finally
+            {
+              repositoryTab.clearStatusText();
+            }
+          }
+        }
+      });
+
       widgetCancel = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(widgetCancel,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetCancel,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetCancel.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
