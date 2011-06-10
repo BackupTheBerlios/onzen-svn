@@ -1076,7 +1076,7 @@ class Preferences
   {
     if (!dialog.isDisposed())
     {
-      if ((Boolean)Dialogs.run(dialog))
+      if ((Boolean)Dialogs.run(dialog,false))
       {
         if (Dialogs.confirm(shell,"Confirmation","Some settings may become active only after restarting Onzen.","Restart now","Cancel"))
         {
