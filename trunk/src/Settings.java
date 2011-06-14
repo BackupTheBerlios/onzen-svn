@@ -843,21 +843,33 @@ public class Settings
 
   @SettingComment(text={"","Default mail settings"})
   @SettingValue
-  public static String  mailSMTPHost                                    = "";
+  public static String           mailSMTPHost                           = "";
   @SettingValue
-  public static int     mailSMTPPort                                    = 25;
+  public static int              mailSMTPPort                           = 25;
   @SettingValue
-  public static boolean mailSMTPSSL                                     = false;
+  public static boolean          mailSMTPSSL                            = false;
   @SettingValue
-  public static String  mailLogin                                       = "";
+  public static String           mailLogin                              = "";
   @SettingValue
-  public static String  mailFrom                                        = "";
+  public static String           mailFrom                               = "";
 
   @SettingComment(text={"","Mail commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
   @SettingValue
   public static String           commandMail                            = "mail -s '${subject}' ${to} ${cc}";
   @SettingValue
   public static String           commandMailAttachment                  = "mail -s '${subject}' -a ${file} ${to} ${cc}";
+
+  @SettingComment(text={"","Default review server settings"})
+  @SettingValue
+  public static String           reviewServer                           = "";
+  @SettingValue
+  public static String           reviewServerUserName                   = "";
+  @SettingValue
+  public static String           reviewServerPassword                   = "";
+
+  @SettingComment(text={"","Review commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
+  @SettingValue
+  public static String           commandPostReview                      = "post-review --server=${server} --username=${user} --password=${password} --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
 
   // general flags
   @SettingComment(text={"","Flags"})
