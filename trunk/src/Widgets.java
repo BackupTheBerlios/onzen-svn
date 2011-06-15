@@ -2254,7 +2254,7 @@ class Widgets
    */
   public static Spinner newSpinner(Composite composite, int min, int max)
   {
-    return newSpinner(composite,SWT.NONE,min,max);
+    return newSpinner(composite,SWT.BORDER|SWT.RIGHT,min,max);
   }
 
   /** create new spinner widget
