@@ -1298,17 +1298,21 @@ class StoredFiles
                     "rootPath",
                     "openDirectories",
 
+                    "patchTests",
+
                     "mailSMTPHost",
                     "mailSMTPPort",
                     "mailSMTPSSL",
                     "mailLogin",
                     "mailFrom",
 
-                    "patchMailTests",
                     "patchMailTo",
                     "patchMailCC",
                     "patchMailSubject",
-                    "patchMailText"
+                    "patchMailText",
+
+                    "reviewServer",
+                    "reviewServerUserName"
                    }
         )
 @XmlSeeAlso({RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
@@ -1399,9 +1403,9 @@ abstract class Repository implements Serializable
   @XmlElement(name = "path")
   private HashSet<String> openDirectories;
 
-  @XmlElementWrapper(name = "patchMailTests")
-  @XmlElement(name = "test", defaultValue = "")
-  public String[] patchMailTests = new String[0];
+  @XmlElementWrapper(name = "patchTests")
+  @XmlElement(name = "patchTests", defaultValue = "")
+  public String[] patchTests = new String[0];
 
   @XmlElement(name = "mailSMTPHost")
   public String  mailSMTPHost;
@@ -1422,6 +1426,11 @@ abstract class Repository implements Serializable
   public String patchMailSubject = "Patch #${n %04d}: ${summary}";
   @XmlElement(name = "patchMailText", defaultValue = "${message}\n\n${tests - %s}")
   public String patchMailText = "${message}\n\n${tests - %s}";
+
+  @XmlElement(name = "reviewServer")
+  public String  reviewServer;
+  @XmlElement(name = "reviewServerUserName")
+  public String  reviewServerUserName;
 
   // ------------------------ native functions ----------------------------
 
