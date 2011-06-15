@@ -300,9 +300,9 @@ class CommandMailPatch
             widgetTests.setHeaderVisible(false);
             Widgets.layout(widgetTests,1,0,TableLayoutData.NSWE);
             {
-              for (String test : repositoryTab.repository.patchMailTests)
+              for (String patchTest : repositoryTab.repository.patchTests)
               {
-                Widgets.addTableEntry(widgetTests,test,test);
+                Widgets.addTableEntry(widgetTests,patchTest,patchTest);
               }
             }
 
@@ -857,15 +857,15 @@ Dprintf.dprintf("");
     {
       public void handleEvent(Event event)
       {
-        String newTest = widgetNewTest.getText().trim();
+        String newPatchTest = widgetNewTest.getText().trim();
 
-        if (!newTest.isEmpty())
+        if (!newPatchTest.isEmpty())
         {
           // check for duplicate
           boolean found = false;
-          for (String test : repositoryTab.repository.patchMailTests)
+          for (String patchTest : repositoryTab.repository.patchTests)
           {
-            if (test.equalsIgnoreCase(newTest))
+            if (patchTest.equalsIgnoreCase(newPatchTest))
             {
               found = true;
               break;
@@ -874,18 +874,18 @@ Dprintf.dprintf("");
 
           if (!found)
           {
-            int n = repositoryTab.repository.patchMailTests.length;
+            int n = repositoryTab.repository.patchTests.length;
 
             // add new test
-            repositoryTab.repository.patchMailTests = Arrays.copyOf(repositoryTab.repository.patchMailTests,n+1);
-            repositoryTab.repository.patchMailTests[n] = newTest;
+            repositoryTab.repository.patchTests = Arrays.copyOf(repositoryTab.repository.patchTests,n+1);
+            repositoryTab.repository.patchTests[n] = newPatchTest;
 
-            TableItem tableItem = Widgets.addTableEntry(widgetTests,newTest,newTest);
+            TableItem tableItem = Widgets.addTableEntry(widgetTests,newPatchTest,newPatchTest);
             tableItem.setChecked(true);
           }
 
           // add test to mail
-          data.tests.add(newTest);
+          data.tests.add(newPatchTest);
           updateMailText();
         }
 
