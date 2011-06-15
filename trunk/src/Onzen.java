@@ -2886,34 +2886,40 @@ exception.printStackTrace();
       String   title;
       String   rootPath;
       String   masterRepository;
+      String[] patchTests;
       String   mailSMTPHost;
       int      mailSMTPPort;
       boolean  mailSMTPSSL;
       String   mailLogin;
       String   mailPassword;
       String   mailFrom;
-      String[] patchMailTests;
       String   patchMailTo;
       String   patchMailCC;
       String   patchMailSubject;
       String   patchMailText;
+      String   reviewServer;
+      String   reviewServerUserName;
+      String   reviewServerPassword;
 
       Data()
       {
-        this.title            = null;
-        this.rootPath         = null;
-        this.masterRepository = null;
-        this.mailSMTPHost     = null;
-        this.mailSMTPPort     = 0;
-        this.mailSMTPSSL      = false;
-        this.mailLogin        = null;
-        this.mailPassword     = null;
-        this.mailFrom         = null;
-        this.patchMailTests   = null;
-        this.patchMailTo      = null;
-        this.patchMailCC      = null;
-        this.patchMailSubject = null;
-        this.patchMailSubject = null;
+        this.title                = null;
+        this.rootPath             = null;
+        this.masterRepository     = null;
+        this.patchTests           = null;
+        this.mailSMTPHost         = null;
+        this.mailSMTPPort         = 0;
+        this.mailSMTPSSL          = false;
+        this.mailLogin            = null;
+        this.mailPassword         = null;
+        this.mailFrom             = null;
+        this.patchMailTo          = null;
+        this.patchMailCC          = null;
+        this.patchMailSubject     = null;
+        this.patchMailSubject     = null;
+        this.reviewServer         = null;
+        this.reviewServerUserName = null;
+        this.reviewServerPassword = null;
       }
     };
 
@@ -2934,17 +2940,20 @@ exception.printStackTrace();
     final Text                  widgetTitle;
     final Text                  widgetRootPath;
     final HashMap<Field,Widget> widgetFieldMap = new HashMap<Field,Widget>();
+    final List                  widgetPatchTests;
     final Text                  widgetMailSMTPHost;
     final Spinner               widgetMailSMTPPort;
     final Button                widgetMailSMTPSSL;
     final Text                  widgetMailLogin;
     final Text                  widgetMailPassword;
     final Text                  widgetMailFrom;
-    final List                  widgetPatchTests;
     final Text                  widgetPatchMailTo;
     final Text                  widgetPatchMailCC;
     final Text                  widgetPatchMailSubject;
     final Text                  widgetPatchMailText;
+    final Text                  widgetReviewServer;
+    final Text                  widgetReviewServerUserName;
+    final Text                  widgetReviewServerPassword;
     final Button                widgetSave;
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(1.0,1.0,4));
@@ -3136,9 +3145,154 @@ exception.printStackTrace();
         }
       }
 
+      subComposite = Widgets.addTab(tabFolder,"Patch tests");
+      subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+      Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
+      {
+        widgetPatchTests = Widgets.newList(subComposite);
+        if (repositoryTab.repository.patchTests != null)
+        {
+          for (String patchTest : repositoryTab.repository.patchTests)
+          {
+            widgetPatchTests.add(patchTest);
+          }
+        }
+        Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,0,2);
+        widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch for review.");
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(null,null));
+        Widgets.layout(subSubComposite,1,0,TableLayoutData.E,0,0,2);
+        {
+          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
+          Widgets.layout(button,0,0,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetPatchTests.getSelectionIndex();
+              if (index >= 0)
+              {
+                if (index > 0)
+                {
+                  String test0 = widgetPatchTests.getItem(index-1);
+                  String test1 = widgetPatchTests.getItem(index  );
+                  widgetPatchTests.setItem(index-1,test1);
+                  widgetPatchTests.setItem(index  ,test0);
+                  widgetPatchTests.setSelection(index-1);
+                }
+              }
+            }
+          });
+          button.setToolTipText("Move test description up.");
+
+          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
+          Widgets.layout(button,0,1,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetPatchTests.getSelectionIndex();
+              if (index >= 0)
+              {
+                if (index < widgetPatchTests.getItemCount()-1)
+                {
+                  String test0 = widgetPatchTests.getItem(index  );
+                  String test1 = widgetPatchTests.getItem(index+1);
+                  widgetPatchTests.setItem(index  ,test1);
+                  widgetPatchTests.setItem(index+1,test0);
+                  widgetPatchTests.setSelection(index+1);
+                }
+              }
+            }
+          });
+          button.setToolTipText("Move test description down.");
+
+          button = Widgets.newButton(subSubComposite,"Add");
+          Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String patchTest = Dialogs.string(dialog,"Edit patch test","Test:","","Add","Cancel");
+              if (patchTest != null)
+              {
+                widgetPatchTests.add(patchTest);
+              }
+            }
+          });
+          button.setToolTipText("Add new test description.");
+
+          button = Widgets.newButton(subSubComposite,"Remove");
+          Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetPatchTests.getSelectionIndex();
+              if (index >= 0)
+              {
+                String test = widgetPatchTests.getItem(index);
+                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove patch test '%s'?",test)))
+                {
+                  widgetPatchTests.remove(index);
+                }
+              }
+            }
+          });
+          button.setToolTipText("Remove selected test description.");
+        }
+        menu = Widgets.newPopupMenu(dialog);
+        {
+          subMenu = Widgets.addMenu(menu,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
+                  widgetPatchTests.removeAll();
+                  if (repository.patchTests != null)
+                  {
+                    for (String patchTest : repository.patchTests)
+                    {
+                      widgetPatchTests.add(patchTest);
+                    }
+                  }
+                }
+              });
+            }
+          }
+        }
+        subComposite.setMenu(menu);
+        subComposite.setToolTipText("Test description settings.\nRight-click to open context menu.");
+      }
+
       subComposite = Widgets.addTab(tabFolder,"Mail");
       subComposite.setLayout(new TableLayout(new double[]{0.0,0.3,0.7},1.0));
-      Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,0,2,TableLayoutData.NSWE);
       {
         subSubComposite = Widgets.newGroup(subComposite,"Mail server");
         subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -3241,154 +3395,9 @@ exception.printStackTrace();
         subSubComposite.setMenu(menu);
         subSubComposite.setToolTipText("Mail server settings.\nRight-click to open context menu.");
 
-        subSubComposite = Widgets.newGroup(subComposite,"Tests");
-        subSubComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
-        {
-          widgetPatchTests = Widgets.newList(subSubComposite);
-          if (repositoryTab.repository.patchMailTests != null)
-          {
-            for (String test : repositoryTab.repository.patchMailTests)
-            {
-              widgetPatchTests.add(test);
-            }
-          }
-          Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,0,2);
-          widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch mail.");
-
-          subSubSubComposite = Widgets.newComposite(subSubComposite);
-          subSubSubComposite.setLayout(new TableLayout(null,null));
-          Widgets.layout(subSubSubComposite,1,0,TableLayoutData.E,0,0,2);
-          {
-            button = Widgets.newButton(subSubSubComposite,Onzen.IMAGE_ARROW_UP);
-            Widgets.layout(button,0,0,TableLayoutData.E);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetPatchTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  if (index > 0)
-                  {
-                    String test0 = widgetPatchTests.getItem(index-1);
-                    String test1 = widgetPatchTests.getItem(index  );
-                    widgetPatchTests.setItem(index-1,test1);
-                    widgetPatchTests.setItem(index  ,test0);
-                    widgetPatchTests.setSelection(index-1);
-                  }
-                }
-              }
-            });
-            button.setToolTipText("Move test description up.");
-
-            button = Widgets.newButton(subSubSubComposite,Onzen.IMAGE_ARROW_DOWN);
-            Widgets.layout(button,0,1,TableLayoutData.E);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetPatchTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  if (index < widgetPatchTests.getItemCount()-1)
-                  {
-                    String test0 = widgetPatchTests.getItem(index  );
-                    String test1 = widgetPatchTests.getItem(index+1);
-                    widgetPatchTests.setItem(index  ,test1);
-                    widgetPatchTests.setItem(index+1,test0);
-                    widgetPatchTests.setSelection(index+1);
-                  }
-                }
-              }
-            });
-            button.setToolTipText("Move test description down.");
-
-            button = Widgets.newButton(subSubSubComposite,"Add");
-            Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String test = Dialogs.string(dialog,"Edit test","Test:","","Add","Cancel");
-                if (test != null)
-                {
-                  widgetPatchTests.add(test);
-                }
-              }
-            });
-            button.setToolTipText("Add new test description.");
-
-            button = Widgets.newButton(subSubSubComposite,"Remove");
-            Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetPatchTests.getSelectionIndex();
-                if (index >= 0)
-                {
-                  String test = widgetPatchTests.getItem(index);
-                  if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove test '%s'?",test)))
-                  {
-                    widgetPatchTests.remove(index);
-                  }
-                }
-              }
-            });
-            button.setToolTipText("Remove selected test description.");
-          }
-        }
-        menu = Widgets.newPopupMenu(dialog);
-        {
-          subMenu = Widgets.addMenu(menu,"Copy from...");
-          for (Repository repository : repositoryList)
-          {
-            if (repository != repositoryTab.repository)
-            {
-              menuItem = Widgets.addMenuItem(subMenu,repository.title);
-              menuItem.setData(repository);
-              menuItem.addSelectionListener(new SelectionListener()
-              {
-                public void widgetDefaultSelected(SelectionEvent selectionEvent)
-                {
-                }
-                public void widgetSelected(SelectionEvent selectionEvent)
-                {
-                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
-                  Repository repository = (Repository)widget.getData();
-
-                  widgetPatchTests.removeAll();
-                  if (repository.patchMailTests != null)
-                  {
-                    for (String test : repository.patchMailTests)
-                    {
-                      widgetPatchTests.add(test);
-                    }
-                  }
-                }
-              });
-            }
-          }
-        }
-        subSubComposite.setMenu(menu);
-        subSubComposite.setToolTipText("Test description settings.\nRight-click to open context menu.");
-
         subSubComposite = Widgets.newGroup(subComposite,"Patch mail");
         subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
-        Widgets.layout(subSubComposite,2,0,TableLayoutData.NSWE);
+        Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subSubComposite,"To:");
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
@@ -3454,6 +3463,74 @@ exception.printStackTrace();
         subSubComposite.setMenu(menu);
         subSubComposite.setToolTipText("Patch mail settings.\nRight-click to open context menu.");
       }
+
+      subComposite = Widgets.addTab(tabFolder,"Post review");
+      subComposite.setLayout(new TableLayout(new double[]{0.0,0.3,0.7},1.0));
+      Widgets.layout(subComposite,0,3,TableLayoutData.NSWE);
+      {
+        subSubComposite = Widgets.newGroup(subComposite,"Review server");
+        subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,0,0,TableLayoutData.WE,0,0,2);
+        {
+          label = Widgets.newLabel(subSubComposite,"Name:");
+          Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
+
+          widgetReviewServer = Widgets.newText(subSubComposite);
+          widgetReviewServer.setText((repositoryTab.repository.reviewServer != null)?repositoryTab.repository.reviewServer:Settings.reviewServer);
+          Widgets.layout(widgetReviewServer,0,1,TableLayoutData.WE);
+          widgetReviewServer.setToolTipText("Review server name.");
+
+          label = Widgets.newLabel(subSubComposite,"User name:");
+          Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
+
+          widgetReviewServerUserName = Widgets.newText(subSubComposite);
+          widgetReviewServerUserName.setText((repositoryTab.repository.reviewServerUserName != null)?repositoryTab.repository.reviewServerUserName:Settings.reviewServerUserName);
+          Widgets.layout(widgetReviewServerUserName,1,1,TableLayoutData.WE);
+          widgetReviewServerUserName.setToolTipText("Review server user name.");
+
+          label = Widgets.newLabel(subSubComposite,"Password:");
+          Widgets.layout(label,2,0,TableLayoutData.W);
+
+          widgetReviewServerPassword = Widgets.newPassword(subSubComposite);
+          String password = getPassword(Settings.reviewServerPassword,Settings.reviewServerPassword);
+          if (password != null) widgetReviewServerPassword.setText(password);
+          Widgets.layout(widgetReviewServerPassword,2,1,TableLayoutData.WE);
+          widgetReviewServerPassword.setToolTipText("Review server login password.");
+        }
+        menu = Widgets.newPopupMenu(dialog);
+        {
+          subMenu = Widgets.addMenu(menu,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+                  String     password   = getPassword(repository.mailLogin,repository.mailSMTPHost);
+
+                  if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
+                  widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
+                  widgetMailSMTPSSL.setSelection(repository.mailSMTPSSL);
+                  if (repository.mailLogin != null) widgetMailLogin.setText(repository.mailLogin);
+                  if (password != null) widgetMailPassword.setText(password);
+                  if (repository.mailFrom != null) widgetMailFrom.setText(repository.mailFrom);
+                }
+              });
+            }
+          }
+        }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Review server settings.\nRight-click to open context menu.");
+      }
     }
 
     // buttons
@@ -3472,19 +3549,22 @@ exception.printStackTrace();
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.title            = widgetTitle.getText();
-          data.rootPath         = widgetRootPath.getText();
-          data.mailSMTPHost     = widgetMailSMTPHost.getText();
-          data.mailSMTPPort     = widgetMailSMTPPort.getSelection();
-          data.mailSMTPSSL      = widgetMailSMTPSSL.getSelection();
-          data.mailLogin        = widgetMailLogin.getText();
-          data.mailPassword     = widgetMailPassword.getText();
-          data.mailFrom         = widgetMailFrom.getText();
-          data.patchMailTests   = widgetPatchTests.getItems();
-          data.patchMailTo      = widgetPatchMailTo.getText();
-          data.patchMailCC      = widgetPatchMailCC.getText();
-          data.patchMailSubject = widgetPatchMailSubject.getText();
-          data.patchMailText    = widgetPatchMailText.getText();
+          data.title                = widgetTitle.getText();
+          data.rootPath             = widgetRootPath.getText();
+          data.patchTests           = widgetPatchTests.getItems();
+          data.mailSMTPHost         = widgetMailSMTPHost.getText();
+          data.mailSMTPPort         = widgetMailSMTPPort.getSelection();
+          data.mailSMTPSSL          = widgetMailSMTPSSL.getSelection();
+          data.mailLogin            = widgetMailLogin.getText();
+          data.mailPassword         = widgetMailPassword.getText();
+          data.mailFrom             = widgetMailFrom.getText();
+          data.patchMailTo          = widgetPatchMailTo.getText();
+          data.patchMailCC          = widgetPatchMailCC.getText();
+          data.patchMailSubject     = widgetPatchMailSubject.getText();
+          data.patchMailText        = widgetPatchMailText.getText();
+          data.reviewServer         = widgetReviewServer.getText();
+          data.reviewServerUserName = widgetReviewServerUserName.getText();
+          data.reviewServerPassword = widgetReviewServerPassword.getText();
 
           for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
           {
@@ -3604,18 +3684,22 @@ exception.printStackTrace();
     {
       // set data
       repositoryTab.setTitle(data.title);
-      repositoryTab.repository.rootPath         = data.rootPath;
-      repositoryTab.repository.mailSMTPHost     = data.mailSMTPHost;
-      repositoryTab.repository.mailSMTPPort     = data.mailSMTPPort;
-      repositoryTab.repository.mailSMTPSSL      = data.mailSMTPSSL;
-      repositoryTab.repository.mailLogin        = data.mailLogin;
-      repositoryTab.repository.mailFrom         = data.mailFrom;
-      repositoryTab.repository.patchMailTests   = data.patchMailTests;
-      repositoryTab.repository.patchMailTo      = data.patchMailTo;
-      repositoryTab.repository.patchMailCC      = data.patchMailCC;
-      repositoryTab.repository.patchMailSubject = data.patchMailSubject;
-      repositoryTab.repository.patchMailText    = data.patchMailText;
+      repositoryTab.repository.rootPath             = data.rootPath;
+      repositoryTab.repository.patchTests           = data.patchTests;
+      repositoryTab.repository.mailSMTPHost         = data.mailSMTPHost;
+      repositoryTab.repository.mailSMTPPort         = data.mailSMTPPort;
+      repositoryTab.repository.mailSMTPSSL          = data.mailSMTPSSL;
+      repositoryTab.repository.mailLogin            = data.mailLogin;
+      repositoryTab.repository.mailFrom             = data.mailFrom;
+      repositoryTab.repository.patchMailTo          = data.patchMailTo;
+      repositoryTab.repository.patchMailCC          = data.patchMailCC;
+      repositoryTab.repository.patchMailSubject     = data.patchMailSubject;
+      repositoryTab.repository.patchMailText        = data.patchMailText;
+      repositoryTab.repository.reviewServer         = data.reviewServer;
+      repositoryTab.repository.reviewServerUserName = data.reviewServerUserName;
+      repositoryTab.repository.patchMailText        = data.patchMailText;
       setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
+      setPassword(data.reviewServerUserName,data.reviewServer,data.reviewServerPassword);
 
       // save list
       try
