@@ -125,6 +125,9 @@ class Preferences
   private final Table         widgetEditors;
   private final Text          widgetCommandMail;
   private final Text          widgetCommandMailAttachment;
+  private final Text          widgetReviewServer;
+  private final Text          widgetReviewServerUserName;
+  private final Text          widgetCommandPostReview;
 
   private final Text          widgetCVSCommand;
   private final Button        widgetCVSPruneEmptyDirectories;
@@ -384,23 +387,49 @@ class Preferences
           });
         }
 
-        subComposite = Widgets.newComposite(composite);
+        subComposite = Widgets.newGroup(composite,"Mail");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
         Widgets.layout(subComposite,2,0,TableLayoutData.WE);
         {
-          label = Widgets.newLabel(subComposite,"Mail command:");
+          label = Widgets.newLabel(subComposite,"External command:");
           Widgets.layout(label,0,0,TableLayoutData.W);
           widgetCommandMail = Widgets.newText(subComposite);
           widgetCommandMail.setText(Settings.commandMail);
           Widgets.layout(widgetCommandMail,0,1,TableLayoutData.WE);
-          widgetCommandMail.setToolTipText("Mail command.\nMacros:\n  %to% - to address\n  %cc% - CC address\n  %subject% - subject line\n");
+          widgetCommandMail.setToolTipText("External mail command.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n");
 
-          label = Widgets.newLabel(subComposite,"Mail command with attachment:");
+          label = Widgets.newLabel(subComposite,"External command with attachment:");
           Widgets.layout(label,1,0,TableLayoutData.W);
           widgetCommandMailAttachment = Widgets.newText(subComposite);
           widgetCommandMailAttachment.setText(Settings.commandMailAttachment);
           Widgets.layout(widgetCommandMailAttachment,1,1,TableLayoutData.WE);
-          widgetCommandMailAttachment.setToolTipText("Mail command with an attachment.\nMacros:\n  %to% - to address\n  %cc% - CC address\n  %subject% - subject line\n  %file% - attachment file name");
+          widgetCommandMailAttachment.setToolTipText("External mail command with an attachment.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n  ${file} - attachment file name");
+        }
+
+        subComposite = Widgets.newGroup(composite,"Post review");
+        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,3,0,TableLayoutData.WE);
+        {
+          label = Widgets.newLabel(subComposite,"Review server:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+          widgetReviewServer = Widgets.newText(subComposite);
+          widgetReviewServer.setText(Settings.reviewServer);
+          Widgets.layout(widgetReviewServer,0,1,TableLayoutData.WE);
+          widgetReviewServer.setToolTipText("Default post review server name.\n");
+
+          label = Widgets.newLabel(subComposite,"User name:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
+          widgetReviewServerUserName = Widgets.newText(subComposite);
+          widgetReviewServerUserName.setText(Settings.reviewServerUserName);
+          Widgets.layout(widgetReviewServerUserName,1,1,TableLayoutData.WE);
+          widgetReviewServerUserName.setToolTipText("Default review server user name.\n");
+
+          label = Widgets.newLabel(subComposite,"Post review command:");
+          Widgets.layout(label,2,0,TableLayoutData.W);
+          widgetCommandPostReview = Widgets.newText(subComposite);
+          widgetCommandPostReview.setText(Settings.commandPostReview);
+          Widgets.layout(widgetCommandPostReview,2,1,TableLayoutData.WE);
+          widgetCommandPostReview.setToolTipText("Post review command.\nMacros:\n  ${server} - review server name\n  ${user} - user name\n  ${password} - password\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
         }
       }
 
@@ -1015,6 +1044,12 @@ class Preferences
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
           Settings.editors                                = getEditors();
+
+          Settings.commandMail                            = widgetCommandMail.getText();
+          Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText();
+          Settings.reviewServer                           = widgetReviewServer.getText();
+          Settings.reviewServerUserName                   = widgetReviewServerUserName.getText();
+          Settings.commandPostReview                      = widgetCommandPostReview.getText();
 
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
