@@ -298,6 +298,7 @@ class CommandAdd
             if (i < history.length-1)
             {
               widgetHistory.setSelection(i+1);
+              display.update();
               widgetHistory.showSelection();
               widgetMessage.setText(StringUtils.join(history[i+1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
@@ -309,6 +310,7 @@ class CommandAdd
             if (i > 0)
             {
               widgetHistory.setSelection(i-1);
+              display.update();
               widgetHistory.showSelection();
               widgetMessage.setText(StringUtils.join(history[i-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
@@ -320,6 +322,7 @@ class CommandAdd
             if (history.length > 0)
             {
               widgetHistory.setSelection(0);
+              display.update();
               widgetHistory.showSelection();
               widgetMessage.setText(StringUtils.join(history[0],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
@@ -331,6 +334,7 @@ class CommandAdd
             if (history.length > 0)
             {
               widgetHistory.setSelection(history.length-1);
+              display.update();
               widgetHistory.showSelection();
               widgetMessage.setText(StringUtils.join(history[history.length-1],widgetMessage.DELIMITER));
               widgetMessage.setFocus();
@@ -368,6 +372,7 @@ class CommandAdd
         widgetHistory.add(StringUtils.join(lines,", "));
       }
       widgetHistory.setSelection(widgetHistory.getItemCount()-1);
+      display.update();
       widgetHistory.showSelection();
       widgetHistory.deselectAll();
     }
