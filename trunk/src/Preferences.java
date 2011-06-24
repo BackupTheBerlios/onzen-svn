@@ -125,6 +125,14 @@ class Preferences
   private final Table         widgetEditors;
   private final Text          widgetCommandMail;
   private final Text          widgetCommandMailAttachment;
+
+  private final Text          widgetMailSMTPHost;
+  private final Spinner       widgetMailSMTPPort;
+  private final Button        widgetMailSMTPSSL;
+  private final Text          widgetMailLogin;
+  private final Text          widgetMailPassword;
+  private final Text          widgetMailFrom;
+
   private final Text          widgetReviewServer;
   private final Text          widgetReviewServerUserName;
   private final Text          widgetCommandPostReview;
@@ -173,7 +181,7 @@ class Preferences
   Preferences(final Shell shell, final Onzen onzen)
   {
     TabFolder tabFolder;
-    Composite composite,subComposite,subSubComposite;
+    Composite composite,subComposite,subSubComposite,subSubSubComposite;
     Label     label;
     Button    button;
     Listener  listener;
@@ -387,18 +395,18 @@ class Preferences
           });
         }
 
-        subComposite = Widgets.newGroup(composite,"Mail");
+        subComposite = Widgets.newGroup(composite,"External Mail");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
         Widgets.layout(subComposite,2,0,TableLayoutData.WE);
         {
-          label = Widgets.newLabel(subComposite,"External command:");
+          label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,0,0,TableLayoutData.W);
           widgetCommandMail = Widgets.newText(subComposite);
           widgetCommandMail.setText(Settings.commandMail);
           Widgets.layout(widgetCommandMail,0,1,TableLayoutData.WE);
           widgetCommandMail.setToolTipText("External mail command.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n");
 
-          label = Widgets.newLabel(subComposite,"External command with attachment:");
+          label = Widgets.newLabel(subComposite,"Command with attachment:");
           Widgets.layout(label,1,0,TableLayoutData.W);
           widgetCommandMailAttachment = Widgets.newText(subComposite);
           widgetCommandMailAttachment.setText(Settings.commandMailAttachment);
@@ -406,9 +414,71 @@ class Preferences
           widgetCommandMailAttachment.setToolTipText("External mail command with an attachment.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n  ${file} - attachment file name");
         }
 
-        subComposite = Widgets.newGroup(composite,"Post review");
+        subComposite = Widgets.newGroup(composite,"SMTP Mail");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
         Widgets.layout(subComposite,3,0,TableLayoutData.WE);
+        {
+          label = Widgets.newLabel(subComposite,"Server:");
+          Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,new double[]{0.7,0.0,0.3,0.0}));
+          Widgets.layout(subSubComposite,0,1,TableLayoutData.WE,0,0,2);
+          {
+            widgetMailSMTPHost = Widgets.newText(subSubComposite);
+            widgetMailSMTPHost.setText(Settings.mailSMTPHost);
+            Widgets.layout(widgetMailSMTPHost,0,0,TableLayoutData.WE);
+            widgetMailSMTPHost.setToolTipText("Mail SMTP server host name.");
+
+            label = Widgets.newLabel(subSubComposite,"Port:");
+            Widgets.layout(label,0,1,TableLayoutData.W);
+
+            widgetMailSMTPPort = Widgets.newSpinner(subSubComposite,0,65535);
+            widgetMailSMTPPort.setTextLimit(5);
+            widgetMailSMTPPort.setSelection(Settings.mailSMTPPort);
+            Widgets.layout(widgetMailSMTPPort,0,2,TableLayoutData.WE);
+            widgetMailSMTPPort.setToolTipText("Mail SMTP server port number.");
+
+            widgetMailSMTPSSL = Widgets.newCheckbox(subSubComposite,"SSL");
+            widgetMailSMTPSSL.setSelection(Settings.mailSMTPSSL);
+            Widgets.layout(widgetMailSMTPSSL,0,3,TableLayoutData.E);
+            widgetMailSMTPSSL.setToolTipText("Use SMTP with SSL encryption.");
+          }
+
+          label = Widgets.newLabel(subComposite,"Login:");
+          Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0,1.0}));
+          Widgets.layout(subSubComposite,1,1,TableLayoutData.WE,0,0,2);
+          {
+            widgetMailLogin = Widgets.newText(subSubComposite);
+            widgetMailLogin.setText(Settings.mailLogin);
+            Widgets.layout(widgetMailLogin,0,0,TableLayoutData.WE);
+            widgetMailLogin.setToolTipText("Mail server login name.");
+
+            label = Widgets.newLabel(subSubComposite,"Password:");
+            Widgets.layout(label,0,1,TableLayoutData.W);
+
+            widgetMailPassword = Widgets.newPassword(subSubComposite);
+            String password = onzen.getPassword(Settings.mailSMTPHost);
+            if (password != null) widgetMailPassword.setText(password);
+            Widgets.layout(widgetMailPassword,0,2,TableLayoutData.WE);
+            widgetMailPassword.setToolTipText("Mail server login password.");
+          }
+
+          label = Widgets.newLabel(subComposite,"From name:");
+          Widgets.layout(label,2,0,TableLayoutData.W,0,0,2);
+
+          widgetMailFrom = Widgets.newText(subComposite);
+          widgetMailFrom.setText(Settings.mailFrom);
+          Widgets.layout(widgetMailFrom,2,1,TableLayoutData.WE,0,0,2);
+          widgetMailFrom.setToolTipText("Mail from address.");
+        }
+
+        subComposite = Widgets.newGroup(composite,"Post review");
+        subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,4,0,TableLayoutData.WE);
         {
           label = Widgets.newLabel(subComposite,"Review server:");
           Widgets.layout(label,0,0,TableLayoutData.W);
@@ -1016,40 +1086,48 @@ class Preferences
           saveColors();
           saveFonts();
 
-          Settings.cvsCommand                             = widgetCVSCommand.getText();
+          Settings.cvsCommand                             = widgetCVSCommand.getText().trim();
           Settings.cvsPruneEmtpyDirectories               = widgetCVSPruneEmptyDirectories.getSelection();
 
-          Settings.svnCommand                             = widgetSVNCommand.getText();
-          Settings.svnDiffCommand                         = widgetSVNDiffCommand.getText();
-          Settings.svnDiffCommandOptions                  = widgetSVNDiffCommandOptions.getText();
-          Settings.svnDiffCommandOptionsIgnoreWhitespaces = widgetSVNDiffCommandOptionsIgnoreWhitespaces.getText();
+          Settings.svnCommand                             = widgetSVNCommand.getText().trim();
+          Settings.svnDiffCommand                         = widgetSVNDiffCommand.getText().trim();
+          Settings.svnDiffCommandOptions                  = widgetSVNDiffCommandOptions.getText().trim();
+          Settings.svnDiffCommandOptionsIgnoreWhitespaces = widgetSVNDiffCommandOptionsIgnoreWhitespaces.getText().trim();
 
-          Settings.hgCommand                              = widgetHGCommand.getText();
-          Settings.hgDiffCommand                          = widgetHGDiffCommand.getText();
-          Settings.hgDiffCommandOptions                   = widgetHGDiffCommandOptions.getText();
-          Settings.hgDiffCommandOptionsIgnoreWhitespaces  = widgetHGDiffCommandOptionsIgnoreWhitespaces.getText();
+          Settings.hgCommand                              = widgetHGCommand.getText().trim();
+          Settings.hgDiffCommand                          = widgetHGDiffCommand.getText().trim();
+          Settings.hgDiffCommandOptions                   = widgetHGDiffCommandOptions.getText().trim();
+          Settings.hgDiffCommandOptionsIgnoreWhitespaces  = widgetHGDiffCommandOptionsIgnoreWhitespaces.getText().trim();
           Settings.hgUseForestExtension                   = widgetHGUseForestExtension.getSelection();
           Settings.hgUpdateWithFetch                      = widgetHGUpdateWithFetch.getSelection();
           Settings.hgSafeUpdate                           = widgetHGSafeUpdate.getSelection();
           Settings.hgSingleLineCommitMessages             = widgetHGSingleLineCommitMessages.getSelection();
           Settings.hgRelativePatchPaths                   = widgetHGRelativePatchPaths.getSelection();
 
-          Settings.gitCommand                             = widgetGitCommand.getText();
+          Settings.gitCommand                             = widgetGitCommand.getText().trim();
 
-          Settings.tmpDirectory                           = widgetTmpDirectory.getText();
-          Settings.dateFormat                             = widgetDateFormat.getText();
-          Settings.timeFormat                             = widgetTimeFormat.getText();
-          Settings.dateTimeFormat                         = widgetDateTimeFormat.getText();
+          Settings.tmpDirectory                           = widgetTmpDirectory.getText().trim();
+          Settings.dateFormat                             = widgetDateFormat.getText().trim();
+          Settings.timeFormat                             = widgetTimeFormat.getText().trim();
+          Settings.dateTimeFormat                         = widgetDateTimeFormat.getText().trim();
           Settings.maxBackgroundTasks                     = Integer.parseInt(widgetMaxBackgroundTasks.getText());
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
           Settings.editors                                = getEditors();
 
           Settings.commandMail                            = widgetCommandMail.getText();
-          Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText();
-          Settings.reviewServer                           = widgetReviewServer.getText();
-          Settings.reviewServerUserName                   = widgetReviewServerUserName.getText();
-          Settings.commandPostReview                      = widgetCommandPostReview.getText();
+          Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText().trim();
+
+          Settings.mailSMTPHost                           = widgetMailSMTPHost.getText().trim();
+          Settings.mailSMTPPort                           = Integer.parseInt(widgetMailSMTPPort.getText());
+          Settings.mailSMTPSSL                            = widgetMailSMTPSSL.getSelection();
+          Settings.mailLogin                              = widgetMailLogin.getText().trim();
+          onzen.setPassword(Settings.mailSMTPHost,widgetMailPassword.getText().trim());
+          Settings.mailFrom                               = widgetMailFrom.getText().trim();
+
+          Settings.reviewServer                           = widgetReviewServer.getText().trim();
+          Settings.reviewServerUserName                   = widgetReviewServerUserName.getText().trim();
+          Settings.commandPostReview                      = widgetCommandPostReview.getText().trim();
 
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
