@@ -3364,6 +3364,28 @@ exception.printStackTrace();
         menu = Widgets.newPopupMenu(dialog);
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
+          menuItem = Widgets.addMenuItem(subMenu,"default");
+          menuItem.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String password = getPassword(Settings.reviewServerUserName,Settings.reviewServer);
+
+              if (Settings.reviewServer != null) widgetReviewServer.setText(Settings.reviewServer);
+              if (Settings.reviewServerUserName != null) widgetReviewServerUserName.setText(Settings.reviewServerUserName);
+              if (password != null) widgetReviewServerPassword.setText(password);
+
+              if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
+              widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
+              widgetMailSMTPSSL.setSelection(repository.mailSMTPSSL);
+              if (repository.mailLogin != null) widgetMailLogin.setText(repository.mailLogin);
+              if (password != null) widgetMailPassword.setText(password);
+              if (repository.mailFrom != null) widgetMailFrom.setText(repository.mailFrom);
+            }
+          });
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -3492,7 +3514,7 @@ exception.printStackTrace();
           Widgets.layout(label,2,0,TableLayoutData.W);
 
           widgetReviewServerPassword = Widgets.newPassword(subSubComposite);
-          String password = getPassword(Settings.reviewServerPassword,Settings.reviewServerPassword);
+          String password = getPassword(repositoryTab.repository.reviewServerUserName,repositoryTab.repository.reviewServer);
           if (password != null) widgetReviewServerPassword.setText(password);
           Widgets.layout(widgetReviewServerPassword,2,1,TableLayoutData.WE);
           widgetReviewServerPassword.setToolTipText("Review server login password.");
@@ -3500,6 +3522,21 @@ exception.printStackTrace();
         menu = Widgets.newPopupMenu(dialog);
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
+          menuItem = Widgets.addMenuItem(subMenu,"default");
+          menuItem.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String password = getPassword(Settings.reviewServerUserName,Settings.reviewServer);
+
+              if (Settings.reviewServer != null) widgetReviewServer.setText(Settings.reviewServer);
+              if (Settings.reviewServerUserName != null) widgetReviewServerUserName.setText(Settings.reviewServerUserName);
+              if (password != null) widgetReviewServerPassword.setText(password);
+            }
+          });
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -3515,14 +3552,11 @@ exception.printStackTrace();
                 {
                   MenuItem   widget     = (MenuItem)selectionEvent.widget;
                   Repository repository = (Repository)widget.getData();
-                  String     password   = getPassword(repository.mailLogin,repository.mailSMTPHost);
+                  String     password   = getPassword(repository.reviewServerUserName,repository.reviewServer);
 
-                  if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
-                  widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
-                  widgetMailSMTPSSL.setSelection(repository.mailSMTPSSL);
-                  if (repository.mailLogin != null) widgetMailLogin.setText(repository.mailLogin);
-                  if (password != null) widgetMailPassword.setText(password);
-                  if (repository.mailFrom != null) widgetMailFrom.setText(repository.mailFrom);
+                  if (repository.reviewServer != null) widgetReviewServer.setText(repository.reviewServer);
+                  if (repository.reviewServerUserName != null) widgetReviewServerUserName.setText(repository.reviewServerUserName);
+                  if (password != null) widgetReviewServerPassword.setText(password);
                 }
               });
             }
