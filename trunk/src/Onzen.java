@@ -3372,18 +3372,14 @@ exception.printStackTrace();
             }
             public void widgetSelected(SelectionEvent selectionEvent)
             {
-              String password = getPassword(Settings.reviewServerUserName,Settings.reviewServer);
+              String password = getPassword(Settings.mailLogin,Settings.mailSMTPHost);
 
-              if (Settings.reviewServer != null) widgetReviewServer.setText(Settings.reviewServer);
-              if (Settings.reviewServerUserName != null) widgetReviewServerUserName.setText(Settings.reviewServerUserName);
-              if (password != null) widgetReviewServerPassword.setText(password);
-
-              if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
-              widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
-              widgetMailSMTPSSL.setSelection(repository.mailSMTPSSL);
-              if (repository.mailLogin != null) widgetMailLogin.setText(repository.mailLogin);
+              if (Settings.mailSMTPHost != null) widgetMailSMTPHost.setText(Settings.mailSMTPHost);
+              widgetMailSMTPPort.setSelection(Settings.mailSMTPPort);
+              widgetMailSMTPSSL.setSelection(Settings.mailSMTPSSL);
+              if (Settings.mailLogin != null) widgetMailLogin.setText(Settings.mailLogin);
               if (password != null) widgetMailPassword.setText(password);
-              if (repository.mailFrom != null) widgetMailFrom.setText(repository.mailFrom);
+              if (Settings.mailFrom != null) widgetMailFrom.setText(Settings.mailFrom);
             }
           });
           for (Repository repository : repositoryList)
