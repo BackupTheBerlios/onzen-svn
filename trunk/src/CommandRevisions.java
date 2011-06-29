@@ -11,21 +11,11 @@
 /****************************** Imports ********************************/
 // base
 import java.io.DataOutputStream;
-//import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
-//import java.util.HashMap;
 import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -340,7 +330,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled((fileData.mode == FileData.Modes.TEXT) && (data.selectedRevisionData != null));
+          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData != null);
         }
       });
       widgetView.addSelectionListener(new SelectionListener()
