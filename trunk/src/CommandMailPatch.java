@@ -1017,13 +1017,13 @@ Dprintf.dprintf("");
    */
   private void findPrev(StyledText widgetPatch, Text widgetFind)
   {
-    String findText = widgetFind.getText();
+    String findText = widgetFind.getText().toLowerCase();
     if (!findText.isEmpty())
     {
       // get cursor position, text before cursor
       int cursorIndex = widgetPatch.getCaretOffset();
 
-      int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).lastIndexOf(findText) : -1;
+      int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
       if (offset >= 0)
       {
         int index = offset;
@@ -1046,7 +1046,7 @@ Dprintf.dprintf("cursorIndex=%d index=%d",cursorIndex,index);
    */
   private void findNext(StyledText widgetPatch, Text widgetFind)
   {
-    String findText = widgetFind.getText();
+    String findText = widgetFind.getText().toLowerCase();
     if (!findText.isEmpty())
     {
       // get cursor position, text before cursor
@@ -1054,7 +1054,7 @@ Dprintf.dprintf("cursorIndex=%d index=%d",cursorIndex,index);
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = widgetPatch.getText().substring(cursorIndex+1).indexOf(findText);
+      int offset = widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText);
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;

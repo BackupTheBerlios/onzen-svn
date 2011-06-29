@@ -2046,13 +2046,13 @@ Dprintf.dprintf("");
   {
     int index = -1;
 
-    String findText = widgetFind.getText();
+    String findText = widgetFind.getText().toLowerCase();
     if (!findText.isEmpty())
     {
       // get cursor position, text before cursor
       int cursorIndex = widgetText.getCaretOffset();
 
-      int offset = (cursorIndex > 0) ? widgetText.getText(0,cursorIndex-1).lastIndexOf(findText) : -1;
+      int offset = (cursorIndex > 0) ? widgetText.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
       if (offset >= 0)
       {
         index = offset;
@@ -2079,7 +2079,7 @@ Dprintf.dprintf("");
   {
     int index = -1;
 
-    String findText = widgetFind.getText();
+    String findText = widgetFind.getText().toLowerCase();
     if (!findText.isEmpty())
     {
       // get cursor position, text before cursor
@@ -2087,7 +2087,7 @@ Dprintf.dprintf("");
   //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = widgetText.getText().substring(cursorIndex+1).indexOf(findText);
+      int offset = widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText);
       if (offset >= 0)
       {
         index = cursorIndex+1+offset;
