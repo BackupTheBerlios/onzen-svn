@@ -210,15 +210,7 @@ class CommandView
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFind.setEnabled(false);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
-        Widgets.addModifyListener(new WidgetListener(widgetFind,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.lines != null));
-          }
-        });
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
@@ -628,7 +620,7 @@ class CommandView
         int cursorIndex = widgetText.getCaretOffset();
 
         // search
-        int offset = widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText);
+        int offset = (cursorIndex > 0) ? widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
         if (offset >= 0)
         {
           int index = cursorIndex+1+offset;

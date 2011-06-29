@@ -305,13 +305,6 @@ class CommandDiff
 
         widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         Widgets.layout(widgetFindLeft,0,1,TableLayoutData.WE);
-        Widgets.addModifyListener(new WidgetListener(widgetFindLeft,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.diffData != null));
-          }
-        });
 
         widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindLeftPrev.setEnabled(false);
@@ -345,13 +338,6 @@ class CommandDiff
 
         widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         Widgets.layout(widgetFindRight,0,1,TableLayoutData.WE);
-        Widgets.addModifyListener(new WidgetListener(widgetFindRight,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.diffData != null));
-          }
-        });
 
         widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindRightPrev.setEnabled(false);
@@ -2087,7 +2073,7 @@ Dprintf.dprintf("");
   //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText);
+      int offset = (cursorIndex > 0) ? widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
       if (offset >= 0)
       {
         index = cursorIndex+1+offset;

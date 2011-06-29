@@ -1054,7 +1054,7 @@ Dprintf.dprintf("cursorIndex=%d index=%d",cursorIndex,index);
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText);
+      int offset = (cursorIndex > 0) ? widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;
