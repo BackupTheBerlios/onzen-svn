@@ -799,6 +799,8 @@ public class Settings
   public static int                      keyDeleteLocal                 = SWT.NONE;
 
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFind                        = SWT.CTRL+'f';
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindPrev                    = SWT.CTRL+SWT.ARROW_LEFT;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindNext                    = SWT.CTRL+SWT.ARROW_RIGHT;

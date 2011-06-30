@@ -1163,26 +1163,31 @@ class CommandDiff
       }
     });
 
-    dialog.addKeyListener(new KeyListener()
+    KeyListener keyListener = new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-Dprintf.dprintf("");
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+//Dprintf.dprintf("keyEvent=%s",keyEvent);
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
         {
-Dprintf.dprintf("");
+          if      (keyEvent.widget == widgetTextLeft ) widgetFindLeft.forceFocus();
+          else if (keyEvent.widget == widgetTextRight) widgetFindRight.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
           Widgets.invoke(widgetPrev);
         }
         else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
         {
-Dprintf.dprintf("");
           Widgets.invoke(widgetNext);
         }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
       }
-    });
+    };
+    widgetTextLeft.addKeyListener(keyListener);
+    widgetTextRight.addKeyListener(keyListener);
 
     dialog.addListener(USER_EVENT_NEW_REVISION,new Listener()
     {
