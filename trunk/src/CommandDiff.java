@@ -96,6 +96,7 @@ class CommandDiff
     DiffData[]              diffData;           // diff data
     String[]                revisionNames;      // revision names
     DiffData.Types[]        lineTypes;          // array with line block types
+    int                     lineIndex;          // current line index
 
     Data()
     {
@@ -103,6 +104,7 @@ class CommandDiff
       this.diffData      = null;
       this.revisionNames = null;
       this.lineTypes     = null;
+      this.lineIndex     = 0;
     }
   };
 
@@ -716,22 +718,24 @@ class CommandDiff
       public void caretMoved(CaretEvent caretEvent)
       {
         int lineIndex = widgetTextLeft.getLineAtOffset(caretEvent.caretOffset);
-
-        String line1 = widgetTextLeft.getLine(lineIndex);
-        String line2 = widgetTextRight.getLine(lineIndex);
-        setLine(widgetLineDiff,
-                line1,
-                line2
-               );
-        updateLineColors(widgetLineDiff,
-                         widgetAdded.getSelection(),
-                         widgetDeleted.getSelection(),
-                         widgetChanged.getSelection(),
-                         widgetChangedWhitespaces.getSelection(),
-                         COLOR_DIFF_NONE,
-                         COLOR_DIFF_CHANGED,
-                         COLOR_DIFF_CHANGED_WHITESPACES
-                        );
+        if (lineIndex != data.lineIndex)
+        {
+          setLine(widgetLineDiff,
+                  widgetTextLeft,
+                  widgetTextRight,
+                  lineIndex
+                 );
+          updateLineColors(widgetLineDiff,
+                           widgetAdded.getSelection(),
+                           widgetDeleted.getSelection(),
+                           widgetChanged.getSelection(),
+                           widgetChangedWhitespaces.getSelection(),
+                           COLOR_DIFF_NONE,
+                           COLOR_DIFF_CHANGED,
+                           COLOR_DIFF_CHANGED_WHITESPACES
+                          );
+          data.lineIndex = lineIndex;
+        }
       }
     });
     widgetTextRight.addCaretListener(new CaretListener()
@@ -739,22 +743,24 @@ class CommandDiff
       public void caretMoved(CaretEvent caretEvent)
       {
         int lineIndex = widgetTextRight.getLineAtOffset(caretEvent.caretOffset);
-
-        String line1 = widgetTextLeft.getLine(lineIndex);
-        String line2 = widgetTextRight.getLine(lineIndex);
-        setLine(widgetLineDiff,
-                line1,
-                line2
-               );
-        updateLineColors(widgetLineDiff,
-                         widgetAdded.getSelection(),
-                         widgetDeleted.getSelection(),
-                         widgetChanged.getSelection(),
-                         widgetChangedWhitespaces.getSelection(),
-                         COLOR_DIFF_NONE,
-                         COLOR_DIFF_CHANGED,
-                         COLOR_DIFF_CHANGED_WHITESPACES
-                        );
+        if (lineIndex != data.lineIndex)
+        {
+          setLine(widgetLineDiff,
+                  widgetTextLeft,
+                  widgetTextRight,
+                  lineIndex
+                 );
+          updateLineColors(widgetLineDiff,
+                           widgetAdded.getSelection(),
+                           widgetDeleted.getSelection(),
+                           widgetChanged.getSelection(),
+                           widgetChangedWhitespaces.getSelection(),
+                           COLOR_DIFF_NONE,
+                           COLOR_DIFF_CHANGED,
+                           COLOR_DIFF_CHANGED_WHITESPACES
+                          );
+          data.lineIndex = lineIndex;
+        }
       }
     });
 
@@ -1776,16 +1782,21 @@ class CommandDiff
 
   /** set line text
    * @param widgetLineDiff line diff widget
-   * @param line1,line2 lines
+   * @param widgetTextLeft,widgetTextRight text widgets
+   * @param lineIndex line index (0..n-1)
    */
   private void setLine(StyledText widgetLineDiff,
-                       String     line1,
-                       String     line2
+                       StyledText widgetTextLeft,
+                       StyledText widgetTextRight,
+                       int        lineIndex
                       )
   {
-    widgetLineDiff.setText("");
-    widgetLineDiff.append(line1); widgetLineDiff.append("\n");
-    widgetLineDiff.append(line2); widgetLineDiff.append("\n");
+    final String LINE_DELIMITER = widgetLineDiff.getLineDelimiter();
+
+    StringBuilder buffer = new StringBuilder();   
+    buffer.append(widgetTextLeft.getLine(lineIndex)); buffer.append(LINE_DELIMITER);
+    buffer.append(widgetTextRight.getLine(lineIndex)); buffer.append(LINE_DELIMITER);
+    widgetLineDiff.setText(buffer.toString());
   }
 
   /**
