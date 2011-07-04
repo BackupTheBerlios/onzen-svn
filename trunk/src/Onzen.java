@@ -3149,7 +3149,10 @@ exception.printStackTrace();
       subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
       Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
       {
+        menu = Widgets.newPopupMenu(dialog);
+
         widgetPatchTests = Widgets.newList(subComposite);
+        widgetPatchTests.setMenu(menu);
         if (repositoryTab.repository.patchTests != null)
         {
           for (String patchTest : repositoryTab.repository.patchTests)
@@ -3254,7 +3257,7 @@ exception.printStackTrace();
           });
           button.setToolTipText("Remove selected test description.");
         }
-        menu = Widgets.newPopupMenu(dialog);
+
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
           for (Repository repository : repositoryList)
@@ -3294,11 +3297,14 @@ exception.printStackTrace();
       subComposite.setLayout(new TableLayout(new double[]{0.0,0.3,0.7},1.0));
       Widgets.layout(subComposite,0,2,TableLayoutData.NSWE);
       {
+        menu = Widgets.newPopupMenu(dialog);
+
         subSubComposite = Widgets.newGroup(subComposite,"Mail server");
         subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,0,0,TableLayoutData.WE,0,0,2);
         {
           label = Widgets.newLabel(subSubComposite,"SMTP server:");
+          label.setMenu(menu);
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
           subSubSubComposite = Widgets.newComposite(subSubComposite);
@@ -3306,6 +3312,7 @@ exception.printStackTrace();
           Widgets.layout(subSubSubComposite,0,1,TableLayoutData.WE,0,0,2);
           {
             label = Widgets.newLabel(subSubSubComposite,"Name:");
+            label.setMenu(menu);
             Widgets.layout(label,0,0,TableLayoutData.W);
 
             widgetMailSMTPHost = Widgets.newText(subSubSubComposite);
@@ -3314,6 +3321,7 @@ exception.printStackTrace();
             widgetMailSMTPHost.setToolTipText("Mail SMTP server host name.");
 
             label = Widgets.newLabel(subSubSubComposite,"Port:");
+            label.setMenu(menu);
             Widgets.layout(label,0,2,TableLayoutData.W);
 
             widgetMailSMTPPort = Widgets.newSpinner(subSubSubComposite,0,65535);
@@ -3329,6 +3337,7 @@ exception.printStackTrace();
           }
 
           label = Widgets.newLabel(subSubComposite,"Login:");
+          label.setMenu(menu);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
 
           subSubSubComposite = Widgets.newComposite(subSubComposite);
@@ -3336,6 +3345,7 @@ exception.printStackTrace();
           Widgets.layout(subSubSubComposite,1,1,TableLayoutData.WE,0,0,2);
           {
             label = Widgets.newLabel(subSubSubComposite,"Name:");
+            label.setMenu(menu);
             Widgets.layout(label,0,0,TableLayoutData.W);
 
             widgetMailLogin = Widgets.newText(subSubSubComposite);
@@ -3344,6 +3354,7 @@ exception.printStackTrace();
             widgetMailLogin.setToolTipText("Mail server login name.");
 
             label = Widgets.newLabel(subSubSubComposite,"Password:");
+            label.setMenu(menu);
             Widgets.layout(label,0,2,TableLayoutData.W);
 
             widgetMailPassword = Widgets.newPassword(subSubSubComposite);
@@ -3354,6 +3365,7 @@ exception.printStackTrace();
           }
 
           label = Widgets.newLabel(subSubComposite,"From name:");
+          label.setMenu(menu);
           Widgets.layout(label,3,0,TableLayoutData.W,0,0,2);
 
           widgetMailFrom = Widgets.newText(subSubComposite);
@@ -3361,7 +3373,7 @@ exception.printStackTrace();
           Widgets.layout(widgetMailFrom,3,1,TableLayoutData.WE,0,0,2);
           widgetMailFrom.setToolTipText("Mail from address.");
         }
-        menu = Widgets.newPopupMenu(dialog);
+
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
           menuItem = Widgets.addMenuItem(subMenu,"default");
@@ -3413,11 +3425,14 @@ exception.printStackTrace();
         subSubComposite.setMenu(menu);
         subSubComposite.setToolTipText("Mail server settings.\nRight-click to open context menu.");
 
+        menu = Widgets.newPopupMenu(dialog);
+
         subSubComposite = Widgets.newGroup(subComposite,"Patch mail");
         subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subSubComposite,"To:");
+          label.setMenu(menu);
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
           widgetPatchMailTo = Widgets.newText(subSubComposite);
@@ -3426,6 +3441,7 @@ exception.printStackTrace();
           widgetPatchMailTo.setToolTipText("Default to-address for patch mails.");
 
           label = Widgets.newLabel(subSubComposite,"CC:");
+          label.setMenu(menu);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
           button.setToolTipText("Default CC-addresses for patch mails.");
 
@@ -3435,6 +3451,7 @@ exception.printStackTrace();
           widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
 
           label = Widgets.newLabel(subSubComposite,"Subject:");
+          label.setMenu(menu);
           Widgets.layout(label,2,0,TableLayoutData.W,0,0,2);
 
           widgetPatchMailSubject = Widgets.newText(subSubComposite);
@@ -3443,6 +3460,7 @@ exception.printStackTrace();
           widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
 
           label = Widgets.newLabel(subSubComposite,"Text:");
+          label.setMenu(menu);
           Widgets.layout(label,3,0,TableLayoutData.NW,0,0,2);
 
           widgetPatchMailText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
@@ -3450,7 +3468,7 @@ exception.printStackTrace();
           Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE,0,0,2);
           widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
         }
-        menu = Widgets.newPopupMenu(dialog);
+
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
           for (Repository repository : repositoryList)
@@ -3486,11 +3504,14 @@ exception.printStackTrace();
       subComposite.setLayout(new TableLayout(new double[]{0.0,0.3,0.7},1.0));
       Widgets.layout(subComposite,0,3,TableLayoutData.NSWE);
       {
+        menu = Widgets.newPopupMenu(dialog);
+
         subSubComposite = Widgets.newGroup(subComposite,"Review server");
         subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,0,0,TableLayoutData.WE,0,0,2);
         {
           label = Widgets.newLabel(subSubComposite,"Name:");
+          label.setMenu(menu);
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
           widgetReviewServer = Widgets.newText(subSubComposite);
@@ -3499,6 +3520,7 @@ exception.printStackTrace();
           widgetReviewServer.setToolTipText("Review server name.");
 
           label = Widgets.newLabel(subSubComposite,"User name:");
+          label.setMenu(menu);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
 
           widgetReviewServerUserName = Widgets.newText(subSubComposite);
@@ -3507,6 +3529,7 @@ exception.printStackTrace();
           widgetReviewServerUserName.setToolTipText("Review server user name.");
 
           label = Widgets.newLabel(subSubComposite,"Password:");
+          label.setMenu(menu);
           Widgets.layout(label,2,0,TableLayoutData.W);
 
           widgetReviewServerPassword = Widgets.newPassword(subSubComposite);
@@ -3515,7 +3538,7 @@ exception.printStackTrace();
           Widgets.layout(widgetReviewServerPassword,2,1,TableLayoutData.WE);
           widgetReviewServerPassword.setToolTipText("Review server login password.");
         }
-        menu = Widgets.newPopupMenu(dialog);
+
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
           menuItem = Widgets.addMenuItem(subMenu,"default");
