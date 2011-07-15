@@ -10,22 +10,6 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.BufferedReader;
-//import java.io.IOException;
-
-//import java.util.ArrayList;
-//import java.util.Arrays;
-//import java.util.BitSet;
-//import java.util.Comparator;
-//import java.util.Date;
-//import java.util.HashMap;
-//import java.util.HashSet;
-//import java.util.LinkedList;
-//import java.util.LinkedHashSet;
-//import java.util.ListIterator;
-//import java.util.StringTokenizer;
 
 // graphics
 import org.eclipse.swt.custom.CaretEvent;
@@ -144,7 +128,7 @@ class CommandRevisionInfo
    * @param fileData file to show revision information
    * @param revision revision to show or null
    */
-  CommandRevisionInfo(Shell shell, final RepositoryTab repositoryTab, FileData fileData, String revision)
+  CommandRevisionInfo(Shell shell, final RepositoryTab repositoryTab, final FileData fileData, final String revision)
   {
     Composite         composite,subComposite;
     Label             label;
@@ -227,6 +211,22 @@ class CommandRevisionInfo
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
+      button = Widgets.newButton(composite,"View");
+      Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          CommandView commandView = new CommandView(dialog,repositoryTab,fileData,revision);
+          commandView.run();
+        }
+      });
+
       widgetButtonClose = Widgets.newButton(composite,"Close");
       Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonClose.addSelectionListener(new SelectionListener()
