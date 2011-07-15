@@ -4289,6 +4289,7 @@ private static void printTree(Tree tree)
   public static void addModifyListener(WidgetListener widgetListener)
   {
     listenersList.add(widgetListener);
+    widgetListener.modified();
   }
 
   /** execute modify listeners
