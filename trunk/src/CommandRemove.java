@@ -150,6 +150,9 @@ class CommandRemove
     // get history
     history = CommitMessage.getHistory();
 
+    // init data
+    data.immediateCommitFlag = Settings.immediateCommit;
+
     // remove files dialog
     dialog = Dialogs.open(shell,"Remove files",new double[]{1.0,0.0},1.0);
 
@@ -367,9 +370,6 @@ class CommandRemove
       widgetHistory.showSelection();
       widgetHistory.deselectAll();
     }
-
-    // update
-    data.immediateCommitFlag = Settings.immediateCommit;
   }
 
   /** remove command
