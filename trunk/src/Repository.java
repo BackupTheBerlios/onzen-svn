@@ -1306,13 +1306,15 @@ class StoredFiles
                     "mailLogin",
                     "mailFrom",
 
+                    "patchMailFlag",
                     "patchMailTo",
                     "patchMailCC",
                     "patchMailSubject",
                     "patchMailText",
 
-                    "reviewServer",
-                    "reviewServerUserName"
+                    "reviewServerFlag",
+                    "reviewServerHost",
+                    "reviewServerLogin"
                    }
         )
 @XmlSeeAlso({RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
@@ -1418,6 +1420,8 @@ abstract class Repository implements Serializable
   @XmlElement(name = "mailFrom")
   public String  mailFrom;
 
+  @XmlElement(name = "patchMail")
+  public boolean patchMailFlag;
   @XmlElement(name = "patchMailTo", defaultValue = "")
   public String patchMailTo = "";
   @XmlElement(name = "patchMailCC", defaultValue = "")
@@ -1428,9 +1432,11 @@ abstract class Repository implements Serializable
   public String patchMailText = "${message}\n\n${tests - %s}";
 
   @XmlElement(name = "reviewServer")
-  public String  reviewServer;
-  @XmlElement(name = "reviewServerUserName")
-  public String  reviewServerUserName;
+  public boolean reviewServerFlag;
+  @XmlElement(name = "reviewServerHost")
+  public String  reviewServerHost;
+  @XmlElement(name = "reviewServerLogin")
+  public String  reviewServerLogin;
 
   // ------------------------ native functions ----------------------------
 
