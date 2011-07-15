@@ -863,9 +863,9 @@ public class Settings
 
   @SettingComment(text={"","Default review server settings"})
   @SettingValue
-  public static String           reviewServer                           = "";
+  public static String           reviewServerHost                       = "";
   @SettingValue
-  public static String           reviewServerUserName                   = "";
+  public static String           reviewServerLogin                      = "";
   @SettingValue
   public static String           reviewServerPassword                   = "";
 
