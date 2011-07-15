@@ -133,8 +133,8 @@ class Preferences
   private final Text          widgetMailPassword;
   private final Text          widgetMailFrom;
 
-  private final Text          widgetReviewServer;
-  private final Text          widgetReviewServerUserName;
+  private final Text          widgetReviewServerHost;
+  private final Text          widgetReviewServerLogin;
   private final Text          widgetCommandPostReview;
 
   private final Text          widgetCVSCommand;
@@ -482,17 +482,17 @@ class Preferences
         {
           label = Widgets.newLabel(subComposite,"Review server:");
           Widgets.layout(label,0,0,TableLayoutData.W);
-          widgetReviewServer = Widgets.newText(subComposite);
-          widgetReviewServer.setText(Settings.reviewServer);
-          Widgets.layout(widgetReviewServer,0,1,TableLayoutData.WE);
-          widgetReviewServer.setToolTipText("Default post review server name.\n");
+          widgetReviewServerHost = Widgets.newText(subComposite);
+          widgetReviewServerHost.setText(Settings.reviewServerHost);
+          Widgets.layout(widgetReviewServerHost,0,1,TableLayoutData.WE);
+          widgetReviewServerHost.setToolTipText("Default post review server name.\n");
 
           label = Widgets.newLabel(subComposite,"User name:");
           Widgets.layout(label,1,0,TableLayoutData.W);
-          widgetReviewServerUserName = Widgets.newText(subComposite);
-          widgetReviewServerUserName.setText(Settings.reviewServerUserName);
-          Widgets.layout(widgetReviewServerUserName,1,1,TableLayoutData.WE);
-          widgetReviewServerUserName.setToolTipText("Default review server user name.\n");
+          widgetReviewServerLogin = Widgets.newText(subComposite);
+          widgetReviewServerLogin.setText(Settings.reviewServerLogin);
+          Widgets.layout(widgetReviewServerLogin,1,1,TableLayoutData.WE);
+          widgetReviewServerLogin.setToolTipText("Default review server user name.\n");
 
           label = Widgets.newLabel(subComposite,"Post review command:");
           Widgets.layout(label,2,0,TableLayoutData.W);
@@ -1125,8 +1125,8 @@ class Preferences
           onzen.setPassword(Settings.mailSMTPHost,widgetMailPassword.getText().trim());
           Settings.mailFrom                               = widgetMailFrom.getText().trim();
 
-          Settings.reviewServer                           = widgetReviewServer.getText().trim();
-          Settings.reviewServerUserName                   = widgetReviewServerUserName.getText().trim();
+          Settings.reviewServerHost                       = widgetReviewServerHost.getText().trim();
+          Settings.reviewServerLogin                      = widgetReviewServerLogin.getText().trim();
           Settings.commandPostReview                      = widgetCommandPostReview.getText().trim();
 
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
