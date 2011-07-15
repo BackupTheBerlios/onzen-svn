@@ -1859,7 +1859,6 @@ menuItem.addSelectionListener(new SelectionListener()
     shell.open();
 
     // listener
-
     shell.addListener(SWT.Resize,new Listener()
     {
       public void handleEvent(Event event)
@@ -2897,8 +2896,8 @@ exception.printStackTrace();
       String   patchMailCC;
       String   patchMailSubject;
       String   patchMailText;
-      String   reviewServer;
-      String   reviewServerUserName;
+      String   reviewServerHost;
+      String   reviewServerLogin;
       String   reviewServerPassword;
 
       Data()
@@ -2917,8 +2916,8 @@ exception.printStackTrace();
         this.patchMailCC          = null;
         this.patchMailSubject     = null;
         this.patchMailSubject     = null;
-        this.reviewServer         = null;
-        this.reviewServerUserName = null;
+        this.reviewServerHost     = null;
+        this.reviewServerLogin    = null;
         this.reviewServerPassword = null;
       }
     };
@@ -2951,8 +2950,8 @@ exception.printStackTrace();
     final Text                  widgetPatchMailCC;
     final Text                  widgetPatchMailSubject;
     final Text                  widgetPatchMailText;
-    final Text                  widgetReviewServer;
-    final Text                  widgetReviewServerUserName;
+    final Text                  widgetReviewServerHost;
+    final Text                  widgetReviewServerLogin;
     final Text                  widgetReviewServerPassword;
     final Button                widgetSave;
     composite = Widgets.newComposite(dialog);
@@ -3514,26 +3513,26 @@ exception.printStackTrace();
           label.setMenu(menu);
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
-          widgetReviewServer = Widgets.newText(subSubComposite);
-          widgetReviewServer.setText((repositoryTab.repository.reviewServer != null)?repositoryTab.repository.reviewServer:Settings.reviewServer);
-          Widgets.layout(widgetReviewServer,0,1,TableLayoutData.WE);
-          widgetReviewServer.setToolTipText("Review server name.");
+          widgetReviewServerHost = Widgets.newText(subSubComposite);
+          widgetReviewServerHost.setText((repositoryTab.repository.reviewServerHost != null)?repositoryTab.repository.reviewServerHost:Settings.reviewServerHost);
+          Widgets.layout(widgetReviewServerHost,0,1,TableLayoutData.WE);
+          widgetReviewServerHost.setToolTipText("Review server name.");
 
           label = Widgets.newLabel(subSubComposite,"User name:");
           label.setMenu(menu);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
 
-          widgetReviewServerUserName = Widgets.newText(subSubComposite);
-          widgetReviewServerUserName.setText((repositoryTab.repository.reviewServerUserName != null)?repositoryTab.repository.reviewServerUserName:Settings.reviewServerUserName);
-          Widgets.layout(widgetReviewServerUserName,1,1,TableLayoutData.WE);
-          widgetReviewServerUserName.setToolTipText("Review server user name.");
+          widgetReviewServerLogin = Widgets.newText(subSubComposite);
+          widgetReviewServerLogin.setText((repositoryTab.repository.reviewServerLogin != null)?repositoryTab.repository.reviewServerLogin:Settings.reviewServerLogin);
+          Widgets.layout(widgetReviewServerLogin,1,1,TableLayoutData.WE);
+          widgetReviewServerLogin.setToolTipText("Review server user name.");
 
           label = Widgets.newLabel(subSubComposite,"Password:");
           label.setMenu(menu);
           Widgets.layout(label,2,0,TableLayoutData.W);
 
           widgetReviewServerPassword = Widgets.newPassword(subSubComposite);
-          String password = getPassword(repositoryTab.repository.reviewServerUserName,repositoryTab.repository.reviewServer);
+          String password = getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
           if (password != null) widgetReviewServerPassword.setText(password);
           Widgets.layout(widgetReviewServerPassword,2,1,TableLayoutData.WE);
           widgetReviewServerPassword.setToolTipText("Review server login password.");
@@ -3549,10 +3548,10 @@ exception.printStackTrace();
             }
             public void widgetSelected(SelectionEvent selectionEvent)
             {
-              String password = getPassword(Settings.reviewServerUserName,Settings.reviewServer);
+              String password = getPassword(Settings.reviewServerLogin,Settings.reviewServerHost);
 
-              if (Settings.reviewServer != null) widgetReviewServer.setText(Settings.reviewServer);
-              if (Settings.reviewServerUserName != null) widgetReviewServerUserName.setText(Settings.reviewServerUserName);
+              if (Settings.reviewServerHost != null) widgetReviewServerHost.setText(Settings.reviewServerHost);
+              if (Settings.reviewServerLogin != null) widgetReviewServerLogin.setText(Settings.reviewServerLogin);
               if (password != null) widgetReviewServerPassword.setText(password);
             }
           });
@@ -3571,10 +3570,10 @@ exception.printStackTrace();
                 {
                   MenuItem   widget     = (MenuItem)selectionEvent.widget;
                   Repository repository = (Repository)widget.getData();
-                  String     password   = getPassword(repository.reviewServerUserName,repository.reviewServer);
+                  String     password   = getPassword(repository.reviewServerLogin,repository.reviewServerHost);
 
-                  if (repository.reviewServer != null) widgetReviewServer.setText(repository.reviewServer);
-                  if (repository.reviewServerUserName != null) widgetReviewServerUserName.setText(repository.reviewServerUserName);
+                  if (repository.reviewServerHost != null) widgetReviewServerHost.setText(repository.reviewServerHost);
+                  if (repository.reviewServerLogin != null) widgetReviewServerLogin.setText(repository.reviewServerLogin);
                   if (password != null) widgetReviewServerPassword.setText(password);
                 }
               });
@@ -3615,8 +3614,8 @@ exception.printStackTrace();
           data.patchMailCC          = widgetPatchMailCC.getText();
           data.patchMailSubject     = widgetPatchMailSubject.getText();
           data.patchMailText        = widgetPatchMailText.getText();
-          data.reviewServer         = widgetReviewServer.getText();
-          data.reviewServerUserName = widgetReviewServerUserName.getText();
+          data.reviewServerHost     = widgetReviewServerHost.getText();
+          data.reviewServerLogin    = widgetReviewServerLogin.getText();
           data.reviewServerPassword = widgetReviewServerPassword.getText();
 
           for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
@@ -3748,11 +3747,11 @@ exception.printStackTrace();
       repositoryTab.repository.patchMailCC          = data.patchMailCC;
       repositoryTab.repository.patchMailSubject     = data.patchMailSubject;
       repositoryTab.repository.patchMailText        = data.patchMailText;
-      repositoryTab.repository.reviewServer         = data.reviewServer;
-      repositoryTab.repository.reviewServerUserName = data.reviewServerUserName;
+      repositoryTab.repository.reviewServerHost     = data.reviewServerHost;
+      repositoryTab.repository.reviewServerLogin    = data.reviewServerLogin;
       repositoryTab.repository.patchMailText        = data.patchMailText;
       setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
-      setPassword(data.reviewServerUserName,data.reviewServer,data.reviewServerPassword);
+      setPassword(data.reviewServerLogin,data.reviewServerHost,data.reviewServerPassword);
 
       // save list
       try
