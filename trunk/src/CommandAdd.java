@@ -154,6 +154,9 @@ class CommandAdd
     // get history
     history = CommitMessage.getHistory();
 
+    // init data
+    data.immediateCommitFlag = Settings.immediateCommit;
+
     // add files dialog
     dialog = Dialogs.open(shell,"Add files",new double[]{1.0,0.0},1.0);
 
@@ -376,9 +379,6 @@ class CommandAdd
       widgetHistory.showSelection();
       widgetHistory.deselectAll();
     }
-
-    // update
-    data.immediateCommitFlag = Settings.immediateCommit;
   }
 
   /** add command
