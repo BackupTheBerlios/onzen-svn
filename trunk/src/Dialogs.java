@@ -10,6 +10,7 @@
 
 /****************************** Imports ********************************/
 import java.io.File;
+import java.util.BitSet;
 
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
@@ -807,7 +808,7 @@ class Dialogs
     return confirm(parentShell,title,IMAGE,message,yesText,noText);
   }
 
-  /** multiple select dialog
+  /** select dialog
    * @param parentShell parent shell
    * @param title title string
    * @param message confirmation message
@@ -888,6 +889,151 @@ class Dialogs
     {
       return defaultValue;
     }
+  }
+
+  /** multiple select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
+   * @param yesText yes-text
+   * @param noText no-text
+   * @param defaultValue default value
+   * @return selection
+   */
+  public static BitSet selectMulti(Shell parentShell, String title, String message, String[] texts, String yesText, String noText, BitSet defaultValue)
+  {
+    final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"question.png");
+
+    Composite composite,subComposite;
+    Label     label;
+    Button    button;
+
+    if (!parentShell.isDisposed())
+    {
+      final BitSet result = new BitSet(texts.length);
+
+      final Shell dialog = open(parentShell,title);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+      {
+        label = new Label(composite,SWT.LEFT);
+        label.setImage(IMAGE);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+
+        // message
+        label = new Label(composite,SWT.LEFT|SWT.WRAP);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.WE,0,0,4));
+
+        // checkboxes
+        subComposite = new Composite(composite,SWT.NONE);
+        subComposite.setLayout(new TableLayout(0.0,1.0));
+        subComposite.setLayoutData(new TableLayoutData(1,1,TableLayoutData.NSWE));
+        {
+          int value = 0;
+          for (String text : texts)
+          {
+            button = new Button(subComposite,SWT.CHECK);
+            button.setText(text);
+            button.setData(value);
+            if ((defaultValue != null) && defaultValue.get(value)) button.setFocus();
+            button.setLayoutData(new TableLayoutData(value,0,TableLayoutData.W));
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Button widget = (Button)selectionEvent.widget;
+                int    value  = (Integer)widget.getData();
+
+                result.set(value,widget.getSelection());
+              }
+            });
+
+            value++;
+          }
+        }
+      }
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(2,0,TableLayoutData.WE,0,0,4));
+      {
+        button = new Button(composite,SWT.CENTER);
+        button.setText(yesText);
+        button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            close(dialog,true);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+
+        button = new Button(composite,SWT.CENTER);
+        button.setText(noText);
+        button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            close(dialog,false);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      if ((Boolean)run(dialog,defaultValue))
+      {
+        return result;
+      }
+      else
+      {
+        return null;
+      }
+    }
+    else
+    {
+      return defaultValue;
+    }
+  }
+
+  /** multiple select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
+   * @param yesText yes-text
+   * @param noText no-text
+   * @return selection
+   */
+  public static BitSet selectMulti(Shell parentShell, String title, String message, String[] texts, String yesText, String noText)
+  {
+    return selectMulti(parentShell,title,message,texts,yesText,noText,null);
+  }
+
+  /** multiple select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
+   * @return selection
+   */
+  public static BitSet selectMulti(Shell parentShell, String title, String message, String[] texts)
+  {
+    return selectMulti(parentShell,title,message,texts,"OK","Cancel");
   }
 
   /** password dialog
