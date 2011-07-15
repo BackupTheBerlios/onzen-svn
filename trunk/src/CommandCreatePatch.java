@@ -436,7 +436,7 @@ class CommandCreatePatch
       });
       button.setToolTipText("Store patch into database.");
 
-      button = Widgets.newButton(composite,"Mail for review");
+      button = Widgets.newButton(composite,"Send for review");
       button.setEnabled(false);
       Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(button,data)
@@ -466,20 +466,20 @@ class CommandCreatePatch
                                 patchLines
                                );
 
-              // mail patch
-              CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
-                                                                       repositoryTab,
-                                                                       fileDataSet,
-                                                                       patch
-                                                                      );
-              if (commandMailPatch.execute())
+              // send patch for review
+              CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
+                                                                             repositoryTab,
+                                                                             fileDataSet,
+                                                                             patch
+                                                                            );
+              if (commandPatchReview.execute())
               {
                 try
                 {
                   // save patch into database
                   patch.state   = Patch.States.REVIEW;
-                  patch.summary = commandMailPatch.summary;
-                  patch.message = commandMailPatch.message;
+                  patch.summary = commandPatchReview.summary;
+                  patch.message = commandPatchReview.message;
                   patch.save();
 
                   // close dialog
