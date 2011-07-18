@@ -180,8 +180,8 @@ class CommandPatchReview
   private final Text          widgetPatchMailCC;
   private final Text          widgetPatchMailSubject;
   private final Text          widgetPatchMailText;
-  private final Text          widgetReviewServerSubject;
-  private final Text          widgetReviewServerText;
+  private final Text          widgetReviewServerSummary;
+  private final Text          widgetReviewServerDescription;
   private final Button        widgetSend;
   private final Button        widgetCancel;
 
@@ -336,7 +336,7 @@ class CommandPatchReview
                     {
                       tableItem.setText(test);
                       tableItem.setData(test);
-                      updateMailText();
+                      updateText();
                     }
                   }
                 }
@@ -371,7 +371,7 @@ class CommandPatchReview
                       tableItem1.setText(text0);
                       tableItem1.setData(data0);
                       tableItem1.setChecked(checked0);
-                      updateMailText();
+                      updateText();
 
                       widgetTests.setSelection(index-1);
                     }
@@ -408,7 +408,7 @@ class CommandPatchReview
                       tableItem1.setText(text0);
                       tableItem1.setData(data0);
                       tableItem1.setChecked(checked0);
-                      updateMailText();
+                      updateText();
 
                       widgetTests.setSelection(index+1);
                     }
@@ -430,7 +430,7 @@ class CommandPatchReview
                   if (index >= 0)
                   {
                     widgetTests.remove(index);
-                    updateMailText();
+                    updateText();
                   }
                 }
               });
@@ -492,6 +492,13 @@ class CommandPatchReview
               Widgets.modified(data);
             }
           });
+          Widgets.addModifyListener(new WidgetListener(button,data)
+          {
+            public void modified(Button button)
+            {
+              button.setSelection(data.patchMailFlag);
+            }
+          });
 
           subSubComposite = Widgets.newComposite(subComposite);
           subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
@@ -546,6 +553,8 @@ class CommandPatchReview
               public void modified(Control control)
               {
                 Widgets.setEnabled(control,data.patchMailFlag);
+                // work-around for SWT bug: disable color is wrong
+                control.setForeground(data.patchMailFlag?Onzen.COLOR_BLACK:Onzen.COLOR_GRAY);
               }
             });
           }
@@ -570,6 +579,13 @@ class CommandPatchReview
               Widgets.modified(data);
             }
           });
+          Widgets.addModifyListener(new WidgetListener(button,data)
+          {
+            public void modified(Button button)
+            {
+              button.setSelection(data.reviewServerFlag);
+            }
+          });
 
           subSubComposite = Widgets.newComposite(subComposite);
           subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
@@ -578,9 +594,9 @@ class CommandPatchReview
             label = Widgets.newLabel(subSubComposite,"Subject:");
             Widgets.layout(label,0,0,TableLayoutData.W);
 
-            widgetReviewServerSubject = Widgets.newText(subSubComposite);
-            Widgets.layout(widgetReviewServerSubject,0,1,TableLayoutData.WE);
-            Widgets.addModifyListener(new WidgetListener(widgetReviewServerSubject,data)
+            widgetReviewServerSummary = Widgets.newText(subSubComposite);
+            Widgets.layout(widgetReviewServerSummary,0,1,TableLayoutData.WE);
+            Widgets.addModifyListener(new WidgetListener(widgetReviewServerSummary,data)
             {
               public void modified(Control control)
               {
@@ -591,13 +607,15 @@ class CommandPatchReview
             label = Widgets.newLabel(subSubComposite,"Text:");
             Widgets.layout(label,1,0,TableLayoutData.NW);
 
-            widgetReviewServerText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-            Widgets.layout(widgetReviewServerText,1,1,TableLayoutData.NSWE);
-            Widgets.addModifyListener(new WidgetListener(widgetReviewServerText,data)
+            widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+            Widgets.layout(widgetReviewServerDescription,1,1,TableLayoutData.NSWE);
+            Widgets.addModifyListener(new WidgetListener(widgetReviewServerDescription,data)
             {
               public void modified(Control control)
               {
                 Widgets.setEnabled(control,data.reviewServerFlag);
+                // work-around for SWT bug: disable color is wrong
+                control.setForeground(data.reviewServerFlag?Onzen.COLOR_BLACK:Onzen.COLOR_GRAY);
               }
             });
           }
@@ -625,32 +643,33 @@ class CommandPatchReview
           // get patch review methods if not already set
           if (!data.patchMailFlag && !data.reviewServerFlag)
           {
-            BitSet valueSet = Dialogs.selectMulti(shell,"Send patch review","Select patch review methods:",new String[]{"patch mail","review server"});
+            BitSet valueSet = Dialogs.selectMulti(shell,"Patch review methods","Select patch review methods:",new String[]{"patch mail","review server"});
             if (valueSet != null)
             {
               data.patchMailFlag    = valueSet.get(0);
               data.reviewServerFlag = valueSet.get(1);
-              if (!data.patchMailFlag && !data.reviewServerFlag)
-              {
-                return;
-              }
+              Widgets.modified(data);
+            }
+            if (!data.patchMailFlag && !data.reviewServerFlag)
+            {
+              return;
             }
           }
 
-          File tmpFile = null;
+          File tmpPatchFile = null;
           try
           {
             // create patch file
-            tmpFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
-            patch.write(tmpFile);
+            tmpPatchFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
+            patch.write(tmpPatchFile);
 
             if (data.patchMailFlag)
             {
               if (repositoryTab.repository.mailSMTPHost != null)
               {
                 // send mail with JavaMail
-  //int port = 587;
-  //int port = 25;
+//int port = 587;
+//int port = 25;
                 try
                 {
                   final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
@@ -670,7 +689,7 @@ class CommandPatchReview
                   properties.put("mail.smtp.host",repositoryTab.repository.mailSMTPHost);
                   properties.put("mail.smtp.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
                   properties.put("mail.from",repositoryTab.repository.mailFrom);
-  //properties.put("mail.smtp.starttls.enable","true");
+//properties.put("mail.smtp.starttls.enable","true");
                   properties.put("mail.smtp.auth",(password != null) && !password.isEmpty());
                   if (repositoryTab.repository.mailSMTPSSL)
                   {
@@ -679,8 +698,8 @@ class CommandPatchReview
                     properties.put("mail.smtp.socketFactory.fallback","false");
                   }
 
-  //properties.put("mail.smtps.starttls.enable","true");
-  //                if (Settings.debugFlag) properties.put("mail.debug","true");
+//properties.put("mail.smtps.starttls.enable","true");
+//                  if (Settings.debugFlag) properties.put("mail.debug","true");
                   Authenticator auth = new Authenticator()
                   {
                     public PasswordAuthentication getPasswordAuthentication()
@@ -694,18 +713,18 @@ class CommandPatchReview
                   MimeMultipart mimeMultipart = new MimeMultipart();
 
                   MimeBodyPart text = new MimeBodyPart();
-                  text.setText(widgetPatchMailText.getText());
+                  text.setText(widgetPatchMailText.getText().trim());
                   text.setDisposition(MimeBodyPart.INLINE);
                   mimeMultipart.addBodyPart(text);
 
                   MimeBodyPart attachment = new MimeBodyPart();
-                  attachment.attachFile(tmpFile);
+                  attachment.attachFile(tmpPatchFile);
                   attachment.setFileName("file.patch");
                   attachment.setDisposition(Part.ATTACHMENT);
                   attachment.setDescription("Attached File: "+"patch");
-  // detect mime type?
-  //                FileDataSource fileDataSource = new FileDataSource(tmpFile);
-  //                DataHandler dataHandler = new DataHandler(fileDataSource);
+// detect mime type?
+//                  FileDataSource fileDataSource = new FileDataSource(tmpPatchFile);
+//                  DataHandler dataHandler = new DataHandler(fileDataSource);
                   DataHandler dataHandler = new DataHandler(StringUtils.join(patch.getLines(),"\n"),"text/plain");
                   attachment.setDataHandler(dataHandler);
                   mimeMultipart.addBodyPart(attachment);
@@ -747,14 +766,14 @@ class CommandPatchReview
                   macro.expand("to",     widgetPatchMailTo.getText().trim()     );
                   macro.expand("cc",     widgetPatchMailCC.getText().trim()     );
                   macro.expand("subject",widgetPatchMailSubject.getText().trim());
-                  macro.expand("file",   tmpFile.getAbsolutePath()         );
+                  macro.expand("file",   tmpPatchFile.getAbsolutePath()         );
                   String[] commandArray = macro.getValueArray();
-  //for (String s : command) Dprintf.dprintf("command=%s",s);
+//for (String s : commandArray) Dprintf.dprintf("command=%s",s);
 
                   // execute and add text
                   Process process = Runtime.getRuntime().exec(commandArray);
                   PrintWriter processOutput = new PrintWriter(process.getOutputStream());
-                  for (String line : StringUtils.split(widgetPatchMailText.getText(),widgetPatchMailText.DELIMITER))
+                  for (String line : StringUtils.split(widgetPatchMailText.getText().trim(),widgetPatchMailText.DELIMITER))
                   {
                     processOutput.println(line);
                   }
@@ -782,10 +801,57 @@ class CommandPatchReview
             }
             if (data.reviewServerFlag)
             {
+              if (!Settings.commandPostReviewServer.isEmpty())
+              {
+                // review server post command
+                try
+                {
+                  final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
+
+                  ArrayList<String> tests = new ArrayList<String>();
+                  for (TableItem tableItem : widgetTests.getItems())
+                  {
+                    if (tableItem.getChecked()) tests.add((String)tableItem.getData());
+                  }
+
+                  // create command
+                  Macro macro = new Macro(StringUtils.split(Settings.commandPostReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+                  macro.expand("server",     repositoryTab.repository.reviewServerHost     );
+                  macro.expand("login",      repositoryTab.repository.reviewServerLogin    );
+                  macro.expand("password",   (password != null) ? password : ""            );
+                  macro.expand("summary",    widgetReviewServerSummary.getText().trim()    );
+                  macro.expand("description",widgetReviewServerDescription.getText().trim());
+                  macro.expand("tests",      tests,","                                     );
+                  macro.expand("file",       tmpPatchFile.getAbsolutePath()                );
+                  String[] commandArray = macro.getValueArray();
+//for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+
+                  // execute and add text
+                  Process process = Runtime.getRuntime().exec(commandArray);
+
+                  // wait done
+                  int exitcode = process.waitFor();
+                  if (exitcode != 0)
+                  {
+                    Dialogs.error(dialog,"Cannot post patch to review server (exitcode: %d)",exitcode);
+                    return;
+                  }
+                }
+                catch (InterruptedException exception)
+                {
+                  Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
+                  return;
+                }
+              }
+              else
+              {
+                Dialogs.error(dialog,"No review server post command configured.\nPlease check settings.");
+                return;
+              }
             }
 
             // free resources
-            tmpFile.delete(); tmpFile = null;
+            tmpPatchFile.delete(); tmpPatchFile = null;
           }
           catch (IOException exception)
           {
@@ -794,7 +860,7 @@ class CommandPatchReview
           }
           finally
           {
-            if (tmpFile != null) tmpFile.delete();
+            if (tmpPatchFile != null) tmpPatchFile.delete();
           }
 
           repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
@@ -961,7 +1027,7 @@ class CommandPatchReview
         if (index >= 0)
         {
           widgetMessage.setText(StringUtils.join(data.history[index].message,widgetMessage.DELIMITER));
-          updateMailText();
+          updateText();
         }
       }
     });
@@ -969,7 +1035,7 @@ class CommandPatchReview
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        updateMailSubject();
+        updateSubject();
       }
     });
     Widgets.setNextFocus(widgetSummary,widgetMessage);
@@ -977,7 +1043,7 @@ class CommandPatchReview
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        updateMailText();
+        updateText();
       }
     });
     widgetTests.addSelectionListener(new SelectionListener()
@@ -987,7 +1053,7 @@ class CommandPatchReview
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        updateMailText();
+        updateText();
       }
     });
     widgetNewTest.addModifyListener(new ModifyListener()
@@ -1031,7 +1097,7 @@ class CommandPatchReview
 
           // add test to mail
           data.tests.add(newPatchTest);
-          updateMailText();
+          updateText();
         }
 
         widgetNewTest.setText("");
@@ -1059,8 +1125,8 @@ class CommandPatchReview
     widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.getLineDelimiter()));
     widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
     widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
-    updateMailSubject();
-    updateMailText();
+    updateSubject();
+    updateText();
   }
 
   /** mail patch command
@@ -1214,27 +1280,36 @@ class CommandPatchReview
     }
   }
 
-  /** update mail subject line
+  /** update subject line
    */
-  private void updateMailSubject()
+  private void updateSubject()
   {
-    Macro macro = new Macro(repositoryTab.repository.patchMailSubject);
-    macro.expand("n",      patch.getNumber()      );
+    Macro macro;
+
+    macro = new Macro(repositoryTab.repository.patchMailSubject);
+    macro.expand("n",      patch.getNumber()             );
     macro.expand("summary",widgetSummary.getText().trim());
     widgetPatchMailSubject.setText(macro.getValue());
+
+    macro = new Macro(repositoryTab.repository.reviewServerSummary);
+    macro.expand("n",      patch.getNumber()             );
+    macro.expand("summary",widgetSummary.getText().trim());
+    widgetReviewServerSummary.setText(macro.getValue());
   }
 
-  /** update mail text
+  /** update text
    */
-  private void updateMailText()
+  private void updateText()
   {
+    Macro macro;
+
     ArrayList<String> tests = new ArrayList<String>();
     for (TableItem tableItem : widgetTests.getItems())
     {
       if (tableItem.getChecked()) tests.add((String)tableItem.getData());
     }
 
-    Macro macro = new Macro(repositoryTab.repository.patchMailText);
+    macro = new Macro(repositoryTab.repository.patchMailText);
     macro.expand("n",       patch.getNumber()                 );
     macro.expand("summary", widgetSummary.getText().trim()    );
     macro.expand("date",    Onzen.DATE_FORMAT.format(date)    );
@@ -1243,6 +1318,16 @@ class CommandPatchReview
     macro.expand("message", widgetMessage.getText().trim()    );
     macro.expand("tests",   tests,"\n"                        );
     widgetPatchMailText.setText(macro.getValue());
+
+    macro = new Macro(repositoryTab.repository.reviewServerDescription);
+    macro.expand("n",       patch.getNumber()                 );
+    macro.expand("summary", widgetSummary.getText().trim()    );
+    macro.expand("date",    Onzen.DATE_FORMAT.format(date)    );
+    macro.expand("time",    Onzen.TIME_FORMAT.format(date)    );
+    macro.expand("datetime",Onzen.DATETIME_FORMAT.format(date));
+    macro.expand("message", widgetMessage.getText().trim()    );
+    macro.expand("tests",   tests,"\n"                        );
+    widgetReviewServerDescription.setText(macro.getValue());
   }
 }
 
