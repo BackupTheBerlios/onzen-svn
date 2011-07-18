@@ -871,7 +871,7 @@ public class Settings
 
   @SettingComment(text={"","Review commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
   @SettingValue
-  public static String           commandPostReview                      = "post-review --server=${server} --username=${user} --password=${password} --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
+  public static String           commandPostReviewServer                = "post-review --server=${server} --username=${login} --password=${password} --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
 
   // general flags
   @SettingComment(text={"","Flags"})
