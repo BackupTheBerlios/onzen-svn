@@ -3307,31 +3307,27 @@ exception.printStackTrace();
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
           subSubSubComposite = Widgets.newComposite(subSubComposite);
-          subSubSubComposite.setLayout(new TableLayout(null,new double[]{0.0,0.7,0.0,0.3,0.0}));
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{0.7,0.0,0.3,0.0}));
           Widgets.layout(subSubSubComposite,0,1,TableLayoutData.WE,0,0,2);
           {
-            label = Widgets.newLabel(subSubSubComposite,"Name:");
-            label.setMenu(menu);
-            Widgets.layout(label,0,0,TableLayoutData.W);
-
             widgetMailSMTPHost = Widgets.newText(subSubSubComposite);
             widgetMailSMTPHost.setText((repositoryTab.repository.mailSMTPHost != null)?repositoryTab.repository.mailSMTPHost:Settings.mailSMTPHost);
-            Widgets.layout(widgetMailSMTPHost,0,1,TableLayoutData.WE);
+            Widgets.layout(widgetMailSMTPHost,0,0,TableLayoutData.WE);
             widgetMailSMTPHost.setToolTipText("Mail SMTP server host name.");
 
             label = Widgets.newLabel(subSubSubComposite,"Port:");
             label.setMenu(menu);
-            Widgets.layout(label,0,2,TableLayoutData.W);
+            Widgets.layout(label,0,1,TableLayoutData.W);
 
             widgetMailSMTPPort = Widgets.newSpinner(subSubSubComposite,0,65535);
             widgetMailSMTPPort.setTextLimit(5);
             widgetMailSMTPPort.setSelection((repositoryTab.repository.mailSMTPPort != 0)?repositoryTab.repository.mailSMTPPort:Settings.mailSMTPPort);
-            Widgets.layout(widgetMailSMTPPort,0,3,TableLayoutData.WE);
+            Widgets.layout(widgetMailSMTPPort,0,2,TableLayoutData.WE);
             widgetMailSMTPPort.setToolTipText("Mail SMTP server port number.");
 
             widgetMailSMTPSSL = Widgets.newCheckbox(subSubSubComposite,"SSL");
             widgetMailSMTPSSL.setSelection(repositoryTab.repository.mailSMTPSSL);
-            Widgets.layout(widgetMailSMTPSSL,0,4,TableLayoutData.E);
+            Widgets.layout(widgetMailSMTPSSL,0,3,TableLayoutData.E);
             widgetMailSMTPSSL.setToolTipText("Use SMTP with SSL encryption.");
           }
 
@@ -3340,26 +3336,22 @@ exception.printStackTrace();
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
 
           subSubSubComposite = Widgets.newComposite(subSubComposite);
-          subSubSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0,1.0}));
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0,1.0}));
           Widgets.layout(subSubSubComposite,1,1,TableLayoutData.WE,0,0,2);
           {
-            label = Widgets.newLabel(subSubSubComposite,"Name:");
-            label.setMenu(menu);
-            Widgets.layout(label,0,0,TableLayoutData.W);
-
             widgetMailLogin = Widgets.newText(subSubSubComposite);
             widgetMailLogin.setText((repositoryTab.repository.mailLogin != null)?repositoryTab.repository.mailLogin:Settings.mailLogin);
-            Widgets.layout(widgetMailLogin,0,1,TableLayoutData.WE);
+            Widgets.layout(widgetMailLogin,0,0,TableLayoutData.WE);
             widgetMailLogin.setToolTipText("Mail server login name.");
 
             label = Widgets.newLabel(subSubSubComposite,"Password:");
             label.setMenu(menu);
-            Widgets.layout(label,0,2,TableLayoutData.W);
+            Widgets.layout(label,0,1,TableLayoutData.W);
 
             widgetMailPassword = Widgets.newPassword(subSubSubComposite);
             String password = getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
             if (password != null) widgetMailPassword.setText(password);
-            Widgets.layout(widgetMailPassword,0,3,TableLayoutData.WE);
+            Widgets.layout(widgetMailPassword,0,2,TableLayoutData.WE);
             widgetMailPassword.setToolTipText("Mail server login password.");
           }
 
