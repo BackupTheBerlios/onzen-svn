@@ -1314,7 +1314,9 @@ class StoredFiles
 
                     "reviewServerFlag",
                     "reviewServerHost",
-                    "reviewServerLogin"
+                    "reviewServerLogin",
+                    "reviewServerSummary",
+                    "reviewServerDescription"
                    }
         )
 @XmlSeeAlso({RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
@@ -1437,6 +1439,10 @@ abstract class Repository implements Serializable
   public String  reviewServerHost;
   @XmlElement(name = "reviewServerLogin")
   public String  reviewServerLogin;
+  @XmlElement(name = "reviewServerSummary", defaultValue = "Patch #${n %04d}: ${summary}")
+  public String reviewServerSummary = "Patch #${n %04d}: ${summary}";
+  @XmlElement(name = "reviewServerDescription", defaultValue = "${message}\n\n${tests - %s}")
+  public String reviewServerDescription = "${message}\n\n${tests - %s}";
 
   // ------------------------ native functions ----------------------------
 
