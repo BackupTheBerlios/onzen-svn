@@ -630,6 +630,15 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
 
   /** notify modify variable
    * Note: required because it can be overwritten by specific handler
+   * @param button button to notify
+   */
+  void modified(Button button)
+  {
+    modified((Control)button);
+  }
+
+  /** notify modify variable
+   * Note: required because it can be overwritten by specific handler
    * @param menuItem menu item to notify
    */
   void modified(MenuItem menuItem)
@@ -641,11 +650,15 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
    */
   public void modified()
   {
+    if      (widget instanceof Button)
+    {
+      modified((Button)widget);
+    }
     if      (widget instanceof Control)
     {
       modified((Control)widget);
     }
-    else if (widget instanceof Control)
+    else if (widget instanceof MenuItem)
     {
       modified((MenuItem)widget);
     }
