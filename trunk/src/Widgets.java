@@ -654,7 +654,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
     {
       modified((Button)widget);
     }
-    if      (widget instanceof Control)
+    else if (widget instanceof Control)
     {
       modified((Control)widget);
     }
