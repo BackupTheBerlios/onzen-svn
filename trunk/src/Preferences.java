@@ -135,7 +135,7 @@ class Preferences
 
   private final Text          widgetReviewServerHost;
   private final Text          widgetReviewServerLogin;
-  private final Text          widgetCommandPostReview;
+  private final Text          widgetCommandPostReviewServer;
 
   private final Text          widgetCVSCommand;
   private final Button        widgetCVSPruneEmptyDirectories;
@@ -476,30 +476,30 @@ class Preferences
           widgetMailFrom.setToolTipText("Mail from address.");
         }
 
-        subComposite = Widgets.newGroup(composite,"Post review");
+        subComposite = Widgets.newGroup(composite,"Post review server");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
         Widgets.layout(subComposite,4,0,TableLayoutData.WE);
         {
-          label = Widgets.newLabel(subComposite,"Review server:");
+          label = Widgets.newLabel(subComposite,"Server:");
           Widgets.layout(label,0,0,TableLayoutData.W);
           widgetReviewServerHost = Widgets.newText(subComposite);
           widgetReviewServerHost.setText(Settings.reviewServerHost);
           Widgets.layout(widgetReviewServerHost,0,1,TableLayoutData.WE);
           widgetReviewServerHost.setToolTipText("Default post review server name.\n");
 
-          label = Widgets.newLabel(subComposite,"User name:");
+          label = Widgets.newLabel(subComposite,"Login:");
           Widgets.layout(label,1,0,TableLayoutData.W);
           widgetReviewServerLogin = Widgets.newText(subComposite);
           widgetReviewServerLogin.setText(Settings.reviewServerLogin);
           Widgets.layout(widgetReviewServerLogin,1,1,TableLayoutData.WE);
-          widgetReviewServerLogin.setToolTipText("Default review server user name.\n");
+          widgetReviewServerLogin.setToolTipText("Default review server login name.\n");
 
-          label = Widgets.newLabel(subComposite,"Post review command:");
+          label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,2,0,TableLayoutData.W);
-          widgetCommandPostReview = Widgets.newText(subComposite);
-          widgetCommandPostReview.setText(Settings.commandPostReview);
-          Widgets.layout(widgetCommandPostReview,2,1,TableLayoutData.WE);
-          widgetCommandPostReview.setToolTipText("Post review command.\nMacros:\n  ${server} - review server name\n  ${user} - user name\n  ${password} - password\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
+          widgetCommandPostReviewServer = Widgets.newText(subComposite);
+          widgetCommandPostReviewServer.setText(Settings.commandPostReviewServer);
+          Widgets.layout(widgetCommandPostReviewServer,2,1,TableLayoutData.WE);
+          widgetCommandPostReviewServer.setToolTipText("Post review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
         }
       }
 
@@ -1127,7 +1127,7 @@ class Preferences
 
           Settings.reviewServerHost                       = widgetReviewServerHost.getText().trim();
           Settings.reviewServerLogin                      = widgetReviewServerLogin.getText().trim();
-          Settings.commandPostReview                      = widgetCommandPostReview.getText().trim();
+          Settings.commandPostReviewServer                = widgetCommandPostReviewServer.getText().trim();
 
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
