@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Properties;
 
 // graphics
@@ -99,11 +100,12 @@ class CommandStorePatch
    */
   class Data
   {
-    String[]        revisionNames;        // revision names
-    String[] lines;                // patch lines
-    String[] linesNoWhitespaces;   // patch lines (without whitespaces)
-    String   summary;              // summary for patch
-    String[] message;              // message for patch
+    String[]              revisionNames;        // revision names
+    String[]              lines;                // patch lines
+    String[]              linesNoWhitespaces;   // patch lines (without whitespaces)
+    String                summary;              // summary for patch
+    String[]              message;              // message for patch
+    LinkedHashSet<String> testSet;              // tests for patch
 
     Data()
     {
@@ -112,31 +114,33 @@ class CommandStorePatch
       this.linesNoWhitespaces = null;
       this.summary            = null;
       this.message            = null;
+      this.testSet            = null;
     }
   };
 
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  public String               summary;
-  public String[]             message;
+  public String                summary;
+  public String[]              message;
+  public LinkedHashSet<String> testSet;
 
   // global variable references
-  private final RepositoryTab repositoryTab;
-  private final Patch         patch;
-  private final Date          date;
-  private final Display       display;
+  private final RepositoryTab  repositoryTab;
+  private final Patch          patch;
+  private final Date           date;
+  private final Display        display;
 
   // dialog
-  private final Data          data = new Data();
-  private final Shell         dialog;
+  private final Data           data = new Data();
+  private final Shell          dialog;
 
   // widgets
-  private final Text          widgetPatch;
-  private final Text          widgetSummary;
-  private final Text          widgetMessage;
-  private final Button        widgetStore;
-  private final Button        widgetCancel;
+  private final Text           widgetPatch;
+  private final Text           widgetSummary;
+  private final Text           widgetMessage;
+  private final Button         widgetStore;
+  private final Button         widgetCancel;
 
   // ------------------------ native functions ----------------------------
 
@@ -163,6 +167,7 @@ class CommandStorePatch
     // initialize variables
     this.summary       = summary;
     this.message       = message;
+    this.testSet       = new LinkedHashSet<String>();
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
     this.date          = new Date();
@@ -220,6 +225,9 @@ class CommandStorePatch
         {
           data.summary = widgetSummary.getText();
           data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+//???
+Dprintf.dprintf("");
+//          data.testSet = widgetSummary.getText();
 
           Settings.geometryStorePatch = dialog.getSize();
 
@@ -274,6 +282,9 @@ class CommandStorePatch
       {
         summary = data.summary;
         message = data.message;
+//???
+Dprintf.dprintf("");
+//          data.testSet = widgetSummary.getText();
       }
     }
   }
@@ -289,6 +300,9 @@ class CommandStorePatch
       {
         summary = data.summary;
         message = data.message;
+//???
+Dprintf.dprintf("");
+//          data.testSet = widgetSummary.getText();
 
         return true;
       }
