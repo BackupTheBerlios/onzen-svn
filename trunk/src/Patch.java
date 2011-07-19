@@ -35,6 +35,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -94,19 +95,20 @@ class Patch
   };
 
   // --------------------------- variables --------------------------------
-  public  String   rootPath;               // root path
-  public  States   state;                  // patch state; see States
-  public  String   summary;                // summary comment
-  public  String[] message;                // commit message
-  public  String   revision1,revision2;    // revision
-  public  boolean  ignoreWhitespaces;      // true when whitespaces are ignored
+  public  String                rootPath;               // root path
+  public  States                state;                  // patch state; see States
+  public  String                summary;                // summary comment
+  public  String[]              message;                // commit message
+  public  String                revision1,revision2;    // revision
+  public  boolean               ignoreWhitespaces;      // true when whitespaces are ignored
+  public  LinkedHashSet<String> testSet;                // tests done
 
-  private String[] fileNames;              // files belonging to patch
-  private String[] lines;                  // patch lines or null
-  private File     file;                   // file with patch or null
-  private int      databaseId;             // id in database or Database.ID_NONE
-  private int      number;                 // patch number or Database.ID_NONE
-  private File     tmpFile;                // temporary file with patch
+  private HashSet<String>       fileNameSet;            // files belonging to patch
+  private String[]              lines;                  // patch lines or null
+  private File                  file;                   // file with patch or null
+  private int                   databaseId;             // id in database or Database.ID_NONE
+  private int                   number;                 // patch number or Database.ID_NONE
+  private File                  tmpFile;                // temporary file with patch
 
   // ------------------------ native functions ----------------------------
 
@@ -127,7 +129,7 @@ class Patch
     try
     {
       Statement         statement;
-      PreparedStatement preparedStatement;
+      PreparedStatement preparedStatement1,preparedStatement2;
       ResultSet         resultSet1,resultSet2;
 
       // open database
@@ -161,12 +163,22 @@ class Patch
                                             ";"
                                            );
 
-        preparedStatement = database.connection.prepareStatement("SELECT "+
-                                                                 "  fileName "+
-                                                                 "FROM files "+
-                                                                 "WHERE patchId=? "+
-                                                                 ";"
-                                                                );
+        preparedStatement1 = database.connection.prepareStatement("SELECT "+
+                                                                  "  fileName "+
+                                                                  "FROM files "+
+                                                                  "WHERE patchId=? "+
+                                                                  "ORDER BY id "+
+                                                                  ";"
+                                                                 );
+        preparedStatement2 = database.connection.prepareStatement("SELECT "+
+                                                                  "  test "+
+                                                                  "FROM tests "+
+                                                                  "WHERE patchId=? "+
+                                                                  "ORDER BY id "+
+                                                                  ";"
+                                                                 );
+        HashSet<String> fileNameSet = new HashSet<String>();
+        LinkedHashSet<String> testSet = new LinkedHashSet<String>();
         while (resultSet1.next())
         {
           // get patch data
@@ -183,15 +195,15 @@ class Patch
 //Dprintf.dprintf("databaseId=%d rootPath=%s state=%s summary=%s number=%d",databaseId,rootPath,state,summary,number);
 
           // get file names
-          ArrayList<String> fileNameList = new ArrayList<String>();
-          preparedStatement.setInt(1,databaseId);
+          fileNameSet.clear();
+          preparedStatement1.setInt(1,databaseId);
           resultSet2 = null;
           try
           {
-            resultSet2 = preparedStatement.executeQuery();
+            resultSet2 = preparedStatement1.executeQuery();
             while (resultSet2.next())
             {
-              fileNameList.add(resultSet2.getString("fileName"));
+              fileNameSet.add(resultSet2.getString("fileName"));
             }
             resultSet2.close(); resultSet2 = null;
           }
@@ -199,7 +211,24 @@ class Patch
           {
             if (resultSet2 != null) resultSet2.close();
           }
-          String[] fileNames = fileNameList.toArray(new String[fileNameList.size()]);
+
+          // get tests
+          testSet.clear();
+          preparedStatement2.setInt(1,databaseId);
+          resultSet2 = null;
+          try
+          {
+            resultSet2 = preparedStatement2.executeQuery();
+            while (resultSet2.next())
+            {
+              testSet.add(resultSet2.getString("test"));
+            }
+            resultSet2.close(); resultSet2 = null;
+          }
+          finally
+          {
+            if (resultSet2 != null) resultSet2.close();
+          }
 
           // add to list
           patchList.add(new Patch(rootPath,
@@ -211,7 +240,8 @@ class Patch
                                   revision1,
                                   revision2,
                                   ignoreWhitespaces,
-                                  fileNames,
+                                  fileNameSet,
+                                  testSet,
                                   lines,
                                   null
                                  )
@@ -250,21 +280,23 @@ class Patch
    * @param message message text lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
-   * @param fileNames file names
+   * @param fileNameSet file names
+   * @param testSet tests done
    * @param file file with patch
    */
-  private Patch(String   rootPath,
-                int      databaseId,
-                int      number,
-                States   state,
-                String   summary,
-                String   message[],
-                String   revision1,
-                String   revision2,
-                boolean  ignoreWhitespaces,
-                String[] fileNames,
-                String[] lines,
-                File     file
+  private Patch(String                rootPath,
+                int                   databaseId,
+                int                   number,
+                States                state,
+                String                summary,
+                String                message[],
+                String                revision1,
+                String                revision2,
+                boolean               ignoreWhitespaces,
+                HashSet<String>       fileNameSet,
+                LinkedHashSet<String> testSet,
+                String[]              lines,
+                File                  file
                )
   {
     this.rootPath          = rootPath;
@@ -274,7 +306,8 @@ class Patch
     this.revision1         = revision1;
     this.revision2         = revision2;
     this.ignoreWhitespaces = ignoreWhitespaces;
-    this.fileNames         = fileNames;
+    this.fileNameSet       = fileNameSet;
+    this.testSet           = testSet;
 
     this.lines             = lines;
     this.file              = file;
@@ -291,19 +324,21 @@ class Patch
    * @param message message text lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
-   * @param fileNames file names
+   * @param fileNameSet file names
+   * @param testSet tests done
    * @param lines patch lines
    */
-  public Patch(String   rootPath,
-               int      databaseId,
-               States   state,
-               String   summary,
-               String[] message,
-               String   revision1,
-               String   revision2,
-               boolean  ignoreWhitespaces,
-               String[] fileNames,
-               String[] lines
+  public Patch(String                rootPath,
+               int                   databaseId,
+               States                state,
+               String                summary,
+               String[]              message,
+               String                revision1,
+               String                revision2,
+               boolean               ignoreWhitespaces,
+               HashSet<String>       fileNameSet,
+               LinkedHashSet<String> testSet,
+               String[]              lines
               )
   {
     this(rootPath,
@@ -315,7 +350,8 @@ class Patch
          revision1,
          revision2,
          ignoreWhitespaces,
-         fileNames,
+         fileNameSet,
+         testSet,
          lines,
          null
         );
@@ -345,17 +381,17 @@ class Patch
          revision2,
          ignoreWhitespaces,
          null,
+         null,
          lines
         );
     if (fileDataSet != null)
     {
       // set file names
-      ArrayList<String> fileList = new ArrayList<String>();
+      HashSet<String> fileNameSet = new HashSet<String>();
       for (FileData fileData : fileDataSet)
       {
-        fileList.add(fileData.getFileName());
+        fileNameSet.add(fileData.getFileName());
       }
-      this.fileNames = fileList.toArray(new String[fileList.size()]);
     }
   }
 
@@ -364,7 +400,10 @@ class Patch
    * @param fileDataSet file data set
    * @param lines patch lines
    */
-  public Patch(String rootPath, HashSet<FileData> fileDataSet, String[] lines)
+  public Patch(String            rootPath,
+               HashSet<FileData> fileDataSet,
+               String[]          lines
+              )
   {
     this(rootPath,fileDataSet,null,null,false,lines);
   }
@@ -373,7 +412,9 @@ class Patch
    * @param rootPath root path
    * @param lines patch lines
    */
-  public Patch(String rootPath, String[] lines)
+  public Patch(String   rootPath,
+               String[] lines
+              )
   {
     this(rootPath,null,lines);
   }
@@ -386,19 +427,21 @@ class Patch
    * @param message message text lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
-   * @param fileNames file names
+   * @param fileNameSet file names
+   * @param testSet tests done
    * @param file file with patch
    */
-  public Patch(String   rootPath,
-               int      databaseId,
-               States   state,
-               String   summary,
-               String[] message,
-               String   revision1,
-               String   revision2,
-               boolean  ignoreWhitespaces,
-               String[] fileNames,
-               File     file
+  public Patch(String                rootPath,
+               int                   databaseId,
+               States                state,
+               String                summary,
+               String[]              message,
+               String                revision1,
+               String                revision2,
+               boolean               ignoreWhitespaces,
+               HashSet<String>       fileNameSet,
+               LinkedHashSet<String> testSet,
+               File                  file
               )
   {
     this(rootPath,
@@ -410,7 +453,8 @@ class Patch
          revision1,
          revision2,
          ignoreWhitespaces,
-         fileNames,
+         fileNameSet,
+         testSet,
          null,
          file
         );
@@ -421,14 +465,16 @@ class Patch
    * @param fileDataSet file data set
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
+   * @param testSet tests done
    * @param file file with patch
    */
-  public Patch(String            rootPath,
-               HashSet<FileData> fileDataSet,
-               String            revision1,
-               String            revision2,
-               boolean           ignoreWhitespaces,
-               File              file
+  public Patch(String                rootPath,
+               HashSet<FileData>     fileDataSet,
+               String                revision1,
+               String                revision2,
+               boolean               ignoreWhitespaces,
+               LinkedHashSet<String> testSet,
+               File                  file
               )
   {
     this(rootPath,
@@ -440,17 +486,17 @@ class Patch
          revision2,
          ignoreWhitespaces,
          null,
+         testSet,
          file
         );
     if (fileDataSet != null)
     {
       // set file names
-      ArrayList<String> fileList = new ArrayList<String>();
+      HashSet<String> fileNameSet = new HashSet<String>();
       for (FileData fileData : fileDataSet)
       {
-        fileList.add(fileData.getFileName());
+        fileNameSet.add(fileData.getFileName());
       }
-      this.fileNames = fileList.toArray(new String[fileList.size()]);
     }
   }
 
@@ -459,16 +505,21 @@ class Patch
    * @param fileDataSet file data set
    * @param file file with patch
    */
-  public Patch(String rootPath, HashSet<FileData> fileDataSet, File file)
+  public Patch(String            rootPath,
+               HashSet<FileData> fileDataSet,
+               File              file
+              )
   {
-    this(rootPath,fileDataSet,null,null,false,file);
+    this(rootPath,fileDataSet,null,null,false,null,file);
   }
 
   /** create patch
    * @param rootPath root path
    * @param file file with patch
    */
-  public Patch(String rootPath, File file)
+  public Patch(String   rootPath,
+               File     file
+              )
   {
     this(rootPath,null,file);
   }
@@ -477,9 +528,11 @@ class Patch
    * @param rootPath root path
    * @param databaseId database id
    */
-  public Patch(String rootPath, int databaseId)
+  public Patch(String rootPath,
+               int    databaseId
+              )
   {
-    this(rootPath,databaseId,States.NONE,"",null,null,null,false,null,(String[])null);
+    this(rootPath,databaseId,States.NONE,"",null,null,null,false,null,null,(String[])null);
   }
 
   /** create patch
@@ -535,7 +588,7 @@ class Patch
    */
   public String[] getFileNames()
   {
-    return fileNames;
+    return fileNameSet.toArray(new String[fileNameSet.size()]);
   }
 
   /** allocate a patch number
@@ -734,17 +787,32 @@ Dprintf.dprintf("");
         }
       }
 
-      if (fileNames != null)
+      if (fileNameSet != null)
       {
         // insert files
         preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
         preparedStatement = database.connection.prepareStatement("INSERT INTO files (patchId,fileName) VALUES (?,?);");
-        for (String fileName : fileNames)
+        for (String fileName : fileNameSet)
         {
           preparedStatement.setInt(1,databaseId);
           preparedStatement.setString(2,fileName);
+          preparedStatement.executeUpdate();
+        }
+      }
+
+      if (testSet != null)
+      {
+        // insert tests
+        preparedStatement = database.connection.prepareStatement("DELETE FROM tests WHERE patchId=?;");
+        preparedStatement.setInt(1,databaseId);
+        preparedStatement.executeUpdate();
+        preparedStatement = database.connection.prepareStatement("INSERT INTO tests (patchId,test) VALUES (?,?);");
+        for (String test : testSet)
+        {
+          preparedStatement.setInt(1,databaseId);
+          preparedStatement.setString(2,test);
           preparedStatement.executeUpdate();
         }
       }
@@ -813,7 +881,8 @@ Dprintf.dprintf("");
         }
 
         // load file names
-        ArrayList<String> fileNameList = new ArrayList<String>();
+        if (fileNameSet == null) fileNameSet = new HashSet<String>();
+        fileNameSet.clear();
         preparedStatement = database.connection.prepareStatement("SELECT "+
                                                                  "  fileName "+
                                                                  "FROM files "+
@@ -827,7 +896,7 @@ Dprintf.dprintf("");
           resultSet = preparedStatement.executeQuery();
           while (resultSet.next())
           {
-            fileNameList.add(resultSet.getString("fileName"));
+            fileNameSet.add(resultSet.getString("fileName"));
           }
           resultSet.close(); resultSet = null;
         }
@@ -835,7 +904,31 @@ Dprintf.dprintf("");
         {
           if (resultSet != null) resultSet.close();
         }
-        fileNames = fileNameList.toArray(new String[fileNameList.size()]);
+
+        // load tests
+        if (testSet == null) testSet = new LinkedHashSet<String>();
+        testSet.clear();
+        preparedStatement = database.connection.prepareStatement("SELECT "+
+                                                                 "  test "+
+                                                                 "FROM tests "+
+                                                                 "WHERE patchId=? "+
+                                                                 ";"
+                                                                );
+        preparedStatement.setInt(1,databaseId);
+        resultSet = null;
+        try
+        {
+          resultSet = preparedStatement.executeQuery();
+          while (resultSet.next())
+          {
+            testSet.add(resultSet.getString("fileName"));
+          }
+          resultSet.close(); resultSet = null;
+        }
+        finally
+        {
+          if (resultSet != null) resultSet.close();
+        }
 
         // close database
         closePatchesDatabase(database);
@@ -871,6 +964,11 @@ Dprintf.dprintf("");
 
         // delete file names
         preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
+        preparedStatement.setInt(1,databaseId);
+        preparedStatement.executeUpdate();
+
+        // delete tests
+        preparedStatement = database.connection.prepareStatement("DELETE FROM tests WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
@@ -1533,6 +1631,13 @@ Dprintf.dprintf("exception=%s",exception);
                               "  id       INTEGER PRIMARY KEY, "+
                               "  patchId  INTEGER, "+
                               "  fileName TEXT "+
+                              ");"
+                             );
+      statement = database.connection.createStatement();
+      statement.executeUpdate("CREATE TABLE IF NOT EXISTS tests ( "+
+                              "  id       INTEGER PRIMARY KEY, "+
+                              "  patchId  INTEGER, "+
+                              "  test     TEXT "+
                               ");"
                              );
       statement = database.connection.createStatement();
