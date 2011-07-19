@@ -398,7 +398,7 @@ class CommandCreatePatch
                                 patchLines
                                );
 
-              // mail patch
+              // store patch
               CommandStorePatch commandStorePatch = new CommandStorePatch(dialog,
                                                                           repositoryTab,
                                                                           fileDataSet,
@@ -412,6 +412,7 @@ class CommandCreatePatch
                   patch.state   = Patch.States.NONE;
                   patch.summary = commandStorePatch.summary;
                   patch.message = commandStorePatch.message;
+                  patch.testSet = commandStorePatch.testSet;
                   patch.save();
 
                   // close dialog
@@ -480,6 +481,7 @@ class CommandCreatePatch
                   patch.state   = Patch.States.REVIEW;
                   patch.summary = commandPatchReview.summary;
                   patch.message = commandPatchReview.message;
+                  patch.testSet = commandPatchReview.testSet;
                   patch.save();
 
                   // close dialog
