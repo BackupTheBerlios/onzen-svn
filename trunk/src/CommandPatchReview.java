@@ -21,6 +21,7 @@ import java.util.BitSet;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Properties;
 import java.util.HashMap;
 
@@ -118,15 +119,15 @@ class CommandPatchReview
    */
   class Data
   {
-    Patch[]         history;              // patch history
-    String[]        revisionNames;        // revision names
-    String[]        lines;                // patch lines
-    String[]        linesNoWhitespaces;   // patch lines (without whitespaces)
-    String          summary;              // summary for patch
-    String[]        message;              // message for patch (without mail prefix/postfix etc.)
-    HashSet<String> tests;                // test infos
-    boolean         patchMailFlag;        // send patch mail
-    boolean         reviewServerFlag;     // send patch to review server
+    Patch[]               history;              // patch history
+    String[]              revisionNames;        // revision names
+    String[]              lines;                // patch lines
+    String[]              linesNoWhitespaces;   // patch lines (without whitespaces)
+    String                summary;              // summary for patch
+    String[]              message;              // message for patch (without mail prefix/postfix etc.)
+    LinkedHashSet<String> testSet;              // tests done
+    boolean               patchMailFlag;        // send patch mail
+    boolean               reviewServerFlag;     // send patch to review server
 
     Data()
     {
@@ -135,7 +136,7 @@ class CommandPatchReview
       this.linesNoWhitespaces = null;
       this.summary            = null;
       this.message            = null;
-      this.tests              = new HashSet<String>();
+      this.testSet            = new LinkedHashSet<String>();
       this.patchMailFlag      = false;
       this.reviewServerFlag   = false;
     }
@@ -154,6 +155,7 @@ class CommandPatchReview
   // --------------------------- variables --------------------------------
   public String               summary;
   public String[]             message;
+  LinkedHashSet<String>       testSet;
 
   // global variable references
   private final RepositoryTab repositoryTab;
@@ -210,6 +212,7 @@ class CommandPatchReview
     // initialize variables
     this.summary       = summary;
     this.message       = message;
+    this.testSet       = new LinkedHashSet<String>();
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
     this.date          = new Date();
@@ -808,6 +811,7 @@ class CommandPatchReview
                 {
                   final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
 
+                  // get tests
                   ArrayList<String> tests = new ArrayList<String>();
                   for (TableItem tableItem : widgetTests.getItems())
                   {
@@ -863,8 +867,11 @@ class CommandPatchReview
             if (tmpPatchFile != null) tmpPatchFile.delete();
           }
 
-          repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
-          repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+          data.testSet.clear();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
+          }
 
           Settings.geometryMailPatch = dialog.getSize();
 
@@ -882,9 +889,6 @@ class CommandPatchReview
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
-          repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
-
           Settings.geometryMailPatch = dialog.getSize();
 
           Dialogs.close(dialog,true);
@@ -1072,7 +1076,7 @@ class CommandPatchReview
 
         if (!newPatchTest.isEmpty())
         {
-          // check for duplicate
+          // check for duplicate tests
           boolean found = false;
           for (String patchTest : repositoryTab.repository.patchTests)
           {
@@ -1087,7 +1091,7 @@ class CommandPatchReview
           {
             int n = repositoryTab.repository.patchTests.length;
 
-            // add new test
+            // add new test to repository list
             repositoryTab.repository.patchTests = Arrays.copyOf(repositoryTab.repository.patchTests,n+1);
             repositoryTab.repository.patchTests[n] = newPatchTest;
 
@@ -1095,8 +1099,8 @@ class CommandPatchReview
             tableItem.setChecked(true);
           }
 
-          // add test to mail
-          data.tests.add(newPatchTest);
+          // add test to patch
+          data.testSet.add(newPatchTest);
           updateText();
         }
 
@@ -1149,8 +1153,11 @@ class CommandPatchReview
       Widgets.setFocus(widgetSummary);
       if ((Boolean)Dialogs.run(dialog,false))
       {
-        summary = data.summary;
-        message = data.message;
+        repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
+        repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+        summary                                   = data.summary;
+        message                                   = data.message;
+        testSet                                   = data.testSet;
       }
     }
   }
@@ -1164,8 +1171,11 @@ class CommandPatchReview
       Widgets.setFocus(widgetSummary);
       if ((Boolean)Dialogs.run(dialog,false))
       {
-        summary = data.summary;
-        message = data.message;
+        repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
+        repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+        summary                                   = data.summary;
+        message                                   = data.message;
+        testSet                                   = data.testSet;
 
         return true;
       }
@@ -1303,12 +1313,14 @@ class CommandPatchReview
   {
     Macro macro;
 
+    // get tests
     ArrayList<String> tests = new ArrayList<String>();
     for (TableItem tableItem : widgetTests.getItems())
     {
       if (tableItem.getChecked()) tests.add((String)tableItem.getData());
     }
 
+    // update mail text
     macro = new Macro(repositoryTab.repository.patchMailText);
     macro.expand("n",       patch.getNumber()                 );
     macro.expand("summary", widgetSummary.getText().trim()    );
@@ -1319,6 +1331,7 @@ class CommandPatchReview
     macro.expand("tests",   tests,"\n"                        );
     widgetPatchMailText.setText(macro.getValue());
 
+    // update review server text
     macro = new Macro(repositoryTab.repository.reviewServerDescription);
     macro.expand("n",       patch.getNumber()                 );
     macro.expand("summary", widgetSummary.getText().trim()    );
