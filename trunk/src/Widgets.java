@@ -632,6 +632,15 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
    * Note: required because it can be overwritten by specific handler
    * @param button button to notify
    */
+  void modified(Combo combo)
+  {
+    modified((Control)combo);
+  }
+
+  /** notify modify variable
+   * Note: required because it can be overwritten by specific handler
+   * @param button button to notify
+   */
   void modified(Button button)
   {
     modified((Control)button);
@@ -653,6 +662,10 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
     if      (widget instanceof Button)
     {
       modified((Button)widget);
+    }
+    else if (widget instanceof Combo)
+    {
+      modified((Combo)widget);
     }
     else if (widget instanceof Control)
     {
