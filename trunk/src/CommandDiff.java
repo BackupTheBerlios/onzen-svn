@@ -379,7 +379,7 @@ class CommandDiff
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0}));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetSync = Widgets.newCheckbox(composite,"Sync");
@@ -509,21 +509,9 @@ class CommandDiff
       });
       widgetChangedWhitespaces.setToolTipText("Show lines with white-space changes.");
 
-      widgetRevisionPrev = Widgets.newButton(composite,Onzen.IMAGE_ARROW_LEFT);
-      widgetRevisionPrev.setEnabled(false);
-      Widgets.layout(widgetRevisionPrev,0,5,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
-      {
-        public void modified(Control control)
-        {
-          Widgets.setEnabled(control,(data.revisionNames != null));
-        }
-      });
-      widgetRevisionPrev.setToolTipText("Show previous revision.");
-
       widgetRevision = Widgets.newSelect(composite);
-      widgetRevisionPrev.setEnabled(false);
-      Widgets.layout(widgetRevision,0,6,TableLayoutData.WE);
+      widgetRevision.setEnabled(false);
+      Widgets.layout(widgetRevision,0,5,TableLayoutData.WE);
       widgetRevision.setToolTipText("Revisions to show.");
       Widgets.addModifyListener(new WidgetListener(widgetRevision,data)
       {
@@ -533,6 +521,18 @@ class CommandDiff
         }
       });
 
+      widgetRevisionPrev = Widgets.newButton(composite,Onzen.IMAGE_ARROW_LEFT);
+      widgetRevisionPrev.setEnabled(false);
+      Widgets.layout(widgetRevisionPrev,0,6,TableLayoutData.W);
+      Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(data.revisionNames != null) && (widgetRevision.getSelectionIndex() > 0));
+        }
+      });
+      widgetRevisionPrev.setToolTipText("Show previous revision.");
+
       widgetRevisionNext = Widgets.newButton(composite,Onzen.IMAGE_ARROW_RIGHT);
       widgetRevisionNext.setEnabled(false);
       Widgets.layout(widgetRevisionNext,0,7,TableLayoutData.W);
@@ -540,7 +540,7 @@ class CommandDiff
       {
         public void modified(Control control)
         {
-          Widgets.setEnabled(control,(data.revisionNames != null));
+          Widgets.setEnabled(control,(data.revisionNames != null) && (widgetRevision.getSelectionIndex() < data.revisionNames.length-1));
         }
       });
       widgetRevisionNext.setToolTipText("Show next revision.");
@@ -1047,6 +1047,18 @@ class CommandDiff
       }
     });
 
+    widgetRevision.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        Widgets.notify(dialog,USER_EVENT_NEW_REVISION,widget.getSelectionIndex());
+      }
+    });
     widgetRevisionPrev.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1060,18 +1072,6 @@ class CommandDiff
           widgetRevision.select(index-1);
           Widgets.notify(dialog,USER_EVENT_NEW_REVISION,index-1);
         }
-      }
-    });
-    widgetRevision.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        Combo widget = (Combo)selectionEvent.widget;
-
-        Widgets.notify(dialog,USER_EVENT_NEW_REVISION,widget.getSelectionIndex());
       }
     });
     widgetRevisionNext.addSelectionListener(new SelectionListener()
