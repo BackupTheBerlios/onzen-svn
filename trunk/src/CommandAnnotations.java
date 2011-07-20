@@ -120,6 +120,8 @@ class CommandAnnotations
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
   private final Combo         widgetRevision;
+  private final Button        widgetRevisionPrev;
+  private final Button        widgetRevisionNext;
 
   // ------------------------ native functions ----------------------------
 
@@ -153,7 +155,7 @@ class CommandAnnotations
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0,0.0,0.0}));
       Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Revision:");
@@ -170,6 +172,31 @@ class CommandAnnotations
           }
         });
         widgetRevision.setToolTipText("Revision to view.");
+
+        widgetRevisionPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_LEFT);
+        widgetRevisionPrev.setEnabled(false);
+        Widgets.layout(widgetRevisionPrev,0,2,TableLayoutData.W);
+        Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
+        {
+          public void modified(Control control)
+          {
+            Widgets.setEnabled(control,(data.revisionNames != null) && (widgetRevision.getSelectionIndex() > 0));
+          }
+        });
+        widgetRevisionPrev.setToolTipText("Show previous revision.");
+
+        widgetRevisionNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_RIGHT);
+        widgetRevisionNext.setEnabled(false);
+        Widgets.layout(widgetRevisionNext,0,3,TableLayoutData.W);
+        Widgets.addModifyListener(new WidgetListener(widgetRevisionNext,data)
+        {
+          public void modified(Control control)
+          {
+
+            Widgets.setEnabled(control,(data.revisionNames != null) && (widgetRevision.getSelectionIndex() < data.revisionNames.length-1));
+          }
+        });
+        widgetRevisionNext.setToolTipText("Show next revision.");
       }
 
       widgetAnnotations = Widgets.newTable(composite,SWT.H_SCROLL|SWT.V_SCROLL);
@@ -270,6 +297,34 @@ class CommandAnnotations
         if ((index >= 0) && (index < data.revisionNames.length))
         {
           show(data.revisionNames[index]);
+        }
+      }
+    });
+    widgetRevisionPrev.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        int index = widgetRevision.getSelectionIndex();
+        if (index > 0)
+        {
+          show(data.revisionNames[index-1]);
+        }
+      }
+    });
+    widgetRevisionNext.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        int index = widgetRevision.getSelectionIndex();
+        if ((data.revisionNames != null) && (index < data.revisionNames.length-1))
+        {
+          show(data.revisionNames[index+1]);
         }
       }
     });
@@ -640,6 +695,9 @@ class CommandAnnotations
           {
             public void run()
             {
+              // set new revision
+              widgetRevision.setText(revision);
+ 
               // set new text
               setText(data.annotationData,
                       widgetAnnotations
