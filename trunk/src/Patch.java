@@ -177,8 +177,6 @@ class Patch
                                                                   "ORDER BY id "+
                                                                   ";"
                                                                  );
-        HashSet<String> fileNameSet = new HashSet<String>();
-        LinkedHashSet<String> testSet = new LinkedHashSet<String>();
         while (resultSet1.next())
         {
           // get patch data
@@ -195,7 +193,7 @@ class Patch
 //Dprintf.dprintf("databaseId=%d rootPath=%s state=%s summary=%s number=%d",databaseId,rootPath,state,summary,number);
 
           // get file names
-          fileNameSet.clear();
+          HashSet<String> fileNameSet = new HashSet<String>();
           preparedStatement1.setInt(1,databaseId);
           resultSet2 = null;
           try
@@ -211,9 +209,10 @@ class Patch
           {
             if (resultSet2 != null) resultSet2.close();
           }
+//Dprintf.dprintf("fileNameSet=%s",fileNameSet);
 
           // get tests
-          testSet.clear();
+          LinkedHashSet<String> testSet = new LinkedHashSet<String>();
           preparedStatement2.setInt(1,databaseId);
           resultSet2 = null;
           try
@@ -229,6 +228,7 @@ class Patch
           {
             if (resultSet2 != null) resultSet2.close();
           }
+//Dprintf.dprintf("testSet=%s",testSet);
 
           // add to list
           patchList.add(new Patch(rootPath,
@@ -1233,7 +1233,7 @@ Dprintf.dprintf("exception=%s",exception);
    */
   public String toString()
   {
-    return "Patch {"+number+", summary: "+summary+", state: "+state.toString()+", lines: "+lines.length+"}";
+    return "Patch {"+number+", summary: "+summary+", state: "+state.toString()+", lines: "+lines.length+", tests: "+testSet.toString()+"}";
   }
 
   //-----------------------------------------------------------------------
