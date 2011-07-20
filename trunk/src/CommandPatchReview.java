@@ -198,8 +198,9 @@ class CommandPatchReview
    * @param patch patch
    * @param summary summary text
    * @param message message text lines
+   * @param testSet tests done
    */
-  CommandPatchReview(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message)
+  CommandPatchReview(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message, LinkedHashSet<String> testSet)
   {
     Composite composite,subComposite,subSubComposite,subSubSubComposite;
     Label     label;
@@ -212,7 +213,7 @@ class CommandPatchReview
     // initialize variables
     this.summary       = summary;
     this.message       = message;
-    this.testSet       = new LinkedHashSet<String>();
+    this.testSet       = testSet;
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
     this.date          = new Date();
@@ -315,7 +316,8 @@ class CommandPatchReview
             {
               for (String patchTest : repositoryTab.repository.patchTests)
               {
-                Widgets.addTableEntry(widgetTests,patchTest,patchTest);
+                TableItem tableItem = Widgets.addTableEntry(widgetTests,patchTest,patchTest);
+                if (testSet.contains(patchTest)) tableItem.setChecked(true);
               }
             }
 
@@ -1131,6 +1133,19 @@ class CommandPatchReview
     widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
     updateSubject();
     updateText();
+  }
+
+  /** mail patch command
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param fileDataSet file data set
+   * @param patch patch
+   * @param summary summary text
+   * @param message message text lines
+   */
+  CommandPatchReview(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message)
+  {
+    this(shell,repositoryTab,fileDataSet,patch,summary,message,new LinkedHashSet<String>());
   }
 
   /** mail patch command
