@@ -632,7 +632,7 @@ class CommandPatches
       });
       button.setToolTipText("Save patch to file.");
 
-      button = Widgets.newButton(composite,"Mail for review");
+      button = Widgets.newButton(composite,"Send for review");
       button.setEnabled(false);
       Widgets.layout(button,0,1,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
@@ -651,22 +651,24 @@ class CommandPatches
         {
           if (data.patch != null)
           {
-            // mail patch
-            CommandMailPatch commandMailPatch = new CommandMailPatch(dialog,
-                                                                     repositoryTab,
-                                                                     data.fileDataSet,
-                                                                     data.patch,
-                                                                     data.patch.summary,
-                                                                     data.patch.message
-                                                                    );
-            if (commandMailPatch.execute())
+            // review patch
+            CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
+                                                                           repositoryTab,
+                                                                           data.fileDataSet,
+                                                                           data.patch,
+                                                                           data.patch.summary,
+                                                                           data.patch.message,
+                                                                           data.patch.testSet
+                                                                          );
+            if (commandPatchReview.execute())
             {
               try
               {
                 // save patch in database
                 data.patch.state   = Patch.States.REVIEW;
-                data.patch.summary = commandMailPatch.summary;
-                data.patch.message = commandMailPatch.message;
+                data.patch.summary = commandPatchReview.summary;
+                data.patch.message = commandPatchReview.message;
+                data.patch.testSet = commandPatchReview.testSet;
                 data.patch.save();
 
                 // close dialog
@@ -681,7 +683,7 @@ class CommandPatches
           }
         }
       });
-      button.setToolTipText("Mail patch for reviewing.");
+      button.setToolTipText("Send patch for reviewing as mail and/or to review server.");
 
       button = Widgets.newButton(composite,"Commit");
       button.setEnabled(false);
