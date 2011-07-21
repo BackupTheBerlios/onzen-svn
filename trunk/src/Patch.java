@@ -387,7 +387,7 @@ class Patch
     if (fileDataSet != null)
     {
       // set file names
-      HashSet<String> fileNameSet = new HashSet<String>();
+      fileNameSet = new HashSet<String>();
       for (FileData fileData : fileDataSet)
       {
         fileNameSet.add(fileData.getFileName());
@@ -492,7 +492,7 @@ class Patch
     if (fileDataSet != null)
     {
       // set file names
-      HashSet<String> fileNameSet = new HashSet<String>();
+      fileNameSet = new HashSet<String>();
       for (FileData fileData : fileDataSet)
       {
         fileNameSet.add(fileData.getFileName());
