@@ -127,6 +127,7 @@ class CommandPatches
 
   // user events
   private final int USER_EVENT_FILTER_PATCHES = 0xFFFF+0;
+  private final int USER_EVENT_ADD_NEW_TEST   = 0xFFFF+1;
 
   // --------------------------- variables --------------------------------
 
@@ -538,7 +539,7 @@ class CommandPatches
           label = Widgets.newLabel(subSubComposite,"Summary:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
-          widgetSummary = Widgets.newText(subSubComposite,SWT.LEFT);
+          widgetSummary = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER);
           Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
 
           label = Widgets.newLabel(subSubComposite,"Message:");
@@ -687,14 +688,12 @@ class CommandPatches
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
               {
-Dprintf.dprintf("");
-//                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
+                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
               }
             });
-
 
             widgetAddNewTest = Widgets.newButton(subSubSubComposite,"Add");
             widgetAddNewTest.setEnabled(false);
@@ -706,8 +705,7 @@ Dprintf.dprintf("");
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-Dprintf.dprintf("");
-//                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
+                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
               }
             });
           }
@@ -761,18 +759,20 @@ Dprintf.dprintf("");
               {
                 if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
               }              
+Dprintf.dprintf("testSet=%s",testSet);
 
               // save patch
               data.patch.summary = summary;
               data.patch.message = StringUtils.split(message,widgetMessage.DELIMITER);
-              data.patch.testSet = testSet;
+              data.patch.testSet = (LinkedHashSet)testSet.clone();
+Dprintf.dprintf("testSet=%s",data.patch.testSet);
               data.patch.save();
 
               // update
               data.tableItem.setText(2,summary);
               data.oldSummary = summary;
               data.oldMessage = message;
-              data.oldTestSet = (LinkedHashSet)testSet.clone();
+              data.oldTestSet = testSet;
               Widgets.modified(data);
             }
             catch (SQLException exception)
@@ -1209,6 +1209,13 @@ Dprintf.dprintf("");
         Widgets.setEnabled(widgetMessageSave,testSetChanged);
       }
     });
+    widgetNewTest.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetAddNewTest.setEnabled(!widgetNewTest.getText().trim().isEmpty());
+      }
+    });
 
     dialog.addListener(USER_EVENT_FILTER_PATCHES,new Listener()
     {
@@ -1232,6 +1239,40 @@ Dprintf.dprintf("");
 
           setSelectedPatch(id);
         }
+      }
+    });
+    dialog.addListener(USER_EVENT_ADD_NEW_TEST,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        String newPatchTest = widgetNewTest.getText().trim();
+
+        if (!newPatchTest.isEmpty())
+        {
+          // check for duplicate tests
+          boolean found = false;
+          for (String patchTest : repositoryTab.repository.patchTests)
+          {
+            if (patchTest.equalsIgnoreCase(newPatchTest))
+            {
+              found = true;
+              break;
+            }
+          }
+
+          if (!found)
+          {
+            // add test to patch
+            TableItem tableItem = Widgets.addTableEntry(widgetTests,newPatchTest,newPatchTest);
+            tableItem.setChecked(true);
+
+            data.patch.testSet.add(newPatchTest);
+            Widgets.modified(data);
+          }
+        }
+
+        widgetNewTest.setText("");
+        widgetNewTest.setFocus();
       }
     });
 
@@ -1353,17 +1394,13 @@ Dprintf.dprintf("");
       data.oldMessage = text;
 
       // set tests
-      data.oldTestSet = new LinkedHashSet<String>();
       widgetTests.removeAll();
-      for (String patchTest : repositoryTab.repository.patchTests)
+      for (String test : patch.testSet)
       {
-        TableItem testTableItem = Widgets.addTableEntry(widgetTests,patchTest,patchTest);
-        if (data.patch.testSet.contains(patchTest))
-        {
-          data.oldTestSet.add(patchTest);
-          testTableItem.setChecked(true);
-        }
+        TableItem testTableItem = Widgets.addTableEntry(widgetTests,test,test);
+        testTableItem.setChecked(true);
       }
+      data.oldTestSet = (LinkedHashSet)patch.testSet.clone();
     }
     else
     {
