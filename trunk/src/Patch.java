@@ -591,6 +591,14 @@ class Patch
     return fileNameSet.toArray(new String[fileNameSet.size()]);
   }
 
+  /** get tests of patch
+   * @return tests
+   */
+  public String[] getTests()
+  {
+    return testSet.toArray(new String[testSet.size()]);
+  }
+
   /** allocate a patch number
    * @return patch number or Database.ID_NONE if no patch number could be allocated
    */
