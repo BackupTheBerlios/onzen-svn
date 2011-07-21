@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.StringTokenizer;
 
 // graphics
@@ -103,16 +104,22 @@ class CommandPatches
     HashSet<FileData>     fileDataSet;
     boolean               showAllRepositories;
     EnumSet<Patch.States> showStates;
+    TableItem             tableItem;
     Patch                 patch;
+    String                oldSummary;
     String                oldMessage;
+    LinkedHashSet<String> oldTestSet;
 
     Data()
     {
       this.fileDataSet         = new HashSet<FileData>();
       this.showAllRepositories = Settings.patchShowAllRepositories;
       this.showStates          = EnumSet.copyOf(Settings.patchShowStates);
+      this.tableItem           = null;
       this.patch               = null;
+      this.oldSummary          = null;
       this.oldMessage          = null;
+      this.oldTestSet          = null;
     }
   };
 
@@ -136,7 +143,11 @@ class CommandPatches
   private final StyledText    widgetChanges;
   private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final List          widgetFileNames;
+  private final Text          widgetSummary;
   private final Text          widgetMessage;
+  private final Table         widgetTests;
+  private final Text          widgetNewTest;
+  private final Button        widgetAddNewTest;
   private final Button        widgetMessageSave;
   private final Button        widgetClose;
 
@@ -151,7 +162,7 @@ class CommandPatches
    */
   CommandPatches(final Shell shell, final RepositoryTab repositoryTab)
   {
-    Composite composite,subComposite;
+    Composite composite,subComposite,subSubComposite,subSubSubComposite;
     Menu      menu;
     MenuItem  menuItem;
     Label     label;
@@ -169,7 +180,7 @@ class CommandPatches
     dialog = Dialogs.open(shell,"Patches",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0,1.0},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       subComposite = Widgets.newComposite(composite);
@@ -516,12 +527,192 @@ class CommandPatches
         }
       }
 
-      label = Widgets.newLabel(composite,"Message:");
-      Widgets.layout(label,3,0,TableLayoutData.W);
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
+      Widgets.layout(subComposite,3,0,TableLayoutData.NSWE);
+      {
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subSubComposite,"Summary:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
 
-      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-      Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Return to commit patch.");
+          widgetSummary = Widgets.newText(subSubComposite,SWT.LEFT);
+          Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
+
+          label = Widgets.newLabel(subSubComposite,"Message:");
+          Widgets.layout(label,1,0,TableLayoutData.NW);
+
+          widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
+        }
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},1.0));
+        Widgets.layout(subSubComposite,0,1,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subSubComposite,"Tests done:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK);
+          widgetTests.setHeaderVisible(false);
+          Widgets.layout(widgetTests,1,0,TableLayoutData.NSWE);
+
+          menu = Widgets.newPopupMenu(dialog);
+          {
+            menuItem = Widgets.addMenuItem(menu,"Edit...");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  TableItem tableItem = widgetTests.getItem(index);
+
+                  String test = Dialogs.string(dialog,"Edit test description","Test:",(String)tableItem.getData());
+                  if (test != null)
+                  {
+                    tableItem.setText(test);
+                    tableItem.setData(test);
+                  }
+                }
+              }
+            });
+
+            menuItem = Widgets.addMenuItem(menu,"Move up");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  if (index > 0)
+                  {
+                    TableItem tableItem0 = widgetTests.getItem(index-1);
+                    TableItem tableItem1 = widgetTests.getItem(index  );
+
+                    String  text0    = tableItem0.getText();
+                    Object  data0    = tableItem0.getData();
+                    boolean checked0 = tableItem0.getChecked();
+                    String  text1    = tableItem1.getText();
+                    Object  data1    = tableItem1.getData();
+                    boolean checked1 = tableItem1.getChecked();
+
+                    tableItem0.setText(text1);
+                    tableItem0.setData(data1);
+                    tableItem0.setChecked(checked1);
+                    tableItem1.setText(text0);
+                    tableItem1.setData(data0);
+                    tableItem1.setChecked(checked0);
+
+                    widgetTests.setSelection(index-1);
+                  }
+                }
+              }
+            });
+
+            menuItem = Widgets.addMenuItem(menu,"Move down");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  if (index < widgetTests.getItemCount()-1)
+                  {
+                    TableItem tableItem0 = widgetTests.getItem(index  );
+                    TableItem tableItem1 = widgetTests.getItem(index+1);
+
+                    String  text0    = tableItem0.getText();
+                    Object  data0    = tableItem0.getData();
+                    boolean checked0 = tableItem0.getChecked();
+                    String  text1    = tableItem1.getText();
+                    Object  data1    = tableItem1.getData();
+                    boolean checked1 = tableItem1.getChecked();
+
+                    tableItem0.setText(text1);
+                    tableItem0.setData(data1);
+                    tableItem0.setChecked(checked1);
+                    tableItem1.setText(text0);
+                    tableItem1.setData(data0);
+                    tableItem1.setChecked(checked0);
+
+                    widgetTests.setSelection(index+1);
+                  }
+                }
+              }
+            });
+
+            menuItem = Widgets.addMenuSeparator(menu);
+
+            menuItem = Widgets.addMenuItem(menu,"Remove");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetTests.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetTests.remove(index);
+                }
+              }
+            });
+          }
+          widgetTests.setMenu(menu);
+          widgetTests.setToolTipText("Executed tests for patch.\nRight-click to open context menu.");
+
+          subSubSubComposite = Widgets.newComposite(subSubComposite,SWT.LEFT,2);
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+          Widgets.layout(subSubSubComposite,2,0,TableLayoutData.WE);
+          {
+            widgetNewTest = Widgets.newText(subSubSubComposite);
+            Widgets.layout(widgetNewTest,0,0,TableLayoutData.WE);
+            widgetNewTest.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+Dprintf.dprintf("");
+//                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+              }
+            });
+
+
+            widgetAddNewTest = Widgets.newButton(subSubSubComposite,"Add");
+            widgetAddNewTest.setEnabled(false);
+            Widgets.layout(widgetAddNewTest,0,1,TableLayoutData.E);
+            widgetAddNewTest.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+Dprintf.dprintf("");
+//                Widgets.notify(dialog,USER_EVENT_ADD_NEW_TEST);
+              }
+            });
+          }
+        }
+      }
 
       widgetMessageSave = Widgets.newButton(composite,"Save");
       widgetMessageSave.setEnabled(false);
@@ -530,8 +721,23 @@ class CommandPatches
       {
         public void modified(Control control)
         {
-          String text = widgetMessage.getText().trim();
-          Widgets.setEnabled(control,(data.oldMessage != null) && !data.oldMessage.equals(text));
+          boolean summaryChanged = (data.oldSummary != null) && !data.oldSummary.equals(widgetSummary.getText().trim());
+          boolean messageChanged = (data.oldMessage != null) && !data.oldMessage.equals(widgetMessage.getText().trim());
+          boolean testSetChanged = false;
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked())
+            {
+              testSetChanged = (data.oldTestSet == null) || !data.oldTestSet.contains((String)tableItem.getData());
+            }
+            else
+            {
+              testSetChanged = (data.oldTestSet != null) && data.oldTestSet.contains((String)tableItem.getData());
+            }
+            if (testSetChanged) break;
+          }
+
+          Widgets.setEnabled(control,summaryChanged || messageChanged || testSetChanged);
         }
       });
       widgetMessageSave.addSelectionListener(new SelectionListener()
@@ -545,15 +751,28 @@ class CommandPatches
           {
             try
             {
-              // get text
-              String text = widgetMessage.getText().trim();
+              // get summary, message
+              String summary = widgetSummary.getText().trim();
+              String message = widgetMessage.getText().trim();
+
+              // get tests
+              LinkedHashSet<String> testSet = new LinkedHashSet<String>();
+              for (TableItem tableItem : widgetTests.getItems())
+              {
+                if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
+              }              
 
               // save patch
-              data.patch.message = StringUtils.split(text,widgetMessage.DELIMITER);
+              data.patch.summary = summary;
+              data.patch.message = StringUtils.split(message,widgetMessage.DELIMITER);
+              data.patch.testSet = testSet;
               data.patch.save();
 
               // update
-              data.oldMessage = text;
+              data.tableItem.setText(2,summary);
+              data.oldSummary = summary;
+              data.oldMessage = message;
+              data.oldTestSet = (LinkedHashSet)testSet.clone();
               Widgets.modified(data);
             }
             catch (SQLException exception)
@@ -944,7 +1163,16 @@ Dprintf.dprintf("");
         Table     widget    = (Table)selectionEvent.widget;
         TableItem tableItem = (TableItem)selectionEvent.item;
 
-        setSelectedPatch((Patch)tableItem.getData());
+        setSelectedPatch(tableItem,(Patch)tableItem.getData());
+      }
+    });
+    widgetSummary.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        Widgets.setEnabled(widgetMessageSave,(data.oldSummary != null) && !data.oldSummary.equals(widget.getText().trim()));
       }
     });
     widgetMessage.addModifyListener(new ModifyListener()
@@ -954,6 +1182,31 @@ Dprintf.dprintf("");
         Text widget = (Text)modifyEvent.widget;
 
         Widgets.setEnabled(widgetMessageSave,(data.oldMessage != null) && !data.oldMessage.equals(widget.getText().trim()));
+      }
+    });
+    widgetTests.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Table widget = (Table)selectionEvent.widget;
+
+        boolean testSetChanged = false;
+        for (TableItem tableItem : widgetTests.getItems())
+        {
+          if (tableItem.getChecked())
+          {
+            testSetChanged = (data.oldTestSet == null) || !data.oldTestSet.contains((String)tableItem.getData());
+          }
+          else
+          {
+            testSetChanged = (data.oldTestSet != null) && data.oldTestSet.contains((String)tableItem.getData());
+          }
+          if (testSetChanged) break;
+        }
+        Widgets.setEnabled(widgetMessageSave,testSetChanged);
       }
     });
 
@@ -1070,11 +1323,13 @@ Dprintf.dprintf("");
   }
 
   /** set selected patch
+   * @param tableItem table item
    * @param patch patch to select
    */
-  private void setSelectedPatch(Patch patch)
+  private void setSelectedPatch(TableItem tableItem, Patch patch)
   {
-    data.patch = patch;
+    data.tableItem = tableItem;
+    data.patch     = patch;
 
     if (data.patch != null)
     {
@@ -1088,10 +1343,27 @@ Dprintf.dprintf("");
         widgetFileNames.add(fileName);
       }
 
+      // set summary
+      widgetSummary.setText(data.patch.summary);
+      data.oldSummary = data.patch.summary;
+
       // set message
       String text = StringUtils.join(data.patch.message,widgetMessage.DELIMITER);
       widgetMessage.setText(text);
       data.oldMessage = text;
+
+      // set tests
+      data.oldTestSet = new LinkedHashSet<String>();
+      widgetTests.removeAll();
+      for (String patchTest : repositoryTab.repository.patchTests)
+      {
+        TableItem testTableItem = Widgets.addTableEntry(widgetTests,patchTest,patchTest);
+        if (data.patch.testSet.contains(patchTest))
+        {
+          data.oldTestSet.add(patchTest);
+          testTableItem.setChecked(true);
+        }
+      }
     }
     else
     {
@@ -1108,20 +1380,16 @@ Dprintf.dprintf("");
    */
   private void setSelectedPatch(int patchNumber)
   {
-    Patch patch = null;
-
     // search patch
     for (TableItem tableItem : widgetPatches.getItems())
     {
       if (((Patch)tableItem.getData()).getNumber() == patchNumber)
       {
-        patch = (Patch)tableItem.getData();
+        // select patch
+        setSelectedPatch(tableItem,(Patch)tableItem.getData());
         break;
       }
     }
-
-    // select patch
-    setSelectedPatch(patch);
   }
 
   /** commit change in patch to repository
