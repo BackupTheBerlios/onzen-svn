@@ -759,13 +759,11 @@ class CommandPatches
               {
                 if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
               }              
-Dprintf.dprintf("testSet=%s",testSet);
 
               // save patch
               data.patch.summary = summary;
               data.patch.message = StringUtils.split(message,widgetMessage.DELIMITER);
               data.patch.testSet = (LinkedHashSet)testSet.clone();
-Dprintf.dprintf("testSet=%s",data.patch.testSet);
               data.patch.save();
 
               // update
