@@ -1173,36 +1173,39 @@ class StoredFiles
     ZipOutputStream output = null;
     try
     {
-      // create temporary file
-      file = File.createTempFile("onzen",".zip",new File(Settings.tmpDirectory));
-
-      // create ZIP
-      output = new ZipOutputStream(new FileOutputStream(file));
-      output.setLevel(ZipOutputStream.STORED);
-
-      // store files
-      byte[] buffer = new byte[64*1024];
-      for (FileData fileData : fileDataSet)
+      if (fileDataSet.size() > 0)
       {
+        // create temporary file
+        file = File.createTempFile("onzen",".zip",new File(Settings.tmpDirectory));
 
-        // add ZIP entry to output stream.
-        output.putNextEntry(new ZipEntry(fileData.getFileName(rootPath)));
+        // create ZIP storage
+        output = new ZipOutputStream(new FileOutputStream(file));
+        output.setLevel(ZipOutputStream.STORED);
 
-        // store file data
-        FileInputStream input = new FileInputStream(fileData.getFileName(rootPath));
-        int n;
-        while ((n = input.read(buffer)) > 0)
+        // store files
+        byte[] buffer = new byte[64*1024];
+        for (FileData fileData : fileDataSet)
         {
-          output.write(buffer,0,n);
+
+          // add ZIP entry to output stream.
+          output.putNextEntry(new ZipEntry(fileData.getFileName(rootPath)));
+
+          // store file data
+          FileInputStream input = new FileInputStream(fileData.getFileName(rootPath));
+          int n;
+          while ((n = input.read(buffer)) > 0)
+          {
+            output.write(buffer,0,n);
+          }
+          input.close();
+
+          // close ZIP entry
+          output.closeEntry();
         }
-        input.close();
 
-        // close ZIP entry
-        output.closeEntry();
+        // close ZIP storage
+        output.close(); output = null;
       }
-
-      // close ZIP
-      output.close(); output = null;
     }
     catch (IOException exception)
     {
@@ -1223,30 +1226,33 @@ class StoredFiles
     ZipFile zipFile = null;
     try
     {
-      // open ZIP
-      zipFile = new ZipFile(file);
-
-      // read entries
-      byte[] buffer = new byte[64*1024];
-      Enumeration zipEntries = zipFile.entries();
-      while (zipEntries.hasMoreElements())
+      if (file != null)
       {
-        // get entry
-        ZipEntry zipEntry = (ZipEntry)zipEntries.nextElement();
+        // open ZIP storage
+        zipFile = new ZipFile(file);
 
-        // restore file data
-        InputStream      input  = zipFile.getInputStream(zipEntry);
-        FileOutputStream output = new FileOutputStream(zipEntry.getName());
-        int n;
-        while ((n = input.read(buffer)) > 0)
+        // read entries
+        byte[] buffer = new byte[64*1024];
+        Enumeration zipEntries = zipFile.entries();
+        while (zipEntries.hasMoreElements())
         {
-          output.write(buffer,0,n);
-        }
-        input.close();
-      }
+          // get entry
+          ZipEntry zipEntry = (ZipEntry)zipEntries.nextElement();
 
-      // close ZIP
-      zipFile.close();
+          // restore file data
+          InputStream      input  = zipFile.getInputStream(zipEntry);
+          FileOutputStream output = new FileOutputStream(zipEntry.getName());
+          int n;
+          while ((n = input.read(buffer)) > 0)
+          {
+            output.write(buffer,0,n);
+          }
+          input.close();
+        }
+
+        // close ZIP storage
+        zipFile.close();
+      }
     }
     catch (IOException exception)
     {
@@ -1265,7 +1271,10 @@ class StoredFiles
   protected void discard()
     throws RepositoryException
   {
-    file.delete();
+    if (file != null)
+    {
+      file.delete();
+    }
   }
 }
 
