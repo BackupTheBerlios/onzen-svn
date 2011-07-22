@@ -1,9 +1,9 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandMailPatch.java,v $
+* $Source: /tmp/cvs/onzen/src/CommandPatchReview.java,v $
 * $Revision: 1.1 $
 * $Author: torsten $
-* Contents: command mail patch
+* Contents: command patch review
 * Systems: all
 *
 \***********************************************************************/
@@ -111,7 +111,7 @@ import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
 
-/** mail patch command
+/** patch review command
  */
 class CommandPatchReview
 {
@@ -191,7 +191,7 @@ class CommandPatchReview
 
   // ---------------------------- methods ---------------------------------
 
-  /** mail patch command
+  /** patch review command
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileDataSet file data set
@@ -875,7 +875,7 @@ class CommandPatchReview
             if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
           }
 
-          Settings.geometryMailPatch = dialog.getSize();
+          Settings.geometryPatchReview = dialog.getSize();
 
           Dialogs.close(dialog,true);
         }
@@ -891,7 +891,7 @@ class CommandPatchReview
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Settings.geometryMailPatch = dialog.getSize();
+          Settings.geometryPatchReview = dialog.getSize();
 
           Dialogs.close(dialog,true);
         }
@@ -1112,7 +1112,7 @@ class CommandPatchReview
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryMailPatch);
+    Dialogs.show(dialog,Settings.geometryPatchReview);
 
     // add files
     if (!widgetFileNames.isDisposed())
@@ -1135,7 +1135,7 @@ class CommandPatchReview
     updateText();
   }
 
-  /** mail patch command
+  /** patch review command
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileDataSet file data set
@@ -1148,7 +1148,19 @@ class CommandPatchReview
     this(shell,repositoryTab,fileDataSet,patch,summary,message,new LinkedHashSet<String>());
   }
 
-  /** mail patch command
+  /** patch review command
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param fileDataSet file data set
+   * @param patch patch
+   * @param testSet tests done
+   */
+  CommandPatchReview(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, Patch patch, LinkedHashSet<String> testSet)
+  {
+    this(shell,repositoryTab,fileDataSet,patch,patch.summary,patch.message,testSet);
+  }
+
+  /** patch review command
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileDataSet file data set
@@ -1156,7 +1168,7 @@ class CommandPatchReview
    */
   CommandPatchReview(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, Patch patch)
   {
-    this(shell,repositoryTab,fileDataSet,patch,"",null);
+    this(shell,repositoryTab,fileDataSet,patch,patch.summary,patch.message,patch.testSet);
   }
 
   /** run dialog

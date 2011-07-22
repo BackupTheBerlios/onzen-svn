@@ -667,7 +667,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryStorePatch             = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryMailPatch              = new Point(500,600);
+  public static Point                    geometryPatchReview            = new Point(500,600);
 
   @SettingComment(text={"","Colors: <rgb foreground>:<rgb background> or  <rgb foreground>"})
   @SettingValue(type=SettingValueAdapterColor.class)
