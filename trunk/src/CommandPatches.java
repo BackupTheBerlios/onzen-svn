@@ -101,7 +101,6 @@ class CommandPatches
    */
   class Data
   {
-    HashSet<FileData>     fileDataSet;
     boolean               showAllRepositories;
     EnumSet<Patch.States> showStates;
     TableItem             tableItem;
@@ -112,7 +111,6 @@ class CommandPatches
 
     Data()
     {
-      this.fileDataSet         = new HashSet<FileData>();
       this.showAllRepositories = Settings.patchShowAllRepositories;
       this.showStates          = EnumSet.copyOf(Settings.patchShowStates);
       this.tableItem           = null;
@@ -437,6 +435,108 @@ class CommandPatches
               }
             }
             Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+          }
+        });
+
+        Widgets.addMenuSeparator(menu);
+
+
+        menuItem = Widgets.addMenuItem(menu,"Save as file");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              saveAsFile((Patch)tableItem.getData());
+            }
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Send for review");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              sendForReview((Patch)tableItem.getData());
+            }
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Commit");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              commit((Patch)tableItem.getData());
+            }
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Apply");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+Dprintf.dprintf("");
+            }
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Unapply");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+Dprintf.dprintf("");
+            }
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Discard");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+Dprintf.dprintf("");
+            }
+          }
+        });
+        menuItem = Widgets.addMenuItem(menu,"Delete");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+Dprintf.dprintf("");
+            }
           }
         });
       }
@@ -808,42 +908,7 @@ class CommandPatches
         {
           if (data.patch != null)
           {
-            // get file name
-            String fileName = Dialogs.fileSave(dialog,"Save patch","",new String[]{".patch","*"});
-            if (fileName == null)
-            {
-              return;
-            }
-
-            // check if file exists: overwrite or append
-            File file = new File(fileName);
-            if (file.exists())
-            {
-              switch (Dialogs.select(dialog,"Confirm",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
-              {
-                case 0:
-                  if (!file.delete())
-                  {
-                    Dialogs.error(dialog,"Cannot delete file!");
-                    return;
-                  }
-                case 1:
-                  break;
-                case 2:
-                  return;
-              }
-            }
-
-            // create patch file
-            try
-            {
-              data.patch.write(fileName);
-            }
-            catch (IOException exception)
-            {
-              Dialogs.error(dialog,"Cannot save patch file! (error: %s)",exception.getMessage());
-              return;
-            }
+            saveAsFile(data.patch);
           }
         }
       });
@@ -868,35 +933,7 @@ class CommandPatches
         {
           if (data.patch != null)
           {
-            // review patch
-            CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
-                                                                           repositoryTab,
-                                                                           data.fileDataSet,
-                                                                           data.patch,
-                                                                           data.patch.summary,
-                                                                           data.patch.message,
-                                                                           data.patch.testSet
-                                                                          );
-            if (commandPatchReview.execute())
-            {
-              try
-              {
-                // save patch in database
-                data.patch.state   = Patch.States.REVIEW;
-                data.patch.summary = commandPatchReview.summary;
-                data.patch.message = commandPatchReview.message;
-                data.patch.testSet = commandPatchReview.testSet;
-                data.patch.save();
-
-                // close dialog
-                Dialogs.close(dialog,true);
-              }
-              catch (SQLException exception)
-              {
-                Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
-                return;
-              }
-            }
+            sendForReview(data.patch);
           }
         }
       });
@@ -921,48 +958,7 @@ class CommandPatches
         {
           if (data.patch != null)
           {
-            // check state
-            switch (data.patch.state)
-            {
-              case COMMITED:
-                if (!Dialogs.confirm(dialog,"Confirmation","Patch is already commited. Commit again?"))
-                {
-                  return;
-                }
-                break;
-              case APPLIED:
-                if (!Dialogs.confirm(dialog,"Confirmation","Patch is applied. Commit anyway?"))
-                {
-                  return;
-                }
-                break;
-              default:
-                break;
-            }
-
-            // commit
-            try
-            {
-              // commit patch
-              commit(data.patch);
-
-              // save new state in database
-              data.patch.state = Patch.States.COMMITED;
-              data.patch.save();
-
-              // notify change of data
-              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(dialog,"Cannot commit patch (error: %s)",exception.getMessage());
-              return;
-            }
-            catch (SQLException exception)
-            {
-              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-              return;
-            }
+            commit(data.patch);
           }
         }
       });
@@ -1427,110 +1423,220 @@ Dprintf.dprintf("");
     }
   }
 
+  /** save patch into file
+   * @param patch patch to save into file
+   */
+  private void saveAsFile(Patch patch)
+  {
+    // get file name
+    String fileName = Dialogs.fileSave(dialog,"Save patch","",new String[]{".patch","*"});
+    if (fileName == null)
+    {
+      return;
+    }
+
+    // check if file exists: overwrite or append
+    File file = new File(fileName);
+    if (file.exists())
+    {
+      switch (Dialogs.select(dialog,"Confirm",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
+      {
+        case 0:
+          if (!file.delete())
+          {
+            Dialogs.error(dialog,"Cannot delete file!");
+            return;
+          }
+        case 1:
+          break;
+        case 2:
+          return;
+      }
+    }
+
+    // create patch file
+    try
+    {
+      patch.write(fileName);
+    }
+    catch (IOException exception)
+    {
+      Dialogs.error(dialog,"Cannot save patch file! (error: %s)",exception.getMessage());
+      return;
+    }
+  }
+
+  /** send patch for review
+   * @param patch patch to send for review
+   */
+  private void sendForReview(Patch patch)
+  {
+    // review patch
+    CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
+                                                                   repositoryTab,
+                                                                   patch
+                                                                  );
+    if (commandPatchReview.execute())
+    {
+      try
+      {
+        // save patch in database
+        patch.state   = Patch.States.REVIEW;
+        patch.summary = commandPatchReview.summary;
+        patch.message = commandPatchReview.message;
+        patch.testSet = commandPatchReview.testSet;
+        patch.save();
+
+        // close dialog
+        Dialogs.close(dialog,true);
+      }
+      catch (SQLException exception)
+      {
+        Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+        return;
+      }
+    }
+  }
+
   /** commit change in patch to repository
    * @param patch patch to commit
    */
   private void commit(Patch patch)
-    throws RepositoryException
   {
-    // get repository instance
-    Repository repository = Repository.newInstance(patch.rootPath);
-
-    // get patches files
-    HashSet<FileData> fileDataSet = new HashSet<FileData>();
-    for (String fileName : patch.getFileNames())
+    // check state
+    switch (patch.state)
     {
-      fileDataSet.add(new FileData(fileName));
-    }
-    repository.updateStates(fileDataSet);
-
-    // get new files
-    HashSet<FileData> newFileDataSet = new HashSet<FileData>();
-    for (FileData fileData : fileDataSet)
-    {
-      if (fileData.state == FileData.States.UNKNOWN)
-      {
-        newFileDataSet.add(fileData);
-      }
+      case COMMITED:
+        if (!Dialogs.confirm(dialog,"Confirmation","Patch is already commited. Commit again?"))
+        {
+          return;
+        }
+        break;
+      case APPLIED:
+        if (!Dialogs.confirm(dialog,"Confirmation","Patch is applied. Commit anyway?"))
+        {
+          return;
+        }
+        break;
+      default:
+        break;
     }
 
-    // save files
-    StoredFiles storedFiles = new StoredFiles(repository.rootPath,fileDataSet);
+    // commit
     try
     {
-      // get existing/new files
-      HashSet<FileData> existFileDataSet = new HashSet<FileData>();
-      if (fileDataSet != null)
+      // get repository instance
+      Repository repository = Repository.newInstance(patch.rootPath);
+
+      // get patches files
+      HashSet<FileData> fileDataSet = FileData.toSet(patch.getFileNames());
+      repository.updateStates(fileDataSet);
+
+      // get new files
+      HashSet<FileData> newFileDataSet = new HashSet<FileData>();
+      for (FileData fileData : fileDataSet)
       {
-        for (FileData fileData : fileDataSet)
+        if (fileData.state == FileData.States.UNKNOWN)
         {
-          if (fileData.state != FileData.States.UNKNOWN)
-          {
-            existFileDataSet.add(fileData);
-          }
+          newFileDataSet.add(fileData);
         }
       }
-      if (existFileDataSet.size() > 0)
-      {
-        // revert local changes of existing files
-        repository.revert(existFileDataSet);
-      }
 
-      // apply patch
-      if (!patch.apply())
-      {
-        throw new RepositoryException("applying patch fail");
-      }
-
-      // commit patch
-      CommitMessage commitMessage = null;
+      // save files
+      StoredFiles storedFiles = new StoredFiles(repository.rootPath,fileDataSet);
       try
       {
-        // add message to history
-        commitMessage = new CommitMessage(patch.message);
-        commitMessage.addToHistory();
-
-        // add new files
-        if (newFileDataSet.size() > 0)
+        // get existing/new files
+        HashSet<FileData> existFileDataSet = new HashSet<FileData>();
+        if (fileDataSet != null)
         {
-          repository.add(newFileDataSet,null,false);
+          for (FileData fileData : fileDataSet)
+          {
+            if (fileData.state != FileData.States.UNKNOWN)
+            {
+              existFileDataSet.add(fileData);
+            }
+          }
+        }
+        if (existFileDataSet.size() > 0)
+        {
+          // revert local changes of existing files
+          repository.revert(existFileDataSet);
         }
 
-        // commit files
-        repository.commit(fileDataSet,commitMessage);
+        // apply patch
+        if (!patch.apply())
+        {
+          throw new RepositoryException("applying patch fail");
+        }
 
-        // update file states
-        repositoryTab.asyncUpdateFileStates(fileDataSet);
+        // commit patch
+        CommitMessage commitMessage = null;
+        try
+        {
+          // add message to history
+          commitMessage = new CommitMessage(patch.message);
+          commitMessage.addToHistory();
 
-        // free resources
-        commitMessage.done(); commitMessage = null;
-      }
-      catch (IOException exception)
-      {
-        throw new RepositoryException(exception);
+          // add new files
+          if (newFileDataSet.size() > 0)
+          {
+            repository.add(newFileDataSet,null,false);
+          }
+
+          // commit files
+          repository.commit(fileDataSet,commitMessage);
+
+          // update file states
+          repositoryTab.asyncUpdateFileStates(fileDataSet);
+
+          // free resources
+          commitMessage.done(); commitMessage = null;
+        }
+        catch (IOException exception)
+        {
+          throw new RepositoryException(exception);
+        }
+        finally
+        {
+          if (commitMessage != null) commitMessage.done();
+        }
+
+        // restore files
+        if (!storedFiles.restore())
+        {
+          throw new RepositoryException("restore local changes fail");
+        }
+
+        // discard stored files
+        storedFiles.discard(); storedFiles = null;
       }
       finally
       {
-        if (commitMessage != null) commitMessage.done();
+        if (storedFiles != null)
+        {
+          storedFiles.restore();
+          storedFiles.discard();
+        }
       }
 
-      // restore files
-      if (!storedFiles.restore())
-      {
-        throw new RepositoryException("restore local changes fail");
-      }
-
-      // discard stored files
-      storedFiles.discard(); storedFiles = null;
+      // save new state in database
+      patch.state = Patch.States.COMMITED;
+      patch.save();
     }
-    finally
+    catch (RepositoryException exception)
     {
-      if (storedFiles != null)
-      {
-        storedFiles.restore();
-        storedFiles.discard();
-      }
+      Dialogs.error(dialog,"Cannot commit patch (error: %s)",exception.getMessage());
+      return;
     }
+    catch (SQLException exception)
+    {
+      Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+      return;
+    }
+
+    // notify change of data
+    Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
   }
 
   private void apply()
