@@ -470,7 +470,6 @@ class CommandCreatePatch
               // send patch for review
               CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
                                                                              repositoryTab,
-                                                                             fileDataSet,
                                                                              patch
                                                                             );
               if (commandPatchReview.execute())
