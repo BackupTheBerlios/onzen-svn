@@ -376,12 +376,12 @@ class Patch
          Database.ID_NONE,
          States.NONE,
          "",
-         null,
+         new String[]{},
          revision1,
          revision2,
          ignoreWhitespaces,
-         null,
-         null,
+         new HashSet<String>(),
+         new LinkedHashSet<String>(),
          lines
         );
     if (fileDataSet != null)
@@ -481,18 +481,17 @@ class Patch
          Database.ID_NONE,
          States.NONE,
          "",
-         null,
+         new String[]{},
          revision1,
          revision2,
          ignoreWhitespaces,
-         null,
+         new HashSet<String>(),
          testSet,
          file
         );
     if (fileDataSet != null)
     {
       // set file names
-      fileNameSet = new HashSet<String>();
       for (FileData fileData : fileDataSet)
       {
         fileNameSet.add(fileData.getFileName());
@@ -510,7 +509,14 @@ class Patch
                File              file
               )
   {
-    this(rootPath,fileDataSet,null,null,false,null,file);
+    this(rootPath,
+         fileDataSet,
+         null,
+         null,
+         false,
+         new LinkedHashSet<String>(),
+         file
+        );
   }
 
   /** create patch
@@ -532,7 +538,18 @@ class Patch
                int    databaseId
               )
   {
-    this(rootPath,databaseId,States.NONE,"",null,null,null,false,null,null,(String[])null);
+    this(rootPath,
+         databaseId,
+         States.NONE,
+         "",
+         new String[]{},
+         null,
+         null,
+         false,
+         new HashSet<String>(),
+         new LinkedHashSet<String>(),
+         (String[])null
+        );
   }
 
   /** create patch
@@ -1522,6 +1539,9 @@ Dprintf.dprintf("exception=%s",exception);
       return "PatchChunk {"+oldFileName+", "+newFileName+", line #: "+lineNb+"}";
     }
 
+    /** check if end-of-file reached in chunk
+     * @return true iff eof
+     */
     private boolean eof()
     {
       if (line == null)
