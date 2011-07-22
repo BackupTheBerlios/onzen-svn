@@ -209,7 +209,7 @@ class Patch
           {
             if (resultSet2 != null) resultSet2.close();
           }
-//Dprintf.dprintf("fileNameSet=%s",fileNameSet);
+//Dprintf.dprintf("databaseId=%d fileNameSet=%s",databaseId,fileNameSet);
 
           // get tests
           LinkedHashSet<String> testSet = new LinkedHashSet<String>();
@@ -228,7 +228,7 @@ class Patch
           {
             if (resultSet2 != null) resultSet2.close();
           }
-//Dprintf.dprintf("testSet=%s",testSet);
+//Dprintf.dprintf("databaseId=%d testSet=%s",databaseId,testSet);
 
           // add to list
           patchList.add(new Patch(rootPath,
