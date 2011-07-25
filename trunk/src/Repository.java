@@ -436,13 +436,45 @@ class FileData
     return getMimeType(repository.rootPath);
   }
 
-  /** convert to set
+  /** convert this to set
    * @return file data set
    */
   public HashSet<FileData> toSet()
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     fileDataSet.add(this);
+
+    return fileDataSet;
+  }
+
+  /** convert to set
+   * @param fileNames file name array
+   * @return file data set
+   */
+  static public HashSet<FileData> toSet(String[] fileNames)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+
+    for (String fileName : fileNames)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
+
+    return fileDataSet;
+  }
+
+  /** convert to set
+   * @param fileNameSet file name set
+   * @return file data set
+   */
+  static public HashSet<FileData> toSet(HashSet<String> fileNameSet)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+
+    for (String fileName : fileNameSet)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
 
     return fileDataSet;
   }
