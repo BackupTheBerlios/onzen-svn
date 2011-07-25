@@ -136,7 +136,7 @@ class CommandPatchReview
       this.linesNoWhitespaces = null;
       this.summary            = null;
       this.message            = null;
-      this.testSet            = new LinkedHashSet<String>();
+      this.testSet            = null;
       this.patchMailFlag      = false;
       this.reviewServerFlag   = false;
     }
@@ -194,13 +194,9 @@ class CommandPatchReview
   /** patch review command
    * @param shell shell
    * @param repositoryTab repository tab
-   * @param fileDataSet file data set
    * @param patch patch
-   * @param summary summary text
-   * @param message message text lines
-   * @param testSet tests done
    */
-  CommandPatchReview(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message, LinkedHashSet<String> testSet)
+  CommandPatchReview(final Shell shell, final RepositoryTab repositoryTab, final Patch patch)
   {
     Composite composite,subComposite,subSubComposite,subSubSubComposite;
     Label     label;
@@ -211,9 +207,9 @@ class CommandPatchReview
     Listener  listener;
 
     // initialize variables
-    this.summary       = summary;
-    this.message       = message;
-    this.testSet       = testSet;
+    this.summary       = patch.summary;
+    this.message       = patch.message;
+    this.testSet       = (LinkedHashSet<String>)patch.testSet.clone();
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
     this.date          = new Date();
@@ -1117,9 +1113,9 @@ class CommandPatchReview
     // add files
     if (!widgetFileNames.isDisposed())
     {
-      for (FileData fileData : fileDataSet)
+      for (String fileName : patch.getFileNames())
       {
-        widgetFileNames.add(fileData.getFileName());
+        widgetFileNames.add(fileName);
       }
     }
 
@@ -1133,42 +1129,6 @@ class CommandPatchReview
     widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
     updateSubject();
     updateText();
-  }
-
-  /** patch review command
-   * @param shell shell
-   * @param repositoryTab repository tab
-   * @param fileDataSet file data set
-   * @param patch patch
-   * @param summary summary text
-   * @param message message text lines
-   */
-  CommandPatchReview(final Shell shell, final RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, final Patch patch, String summary, String[] message)
-  {
-    this(shell,repositoryTab,fileDataSet,patch,summary,message,new LinkedHashSet<String>());
-  }
-
-  /** patch review command
-   * @param shell shell
-   * @param repositoryTab repository tab
-   * @param fileDataSet file data set
-   * @param patch patch
-   * @param testSet tests done
-   */
-  CommandPatchReview(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, Patch patch, LinkedHashSet<String> testSet)
-  {
-    this(shell,repositoryTab,fileDataSet,patch,patch.summary,patch.message,testSet);
-  }
-
-  /** patch review command
-   * @param shell shell
-   * @param repositoryTab repository tab
-   * @param fileDataSet file data set
-   * @param patch patch
-   */
-  CommandPatchReview(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, Patch patch)
-  {
-    this(shell,repositoryTab,fileDataSet,patch,patch.summary,patch.message,patch.testSet);
   }
 
   /** run dialog
