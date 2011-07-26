@@ -131,6 +131,7 @@ class CommandPatches
 
   // global variable references
   private final RepositoryTab repositoryTab;
+  private final Shell         shell;
   private final Display       display;
 
   // dialog
@@ -172,8 +173,9 @@ class CommandPatches
     // initialize variables
     this.repositoryTab = repositoryTab;
 
-    // get display
-    display = shell.getDisplay();
+    // get shell, display
+    this.shell   = shell;
+    this.display = shell.getDisplay();
 
     // add files dialog
     dialog = Dialogs.open(shell,"Patches",new double[]{1.0,0.0},1.0);
@@ -1522,61 +1524,66 @@ Dprintf.dprintf("");
         break;
     }
 
-    // commit
+    // check commit messaage
+    CommitMessage commitMessage = null;
     try
     {
-      // get repository instance
-      Repository repository = Repository.newInstance(patch.rootPath);
-
-      // get patches files
-      HashSet<FileData> fileDataSet = FileData.toSet(patch.getFileNames());
-      repository.updateStates(fileDataSet);
-
-      // get new files
-      HashSet<FileData> newFileDataSet = new HashSet<FileData>();
-      for (FileData fileData : fileDataSet)
+      commitMessage = new CommitMessage(patch.message);
+      if (!repositoryTab.repository.validCommitMessage(commitMessage))
       {
-        if (fileData.state == FileData.States.UNKNOWN)
+        if (!Dialogs.confirm(shell,"Confirm","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
         {
-          newFileDataSet.add(fileData);
+          return;
         }
       }
 
-      // save files
-      StoredFiles storedFiles = new StoredFiles(repository.rootPath,fileDataSet);
+      // commit
       try
       {
-        // get existing/new files
-        HashSet<FileData> existFileDataSet = new HashSet<FileData>();
-        if (fileDataSet != null)
+        // get repository instance
+        Repository repository = Repository.newInstance(patch.rootPath);
+
+        // get patches files
+        HashSet<FileData> fileDataSet = FileData.toSet(patch.getFileNames());
+        repository.updateStates(fileDataSet);
+
+        // get new files
+        HashSet<FileData> newFileDataSet = new HashSet<FileData>();
+        for (FileData fileData : fileDataSet)
         {
-          for (FileData fileData : fileDataSet)
+          if (fileData.state == FileData.States.UNKNOWN)
           {
-            if (fileData.state != FileData.States.UNKNOWN)
-            {
-              existFileDataSet.add(fileData);
-            }
+            newFileDataSet.add(fileData);
           }
         }
-        if (existFileDataSet.size() > 0)
-        {
-          // revert local changes of existing files
-          repository.revert(existFileDataSet);
-        }
 
-        // apply patch
-        if (!patch.apply())
-        {
-          throw new RepositoryException("applying patch fail");
-        }
-
-        // commit patch
-        CommitMessage commitMessage = null;
+        // save files
+        StoredFiles storedFiles = new StoredFiles(repository.rootPath,fileDataSet);
         try
         {
-          // add message to history
-          commitMessage = new CommitMessage(patch.message);
-          commitMessage.addToHistory();
+          // get existing/new files
+          HashSet<FileData> existFileDataSet = new HashSet<FileData>();
+          if (fileDataSet != null)
+          {
+            for (FileData fileData : fileDataSet)
+            {
+              if (fileData.state != FileData.States.UNKNOWN)
+              {
+                existFileDataSet.add(fileData);
+              }
+            }
+          }
+          if (existFileDataSet.size() > 0)
+          {
+            // revert local changes of existing files
+            repository.revert(existFileDataSet);
+          }
+
+          // apply patch
+          if (!patch.apply())
+          {
+            throw new RepositoryException("applying patch fail");
+          }
 
           // add new files
           if (newFileDataSet.size() > 0)
@@ -1584,55 +1591,51 @@ Dprintf.dprintf("");
             repository.add(newFileDataSet,null,false);
           }
 
+          // add message to history
+          commitMessage.addToHistory();
+
           // commit files
           repository.commit(fileDataSet,commitMessage);
 
           // update file states
           repositoryTab.asyncUpdateFileStates(fileDataSet);
 
-          // free resources
-          commitMessage.done(); commitMessage = null;
-        }
-        catch (IOException exception)
-        {
-          throw new RepositoryException(exception);
+          // restore files
+          if (!storedFiles.restore())
+          {
+            throw new RepositoryException("restore local changes fail");
+          }
+
+          // discard stored files
+          storedFiles.discard(); storedFiles = null;
         }
         finally
         {
-          if (commitMessage != null) commitMessage.done();
+          if (storedFiles != null)
+          {
+            storedFiles.restore();
+            storedFiles.discard();
+          }
         }
 
-        // restore files
-        if (!storedFiles.restore())
-        {
-          throw new RepositoryException("restore local changes fail");
-        }
-
-        // discard stored files
-        storedFiles.discard(); storedFiles = null;
+        // save new state in database
+        patch.state = Patch.States.COMMITED;
+        patch.save();
       }
-      finally
+      catch (RepositoryException exception)
       {
-        if (storedFiles != null)
-        {
-          storedFiles.restore();
-          storedFiles.discard();
-        }
+        Dialogs.error(dialog,"Cannot commit patch (error: %s)",exception.getMessage());
+        return;
       }
-
-      // save new state in database
-      patch.state = Patch.States.COMMITED;
-      patch.save();
+      catch (SQLException exception)
+      {
+        Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+        return;
+      }
     }
-    catch (RepositoryException exception)
+    finally
     {
-      Dialogs.error(dialog,"Cannot commit patch (error: %s)",exception.getMessage());
-      return;
-    }
-    catch (SQLException exception)
-    {
-      Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-      return;
+      if (commitMessage != null) commitMessage.done();
     }
 
     // notify change of data

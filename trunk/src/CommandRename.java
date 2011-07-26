@@ -468,23 +468,6 @@ class CommandRename
       // free resources
       commitMessage.done(); commitMessage = null;
     }
-    catch (IOException exception)
-    {
-      final String exceptionMessage = exception.getMessage();
-      display.syncExec(new Runnable()
-      {
-        public void run()
-        {
-          Dialogs.error(shell,
-                        "Cannot rename file\n\n'%s'\n\ninto\n\n'%s'\n\n(error: %s)",
-                        fileData.getFileName(),
-                        data.newFileName,
-                        exceptionMessage
-                       );
-        }
-      });
-      return;
-    }
     catch (RepositoryException exception)
     {
       final String exceptionMessage = exception.getMessage();

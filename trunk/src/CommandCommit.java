@@ -253,10 +253,21 @@ class CommandCommit
         {
           Button widget = (Button)selectionEvent.widget;
 
+          // get message
           data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
 
-          Settings.geometryCommit = dialog.getSize();
+          // check commit messaage
+          CommitMessage commitMessage = new CommitMessage(data.message);
+          if (!repositoryTab.repository.validCommitMessage(commitMessage))
+          {
+            if (!Dialogs.confirm(shell,"Confirm","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
+            {
+              return;
+            }
+          }
 
+          // close dialog
+          Settings.geometryCommit = dialog.getSize();
           Dialogs.close(dialog,true);
         }
       });
@@ -273,6 +284,7 @@ class CommandCommit
         {
           Button widget = (Button)selectionEvent.widget;
 
+          // close dialog
           Dialogs.close(dialog,false);
         }
       });
@@ -579,8 +591,10 @@ class CommandCommit
     CommitMessage commitMessage = null;
     try
     {
-      // create and add message to history
+      // create message
       commitMessage = new CommitMessage(data.message);
+
+      // add message to history
       commitMessage.addToHistory();
 
       // commit files
@@ -598,18 +612,6 @@ class CommandCommit
 
       // free resources
       commitMessage.done(); commitMessage = null;
-    }
-    catch (IOException exception)
-    {
-      final String exceptionMessage = exception.getMessage();
-      display.syncExec(new Runnable()
-      {
-        public void run()
-        {
-          Dialogs.error(shell,"Cannot commit files (error: %s)",exceptionMessage);
-        }
-      });
-      return;
     }
     catch (RepositoryException exception)
     {

@@ -239,7 +239,6 @@ class CommitMessage
    * @param line message lines
    */
   CommitMessage(String[] lines)
-    throws IOException
   {
     // discard empty lines at beginning/end
     int i0 = 0;
@@ -253,22 +252,13 @@ class CommitMessage
       i1--;
     }
     this.lines = Arrays.copyOfRange(lines,i0,i1+1);
-
-    // write to file
-    tmpFile = File.createTempFile("msg",".tmp",new File(Settings.tmpDirectory));
-    PrintWriter output = new PrintWriter(new FileWriter(tmpFile.getPath()));
-    for (String line : this.lines)
-    {
-      output.println(line);
-    }
-    output.close();
   }
 
   /** done commit message
    */
   public void done()
   {
-    tmpFile.delete();
+    if (tmpFile != null) tmpFile.delete();
   }
 
   /** add message to history
@@ -334,7 +324,20 @@ class CommitMessage
    * @return file name
    */
   public String getFileName()
+    throws IOException
   {
+    if (tmpFile == null)
+    {
+      // write to file
+      tmpFile = File.createTempFile("msg",".tmp",new File(Settings.tmpDirectory));
+      PrintWriter output = new PrintWriter(new FileWriter(tmpFile.getPath()));
+      for (String line : this.lines)
+      {
+        output.println(line);
+      }
+      output.close();
+    }
+
     return tmpFile.getAbsolutePath();
   }
 
