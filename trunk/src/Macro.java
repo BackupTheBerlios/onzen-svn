@@ -107,7 +107,8 @@ public class Macro
               for (int i = 0; i < array.length; i++)
               {
                 if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
-                String s = array[i].toString();
+                object = array[i];
+                String s = (object != null) ? object.toString() : "";
                 if (!format.isEmpty())
                 {
                   try
@@ -134,7 +135,8 @@ public class Macro
               while (iterator.hasNext())
               {
                 if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
-                String s = iterator.next().toString();
+                object = iterator.next();
+                String s = (object != null) ? object.toString() : "";
                 if (!format.isEmpty())
                 {
                   try
@@ -156,7 +158,7 @@ public class Macro
             else
             {
               // expand object
-              String s = object.toString();
+              String s = (object != null) ? object.toString() : "";
               if (!format.isEmpty())
               {
                 try
