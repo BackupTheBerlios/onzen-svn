@@ -1595,6 +1595,15 @@ abstract class Repository implements Serializable
     return false;
   }
 
+  /** check if commit message is valid and acceptable
+   * @return true iff commit message accepted
+   */
+  public boolean validCommitMessage(CommitMessage commitMessage)
+  {
+Dprintf.dprintf("");
+    return true;
+  }
+
   /** get open directories
    * @return open directories array
    */

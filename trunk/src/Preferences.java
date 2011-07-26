@@ -153,6 +153,7 @@ class Preferences
   private final Button        widgetHGUpdateWithFetch;
   private final Button        widgetHGSafeUpdate;
   private final Button        widgetHGSingleLineCommitMessages;
+  private final Spinner       widgetHGSingleLineMaxCommitMessageLength;
   private final Button        widgetHGRelativePatchPaths;
 
   private final Text          widgetGitCommand;
@@ -760,7 +761,7 @@ class Preferences
           label = Widgets.newLabel(subComposite,"Miscellaneous:");
           Widgets.layout(label,3,0,TableLayoutData.NW);
           subSubComposite = Widgets.newComposite(subComposite);
-          subSubComposite.setLayout(new TableLayout(null,null));
+          subSubComposite.setLayout(new TableLayout(null,1.0));
           Widgets.layout(subSubComposite,3,1,TableLayoutData.WE);
           {
             widgetHGUseForestExtension = Widgets.newCheckbox(subSubComposite,"use forest extension");
@@ -778,10 +779,43 @@ class Preferences
             Widgets.layout(widgetHGSafeUpdate,2,0,TableLayoutData.WE);
             widgetHGSafeUpdate.setToolTipText("Do 'safe' update. Allow fetch update with not-commited local changes: save local changes, revert, update and restore local changes with merge if needed.");
 
-            widgetHGSingleLineCommitMessages = Widgets.newCheckbox(subSubComposite,"single-line commit messages");
-            widgetHGSingleLineCommitMessages.setSelection(Settings.hgSingleLineCommitMessages);
-            Widgets.layout(widgetHGSingleLineCommitMessages,3,0,TableLayoutData.WE);
-            widgetHGSingleLineCommitMessages.setToolTipText("Concat commit message into single-line to make commit message visiable in the one-line-only commit message log of Mercurial.");
+            subSubSubComposite = Widgets.newComposite(subSubComposite);
+            subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0,0.0}));
+            Widgets.layout(subSubSubComposite,3,0,TableLayoutData.WE);
+            {
+              widgetHGSingleLineCommitMessages = Widgets.newCheckbox(subSubSubComposite,"single-line commit messages");
+              widgetHGSingleLineCommitMessages.setSelection(Settings.hgSingleLineCommitMessages);
+              Widgets.layout(widgetHGSingleLineCommitMessages,0,0,TableLayoutData.WE);
+              widgetHGSingleLineCommitMessages.setToolTipText("Concat commit message into single-line to make commit message visible in the one-line-only commit message log of Mercurial.");
+              widgetHGSingleLineCommitMessages.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  // notify modification
+                  Widgets.modified(Settings.hgSingleLineCommitMessages);
+                }
+              });
+
+              label = Widgets.newLabel(subSubSubComposite,"Max:");
+              Widgets.layout(label,0,1,TableLayoutData.W);
+
+              widgetHGSingleLineMaxCommitMessageLength = Widgets.newSpinner(subSubSubComposite);
+              widgetHGSingleLineMaxCommitMessageLength.setEnabled(Settings.hgSingleLineCommitMessages);
+              widgetHGSingleLineMaxCommitMessageLength.setTextLimit(5);
+              widgetHGSingleLineMaxCommitMessageLength.setSelection(Settings.hgSingleLineMaxCommitMessageLength);
+              Widgets.layout(widgetHGSingleLineMaxCommitMessageLength,0,2,TableLayoutData.W);
+              widgetHGSingleLineMaxCommitMessageLength.setToolTipText("Max. length of single-line commit message. If the length exceed this limit a warning is shown.");
+              Widgets.addModifyListener(new WidgetListener(widgetHGSingleLineMaxCommitMessageLength,Settings.hgSingleLineCommitMessages)
+              {
+                public void modified(Control control)
+                {
+                  control.setEnabled(widgetHGSingleLineCommitMessages.getSelection());
+                }
+              });
+            }
 
             widgetHGRelativePatchPaths = Widgets.newCheckbox(subSubComposite,"relative patch paths");
             widgetHGRelativePatchPaths.setSelection(Settings.hgRelativePatchPaths);
@@ -1101,6 +1135,7 @@ class Preferences
           Settings.hgUseForestExtension                   = widgetHGUseForestExtension.getSelection();
           Settings.hgUpdateWithFetch                      = widgetHGUpdateWithFetch.getSelection();
           Settings.hgSafeUpdate                           = widgetHGSafeUpdate.getSelection();
+          Settings.hgSingleLineCommitMessages             = widgetHGSingleLineCommitMessages.getSelection();
           Settings.hgSingleLineCommitMessages             = widgetHGSingleLineCommitMessages.getSelection();
           Settings.hgRelativePatchPaths                   = widgetHGRelativePatchPaths.getSelection();
 

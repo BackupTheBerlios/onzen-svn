@@ -917,6 +917,8 @@ public class Settings
   @SettingValue
   public static boolean          hgSingleLineCommitMessages             = false;
   @SettingValue
+  public static int              hgSingleLineMaxCommitMessageLength     = 80;
+  @SettingValue
   public static boolean          hgRelativePatchPaths                   = false;
 
   // Git

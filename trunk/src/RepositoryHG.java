@@ -181,6 +181,14 @@ class RepositoryHG extends Repository
     return Types.HG;
   }
 
+  /** check if repository support pull/push commands
+   * @return true iff pull/push commands are supported
+   */
+  public boolean supportPullPush()
+  {
+    return true;
+  }
+
   /** check if repository support patch queues
    * @return true
    */
@@ -189,12 +197,14 @@ class RepositoryHG extends Repository
     return true;
   }
 
-  /** check if repository support pull/push commands
-   * @return true iff pull/push commands are supported
+  /** check if commit message is valid and acceptable
+   * @return true iff commit message accepted
    */
-  public boolean supportPullPush()
+  public boolean validCommitMessage(CommitMessage commitMessage)
   {
-    return true;
+    return    !Settings.hgSingleLineCommitMessages
+           || (Settings.hgSingleLineMaxCommitMessageLength == 0)
+           || (commitMessage.getMessage(", ").length() <= Settings.hgSingleLineMaxCommitMessageLength);
   }
 
   /** update file states
