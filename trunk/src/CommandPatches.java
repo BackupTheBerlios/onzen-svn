@@ -535,9 +535,28 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            for (TableItem tableItem : widgetPatches.getSelection())
+            if (widgetPatches.getSelectionCount() > 0)
             {
-Dprintf.dprintf("");
+              if (Dialogs.confirm(dialog,"Confirmation","Really delete "+widgetPatches.getSelectionCount()+" patches?","Delete","Cancel"))
+              {
+                for (TableItem tableItem : widgetPatches.getSelection())
+                {
+                  try
+                  {
+                    Patch patch = (Patch)tableItem.getData();
+
+                    patch.delete();
+                  }
+                  catch (SQLException exception)
+                  {
+                    Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+                    return;
+                  }
+                }
+
+                // notify change of data
+                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              }
             }
           }
         });
@@ -1441,7 +1460,7 @@ Dprintf.dprintf("");
     File file = new File(fileName);
     if (file.exists())
     {
-      switch (Dialogs.select(dialog,"Confirm",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
+      switch (Dialogs.select(dialog,"Confirmation",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
       {
         case 0:
           if (!file.delete())
@@ -1531,7 +1550,7 @@ Dprintf.dprintf("");
       commitMessage = new CommitMessage(patch.message);
       if (!repositoryTab.repository.validCommitMessage(commitMessage))
       {
-        if (!Dialogs.confirm(shell,"Confirm","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
+        if (!Dialogs.confirm(shell,"Confirmation","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
         {
           return;
         }
