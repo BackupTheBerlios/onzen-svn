@@ -225,15 +225,7 @@ class CommandAnnotations
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFind.setEnabled(false);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
-        Widgets.addModifyListener(new WidgetListener(widgetFind,data)
-        {
-          public void modified(Control control)
-          {
-            Widgets.setEnabled(control,(data.annotationData != null));
-          }
-        });
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
