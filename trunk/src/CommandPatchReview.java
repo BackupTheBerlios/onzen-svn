@@ -136,7 +136,7 @@ class CommandPatchReview
       this.linesNoWhitespaces = null;
       this.summary            = null;
       this.message            = null;
-      this.testSet            = null;
+      this.testSet            = new LinkedHashSet<String>();
       this.patchMailFlag      = false;
       this.reviewServerFlag   = false;
     }
