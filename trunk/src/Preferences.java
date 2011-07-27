@@ -462,7 +462,7 @@ class Preferences
             Widgets.layout(label,0,1,TableLayoutData.W);
 
             widgetMailPassword = Widgets.newPassword(subSubComposite);
-            String password = onzen.getPassword(Settings.mailSMTPHost);
+            String password = onzen.getPassword(Settings.mailLogin,Settings.mailSMTPHost);
             if (password != null) widgetMailPassword.setText(password);
             Widgets.layout(widgetMailPassword,0,2,TableLayoutData.WE);
             widgetMailPassword.setToolTipText("Mail server login password.");
@@ -1157,11 +1157,12 @@ class Preferences
           Settings.mailSMTPPort                           = Integer.parseInt(widgetMailSMTPPort.getText());
           Settings.mailSMTPSSL                            = widgetMailSMTPSSL.getSelection();
           Settings.mailLogin                              = widgetMailLogin.getText().trim();
-          onzen.setPassword(Settings.mailSMTPHost,widgetMailPassword.getText().trim());
+          onzen.setPassword(Settings.mailLogin,Settings.mailSMTPHost,widgetMailPassword.getText());
           Settings.mailFrom                               = widgetMailFrom.getText().trim();
 
           Settings.reviewServerHost                       = widgetReviewServerHost.getText().trim();
           Settings.reviewServerLogin                      = widgetReviewServerLogin.getText().trim();
+//          onzen.setPassword(Settings.reviewServerLogin,Settings.reviewServerHost,widgetReviewServerPassword.getText());
           Settings.commandPostReviewServer                = widgetCommandPostReviewServer.getText().trim();
 
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();

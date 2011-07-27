@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Iterator;
+import java.util.zip.Adler32;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -582,7 +583,23 @@ exception.printStackTrace();
         if (resultSet.next())
         {
           // read and decode password
-          password = decodePassword(masterPassword,resultSet.getBytes("data"));
+          do
+          {
+            password = decodePassword(masterPassword,resultSet.getBytes("data"));
+            if (password == null)
+            {
+              String reenteredMasterPassword = Dialogs.password(shell,"Master password","Cannot decrypt password. Wrong master password?","Re-enter:");
+              if (reenteredMasterPassword != null)
+              {
+                masterPassword = reenteredMasterPassword;
+              }
+              else
+              {
+                return null;
+              }
+            }
+          }
+          while (password == null);
         }
         else
         {
@@ -591,10 +608,14 @@ exception.printStackTrace();
           if (password == null) return null;
 
           // encode and store password
-          preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
-          preparedStatement.setString(1,name);
-          preparedStatement.setBytes(2,encodePassword(masterPassword,password));
-          preparedStatement.executeUpdate();
+          byte[] encodedPassword = encodePassword(masterPassword,password);
+          if (encodedPassword != null)
+          {
+            preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
+            preparedStatement.setString(1,name);
+            preparedStatement.setBytes(2,encodedPassword);
+            preparedStatement.executeUpdate();
+          }
         }
 
         resultSet.close(); resultSet = null;
@@ -643,6 +664,10 @@ exception.printStackTrace();
       if (masterPassword == null) return;
     }
 
+    // get encoded password
+    byte[] encodedPassword = encodePassword(masterPassword,password);
+    if (encodedPassword == null) return;
+
     // store password into password database
     Database database = null;
     try
@@ -659,7 +684,7 @@ exception.printStackTrace();
       // store password
       preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
       preparedStatement.setString(1,name);
-      preparedStatement.setBytes(2,encodePassword(masterPassword,password));
+      preparedStatement.setBytes(2,encodedPassword);
       preparedStatement.executeUpdate();
 
       // close datbase
@@ -697,7 +722,7 @@ exception.printStackTrace();
     {
       Statement         statement;
       ResultSet         resultSet;
-      PreparedStatement preparedStatement;
+      PreparedStatement preparedStatement,preparedStatement1,preparedStatement2;
 
       database = openPasswordDatabase();
 
@@ -709,17 +734,61 @@ exception.printStackTrace();
         preparedStatement = database.connection.prepareStatement("SELECT name,data FROM passwords;");
         resultSet = preparedStatement.executeQuery();
 
-        preparedStatement = database.connection.prepareStatement("UPDATE passwords SET data=? WHERE name=?;");
+        boolean deleteAll = false;
+        boolean skipAll   = false;
+        preparedStatement1 = database.connection.prepareStatement("UPDATE passwords SET data=? WHERE name=?;");
+        preparedStatement2 = database.connection.prepareStatement("DELETE FROM passwords WHERE name=?;");
+        String name;
+        String password;
         while (resultSet.next())
         {
-          // read and decode password
-          String name     = resultSet.getString("name");
-          String password = decodePassword(oldMasterPassword,resultSet.getBytes("data"));
+          // read and decode with old password
+          name     = resultSet.getString("name");
+          password = decodePassword(oldMasterPassword,resultSet.getBytes("data"));
+          if (password != null)
+          {
+            // encode with new password and store
+            preparedStatement1.setBytes(1,encodePassword(newMasterPassword,password));
+            preparedStatement1.setString(2,name);
+            preparedStatement1.executeUpdate();
+          }
+          else if (deleteAll)
+          {
+            // delete password entry
+            preparedStatement2.setString(1,name);
+            preparedStatement2.executeUpdate();
+          }
+          else if (skipAll)
+          {
+            // skip password entry
+          }
+          else
+          {
+            switch (Dialogs.select(shell,"Confirm","Cannot decode '"+name+"' with old master password!\nDelete password entry?",new String[]{"Delete","Delete all","Skip","Skip all","Cancel"},0))
+            {
+              case 0:
+                // delete password entry
+                preparedStatement2.setString(1,name);
+                preparedStatement2.executeUpdate();
+                break;
+              case 1:
+                // delete password entry
+                preparedStatement2.setString(1,name);
+                preparedStatement2.executeUpdate();
 
-          // encode with new password and store
-          preparedStatement.setBytes(1,encodePassword(newMasterPassword,password));
-          preparedStatement.setString(2,name);
-          preparedStatement.executeUpdate();
+                deleteAll = true;
+                break;
+              case 2:
+                // skip password entry
+                break;
+              case 3:
+                // skip password entry
+                skipAll = true;
+                break;
+              case 4:
+                return;
+            }
+          }
         }
 
         resultSet.close(); resultSet = null;
@@ -734,7 +803,7 @@ exception.printStackTrace();
     }
     catch (SQLException exception)
     {
-      Dialogs.error(shell,"Cannot set new master password (error: %s)",exception.getMessage());
+      Dialogs.error(shell,"Cannot set new master password (error: %s).",exception.getMessage());
       return;
     }
     finally
@@ -1915,6 +1984,25 @@ menuItem.addSelectionListener(new SelectionListener()
     return result[0];
   }
 
+  class DatabasePassword implements Serializable
+  {
+    String password;
+    long   checkSum;
+
+    DatabasePassword()
+    {
+    }
+
+    DatabasePassword(String password)
+    {
+      Adler32 adler32 = new Adler32();
+      adler32.update(password.getBytes());
+
+      this.password = password;
+      this.checkSum = adler32.getValue();
+    }
+  }
+
   /** open/create password database
    * @return database
    */
@@ -1993,19 +2081,33 @@ exception.printStackTrace();
 
   /** encode password with master password
    * @param password password to encode
-   * @return encoded password bytess or null
+   * @return encoded password bytes or null
    */
   private byte[] encodePassword(String masterPassword, String password)
   {
-    if ((masterPassword != null) && !masterPassword.isEmpty())
+    byte[] encodedPassword;
+
+    try
     {
-      try
+      // calculate password checksum
+      Adler32 adler32 = new Adler32();
+      adler32.update(password.getBytes());
+
+      // serialize
+      ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+      ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
+      objectOutputStream.writeObject(password);
+Dprintf.dprintf("");
+      objectOutputStream.writeObject(adler32.getValue());
+      byte[] dataBytes = byteArrayOutputStream.toByteArray();
+
+      if ((masterPassword != null) && !masterPassword.isEmpty())
       {
-        byte[] bytes;
+        // crypt with master password
 
         // get secret key
         byte[] masterPasswordBytes = masterPassword.getBytes();
-        bytes = new byte[128/8];
+        byte[] bytes = new byte[128/8];
         for (int z = 0; z < bytes.length; z++)
         {
           bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
@@ -2016,22 +2118,23 @@ exception.printStackTrace();
         Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE,secretKeySpec);
 
-        // encrypt password
-        byte[] passwordBytes = password.getBytes();
-        bytes = Arrays.copyOf(passwordBytes,(passwordBytes.length+15)/16*16);        
-        return cipher.doFinal(bytes);
+        // encrypt password data
+Dprintf.dprintf("");
+        encodedPassword = cipher.doFinal(Arrays.copyOf(dataBytes,(dataBytes.length+15)/16*16));
       }
-      catch (Exception exception)
+      else
       {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-        return null;
+        // no encryption
+        encodedPassword = dataBytes;
       }
     }
-    else
+    catch (Exception exception)
     {
+//Dprintf.dprintf("exception=%s",exception); exception.printStackTrace();
       return null;
     }
+
+    return encodedPassword;
   }
 
   /** decode password with master password
@@ -2040,44 +2143,63 @@ exception.printStackTrace();
    */
   private String decodePassword(String masterPassword, byte[] encodedPassword)
   {
-    if (masterPassword == null)
-    {
-      masterPassword = Dialogs.password(shell,"Master password");
-    }
+    String password;
 
-    if ((masterPassword != null) && !masterPassword.isEmpty())
+    if (encodedPassword != null)
     {
       try
       {
-        byte[] bytes;
+        byte[] dataBytes;
 
-        // get secret key
-        byte[] masterPasswordBytes = masterPassword.getBytes();
-        bytes = new byte[128/8];
-        for (int z = 0; z < bytes.length; z++)
+        if ((masterPassword != null) && !masterPassword.isEmpty())
         {
-          bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
+          // decrypt with master password
+
+          // get secret key
+          byte[] masterPasswordBytes = masterPassword.getBytes();
+          byte[] bytes = new byte[128/8];
+          for (int z = 0; z < bytes.length; z++)
+          {
+            bytes[z] = masterPasswordBytes[z%masterPasswordBytes.length];
+          }
+          SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
+
+          // get cipher
+          Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
+          cipher.init(Cipher.DECRYPT_MODE,secretKeySpec);
+
+          // decrypt password data
+          dataBytes = cipher.doFinal(encodedPassword);
         }
-        SecretKeySpec secretKeySpec = new SecretKeySpec(bytes,"AES");
+        else
+        {
+          // no encryption
+          dataBytes = encodedPassword;
+        }
 
-        // get cipher
-        Cipher cipher = Cipher.getInstance("AES/ECB/NoPadding");
-        cipher.init(Cipher.DECRYPT_MODE,secretKeySpec);
+        // deserialize password, checksum
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(dataBytes);
+        ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        password = (String)objectInputStream.readObject();
+        long  checksum  = (Long)objectInputStream.readObject();
 
-        // decrypt password
-        return new String(cipher.doFinal(encodedPassword));
+        // check if checksum is valid
+        Adler32 adler32 = new Adler32();
+        adler32.update(password.getBytes());
+        if (adler32.getValue() != checksum) return null;
       }
       catch (Exception exception)
       {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
+//Dprintf.dprintf("exception=%s",exception); exception.printStackTrace();         
         return null;
-      }     
+      }
     }
     else
     {
-      return null;
+      password = "";
     }
+
+    return password;
   }
 
   /** add empty "New" tab repository
@@ -2257,7 +2379,7 @@ exception.printStackTrace();
     }
     catch (IOException exception)
     {
-      Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+      Dialogs.error(shell,"Cannot store repository list (error: %s).",exception.getMessage());
     }
 
     return repositoryTab;
@@ -2288,7 +2410,7 @@ exception.printStackTrace();
     }
     catch (IOException exception)
     {
-      Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+      Dialogs.error(shell,"Cannot store repository list (error: %s).",exception.getMessage());
     }
   }
 
@@ -2845,7 +2967,7 @@ exception.printStackTrace();
     }
     catch (IOException exception)
     {
-      Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+      Dialogs.error(shell,"Cannot store repository list (error: %s).",exception.getMessage());
     }
   }
 
@@ -2867,7 +2989,7 @@ exception.printStackTrace();
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Cannot open repository '%s' (error: %s)",rootPath,exception.getMessage());
+      Dialogs.error(shell,"Cannot open repository '%s' (error: %s).",rootPath,exception.getMessage());
       return null;
     }
 
@@ -2899,26 +3021,30 @@ exception.printStackTrace();
       String   reviewServerHost;
       String   reviewServerLogin;
       String   reviewServerPassword;
+      String   reviewServerSummary;
+      String   reviewServerDescription;
 
       Data()
       {
-        this.title                = null;
-        this.rootPath             = null;
-        this.masterRepository     = null;
-        this.patchTests           = null;
-        this.mailSMTPHost         = null;
-        this.mailSMTPPort         = 0;
-        this.mailSMTPSSL          = false;
-        this.mailLogin            = null;
-        this.mailPassword         = null;
-        this.mailFrom             = null;
-        this.patchMailTo          = null;
-        this.patchMailCC          = null;
-        this.patchMailSubject     = null;
-        this.patchMailSubject     = null;
-        this.reviewServerHost     = null;
-        this.reviewServerLogin    = null;
-        this.reviewServerPassword = null;
+        this.title                   = null;
+        this.rootPath                = null;
+        this.masterRepository        = null;
+        this.patchTests              = null;
+        this.mailSMTPHost            = null;
+        this.mailSMTPPort            = 0;
+        this.mailSMTPSSL             = false;
+        this.mailLogin               = null;
+        this.mailPassword            = null;
+        this.mailFrom                = null;
+        this.patchMailTo             = null;
+        this.patchMailCC             = null;
+        this.patchMailSubject        = null;
+        this.patchMailText           = null;
+        this.reviewServerHost        = null;
+        this.reviewServerLogin       = null;
+        this.reviewServerPassword    = null;
+        this.reviewServerSummary     = null;
+        this.reviewServerDescription = null;
       }
     };
 
@@ -2953,6 +3079,8 @@ exception.printStackTrace();
     final Text                  widgetReviewServerHost;
     final Text                  widgetReviewServerLogin;
     final Text                  widgetReviewServerPassword;
+    final Text                  widgetReviewServerSummary;
+    final Text                  widgetReviewServerDescription;
     final Button                widgetSave;
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(1.0,1.0,4));
@@ -3510,24 +3638,29 @@ exception.printStackTrace();
           Widgets.layout(widgetReviewServerHost,0,1,TableLayoutData.WE);
           widgetReviewServerHost.setToolTipText("Review server name.");
 
-          label = Widgets.newLabel(subSubComposite,"User name:");
+          label = Widgets.newLabel(subSubComposite,"Login:");
           label.setMenu(menu);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
 
-          widgetReviewServerLogin = Widgets.newText(subSubComposite);
-          widgetReviewServerLogin.setText((repositoryTab.repository.reviewServerLogin != null)?repositoryTab.repository.reviewServerLogin:Settings.reviewServerLogin);
-          Widgets.layout(widgetReviewServerLogin,1,1,TableLayoutData.WE);
-          widgetReviewServerLogin.setToolTipText("Review server user name.");
+          subSubSubComposite = Widgets.newComposite(subSubComposite);
+          subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0,1.0}));
+          Widgets.layout(subSubSubComposite,1,1,TableLayoutData.WE,0,0,2);
+          {
+            widgetReviewServerLogin = Widgets.newText(subSubSubComposite);
+            widgetReviewServerLogin.setText((repositoryTab.repository.reviewServerLogin != null)?repositoryTab.repository.reviewServerLogin:Settings.reviewServerLogin);
+            Widgets.layout(widgetReviewServerLogin,0,0,TableLayoutData.WE);
+            widgetReviewServerLogin.setToolTipText("Review server login name.");
 
-          label = Widgets.newLabel(subSubComposite,"Password:");
-          label.setMenu(menu);
-          Widgets.layout(label,2,0,TableLayoutData.W);
+            label = Widgets.newLabel(subSubSubComposite,"Password:");
+            label.setMenu(menu);
+            Widgets.layout(label,0,1,TableLayoutData.W);
 
-          widgetReviewServerPassword = Widgets.newPassword(subSubComposite);
-          String password = getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
-          if (password != null) widgetReviewServerPassword.setText(password);
-          Widgets.layout(widgetReviewServerPassword,2,1,TableLayoutData.WE);
-          widgetReviewServerPassword.setToolTipText("Review server login password.");
+            widgetReviewServerPassword = Widgets.newPassword(subSubSubComposite);
+            String password = getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
+            if (password != null) widgetReviewServerPassword.setText(password);
+            Widgets.layout(widgetReviewServerPassword,0,2,TableLayoutData.WE);
+            widgetReviewServerPassword.setToolTipText("Review server login password.");
+          }
         }
 
         {
@@ -3574,6 +3707,59 @@ exception.printStackTrace();
         }
         subSubComposite.setMenu(menu);
         subSubComposite.setToolTipText("Review server settings.\nRight-click to open context menu.");
+
+        menu = Widgets.newPopupMenu(dialog);
+
+        subSubComposite = Widgets.newGroup(subComposite,"Message");
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
+        {
+          label = Widgets.newLabel(subSubComposite,"Summary:");
+          label.setMenu(menu);
+          Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
+
+          widgetReviewServerSummary = Widgets.newText(subSubComposite);
+          if (repositoryTab.repository.reviewServerSummary != null) widgetReviewServerSummary.setText(repositoryTab.repository.reviewServerSummary);
+          Widgets.layout(widgetReviewServerSummary,0,1,TableLayoutData.WE,0,0,2);
+          widgetReviewServerSummary.setToolTipText("Review summary template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
+
+          label = Widgets.newLabel(subSubComposite,"Description:");
+          label.setMenu(menu);
+          Widgets.layout(label,1,0,TableLayoutData.NW,0,0,2);
+
+          widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          if (repositoryTab.repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repositoryTab.repository.reviewServerDescription);
+          Widgets.layout(widgetReviewServerDescription,1,1,TableLayoutData.NSWE,0,0,2);
+          widgetReviewServerDescription.setToolTipText("Review description template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
+        }
+
+        {
+          subMenu = Widgets.addMenu(menu,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
+                  if (repository.reviewServerSummary != null) widgetReviewServerSummary.setText(repository.reviewServerSummary);
+                  if (repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repository.reviewServerDescription);
+                }
+              });
+            }
+          }
+        }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Review message settings.\nRight-click to open context menu.");
       }
     }
 
@@ -3593,22 +3779,24 @@ exception.printStackTrace();
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.title                = widgetTitle.getText();
-          data.rootPath             = widgetRootPath.getText();
-          data.patchTests           = widgetPatchTests.getItems();
-          data.mailSMTPHost         = widgetMailSMTPHost.getText();
-          data.mailSMTPPort         = widgetMailSMTPPort.getSelection();
-          data.mailSMTPSSL          = widgetMailSMTPSSL.getSelection();
-          data.mailLogin            = widgetMailLogin.getText();
-          data.mailPassword         = widgetMailPassword.getText();
-          data.mailFrom             = widgetMailFrom.getText();
-          data.patchMailTo          = widgetPatchMailTo.getText();
-          data.patchMailCC          = widgetPatchMailCC.getText();
-          data.patchMailSubject     = widgetPatchMailSubject.getText();
-          data.patchMailText        = widgetPatchMailText.getText();
-          data.reviewServerHost     = widgetReviewServerHost.getText();
-          data.reviewServerLogin    = widgetReviewServerLogin.getText();
-          data.reviewServerPassword = widgetReviewServerPassword.getText();
+          data.title                   = widgetTitle.getText().trim();
+          data.rootPath                = widgetRootPath.getText().trim();
+          data.patchTests              = widgetPatchTests.getItems();
+          data.mailSMTPHost            = widgetMailSMTPHost.getText().trim();
+          data.mailSMTPPort            = widgetMailSMTPPort.getSelection();
+          data.mailSMTPSSL             = widgetMailSMTPSSL.getSelection();
+          data.mailLogin               = widgetMailLogin.getText().trim();
+          data.mailPassword            = widgetMailPassword.getText();
+          data.mailFrom                = widgetMailFrom.getText().trim();
+          data.patchMailTo             = widgetPatchMailTo.getText().trim();
+          data.patchMailCC             = widgetPatchMailCC.getText().trim();
+          data.patchMailSubject        = widgetPatchMailSubject.getText().trim();
+          data.patchMailText           = widgetPatchMailText.getText().trim();
+          data.reviewServerHost        = widgetReviewServerHost.getText().trim();
+          data.reviewServerLogin       = widgetReviewServerLogin.getText().trim();
+          data.reviewServerPassword    = widgetReviewServerPassword.getText().trim();
+          data.reviewServerSummary     = widgetReviewServerSummary.getText().trim();
+          data.reviewServerDescription = widgetReviewServerDescription.getText().trim();
 
           for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
           {
@@ -3728,20 +3916,21 @@ exception.printStackTrace();
     {
       // set data
       repositoryTab.setTitle(data.title);
-      repositoryTab.repository.rootPath             = data.rootPath;
-      repositoryTab.repository.patchTests           = data.patchTests;
-      repositoryTab.repository.mailSMTPHost         = data.mailSMTPHost;
-      repositoryTab.repository.mailSMTPPort         = data.mailSMTPPort;
-      repositoryTab.repository.mailSMTPSSL          = data.mailSMTPSSL;
-      repositoryTab.repository.mailLogin            = data.mailLogin;
-      repositoryTab.repository.mailFrom             = data.mailFrom;
-      repositoryTab.repository.patchMailTo          = data.patchMailTo;
-      repositoryTab.repository.patchMailCC          = data.patchMailCC;
-      repositoryTab.repository.patchMailSubject     = data.patchMailSubject;
-      repositoryTab.repository.patchMailText        = data.patchMailText;
-      repositoryTab.repository.reviewServerHost     = data.reviewServerHost;
-      repositoryTab.repository.reviewServerLogin    = data.reviewServerLogin;
-      repositoryTab.repository.patchMailText        = data.patchMailText;
+      repositoryTab.repository.rootPath                = data.rootPath;
+      repositoryTab.repository.patchTests              = data.patchTests;
+      repositoryTab.repository.mailSMTPHost            = data.mailSMTPHost;
+      repositoryTab.repository.mailSMTPPort            = data.mailSMTPPort;
+      repositoryTab.repository.mailSMTPSSL             = data.mailSMTPSSL;
+      repositoryTab.repository.mailLogin               = data.mailLogin;
+      repositoryTab.repository.mailFrom                = data.mailFrom;
+      repositoryTab.repository.patchMailTo             = data.patchMailTo;
+      repositoryTab.repository.patchMailCC             = data.patchMailCC;
+      repositoryTab.repository.patchMailSubject        = data.patchMailSubject;
+      repositoryTab.repository.patchMailText           = data.patchMailText;
+      repositoryTab.repository.reviewServerHost        = data.reviewServerHost;
+      repositoryTab.repository.reviewServerLogin       = data.reviewServerLogin;
+      repositoryTab.repository.reviewServerSummary     = data.reviewServerSummary;
+      repositoryTab.repository.reviewServerDescription = data.reviewServerDescription;
       setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
       setPassword(data.reviewServerLogin,data.reviewServerHost,data.reviewServerPassword);
 
@@ -3752,7 +3941,7 @@ exception.printStackTrace();
       }
       catch (IOException exception)
       {
-        Dialogs.error(shell,"Cannot store repository list (error: %s)",exception.getMessage());
+        Dialogs.error(shell,"Cannot store repository list (error: %s).",exception.getMessage());
       }
     }
   }
