@@ -1058,7 +1058,7 @@ class Dialogs
       final String[] result = new String[1];
 
       final Shell dialog = open(parentShell,title,450,SWT.DEFAULT);
-      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
 
       // password
       final Text   widgetPassword1,widgetPassword2;
@@ -1072,7 +1072,7 @@ class Dialogs
         row++;
       }
       composite = new Composite(dialog,SWT.NONE);
-      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       composite.setLayoutData(new TableLayoutData(row+0,0,TableLayoutData.WE));
       {
         label = new Label(composite,SWT.LEFT);
