@@ -320,7 +320,7 @@ class CommandCreatePatch
             File file = new File(fileName);
             if (file.exists())
             {
-              switch (Dialogs.select(dialog,"Confirm",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
+              switch (Dialogs.select(dialog,"Confirmation",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
               {
                 case 0:
                   if (!file.delete())

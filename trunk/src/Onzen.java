@@ -764,7 +764,7 @@ exception.printStackTrace();
           }
           else
           {
-            switch (Dialogs.select(shell,"Confirm","Cannot decode '"+name+"' with old master password!\nDelete password entry?",new String[]{"Delete","Delete all","Skip","Skip all","Cancel"},0))
+            switch (Dialogs.select(shell,"Confirmation","Cannot decode '"+name+"' with old master password!\nDelete password entry?",new String[]{"Delete","Delete all","Skip","Skip all","Cancel"},0))
             {
               case 0:
                 // delete password entry

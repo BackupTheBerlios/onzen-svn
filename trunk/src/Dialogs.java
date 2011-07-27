@@ -780,7 +780,7 @@ class Dialogs
    */
   public static boolean confirm(Shell parentShell, String message, boolean defaultValue)
   {
-    return confirm(parentShell,"Confirm",message,"Yes","No",defaultValue);
+    return confirm(parentShell,"Confirmation",message,"Yes","No",defaultValue);
   }
 
   /** confirmation dialog
@@ -790,7 +790,7 @@ class Dialogs
    */
   public static boolean confirm(Shell parentShell, String message)
   {
-    return confirm(parentShell,"Confirm",message,"Yes","No",false);
+    return confirm(parentShell,"Confirmation",message,"Yes","No",false);
   }
 
   /** confirmation error dialog

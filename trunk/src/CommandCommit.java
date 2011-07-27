@@ -260,7 +260,7 @@ class CommandCommit
           CommitMessage commitMessage = new CommitMessage(data.message);
           if (!repositoryTab.repository.validCommitMessage(commitMessage))
           {
-            if (!Dialogs.confirm(shell,"Confirm","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
+            if (!Dialogs.confirm(shell,"Confirmation","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
             {
               return;
             }
