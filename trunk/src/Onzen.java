@@ -547,18 +547,19 @@ exception.printStackTrace();
     });
   }
 
-  /** load and decode password with master password
-   * @param password password to encode
-   * @return encoded password or null
+  /** get and decode password with master password
+   * @param name name in database
+   * @param inputFlag true to input missing password
+   * @return password or null
    */
-  public String getPassword(String name)
+  public String getPassword(String name, boolean inputFlag)
   {
     String password = null;
 
     // get master password
     if (masterPassword == null)
     {
-      masterPassword = Dialogs.password(shell,"Master password");
+      masterPassword = Dialogs.password(shell,"Master password","Master password:");
       if (masterPassword == null) return null;
     }
 
@@ -580,7 +581,7 @@ exception.printStackTrace();
         preparedStatement.setString(1,name);
         resultSet = preparedStatement.executeQuery();
 
-        if (resultSet.next())
+        if    (resultSet.next())
         {
           // read and decode password
           do
@@ -588,7 +589,7 @@ exception.printStackTrace();
             password = decodePassword(masterPassword,resultSet.getBytes("data"));
             if (password == null)
             {
-              String reenteredMasterPassword = Dialogs.password(shell,"Master password","Cannot decrypt password. Wrong master password?","Re-enter:");
+              String reenteredMasterPassword = Dialogs.password(shell,"Master password","Cannot decrypt password. Wrong master password?","Re-enter master password:");
               if (reenteredMasterPassword != null)
               {
                 masterPassword = reenteredMasterPassword;
@@ -601,7 +602,7 @@ exception.printStackTrace();
           }
           while (password == null);
         }
-        else
+        else if (inputFlag)
         {
           // input password
           password = Dialogs.password(shell,"Password for: "+name);
@@ -642,13 +643,25 @@ exception.printStackTrace();
     return password;
   }
 
-  /** load and decode password with master password
-   * @param password password to encode
-   * @return encoded password or null
+  /** get and decode password with master password
+   * @param login login name
+   * @param host host name
+   * @param inputFlag true to input missing password
+   * @return password or null
    */
-  public String getPassword(String name, String host)
+  public String getPassword(String login, String host, boolean inputFlag)
   {
-    return getPassword(name+"@"+host);
+    return getPassword(login+"@"+host,inputFlag);
+  }
+
+  /** get and decode password with master password
+   * @param login login name
+   * @param host host name
+   * @return password or null
+   */
+  public String getPassword(String login, String host)
+  {
+    return getPassword(login,host,true);
   }
 
   /** store password encode password with master password
@@ -660,7 +673,7 @@ exception.printStackTrace();
     // get master password
     if (masterPassword == null)
     {
-      masterPassword = Dialogs.password(shell,"Master password");
+      masterPassword = Dialogs.password(shell,"Master password","Master password:");
       if (masterPassword == null) return;
     }
 
@@ -703,13 +716,13 @@ exception.printStackTrace();
   }
 
   /** store password encode password with master password
-   * @param name name
+   * @param login login name
    * @param host host name
    * @param password to set
    */
-  public void setPassword(String name, String host, String password)
+  public void setPassword(String login, String host, String password)
   {
-    setPassword(name+"@"+host,password);
+    setPassword(login+"@"+host,password);
   }
 
   /** set new master password
@@ -2097,7 +2110,6 @@ exception.printStackTrace();
       ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
       ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
       objectOutputStream.writeObject(password);
-Dprintf.dprintf("");
       objectOutputStream.writeObject(adler32.getValue());
       byte[] dataBytes = byteArrayOutputStream.toByteArray();
 
@@ -2119,7 +2131,6 @@ Dprintf.dprintf("");
         cipher.init(Cipher.ENCRYPT_MODE,secretKeySpec);
 
         // encrypt password data
-Dprintf.dprintf("");
         encodedPassword = cipher.doFinal(Arrays.copyOf(dataBytes,(dataBytes.length+15)/16*16));
       }
       else
@@ -3477,7 +3488,7 @@ exception.printStackTrace();
             Widgets.layout(label,0,1,TableLayoutData.W);
 
             widgetMailPassword = Widgets.newPassword(subSubSubComposite);
-            String password = getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
+            String password = getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost,false);
             if (password != null) widgetMailPassword.setText(password);
             Widgets.layout(widgetMailPassword,0,2,TableLayoutData.WE);
             widgetMailPassword.setToolTipText("Mail server login password.");
@@ -3503,7 +3514,7 @@ exception.printStackTrace();
             }
             public void widgetSelected(SelectionEvent selectionEvent)
             {
-              String password = getPassword(Settings.mailLogin,Settings.mailSMTPHost);
+              String password = getPassword(Settings.mailLogin,Settings.mailSMTPHost,false);
 
               if (Settings.mailSMTPHost != null) widgetMailSMTPHost.setText(Settings.mailSMTPHost);
               widgetMailSMTPPort.setSelection(Settings.mailSMTPPort);
@@ -3528,7 +3539,7 @@ exception.printStackTrace();
                 {
                   MenuItem   widget     = (MenuItem)selectionEvent.widget;
                   Repository repository = (Repository)widget.getData();
-                  String     password   = getPassword(repository.mailLogin,repository.mailSMTPHost);
+                  String     password   = getPassword(repository.mailLogin,repository.mailSMTPHost,false);
 
                   if (repository.mailSMTPHost != null) widgetMailSMTPHost.setText(repository.mailSMTPHost);
                   widgetMailSMTPPort.setSelection(repository.mailSMTPPort);
@@ -3582,7 +3593,7 @@ exception.printStackTrace();
           label.setMenu(menu);
           Widgets.layout(label,3,0,TableLayoutData.NW,0,0,2);
 
-          widgetPatchMailText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          widgetPatchMailText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
           if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
           Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE,0,0,2);
           widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
@@ -3656,7 +3667,7 @@ exception.printStackTrace();
             Widgets.layout(label,0,1,TableLayoutData.W);
 
             widgetReviewServerPassword = Widgets.newPassword(subSubSubComposite);
-            String password = getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
+            String password = getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost,false);
             if (password != null) widgetReviewServerPassword.setText(password);
             Widgets.layout(widgetReviewServerPassword,0,2,TableLayoutData.WE);
             widgetReviewServerPassword.setToolTipText("Review server login password.");
@@ -3673,7 +3684,7 @@ exception.printStackTrace();
             }
             public void widgetSelected(SelectionEvent selectionEvent)
             {
-              String password = getPassword(Settings.reviewServerLogin,Settings.reviewServerHost);
+              String password = getPassword(Settings.reviewServerLogin,Settings.reviewServerHost,false);
 
               if (Settings.reviewServerHost != null) widgetReviewServerHost.setText(Settings.reviewServerHost);
               if (Settings.reviewServerLogin != null) widgetReviewServerLogin.setText(Settings.reviewServerLogin);
@@ -3695,7 +3706,7 @@ exception.printStackTrace();
                 {
                   MenuItem   widget     = (MenuItem)selectionEvent.widget;
                   Repository repository = (Repository)widget.getData();
-                  String     password   = getPassword(repository.reviewServerLogin,repository.reviewServerHost);
+                  String     password   = getPassword(repository.reviewServerLogin,repository.reviewServerHost,false);
 
                   if (repository.reviewServerHost != null) widgetReviewServerHost.setText(repository.reviewServerHost);
                   if (repository.reviewServerLogin != null) widgetReviewServerLogin.setText(repository.reviewServerLogin);
@@ -3727,7 +3738,7 @@ exception.printStackTrace();
           label.setMenu(menu);
           Widgets.layout(label,1,0,TableLayoutData.NW,0,0,2);
 
-          widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
           if (repositoryTab.repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repositoryTab.repository.reviewServerDescription);
           Widgets.layout(widgetReviewServerDescription,1,1,TableLayoutData.NSWE,0,0,2);
           widgetReviewServerDescription.setToolTipText("Review description template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
