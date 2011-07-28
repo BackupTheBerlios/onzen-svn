@@ -605,7 +605,7 @@ class CommandPatchReview
               }
             });
 
-            label = Widgets.newLabel(subSubComposite,"Text:");
+            label = Widgets.newLabel(subSubComposite,"Description:");
             Widgets.layout(label,1,0,TableLayoutData.NW);
 
             widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
@@ -805,8 +805,10 @@ class CommandPatchReview
               if (!Settings.commandPostReviewServer.isEmpty())
               {
                 // review server post command
+/*
                 try
                 {
+*/
                   final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
 
                   // get tests
@@ -822,6 +824,8 @@ class CommandPatchReview
                   macro.expand("login",      repositoryTab.repository.reviewServerLogin    );
                   macro.expand("password",   (password != null) ? password : ""            );
                   macro.expand("summary",    widgetReviewServerSummary.getText().trim()    );
+                  macro.expand("groups",     repositoryTab.repository.reviewServerGroups   );
+                  macro.expand("persons",    repositoryTab.repository.reviewServerPersons  );
                   macro.expand("description",widgetReviewServerDescription.getText().trim());
                   macro.expand("tests",      tests,","                                     );
                   macro.expand("file",       tmpPatchFile.getAbsolutePath()                );
@@ -829,21 +833,23 @@ class CommandPatchReview
 //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
 
                   // execute and add text
-                  Process process = Runtime.getRuntime().exec(commandArray);
-
-                  // wait done
-                  int exitcode = process.waitFor();
+                  Exec exec = new Exec(commandArray);
+                  String line;
+                  while ((line = exec.getStdout()) != null)
+                  {
+//Dprintf.dprintf("stdout %s",line);
+                  }
+                  while ((line = exec.getStderr()) != null)
+                  {
+//Dprintf.dprintf("stderr %s",line);
+                  }
+                  int exitcode = exec.waitFor();
                   if (exitcode != 0)
                   {
                     Dialogs.error(dialog,"Cannot post patch to review server (exitcode: %d)",exitcode);
                     return;
                   }
-                }
-                catch (InterruptedException exception)
-                {
-                  Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
-                  return;
-                }
+                  exec.done();
               }
               else
               {
