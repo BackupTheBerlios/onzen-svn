@@ -1357,6 +1357,8 @@ class StoredFiles
                     "reviewServerHost",
                     "reviewServerLogin",
                     "reviewServerSummary",
+                    "reviewServerGroups",
+                    "reviewServerPersons",
                     "reviewServerDescription"
                    }
         )
@@ -1482,6 +1484,10 @@ abstract class Repository implements Serializable
   public String  reviewServerLogin;
   @XmlElement(name = "reviewServerSummary", defaultValue = "Patch #${n %04d}: ${summary}")
   public String reviewServerSummary = "Patch #${n %04d}: ${summary}";
+  @XmlElement(name = "reviewServerGroups")
+  public String  reviewServerGroups;
+  @XmlElement(name = "reviewServerPersons")
+  public String  reviewServerPersons;
   @XmlElement(name = "reviewServerDescription", defaultValue = "${message}\n\n${tests - %s}")
   public String reviewServerDescription = "${message}\n\n${tests - %s}";
 

@@ -462,7 +462,7 @@ class Preferences
             Widgets.layout(label,0,1,TableLayoutData.W);
 
             widgetMailPassword = Widgets.newPassword(subSubComposite);
-            String password = onzen.getPassword(Settings.mailLogin,Settings.mailSMTPHost);
+            String password = onzen.getPassword(Settings.mailLogin,Settings.mailSMTPHost,false);
             if (password != null) widgetMailPassword.setText(password);
             Widgets.layout(widgetMailPassword,0,2,TableLayoutData.WE);
             widgetMailPassword.setToolTipText("Mail server login password.");
