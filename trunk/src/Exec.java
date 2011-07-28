@@ -126,14 +126,12 @@ class Exec
   /** execute external command
    * @param path working directory or null
    * @param subDirectory working subdirectory or null
-   * @param command command to execute
+   * @param commandArray command line array
    * @param binaryFlag true to read stdout in binary mode
    */
-  public Exec(String path, String subDirectory, Command command, boolean binaryFlag)
+  public Exec(String path, String subDirectory, String[] commandArray, boolean binaryFlag)
     throws IOException
   {
-    // get command array
-    String[] commandArray = command.getCommandArray();
     if (Settings.debugFlag)
     {
       System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+StringUtils.join(commandArray));
@@ -158,6 +156,18 @@ class Exec
       stdoutBinary = null;
     }
     stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param subDirectory working subdirectory or null
+   * @param command command to execute
+   * @param binaryFlag true to read stdout in binary mode
+   */
+  public Exec(String path, String subDirectory, Command command, boolean binaryFlag)
+    throws IOException
+  {
+    this(path,subDirectory,command.getCommandArray(),binaryFlag);  
   }
 
   /** execute external command
@@ -199,6 +209,15 @@ class Exec
     throws IOException
   {
     this(null,command);
+  }
+
+  /** execute external command
+   * @param commandArray command line array
+   */
+  public Exec(String[] commandArray)
+    throws IOException
+  {
+    this(null,null,commandArray,false);
   }
 
   /** done execute command
