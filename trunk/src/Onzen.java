@@ -3033,6 +3033,8 @@ exception.printStackTrace();
       String   reviewServerLogin;
       String   reviewServerPassword;
       String   reviewServerSummary;
+      String   reviewServerGroups;
+      String   reviewServerPersons;
       String   reviewServerDescription;
 
       Data()
@@ -3055,6 +3057,8 @@ exception.printStackTrace();
         this.reviewServerLogin       = null;
         this.reviewServerPassword    = null;
         this.reviewServerSummary     = null;
+        this.reviewServerGroups      = null;
+        this.reviewServerPersons     = null;
         this.reviewServerDescription = null;
       }
     };
@@ -3091,6 +3095,8 @@ exception.printStackTrace();
     final Text                  widgetReviewServerLogin;
     final Text                  widgetReviewServerPassword;
     final Text                  widgetReviewServerSummary;
+    final Text                  widgetReviewServerGroups;
+    final Text                  widgetReviewServerPersons;
     final Text                  widgetReviewServerDescription;
     final Button                widgetSave;
     composite = Widgets.newComposite(dialog);
@@ -3722,7 +3728,7 @@ exception.printStackTrace();
         menu = Widgets.newPopupMenu(dialog);
 
         subSubComposite = Widgets.newGroup(subComposite,"Message");
-        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subSubComposite,"Summary:");
@@ -3734,13 +3740,31 @@ exception.printStackTrace();
           Widgets.layout(widgetReviewServerSummary,0,1,TableLayoutData.WE,0,0,2);
           widgetReviewServerSummary.setToolTipText("Review summary template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
 
+          label = Widgets.newLabel(subSubComposite,"Groups:");
+          label.setMenu(menu);
+          Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
+
+          widgetReviewServerGroups = Widgets.newText(subSubComposite);
+          if (repositoryTab.repository.reviewServerGroups != null) widgetReviewServerGroups.setText(repositoryTab.repository.reviewServerGroups);
+          Widgets.layout(widgetReviewServerGroups,1,1,TableLayoutData.WE,0,0,2);
+          widgetReviewServerGroups.setToolTipText("Review groups names.");
+
+          label = Widgets.newLabel(subSubComposite,"Summary:");
+          label.setMenu(menu);
+          Widgets.layout(label,2,0,TableLayoutData.W,0,0,2);
+
+          widgetReviewServerPersons = Widgets.newText(subSubComposite);
+          if (repositoryTab.repository.reviewServerPersons != null) widgetReviewServerPersons.setText(repositoryTab.repository.reviewServerPersons);
+          Widgets.layout(widgetReviewServerPersons,2,1,TableLayoutData.WE,0,0,2);
+          widgetReviewServerGroups.setToolTipText("Review person names.");
+
           label = Widgets.newLabel(subSubComposite,"Description:");
           label.setMenu(menu);
-          Widgets.layout(label,1,0,TableLayoutData.NW,0,0,2);
+          Widgets.layout(label,3,0,TableLayoutData.NW,0,0,2);
 
           widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
           if (repositoryTab.repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repositoryTab.repository.reviewServerDescription);
-          Widgets.layout(widgetReviewServerDescription,1,1,TableLayoutData.NSWE,0,0,2);
+          Widgets.layout(widgetReviewServerDescription,3,1,TableLayoutData.NSWE,0,0,2);
           widgetReviewServerDescription.setToolTipText("Review description template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n");
         }
 
@@ -3763,6 +3787,8 @@ exception.printStackTrace();
                   Repository repository = (Repository)widget.getData();
 
                   if (repository.reviewServerSummary != null) widgetReviewServerSummary.setText(repository.reviewServerSummary);
+                  if (repository.reviewServerGroups != null) widgetReviewServerGroups.setText(repository.reviewServerGroups);
+                  if (repository.reviewServerPersons != null) widgetReviewServerPersons.setText(repository.reviewServerPersons);
                   if (repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repository.reviewServerDescription);
                 }
               });
@@ -3807,6 +3833,8 @@ exception.printStackTrace();
           data.reviewServerLogin       = widgetReviewServerLogin.getText().trim();
           data.reviewServerPassword    = widgetReviewServerPassword.getText().trim();
           data.reviewServerSummary     = widgetReviewServerSummary.getText().trim();
+          data.reviewServerGroups      = widgetReviewServerGroups.getText().trim();
+          data.reviewServerPersons     = widgetReviewServerPersons.getText().trim();
           data.reviewServerDescription = widgetReviewServerDescription.getText().trim();
 
           for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
@@ -3941,6 +3969,8 @@ exception.printStackTrace();
       repositoryTab.repository.reviewServerHost        = data.reviewServerHost;
       repositoryTab.repository.reviewServerLogin       = data.reviewServerLogin;
       repositoryTab.repository.reviewServerSummary     = data.reviewServerSummary;
+      repositoryTab.repository.reviewServerGroups      = data.reviewServerGroups;
+      repositoryTab.repository.reviewServerPersons     = data.reviewServerPersons;
       repositoryTab.repository.reviewServerDescription = data.reviewServerDescription;
       setPassword(data.mailLogin,data.mailSMTPHost,data.mailPassword);
       setPassword(data.reviewServerLogin,data.reviewServerHost,data.reviewServerPassword);
