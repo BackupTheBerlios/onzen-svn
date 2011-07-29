@@ -67,7 +67,6 @@ class CommitMessageReceiveBroadcast extends Thread
    */
   public void run()
   {
-//    Object[] data = new Object[3];
     for (;;)
     {
       try
@@ -364,6 +363,14 @@ class CommitMessage
     }
 
     return tmpFile.getAbsolutePath();
+  }
+
+  /** convert data to string
+   * @return string
+   */
+  public String toString()
+  {
+    return "CommitMessage {summary: "+summary+", message: "+getMessage()+"}";
   }
 
   //-----------------------------------------------------------------------
