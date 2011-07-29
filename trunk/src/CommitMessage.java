@@ -85,7 +85,7 @@ class CommitMessageReceiveBroadcast extends Thread
         }
         String userName = data[0];
         String id       = data[1];
-        String message  = data[2];
+        String text     = data[2];
 
         // filter out own messages
         if (userName.equals(CommitMessage.USER_NAME) && id.equals(CommitMessage.ID))
@@ -95,19 +95,19 @@ class CommitMessageReceiveBroadcast extends Thread
 
         // convert message
         ArrayList<String> lineList = new ArrayList<String>();
-        for (String string : message.split("\\\\n"))
+        for (String string : text.split("\\\\n"))
         {
           lineList.add(string.replace("\\\\","\\"));
         }
-        String[] lines = lineList.toArray(new String[lineList.size()]);
+        String[] message = lineList.toArray(new String[lineList.size()]);
 
         // add to history
         synchronized(history)
         {
-          if (!CommitMessage.equalLines(lines,history.peekLast()))
+          if (!CommitMessage.equalLines(message,history.peekLast()))
           {
             // add to history
-            history.addLast(lines);
+            history.addLast(message);
 
             // shorten history
             while (history.size() > Settings.maxMessageHistory)
@@ -140,7 +140,8 @@ class CommitMessage
   private static                LinkedList<String[]> history = new LinkedList<String[]>();
   private static DatagramSocket socket;
 
-  private final String[]        lines;
+  private final String          summary;
+  private final String[]        message;
   private File                  tmpFile;
 
   // ------------------------ native functions ----------------------------
@@ -236,22 +237,33 @@ class CommitMessage
   }
 
   /** create commit message
-   * @param line message lines
+   * @param summary summary line
+   * @param message message lines
    */
-  CommitMessage(String[] lines)
+  CommitMessage(String summary, String[] message)
   {
-    // discard empty lines at beginning/end
+    // discard empty lines at beginning/end of message
     int i0 = 0;
-    while ((i0 < lines.length) && lines[i0].trim().isEmpty())
+    while ((i0 < message.length) && message[i0].trim().isEmpty())
     {
       i0++;
     }
-    int i1 = lines.length-1;
-    while ((i1 >= i0) && lines[i1].trim().isEmpty())
+    int i1 = message.length-1;
+    while ((i1 >= i0) && message[i1].trim().isEmpty())
     {
       i1--;
     }
-    this.lines = Arrays.copyOfRange(lines,i0,i1+1);
+
+    this.summary = summary;
+    this.message = Arrays.copyOfRange(message,i0,i1+1);
+  }
+
+  /** create commit message
+   * @param message message lines
+   */
+  CommitMessage(String[] message)
+  {
+    this(null,message);
   }
 
   /** done commit message
@@ -266,14 +278,14 @@ class CommitMessage
    */
   public void addToHistory()
   {
-    if (lines.length > 0)
+    if (message.length > 0)
     {
       // broadcast message
       try
       {
         // convert message to string
         StringBuilder buffer = new StringBuilder();
-        for (String line : lines)
+        for (String line : message)
         {
           buffer.append(line.replace("\\","\\\\"));
           buffer.append("\\n");
@@ -300,7 +312,7 @@ class CommitMessage
    */
   public boolean isEmpty()
   {
-    return lines.length == 0;
+    return message.length == 0;
   }
 
   /** get message text
@@ -309,7 +321,16 @@ class CommitMessage
    */
   public String getMessage(String separator)
   {
-    return StringUtils.join(lines,separator);
+    StringBuilder buffer = new StringBuilder();
+
+    if (summary != null)
+    {
+      buffer.append(summary);
+      buffer.append(separator);
+    }
+    buffer.append(StringUtils.join(message,separator));
+
+    return buffer.toString();
   }
 
   /** get message text
@@ -331,7 +352,11 @@ class CommitMessage
       // write to file
       tmpFile = File.createTempFile("msg",".tmp",new File(Settings.tmpDirectory));
       PrintWriter output = new PrintWriter(new FileWriter(tmpFile.getPath()));
-      for (String line : this.lines)
+      if (summary != null)
+      {
+        output.println(summary);
+      }
+      for (String line : this.message)
       {
         output.println(line);
       }
@@ -458,10 +483,10 @@ exception.printStackTrace();
   {
     synchronized(history)
     {
-      if (!equalLines(lines,history.peekLast()))
+      if (!equalLines(message,history.peekLast()))
       {
         // add to history
-        history.addLast(lines);
+        history.addLast(message);
 
         // shorten history
         while (history.size() > Settings.maxMessageHistory)
@@ -481,7 +506,7 @@ exception.printStackTrace();
 
           // add to database
           preparedStatement = database.connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
-          preparedStatement.setString(1,Database.linesToData(lines));
+          preparedStatement.setString(1,Database.linesToData(message));
           preparedStatement.execute();
 
           // shorten message table size
