@@ -1547,7 +1547,8 @@ Dprintf.dprintf("");
     CommitMessage commitMessage = null;
     try
     {
-      commitMessage = new CommitMessage(patch.message);
+      // get commit message
+      commitMessage = new CommitMessage(patch.summary,patch.message);
       if (!repositoryTab.repository.validCommitMessage(commitMessage))
       {
         if (!Dialogs.confirm(shell,"Confirmation","The commit message is probably too long or may not be accepted.\n\nCommit with the message anyway?"))
