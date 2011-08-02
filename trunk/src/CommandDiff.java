@@ -164,6 +164,7 @@ class CommandDiff
   private    final Button     widgetPatch;
   private    final Button     widgetPrev;
   private    final Button     widgetNext;
+  private    final Button     widgetReread;
   private    final Button     widgetClose;
 
   private    final Listener   filterListener;
@@ -581,8 +582,20 @@ class CommandDiff
       });
       widgetNext.setToolTipText("Goto next difference.");
 
+      widgetReread = Widgets.newButton(composite,"Reread");
+      widgetReread.setEnabled(false);
+      Widgets.layout(widgetReread,0,11,TableLayoutData.W);
+      Widgets.addModifyListener(new WidgetListener(widgetReread,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(data.diffData != null));
+        }
+      });
+      widgetReread.setToolTipText("Re-read diff.");
+
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,11,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,12,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1168,6 +1181,16 @@ class CommandDiff
         }
       }
     });
+    widgetReread.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Widgets.notify(dialog,USER_EVENT_NEW_REVISION,widgetRevision.getSelectionIndex());
+      }
+    });
 
     KeyListener keyListener = new KeyListener()
     {
@@ -1545,9 +1568,14 @@ class CommandDiff
             textRight.append('\n');
           }
 
-          for (int z = 0; z < Math.max(diffData.deletedLines.length,diffData.addedLines.length); z++)
+          int min = Math.min(diffData.deletedLines.length,diffData.addedLines.length);
+          int max = Math.max(diffData.deletedLines.length,diffData.addedLines.length);
+          for (int z = 0; z < max; z++)
           {
-            lineTypeList.add(DiffData.Types.CHANGED);
+            lineTypeList.add(((z < min) && equalsIgnoreWhitespaces(diffData.deletedLines[z],diffData.addedLines[z]))
+                               ? DiffData.Types.CHANGED_WHITESPACES
+                               : DiffData.Types.CHANGED
+                            );
           }
 
           index += Math.max(diffData.deletedLines.length,diffData.addedLines.length);
