@@ -314,6 +314,16 @@ class CommitMessage
     return message.length == 0;
   }
 
+  
+  /** get summary
+   * @param separator line separator
+   * @return summary
+   */
+  public String getSummary()
+  {
+    return summary;
+  }  
+
   /** get message text
    * @param separator line separator
    * @return text
