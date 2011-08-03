@@ -527,7 +527,7 @@ Dprintf.dprintf("");
             }
           }
         });
-        menuItem = Widgets.addMenuItem(menu,"Delete");
+        menuItem = Widgets.addMenuItem(menu,"Delete...");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -539,6 +539,7 @@ Dprintf.dprintf("");
             {
               if (Dialogs.confirm(dialog,"Confirmation","Really delete "+widgetPatches.getSelectionCount()+" patches?","Delete","Cancel"))
               {
+                // delete patches
                 for (TableItem tableItem : widgetPatches.getSelection())
                 {
                   try
@@ -554,8 +555,8 @@ Dprintf.dprintf("");
                   }
                 }
 
-                // notify change of data
-                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+                // clear selection
+                clearSelectedPatch();
               }
             }
           }
@@ -1442,6 +1443,17 @@ Dprintf.dprintf("");
         break;
       }
     }
+  }
+
+  /** clear selected patch
+   */
+  private void clearSelectedPatch()
+  {
+    widgetChanges.setText("");
+    widgetFileNames.removeAll();
+    widgetMessage.setText("");
+
+    Widgets.modified(data);
   }
 
   /** save patch into file
