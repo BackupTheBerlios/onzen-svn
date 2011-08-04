@@ -2491,10 +2491,10 @@ Dprintf.dprintf("stdout %s",line);
           {
 Dprintf.dprintf("stderr %s",line);
           }
-          int exitcode = exec.waitFor();
-          if (exitcode != 0)
+          int exitCode = exec.waitFor();
+          if (exitCode != 0)
           {
-            throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitcode+")");
+            throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitCode+")");
           }
           exec.done(); exec = null;
         }
