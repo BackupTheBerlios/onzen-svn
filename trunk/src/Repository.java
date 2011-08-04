@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -1357,6 +1358,7 @@ class StoredFiles
                     "reviewServerHost",
                     "reviewServerLogin",
                     "reviewServerSummary",
+                    "reviewServerRepository",
                     "reviewServerGroups",
                     "reviewServerPersons",
                     "reviewServerDescription"
@@ -1484,6 +1486,8 @@ abstract class Repository implements Serializable
   public String  reviewServerLogin;
   @XmlElement(name = "reviewServerSummary", defaultValue = "Patch #${n %04d}: ${summary}")
   public String reviewServerSummary = "Patch #${n %04d}: ${summary}";
+  @XmlElement(name = "reviewServerRepository")
+  public String  reviewServerRepository;
   @XmlElement(name = "reviewServerGroups")
   public String  reviewServerGroups;
   @XmlElement(name = "reviewServerPersons")
@@ -1597,6 +1601,14 @@ abstract class Repository implements Serializable
    * @return true iff patch queues are supported
    */
   public boolean supportPatchQueues()
+  {
+    return false;
+  }
+
+  /** check if repository support posting reviews
+   * @return true iff posting reviews is supported
+   */
+  public boolean supportPostReview()
   {
     return false;
   }
@@ -2393,6 +2405,26 @@ Dprintf.dprintf("fileName=%s",fileName);
   abstract public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException;
 
+  /** pull changes
+   */
+  abstract public void pullChanges()
+    throws RepositoryException;
+
+  /** push changes
+   */
+  abstract public void pushChanges()
+    throws RepositoryException;
+
+  /** apply patch queue patches
+   */
+  abstract public void applyPatches()
+    throws RepositoryException;
+
+  /** unapply patch queue patches
+   */
+  abstract public void unapplyPatches()
+    throws RepositoryException;
+
   /** set files mode
    * @param fileDataSet file data set
    * @param mode file mode
@@ -2415,25 +2447,78 @@ Dprintf.dprintf("fileName=%s",fileName);
     setFileMode(fileDataSet,mode,commitMessage);
   }
 
-  /** pull changes
+  /** post to review server
    */
-  abstract public void pullChanges()
-    throws RepositoryException;
+  public void postReview(String password, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
+    throws RepositoryException
+  {
+    if (!Settings.commandPostReviewServer.isEmpty())
+    {
+Dprintf.dprintf("");
+      File patchFile = null;
+      try
+      {
+        // get patch file
+        patchFile = getPatchFile(fileDataSet);
+Dprintf.dprintf("");
 
-  /** push changes
-   */
-  abstract public void pushChanges()
-    throws RepositoryException;
+        // create command
+        Macro macro = new Macro(StringUtils.split(Settings.commandPostReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+        macro.expand("server",     reviewServerHost);
+        macro.expand("login",      reviewServerLogin);
+        macro.expand("password",   (password != null) ? password : "");
+        macro.expand("summary",    commitMessage.getSummary());
+        macro.expand("groups",     reviewServerGroups);
+        macro.expand("persons",    reviewServerPersons);
+        macro.expand("description",commitMessage.getMessage());
+        macro.expand("tests",      testSet,",");
+        macro.expand("file",       patchFile.getAbsolutePath());
+        String[] commandArray = macro.getValueArray();
+    //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+Dprintf.dprintf("");
 
-  /** apply patch queue patches
-   */
-  abstract public void applyPatches()
-    throws RepositoryException;
+        Exec exec = null;
+        try
+        {
+          // execute
+          exec = new Exec(commandArray);
+          String line;
+          while ((line = exec.getStdout()) != null)
+          {
+Dprintf.dprintf("stdout %s",line);
+          }
+          while ((line = exec.getStderr()) != null)
+          {
+Dprintf.dprintf("stderr %s",line);
+          }
+          int exitcode = exec.waitFor();
+          if (exitcode != 0)
+          {
+            throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitcode+")");
+          }
+          exec.done(); exec = null;
+        }
+        catch (IOException exception)
+        {
+          throw new RepositoryException(exception);
+        }
+        finally
+        {
+          if (exec != null) exec.done();
+        }
 
-  /** unapply patch queue patches
-   */
-  abstract public void unapplyPatches()
-    throws RepositoryException;
+        patchFile.delete(); patchFile = null;
+      }
+      finally
+      {
+        if (patchFile != null) patchFile.delete();
+      }
+    }
+    else
+    {
+      throw new RepositoryException("No review server post command configured.");
+    }
+  }
 
   /** convert data to string
    * @return string
