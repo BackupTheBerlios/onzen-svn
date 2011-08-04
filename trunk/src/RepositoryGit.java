@@ -239,16 +239,6 @@ class RepositoryGit extends Repository
   {
   }
 
-  /** set files mode
-   * @param fileDataSet file data set
-   * @param mode file mode
-   * @param commitMessage commit message
-   */
-  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
-    throws RepositoryException
-  {
-  }
-
   /** pull changes
    */
   public void pullChanges()
@@ -273,6 +263,16 @@ class RepositoryGit extends Repository
   /** unapply patches
    */
   public void unapplyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
   }
