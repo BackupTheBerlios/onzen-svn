@@ -1561,6 +1561,34 @@ Dprintf.dprintf("unknown %s",line);
     }
   }
 
+  /** pull changes
+   */
+  public void pullChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
+    throws RepositoryException
+  {
+  }
+
   /** set files mode
    * @param fileDataSet file data set
    * @param mode file mode
@@ -1611,34 +1639,6 @@ Dprintf.dprintf("unknown %s",line);
     {
       throw new RepositoryException(exception);
     }
-  }
-
-  /** pull changes
-   */
-  public void pullChanges()
-    throws RepositoryException
-  {
-  }
-
-  /** push changes
-   */
-  public void pushChanges()
-    throws RepositoryException
-  {
-  }
-
-  /** apply patches
-   */
-  public void applyPatches()
-    throws RepositoryException
-  {
-  }
-
-  /** unapply patches
-   */
-  public void unapplyPatches()
-    throws RepositoryException
-  {
   }
 
   //-----------------------------------------------------------------------
@@ -1992,9 +1992,8 @@ Dprintf.dprintf("unknown %s",line);
         RevisionDataCVS branchRevisionData = branchesMap.get(branchId);
         if (branchRevisionData == null)
         {
-Dprintf.dprintf("xxxxxxxxxxxxxxxxx %s",branchId);
           // still not known branch -> add to revision tree and create branch
-          revisionDataTreeList.addFirst(revisionData);
+          revisionDataTreeList.add(revisionData);
 
           // store branches of this revision
           branchesMap.put(branchId,revisionData);
@@ -2026,7 +2025,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxx %s",branchId);
               )
       {
         // add revision to tree
-        revisionDataTreeList.addFirst(revisionData);
+        revisionDataTreeList.add(revisionData);
 
         // store branches of this revision
         if (revisionData.branchRevisions != null)
