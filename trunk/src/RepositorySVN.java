@@ -1386,16 +1386,6 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
   }
 
-  /** set files mode
-   * @param fileDataSet file data set
-   * @param mode file mode
-   * @param commitMessage commit message
-   */
-  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
-    throws RepositoryException
-  {
-  }
-
   /** pull changes
    */
   public void pullChanges()
@@ -1420,6 +1410,23 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
   /** unapply patches
    */
   public void unapplyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** post to review server
+   */
+  public void postReviewServer()
     throws RepositoryException
   {
   }
