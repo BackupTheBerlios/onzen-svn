@@ -1846,6 +1846,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     try
     {
       Command command = new Command();
+      Exec    exec;
       int     exitCode;
 
       // post review for files
@@ -1858,15 +1859,26 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--publish");
       command.append("--summary",commitMessage.getSummary());
       command.append("--description",commitMessage.getMessage());
-      command.append("--tests",commitMessage.getMessage(","));
+      command.append("--tests",StringUtils.join(testSet,", "));
       if (reviewServerGroups != null) command.append("--target_groups",reviewServerGroups);
       if (reviewServerPersons != null) command.append("--target_people",reviewServerPersons);
+//command.append("--debug");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      String line;
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("stdout %s",line);
+      }
+      while ((line = exec.getStderr()) != null)
+      {
+//Dprintf.dprintf("stderr %s",line);
+      }
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("post review fail (exit code: %d)",exitCode);
       }
     }
     catch (IOException exception)
