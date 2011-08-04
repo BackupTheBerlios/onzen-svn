@@ -10,8 +10,7 @@
 
 /****************************** Imports ********************************/
 import java.util.ArrayList;
-
-import java.util.AbstractList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Iterator;
 
@@ -160,6 +159,50 @@ public class StringUtils
   public static String join(Object[] objects, String joinString)
   {
     return join(objects,joinString,'\0');
+  }
+
+  /** join string array
+   * @param collection collection to join (convert to string with toString())
+   * @param joinString string used to join two strings
+   * @param quoteChar quote char
+   * @return string
+   */
+  public static String join(Collection collection, String joinString, char quoteChar)
+  {
+    StringBuilder buffer = new StringBuilder();
+    String        string;
+    if (collection != null)
+    {
+      for (Object object : collection)
+      {
+        if (buffer.length() > 0) buffer.append(joinString);
+        string = object.toString();
+        buffer.append((quoteChar != '\0') ? escape(string,true,quoteChar) : string);
+      }
+    }
+
+    return buffer.toString();
+  }
+
+  /** join string array
+   * @param collection collection to join (convert to string with toString())
+   * @param joinString string used to join two strings
+   * @param quote true iff escape strings
+   * @return string
+   */
+  public static String join(Collection collection, String joinString, boolean quote)
+  {
+    return join(collection,joinString,(quote) ? '"' : '\0');
+  }
+
+  /** join string array
+   * @param collection collection to join (convert to string with toString())
+   * @param joinString string used to join two strings
+   * @return string
+   */
+  public static String join(Collection collection, String joinString)
+  {
+    return join(collection,joinString,'\0');
   }
 
   /** join string array with space
