@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Stack;
 
@@ -1694,16 +1695,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
-  /** set files mode
-   * @param fileDataSet file data set
-   * @param mode file mode
-   * @param commitMessage commit message
-   */
-  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
-    throws RepositoryException
-  {
-  }
-
   /** pull changes
    */
   public void pullChanges()
@@ -1829,6 +1820,53 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** post to review server
+   */
+  public void postReview(String password, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // post review for files
+      command.clear();
+      command.append(Settings.hgCommand,"lpostreview");
+      if (reviewServerHost != null) command.append("--server",reviewServerHost);
+      if (reviewServerLogin != null) command.append("--username",reviewServerLogin);
+      if (password != null) command.append("--password",password);
+      if (reviewServerRepository != null) command.append("--repoid",reviewServerRepository);
+      command.append("--publish");
+      command.append("--summary",commitMessage.getSummary());
+      command.append("--description",commitMessage.getMessage());
+      command.append("--tests",commitMessage.getMessage(","));
+      if (reviewServerGroups != null) command.append("--target_groups",reviewServerGroups);
+      if (reviewServerPersons != null) command.append("--target_people",reviewServerPersons);
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
