@@ -329,13 +329,48 @@ class CommandAnnotations
         int index = widget.getSelectionIndex();
         if (index >= 0)
         {
-          String revision = widget.getItem(index).getText(0);
-          if (!revision.equals(widgetRevision.getText()))
+          // get select revision
+          String selectedRevision = widget.getItem(index).getText(0);
+
+          // find previous revision
+          String prevRevision = null;
+          for (int z = 1; z < data.revisionNames.length; z++)
           {
-            if (Dialogs.confirm(dialog,String.format("Show revision '%s'?",revision)))
+            if (data.revisionNames[z].equals(selectedRevision))
             {
-              show(revision);
+              prevRevision = data.revisionNames[z-1];
             }
+          }
+
+          switch (Dialogs.select(dialog,
+                                 "Confirmation",
+                                 "Action:",
+                                 new String[]{"goto revision "+selectedRevision,
+                                              "goto previous revision "+prevRevision,
+                                              "show revision "+selectedRevision,
+                                              "Cancel"
+                                             },
+                                 new boolean[]{!selectedRevision.equals(widgetRevision.getText()),
+                                               prevRevision != null,
+                                               true,
+                                               true
+                                              },
+                                 0
+                                )
+                 )
+          {
+            case 0:
+              show(selectedRevision);
+              break;
+            case 1:
+              show(prevRevision);
+              break;
+            case 2:
+Dprintf.dprintf("");
+//              show(revision);
+              break;
+            case 3:
+              break;
           }
         }
       }
