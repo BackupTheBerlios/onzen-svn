@@ -813,10 +813,11 @@ class Dialogs
    * @param title title string
    * @param message confirmation message
    * @param texts array with texts
+   * @param enabled array with enabled flags
    * @param defaultValue default value (0..n-1)
    * @return selection index (0..n-1)
    */
-  public static int select(Shell parentShell, String title, String message, String[] texts, int defaultValue)
+  public static int select(Shell parentShell, String title, String message, String[] texts, boolean[] enabled, int defaultValue)
   {
     final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"question.png");
 
@@ -858,14 +859,14 @@ class Dialogs
         }
         gc.dispose();
 
-        int value = 0;
-        for (String text : texts)
+        for (int z = 0; z < texts.length; z++)
         {
           button = new Button(composite,SWT.CENTER);
-          button.setText(text);
-          button.setData(value);
-          if (value == defaultValue) button.setFocus();
-          button.setLayoutData(new TableLayoutData(0,value,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,textWidth+20,SWT.DEFAULT));
+          button.setEnabled((enabled == null) || enabled[z]);
+          button.setText(texts[z]);
+          button.setData(z);
+          if (z == defaultValue) button.setFocus();
+          button.setLayoutData(new TableLayoutData(0,z,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,textWidth+20,SWT.DEFAULT));
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -878,8 +879,6 @@ class Dialogs
               close(dialog,widget.getData());
             }
           });
-
-          value++;
         }
       }
 
@@ -889,6 +888,19 @@ class Dialogs
     {
       return defaultValue;
     }
+  }
+
+  /** select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
+   * @param defaultValue default value (0..n-1)
+   * @return selection index (0..n-1)
+   */
+  public static int select(Shell parentShell, String title, String message, String[] texts, int defaultValue)
+  {
+    return select(parentShell,title,message,texts,null,defaultValue);
   }
 
   /** multiple select dialog
