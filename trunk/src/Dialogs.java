@@ -814,14 +814,16 @@ class Dialogs
    * @param message confirmation message
    * @param texts array with texts
    * @param enabled array with enabled flags
+   * @param okText ok-text
+   * @param cancelText cancel-text
    * @param defaultValue default value (0..n-1)
-   * @return selection index (0..n-1)
+   * @return selection index (0..n-1) or -1
    */
-  public static int select(Shell parentShell, String title, String message, String[] texts, boolean[] enabled, int defaultValue)
+  public static int select(Shell parentShell, String title, String message, String[] texts, boolean[] enabled, String okText, String cancelText, int defaultValue)
   {
     final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"question.png");
 
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Button    button;
 
@@ -832,18 +834,65 @@ class Dialogs
       final Shell dialog = open(parentShell,title);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
-      // message
       composite = new Composite(dialog,SWT.NONE);
       composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
       composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
       {
+        // image
         label = new Label(composite,SWT.LEFT);
         label.setImage(IMAGE);
         label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
 
-        label = new Label(composite,SWT.LEFT|SWT.WRAP);
-        label.setText(message);
-        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+        subComposite = new Composite(composite,SWT.NONE);
+        subComposite.setLayout(new TableLayout(0.0,1.0));
+        subComposite.setLayoutData(new TableLayoutData(0,1,TableLayoutData.WE,0,0,4));
+        {
+          int row = 0;
+
+          if (message != null)
+          {
+            // message
+            label = new Label(subComposite,SWT.LEFT|SWT.WRAP);
+            label.setText(message);
+            label.setLayoutData(new TableLayoutData(row,0,TableLayoutData.W,0,0,4)); row++;
+          }
+
+          // buttons
+          if ((okText != null) || (cancelText != null))
+          {
+            Button selectedButton = null;
+            for (int z = 0; z < texts.length; z++)
+            {
+              button = new Button(subComposite,SWT.RADIO);
+              button.setEnabled((enabled == null) || enabled[z]);
+              button.setText(texts[z]);
+              button.setData(z);
+              if (   ((enabled == null) || enabled[z])
+                  && ((z == defaultValue) || (selectedButton == null))
+                 )
+              {
+                if (selectedButton != null) selectedButton.setSelection(false);
+
+                button.setSelection(true);
+                result[0] = z;
+                selectedButton = button;
+              }
+              button.setLayoutData(new TableLayoutData(row,0,TableLayoutData.W)); row++;
+              button.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  Button widget = (Button)selectionEvent.widget;
+
+                  result[0] = (Integer)widget.getData();
+                }
+              });
+            }
+          }
+        }
       }
 
       // buttons
@@ -851,43 +900,104 @@ class Dialogs
       composite.setLayout(new TableLayout(0.0,1.0));
       composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
       {
-        int textWidth = 0;
-        GC gc = new GC(composite);
-        for (String text : texts)
+        if ((okText != null) || (cancelText != null))
         {
-          textWidth = Math.max(textWidth,gc.textExtent(text).x);
-        }
-        gc.dispose();
-
-        for (int z = 0; z < texts.length; z++)
-        {
-          button = new Button(composite,SWT.CENTER);
-          button.setEnabled((enabled == null) || enabled[z]);
-          button.setText(texts[z]);
-          button.setData(z);
-          if (z == defaultValue) button.setFocus();
-          button.setLayoutData(new TableLayoutData(0,z,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,textWidth+20,SWT.DEFAULT));
-          button.addSelectionListener(new SelectionListener()
+          if (okText != null)
           {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            button = new Button(composite,SWT.CENTER);
+            button.setText(okText);
+            button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+            button.addSelectionListener(new SelectionListener()
             {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              Button widget = (Button)selectionEvent.widget;
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                close(dialog,true);
+              }
+            });
+          }
 
-              close(dialog,widget.getData());
-            }
-          });
+          if (cancelText != null)
+          {
+            button = new Button(composite,SWT.CENTER);
+            button.setText(cancelText);
+            button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                close(dialog,false);
+              }
+            });
+          }
+        }
+        else
+        {
+          int textWidth = 0;
+          GC gc = new GC(composite);
+          for (String text : texts)
+          {
+            textWidth = Math.max(textWidth,gc.textExtent(text).x);
+          }
+          gc.dispose();
+
+          for (int z = 0; z < texts.length; z++)
+          {
+            button = new Button(composite,SWT.CENTER);
+            button.setEnabled((enabled == null) || enabled[z]);
+            button.setText(texts[z]);
+            button.setData(z);
+            if (z == defaultValue) button.setFocus();
+            button.setLayoutData(new TableLayoutData(0,z,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,textWidth+20,SWT.DEFAULT));
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Button widget = (Button)selectionEvent.widget;
+
+                result[0] = (Integer)widget.getData();
+                close(dialog,true);
+              }
+            });
+          }
         }
       }
 
-      return (Integer)run(dialog,defaultValue);
+      if ((Boolean)run(dialog,false))
+      {
+        return result[0];
+      }
+      else
+      {
+        return -1;
+      }
     }
     else
     {
       return defaultValue;
     }
+  }
+
+  /** select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
+   * @param enabled array with enabled flags
+   * @param defaultValue default value (0..n-1)
+   * @return selection index (0..n-1)
+   */
+  public static int select(Shell parentShell, String title, String message, String[] texts, boolean[] enabled, int defaultValue)
+  {
+    return select(parentShell,title,message,texts,null,null,null,defaultValue);
   }
 
   /** select dialog
