@@ -802,7 +802,10 @@ class CommandPatchReview
             }
             if (data.reviewServerFlag)
             {
-              postReview(patch);
+              if (!postReview(patch))
+              {
+                return;
+              }
             }
 
             // free resources
@@ -1293,8 +1296,9 @@ class CommandPatchReview
 
   /** post to review server
    * @param patch patch
+   * @return true iff review posted
    */
-  private void postReview(Patch patch)
+  private boolean postReview(Patch patch)
   {
     if (!Settings.commandPostReviewServer.isEmpty())
     {
@@ -1369,7 +1373,7 @@ class CommandPatchReview
       catch (RepositoryException exception)
       {
         Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
-        return;
+        return false;
       }
       finally
       {
@@ -1379,9 +1383,11 @@ class CommandPatchReview
     }
     else
     {
-      Dialogs.error(dialog,"No review server post command configured.\nPlease check settings.");
-      return;
+      Dialogs.error(dialog,"No review server configured.\nPlease check settings.");
+      return false;
     }
+
+    return true;
   }
 }
 
