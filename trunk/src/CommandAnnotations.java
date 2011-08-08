@@ -347,14 +347,14 @@ class CommandAnnotations
                                  "Action:",
                                  new String[]{"goto revision "+selectedRevision,
                                               "goto previous revision "+prevRevision,
-                                              "show revision "+selectedRevision,
-                                              "Cancel"
+                                              "show revision "+selectedRevision
                                              },
                                  new boolean[]{!selectedRevision.equals(widgetRevision.getText()),
                                                prevRevision != null,
-                                               true,
                                                true
                                               },
+                                 "OK",
+                                 "Cancel",
                                  0
                                 )
                  )
@@ -369,7 +369,7 @@ class CommandAnnotations
 Dprintf.dprintf("");
 //              show(revision);
               break;
-            case 3:
+            default:
               break;
           }
         }
