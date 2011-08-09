@@ -391,6 +391,18 @@ onzen.bat: onzen.bat.in onzen-windows.jar
 	$(CHMOD) 775 $@
 endif
 
+.PHONY: linux
+linux: onzen onzen-linux.jar onzen-linux_64.jar
+
+.PHONY: windows
+windows: onzen.bat onzen-windows.jar onzen-windows_64.jar
+
+.PHONY: solaris
+solaris: onzen onzen-solaris.jar onzen-solaris_64.jar
+
+.PHONY: macosx
+macosx: onzen onzen-macosx.jar onzen-macosx_64.jar
+
 # run
 run: $(OBJECTS)
 ifneq ($(JAVA),)
