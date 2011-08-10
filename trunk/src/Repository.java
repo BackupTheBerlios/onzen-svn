@@ -1618,7 +1618,6 @@ abstract class Repository implements Serializable
    */
   public boolean validCommitMessage(CommitMessage commitMessage)
   {
-Dprintf.dprintf("");
     return true;
   }
 
