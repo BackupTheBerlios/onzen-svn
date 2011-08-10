@@ -402,6 +402,7 @@ class CommandDiff
             // sync left to right
             widgetLineNumbersRight.setTopIndex(topIndex);
             widgetTextRight.setTopIndex(topIndex);
+            widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
           }
         }
       });
@@ -625,6 +626,7 @@ class CommandDiff
         if (widgetTextLeft.getTopIndex() != topIndex)
         {
           widgetTextLeft.setTopIndex(topIndex);
+          widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
           widgetBar.redraw();
         }
 
@@ -633,6 +635,7 @@ class CommandDiff
         {
           widgetLineNumbersRight.setTopIndex(topIndex);
           widgetTextRight.setTopIndex(topIndex);
+          widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
         }
       }
     };
@@ -653,6 +656,7 @@ class CommandDiff
 
         // sync right text widget
         widgetTextRight.setTopIndex(topIndex);
+        widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
 
         // sync to left
         if (widgetSync.getSelection())
@@ -661,6 +665,7 @@ class CommandDiff
           if (widgetTextLeft.getTopIndex() != topIndex)
           {
             widgetTextLeft.setTopIndex(topIndex);
+            widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
             widgetBar.redraw();
           }
         }
@@ -690,6 +695,7 @@ class CommandDiff
         {
           widgetLineNumbersRight.setTopIndex(topIndex);
           widgetTextRight.setTopIndex(topIndex);
+          widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
           widgetVerticalScrollBarRight.setSelection(topIndex);
         }
       }
@@ -796,6 +802,7 @@ class CommandDiff
           if (widgetTextLeft.getTopIndex() != topIndex)
           {
             widgetTextLeft.setTopIndex(topIndex);
+            widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
             widgetBar.redraw();
           }
           widgetVerticalScrollBarLeft.setSelection(topIndex);
@@ -1138,6 +1145,7 @@ class CommandDiff
           {
             widgetLineNumbersRight.setTopIndex(topIndex);
             widgetTextRight.setTopIndex(topIndex);
+            widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
           }
         }
       }
@@ -1170,6 +1178,7 @@ class CommandDiff
           // set left text widget
           widgetLineNumbersLeft.setTopIndex(topIndex);
           widgetTextLeft.setTopIndex(topIndex);
+          widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
           widgetBar.redraw();
 
           // sync to right
@@ -1177,6 +1186,7 @@ class CommandDiff
           {
             widgetLineNumbersRight.setTopIndex(topIndex);
             widgetTextRight.setTopIndex(topIndex);
+            widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
           }
         }
       }
