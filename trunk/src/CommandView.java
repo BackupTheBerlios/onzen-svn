@@ -286,7 +286,7 @@ class CommandView
 //Dprintf.dprintf("%d %d",widget.getTopPixel(),widgetText.getTopPixel());
 
         widgetText.setTopIndex(topIndex);
-//        widgetText.setTopPixel(widget.getTopPixel());
+        widgetText.setCaretOffset(widgetText.getOffsetAtLine(topIndex));
       }
     };
     widgetLineNumbers.addListener(SWT.KeyDown,listener);
@@ -305,6 +305,7 @@ class CommandView
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         widgetLineNumbers.setTopIndex(topIndex);
+        widgetVerticalScrollBar.setSelection(topIndex);
       }
     };
     widgetText.addListener(SWT.KeyDown,listener);
@@ -595,7 +596,10 @@ class CommandView
           widgetText.setSelection(index);
           widgetText.redraw();
 
-          widgetLineNumbers.setTopIndex(widgetText.getTopIndex());
+          int topIndex = widgetText.getTopIndex();
+
+          widgetLineNumbers.setTopIndex(topIndex);
+          widgetVerticalScrollBar.setSelection(topIndex);
         }
         else
         {
@@ -620,7 +624,7 @@ class CommandView
         int cursorIndex = widgetText.getCaretOffset();
 
         // search
-        int offset = (cursorIndex > 0) ? widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+        int offset = (cursorIndex >= 0) ? widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
         if (offset >= 0)
         {
           int index = cursorIndex+1+offset;
@@ -629,7 +633,10 @@ class CommandView
           widgetText.setSelection(index);
           widgetText.redraw();
 
-          widgetLineNumbers.setTopIndex(widgetText.getTopIndex());
+          int topIndex = widgetText.getTopIndex();
+
+          widgetLineNumbers.setTopIndex(topIndex);
+          widgetVerticalScrollBar.setSelection(topIndex);
         }
         else
         {
