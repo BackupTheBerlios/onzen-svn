@@ -133,7 +133,7 @@ class CommandAnnotations
    * @param fileData file to view annotions
    * @param revision to view annotions
    */
-  CommandAnnotations(Shell shell, final RepositoryTab repositoryTab, FileData fileData, String revision)
+  CommandAnnotations(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData, String revision)
   {
     Composite composite,subComposite;
     Label     label;
@@ -366,8 +366,8 @@ class CommandAnnotations
               show(prevRevision);
               break;
             case 2:
-Dprintf.dprintf("");
-//              show(revision);
+              CommandRevisions commandRevisions = new CommandRevisions(shell,repositoryTab,fileData,selectedRevision);
+              commandRevisions.run();
               break;
             default:
               break;
