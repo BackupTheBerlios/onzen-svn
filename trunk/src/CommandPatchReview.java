@@ -277,7 +277,7 @@ class CommandPatchReview
       Widgets.layout(tabFolder,1,0,TableLayoutData.NSWE);
       {
         subComposite = Widgets.addTab(tabFolder,"Message");
-        subComposite.setLayout(new TableLayout(1.0,new double[]{1.0,0.0},2));
+        subComposite.setLayout(new TableLayout(1.0,new double[]{0.75,0.25},2));
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           subSubComposite = Widgets.newComposite(subComposite);
@@ -306,7 +306,7 @@ class CommandPatchReview
             label = Widgets.newLabel(subSubComposite,"Tests done:");
             Widgets.layout(label,0,0,TableLayoutData.W);
 
-            widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK);
+            widgetTests = Widgets.newTable(subSubComposite,SWT.CHECK|SWT.H_SCROLL|SWT.V_SCROLL);
             widgetTests.setHeaderVisible(false);
             Widgets.layout(widgetTests,1,0,TableLayoutData.NSWE);
             {
