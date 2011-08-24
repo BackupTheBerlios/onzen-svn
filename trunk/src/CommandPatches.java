@@ -1007,15 +1007,43 @@ Dprintf.dprintf("");
           {
             try
             {
-              // apply patch
-Dprintf.dprintf("");
+              StoredFiles storedFiles = null;
+              try
+              {
+                // create files backup of all local changes (in case there occur some error)
+                storedFiles = new StoredFiles(repositoryTab.repository.rootPath,repositoryTab.repository.getChangedFiles());
 
-              // save new state
-              data.patch.state = Patch.States.APPLIED;
-              data.patch.save();
+                // apply patch
+                if (!data.patch.apply())
+                {
+                  Dialogs.error(dialog,"Cannot apply patch!");
+                  storedFiles.restore(); storedFiles = null;
+                  return;
+                }
 
-              // notify change of data
-              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+                // discard files backup
+                storedFiles.discard(); storedFiles = null;
+
+                // update file states
+                HashSet<FileData> fileDataSet = FileData.toSet(data.patch.getFileNames());
+                repositoryTab.asyncUpdateFileStates(fileDataSet);
+
+                // save new state
+                data.patch.state = Patch.States.APPLIED;
+                data.patch.save();
+
+                // notify change of data
+                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              }
+              finally
+              {
+                if (storedFiles != null) storedFiles.restore();
+              }
+            }
+            catch (RepositoryException exception)
+            {
+              Dialogs.error(dialog,"Cannot apply patch (error: %s)",exception.getMessage());
+              return;
             }
             catch (SQLException exception)
             {
@@ -1048,15 +1076,44 @@ Dprintf.dprintf("");
           {
             try
             {
-              // unapply patch
+              StoredFiles storedFiles = null;
+              try
+              {
+                // create files backup of all local changes (in case there occur some error)
+                storedFiles = new StoredFiles(repositoryTab.repository.rootPath,repositoryTab.repository.getChangedFiles());
+
+                // unapply patch
 Dprintf.dprintf("");
+                if (!data.patch.unapply())
+                {
+                  Dialogs.error(dialog,"Cannot unapply patch!");
+                  storedFiles.restore(); storedFiles = null;
+                  return;
+                }
 
-              // save new state
-              data.patch.state = Patch.States.NONE;
-              data.patch.save();
+                // discard files backup
+                storedFiles.discard(); storedFiles = null;
 
-              // notify change of data
-              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+                // update file states
+                HashSet<FileData> fileDataSet = FileData.toSet(data.patch.getFileNames());
+                repositoryTab.asyncUpdateFileStates(fileDataSet);
+
+                // save new state
+                data.patch.state = Patch.States.NONE;
+                data.patch.save();
+
+                // notify change of data
+                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+              }
+              finally
+              {
+                if (storedFiles != null) storedFiles.restore();
+              }
+            }
+            catch (RepositoryException exception)
+            {
+              Dialogs.error(dialog,"Cannot unapply patch (error: %s)",exception.getMessage());
+              return;
             }
             catch (SQLException exception)
             {
@@ -1106,7 +1163,7 @@ Dprintf.dprintf("");
       });
       button.setToolTipText("Discard patch.");
 
-      button = Widgets.newButton(composite,"Delete");
+      button = Widgets.newButton(composite,"Delete...");
       button.setEnabled(false);
       Widgets.layout(button,0,6,TableLayoutData.W);
       Widgets.addModifyListener(new WidgetListener(button,data)
@@ -1237,7 +1294,7 @@ Dprintf.dprintf("");
     {
       public void handleEvent(Event event)
       {
-        int id = getSelectedPatchId();
+        int patchNumber = getSelectedPatchNumber();
 
         widgetPatches.removeAll();
         Patch[] patches = Patch.getPatches(repositoryTab.repository.rootPath,data.showAllRepositories,data.showStates,50);
@@ -1253,7 +1310,7 @@ Dprintf.dprintf("");
                                  );
           }
 
-          setSelectedPatch(id);
+          setSelectedPatch(patchNumber);
         }
       }
     });
@@ -1370,10 +1427,10 @@ Dprintf.dprintf("");
     return ((tableItems != null) && (tableItems.length > 0)) ? (Patch)tableItems[0].getData() : null;
   }
 
-  /** get selected patch
-   * @return selected patch id or -1
+  /** get selected patch number
+   * @return selected patch number or -1
    */
-  private int getSelectedPatchId()
+  private int getSelectedPatchNumber()
   {
     TableItem[] tableItems = widgetPatches.getSelection();
     return ((tableItems != null) && (tableItems.length > 0)) ? ((Patch)tableItems[0].getData()).getNumber() : -1;
@@ -1390,6 +1447,9 @@ Dprintf.dprintf("");
 
     if (data.patch != null)
     {
+      // select table item
+      widgetPatches.setSelection(tableItem);
+
       // set changes text
       setChangesText(data.patch.getLines());
 
@@ -1436,10 +1496,11 @@ Dprintf.dprintf("");
     // search patch
     for (TableItem tableItem : widgetPatches.getItems())
     {
-      if (((Patch)tableItem.getData()).getNumber() == patchNumber)
+      Patch patch = (Patch)tableItem.getData();
+      if (patch.getNumber() == patchNumber)
       {
         // select patch
-        setSelectedPatch(tableItem,(Patch)tableItem.getData());
+        setSelectedPatch(tableItem,patch);
         break;
       }
     }
