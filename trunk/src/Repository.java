@@ -1404,7 +1404,7 @@ abstract class Repository implements Serializable
     public boolean restore()
       throws RepositoryException
     {
-      // create patch from file
+      // create patch from patch file
       Patch patch = new Patch(rootPath,patchFile);
 
       // apply patch to restore changes
@@ -1845,6 +1845,20 @@ abstract class Repository implements Serializable
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     fileDataSet.add(fileData);
+
+    updateStates(fileDataSet);
+  }
+
+  /** update file state
+   * @param fileNames files to update
+   */
+  public void updateStates(String[] fileNames)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (String fileName : fileNames)
+    {
+      fileDataSet.add(new FileData(fileName));
+    }
 
     updateStates(fileDataSet);
   }
