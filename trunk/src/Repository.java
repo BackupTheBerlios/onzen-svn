@@ -1475,7 +1475,7 @@ abstract class Repository implements Serializable
   public String patchMailCC = "";
   @XmlElement(name = "patchMailSubject", defaultValue = "Patch #${n %04d}: ${summary}")
   public String patchMailSubject = "Patch #${n %04d}: ${summary}";
-  @XmlElement(name = "patchMailText", defaultValue = "${message}\n\n${tests - %s}")
+  @XmlElement(name = "patchMailText", defaultValue = "${message}\n\n${tests - %s}\n\nComment: ${comment}")
   public String patchMailText = "${message}\n\n${tests - %s}";
 
   @XmlElement(name = "reviewServer")
@@ -1492,7 +1492,7 @@ abstract class Repository implements Serializable
   public String  reviewServerGroups;
   @XmlElement(name = "reviewServerPersons")
   public String  reviewServerPersons;
-  @XmlElement(name = "reviewServerDescription", defaultValue = "${message}\n\n${tests - %s}")
+  @XmlElement(name = "reviewServerDescription", defaultValue = "${message}\n\n${tests - %s}\n\nComment: ${comment}")
   public String reviewServerDescription = "${message}\n\n${tests - %s}";
 
   // ------------------------ native functions ----------------------------

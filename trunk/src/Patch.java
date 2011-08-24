@@ -99,6 +99,7 @@ class Patch
   public  States                state;                  // patch state; see States
   public  String                summary;                // summary comment
   public  String[]              message;                // commit message
+  public  String[]              comment;                // comment
   public  String                revision1,revision2;    // revision
   public  boolean               ignoreWhitespaces;      // true when whitespaces are ignored
   public  LinkedHashSet<String> testSet;                // tests done
@@ -146,6 +147,7 @@ class Patch
                                             "  patches.state, "+
                                             "  patches.summary, "+
                                             "  patches.message, "+
+                                            "  patches.comment, "+
                                             "  patches.revision1, "+
                                             "  patches.revision2, "+
                                             "  patches.ignoreWhitespaces, "+
@@ -185,6 +187,7 @@ class Patch
           States   state             = States.toEnum(resultSet1.getInt("state"));
           String   summary           = resultSet1.getString("summary"); if (summary == null) summary = "";
           String[] message           = Database.dataToLines(resultSet1.getString("message"));
+          String[] comment           = Database.dataToLines(resultSet1.getString("comment"));
           String   revision1         = resultSet1.getString("revision1");
           String   revision2         = resultSet1.getString("revision2");
           boolean  ignoreWhitespaces = resultSet1.getInt("ignoreWhitespaces") == 1;
@@ -237,6 +240,7 @@ class Patch
                                   state,
                                   summary,
                                   message,
+                                  comment,
                                   revision1,
                                   revision2,
                                   ignoreWhitespaces,
@@ -278,6 +282,7 @@ class Patch
    * @param state state
    * @param summary summary text
    * @param message message text lines
+   * @param comment comment lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
    * @param fileNameSet file names
@@ -289,7 +294,8 @@ class Patch
                 int                   number,
                 States                state,
                 String                summary,
-                String                message[],
+                String[]              message,
+                String[]              comment,
                 String                revision1,
                 String                revision2,
                 boolean               ignoreWhitespaces,
@@ -303,6 +309,7 @@ class Patch
     this.state             = state;
     this.summary           = summary;
     this.message           = message;
+    this.comment           = comment;
     this.revision1         = revision1;
     this.revision2         = revision2;
     this.ignoreWhitespaces = ignoreWhitespaces;
@@ -322,6 +329,7 @@ class Patch
    * @param state state
    * @param summary summary text
    * @param message message text lines
+   * @param comment coment lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
    * @param fileNameSet file names
@@ -333,6 +341,7 @@ class Patch
                States                state,
                String                summary,
                String[]              message,
+               String[]              comment,
                String                revision1,
                String                revision2,
                boolean               ignoreWhitespaces,
@@ -347,6 +356,7 @@ class Patch
          state,
          summary,
          message,
+         comment,
          revision1,
          revision2,
          ignoreWhitespaces,
@@ -376,6 +386,7 @@ class Patch
          Database.ID_NONE,
          States.NONE,
          "",
+         new String[]{},
          new String[]{},
          revision1,
          revision2,
@@ -425,6 +436,7 @@ class Patch
    * @param state state
    * @param summary summary text
    * @param message message text lines
+   * @param comment comment lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
    * @param fileNameSet file names
@@ -436,6 +448,7 @@ class Patch
                States                state,
                String                summary,
                String[]              message,
+               String[]              comment,
                String                revision1,
                String                revision2,
                boolean               ignoreWhitespaces,
@@ -450,6 +463,7 @@ class Patch
          state,
          summary,
          message,
+         comment,
          revision1,
          revision2,
          ignoreWhitespaces,
@@ -481,6 +495,7 @@ class Patch
          Database.ID_NONE,
          States.NONE,
          "",
+         new String[]{},
          new String[]{},
          revision1,
          revision2,
@@ -542,6 +557,7 @@ class Patch
          databaseId,
          States.NONE,
          "",
+         new String[]{},
          new String[]{},
          null,
          null,
@@ -781,24 +797,26 @@ Dprintf.dprintf("");
       if (databaseId >= 0)
       {
         // update
-        preparedStatement = database.connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,data=? WHERE id=?;");
+        preparedStatement = database.connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,comment=?,data=? WHERE id=?;");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,Database.linesToData(message));
-        preparedStatement.setString(5,Database.linesToData(getLines()));
-        preparedStatement.setInt(6,databaseId);
+        preparedStatement.setString(5,Database.linesToData(comment));
+        preparedStatement.setString(6,Database.linesToData(getLines()));
+        preparedStatement.setInt(7,databaseId);
         preparedStatement.executeUpdate();
       }
       else
       {
         // insert
-        preparedStatement = database.connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,data) VALUES (?,?,?,?,?);");
+        preparedStatement = database.connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,comment,data) VALUES (?,?,?,?,?);");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,Database.linesToData(message));
-        preparedStatement.setString(5,Database.linesToData(getLines()));
+        preparedStatement.setString(5,Database.linesToData(comment));
+        preparedStatement.setString(6,Database.linesToData(getLines()));
         preparedStatement.executeUpdate();
         databaseId = database.getLastInsertId();
 
@@ -876,6 +894,7 @@ Dprintf.dprintf("");
                                                                  "  state, "+
                                                                  "  summary, "+
                                                                  "  message, "+
+                                                                 "  comment, "+
                                                                  "  data "+
                                                                  "FROM patches "+
                                                                  "WHERE id=? "+
@@ -892,6 +911,7 @@ Dprintf.dprintf("");
             state    = States.toEnum(resultSet.getInt("state"));
             summary  = resultSet.getString("summary"); if (summary == null) summary = "";
             message  = Database.dataToLines(resultSet.getString("message"));
+            comment  = Database.dataToLines(resultSet.getString("comment"));
             lines    = Database.dataToLines(resultSet.getString("data"));
           }
           else
@@ -1898,6 +1918,7 @@ Dprintf.dprintf("exception=%s",exception);
                               "  state             INTEGER, "+
                               "  summary           TEXT, "+
                               "  message           TEXT, "+
+                              "  comment           TEXT, "+
                               "  data              TEXT,"+
                               "  revision1         TEXT, "+
                               "  revision2         TEXT, "+

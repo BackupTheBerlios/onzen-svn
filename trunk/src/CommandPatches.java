@@ -107,6 +107,7 @@ class CommandPatches
     Patch                 patch;
     String                oldSummary;
     String                oldMessage;
+    String                oldComment;
     LinkedHashSet<String> oldTestSet;
 
     Data()
@@ -117,6 +118,7 @@ class CommandPatches
       this.patch               = null;
       this.oldSummary          = null;
       this.oldMessage          = null;
+      this.oldComment          = null;
       this.oldTestSet          = null;
     }
   };
@@ -145,6 +147,7 @@ class CommandPatches
   private final List          widgetFileNames;
   private final Text          widgetSummary;
   private final Text          widgetMessage;
+  private final Text          widgetComment;
   private final Table         widgetTests;
   private final Text          widgetNewTest;
   private final Button        widgetAddNewTest;
@@ -655,7 +658,7 @@ Dprintf.dprintf("");
       Widgets.layout(subComposite,3,0,TableLayoutData.NSWE);
       {
         subSubComposite = Widgets.newComposite(subComposite);
-        subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+        subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.6,0.4},new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subSubComposite,"Summary:");
@@ -663,12 +666,21 @@ Dprintf.dprintf("");
 
           widgetSummary = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER);
           Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
+          widgetSummary.setToolTipText("Short summary line for patch.");
 
           label = Widgets.newLabel(subSubComposite,"Message:");
           Widgets.layout(label,1,0,TableLayoutData.NW);
 
           widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
           Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
+          widgetMessage.setToolTipText("Commit message.");
+
+          label = Widgets.newLabel(subSubComposite,"Comment:");
+          Widgets.layout(label,2,0,TableLayoutData.NW);
+
+          widgetComment = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+          Widgets.layout(widgetComment,2,1,TableLayoutData.NSWE);
+          widgetComment.setToolTipText("Additional comment (will not be part of commit message).");
         }
 
         subSubComposite = Widgets.newComposite(subComposite);
@@ -843,6 +855,7 @@ Dprintf.dprintf("");
         {
           boolean summaryChanged = (data.oldSummary != null) && !data.oldSummary.equals(widgetSummary.getText().trim());
           boolean messageChanged = (data.oldMessage != null) && !data.oldMessage.equals(widgetMessage.getText().trim());
+          boolean commentChanged = (data.oldComment != null) && !data.oldComment.equals(widgetComment.getText().trim());
           boolean testSetChanged = false;
           for (TableItem tableItem : widgetTests.getItems())
           {
@@ -857,7 +870,7 @@ Dprintf.dprintf("");
             if (testSetChanged) break;
           }
 
-          Widgets.setEnabled(control,summaryChanged || messageChanged || testSetChanged);
+          Widgets.setEnabled(control,summaryChanged || messageChanged || commentChanged || testSetChanged);
         }
       });
       widgetMessageSave.addSelectionListener(new SelectionListener()
@@ -874,6 +887,7 @@ Dprintf.dprintf("");
               // get summary, message
               String summary = widgetSummary.getText().trim();
               String message = widgetMessage.getText().trim();
+              String comment = widgetComment.getText().trim();
 
               // get tests
               LinkedHashSet<String> testSet = new LinkedHashSet<String>();
@@ -885,6 +899,7 @@ Dprintf.dprintf("");
               // save patch
               data.patch.summary = summary;
               data.patch.message = StringUtils.split(message,widgetMessage.DELIMITER);
+              data.patch.comment = StringUtils.split(comment,widgetComment.DELIMITER);
               data.patch.testSet = (LinkedHashSet)testSet.clone();
               data.patch.save();
 
@@ -892,6 +907,7 @@ Dprintf.dprintf("");
               data.tableItem.setText(2,summary);
               data.oldSummary = summary;
               data.oldMessage = message;
+              data.oldComment = comment;
               data.oldTestSet = testSet;
               Widgets.modified(data);
             }
@@ -1257,6 +1273,15 @@ Dprintf.dprintf("");
         Widgets.setEnabled(widgetMessageSave,(data.oldMessage != null) && !data.oldMessage.equals(widget.getText().trim()));
       }
     });
+    widgetComment.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        Widgets.setEnabled(widgetMessageSave,(data.oldComment != null) && !data.oldComment.equals(widget.getText().trim()));
+      }
+    });
     widgetTests.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1465,9 +1490,14 @@ Dprintf.dprintf("");
       data.oldSummary = data.patch.summary;
 
       // set message
-      String text = StringUtils.join(data.patch.message,widgetMessage.DELIMITER);
-      widgetMessage.setText(text);
-      data.oldMessage = text;
+      String message = StringUtils.join(data.patch.message,widgetMessage.DELIMITER);
+      widgetMessage.setText(message);
+      data.oldMessage = message;
+
+      // set comment
+      String comment = StringUtils.join(data.patch.comment,widgetComment.DELIMITER);
+      widgetComment.setText(comment);
+      data.oldComment = comment;
 
       // set tests
       widgetTests.removeAll();
@@ -1484,6 +1514,7 @@ Dprintf.dprintf("");
       widgetChanges.setText("");
       widgetFileNames.removeAll();
       widgetMessage.setText("");
+      widgetComment.setText("");
     }
     Widgets.modified(data);
   }
@@ -1513,6 +1544,7 @@ Dprintf.dprintf("");
     widgetChanges.setText("");
     widgetFileNames.removeAll();
     widgetMessage.setText("");
+    widgetComment.setText("");
 
     Widgets.modified(data);
   }
@@ -1578,6 +1610,7 @@ Dprintf.dprintf("");
         patch.state   = Patch.States.REVIEW;
         patch.summary = commandPatchReview.summary;
         patch.message = commandPatchReview.message;
+        patch.comment = commandPatchReview.comment;
         patch.testSet = commandPatchReview.testSet;
         patch.save();
 

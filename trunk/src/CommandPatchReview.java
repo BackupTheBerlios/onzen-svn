@@ -125,6 +125,7 @@ class CommandPatchReview
     String[]              linesNoWhitespaces;   // patch lines (without whitespaces)
     String                summary;              // summary for patch
     String[]              message;              // message for patch (without mail prefix/postfix etc.)
+    String[]              comment;              // comment for patch
     LinkedHashSet<String> testSet;              // tests done
     boolean               patchMailFlag;        // send patch mail
     boolean               reviewServerFlag;     // send patch to review server
@@ -136,6 +137,7 @@ class CommandPatchReview
       this.linesNoWhitespaces = null;
       this.summary            = null;
       this.message            = null;
+      this.comment            = null;
       this.testSet            = new LinkedHashSet<String>();
       this.patchMailFlag      = false;
       this.reviewServerFlag   = false;
@@ -155,6 +157,7 @@ class CommandPatchReview
   // --------------------------- variables --------------------------------
   public String               summary;
   public String[]             message;
+  public String[]             comment;
   LinkedHashSet<String>       testSet;
 
   // global variable references
@@ -175,6 +178,7 @@ class CommandPatchReview
   private final Button        widgetFindNext;
   private final Combo         widgetSummary;
   private final Text          widgetMessage;
+  private final Text          widgetComment;
   private final Table         widgetTests;
   private final Text          widgetNewTest;
   private final Button        widgetAddNewTest;
@@ -209,6 +213,7 @@ class CommandPatchReview
     // initialize variables
     this.summary       = patch.summary;
     this.message       = patch.message;
+    this.comment       = patch.comment;
     this.testSet       = (LinkedHashSet<String>)patch.testSet.clone();
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
@@ -281,7 +286,7 @@ class CommandPatchReview
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           subSubComposite = Widgets.newComposite(subComposite);
-          subSubComposite.setLayout(new TableLayout(new double[]{0.0,1.0},new double[]{0.0,1.0}));
+          subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.6,0.4},new double[]{0.0,1.0}));
           Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
           {
             label = Widgets.newLabel(subSubComposite,"Summary:");
@@ -290,6 +295,7 @@ class CommandPatchReview
             widgetSummary = Widgets.newCombo(subSubComposite);
             widgetSummary.setText(summary);
             Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
+            widgetSummary.setToolTipText("Short summary line for patch.");
 
             label = Widgets.newLabel(subSubComposite,"Message:");
             Widgets.layout(label,1,0,TableLayoutData.NW);
@@ -297,6 +303,15 @@ class CommandPatchReview
             widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
             widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
             Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
+            widgetMessage.setToolTipText("Commit message.");
+
+            label = Widgets.newLabel(subSubComposite,"Comment:");
+            Widgets.layout(label,2,0,TableLayoutData.NW);
+
+            widgetComment = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+            widgetComment.setText(StringUtils.join(comment,widgetComment.DELIMITER));
+            Widgets.layout(widgetComment,2,1,TableLayoutData.NSWE);
+            widgetComment.setToolTipText("Additional comment (will not be part of commit message).");
           }
 
           subSubComposite = Widgets.newComposite(subComposite);
@@ -640,6 +655,7 @@ class CommandPatchReview
         {
           data.summary = widgetSummary.getText();
           data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.comment = StringUtils.split(widgetComment.getText(),widgetComment.DELIMITER);
 
           // get patch review methods if not already set
           if (!data.patchMailFlag && !data.reviewServerFlag)
@@ -1004,6 +1020,13 @@ class CommandPatchReview
         updateText();
       }
     });
+    widgetComment.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        updateText();
+      }
+    });
     widgetTests.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1100,6 +1123,7 @@ class CommandPatchReview
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
         summary                                   = data.summary;
         message                                   = data.message;
+        comment                                   = data.comment;
         testSet                                   = data.testSet;
       }
     }
@@ -1118,6 +1142,7 @@ class CommandPatchReview
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
         summary                                   = data.summary;
         message                                   = data.message;
+        comment                                   = data.comment;
         testSet                                   = data.testSet;
 
         return true;
@@ -1271,6 +1296,7 @@ class CommandPatchReview
     macro.expand("time",    Onzen.TIME_FORMAT.format(date)    );
     macro.expand("datetime",Onzen.DATETIME_FORMAT.format(date));
     macro.expand("message", widgetMessage.getText().trim()    );
+    macro.expand("comment", widgetComment.getText().trim()    );
     macro.expand("tests",   tests,"\n"                        );
     widgetPatchMailText.setText(macro.getValue());
 
@@ -1282,6 +1308,7 @@ class CommandPatchReview
     macro.expand("time",    Onzen.TIME_FORMAT.format(date)    );
     macro.expand("datetime",Onzen.DATETIME_FORMAT.format(date));
     macro.expand("message", widgetMessage.getText().trim()    );
+    macro.expand("comment", widgetComment.getText().trim()    );
     macro.expand("tests",   tests,"\n"                        );
     widgetReviewServerDescription.setText(macro.getValue());
   }
@@ -1351,10 +1378,10 @@ class CommandPatchReview
         exec.done(); exec = null;
 */
         
-      // get commit message
-      commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
-                                        StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
-                                       );
+        // get commit message
+        commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
+                                          StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
+                                         );
 
         repositoryTab.repository.postReview(password,
                                             FileData.toSet(patch.getFileNames()),
