@@ -1092,15 +1092,17 @@ Dprintf.dprintf("===============");
       {
 //Dprintf.dprintf("patchChunk=%s",patchChunk);
         // get old, new file
-        File oldFile = new File(rootPath,patchChunk.oldFileName);
-        File newFile = new File(rootPath,patchChunk.newFileName);
+        File oldFile      = new File(rootPath,patchChunk.oldFileName);
+        File newFile      = new File(rootPath,patchChunk.newFileName);
+        File rejectedFile = new File(rootPath,patchChunk.newFileName+".rej");
+        File originalFile = new File(rootPath,patchChunk.newFileName+".orig");
         if (!oldFile.exists() && patchChunk.oldFileName.startsWith("a/") && patchChunk.newFileName.startsWith("b/"))
         {
           oldFile = new File(rootPath,patchChunk.oldFileName.substring(2));
           newFile = new File(rootPath,patchChunk.newFileName.substring(2));
         }
 
-        // load old file lines (if not /dev/null == file is new)
+        // load old file lines (if not /dev/null => file is new)
         oldLineList.clear();
         if (!patchChunk.oldFileName.equals("/dev/null"))
         {
@@ -1127,7 +1129,8 @@ Dprintf.dprintf("exception=%s",exception);
         }
 
         // apply patch lines and create new file
-        int lineNb = 1;
+        int rejectedCount = 0;
+        int oldLineNb     = 1;
         newLineList.clear();
         while (patchChunk.nextChunk())
         {
@@ -1135,21 +1138,21 @@ Dprintf.dprintf("exception=%s",exception);
 //for (PatchLines patchLines : patchChunk.patchLineList) Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
 
           // add not changed lines
-          while (lineNb < patchChunk.lineNb)
+          while (oldLineNb < patchChunk.lineNb)
           {
-            newLineList.add(oldLineList.get(lineNb-1));
-            lineNb++;
+            newLineList.add(oldLineList.get(oldLineNb-1));
+            oldLineNb++;
           }
 
           // process diff chunk
-          int lineNbOffset;
           for (PatchLines patchLines : patchChunk.patchLineList)
           {
-//Dprintf.dprintf("#%d:  %s: %d",lineNb,patchLines.type,patchLines.lines.length);
+//Dprintf.dprintf("at #%d:  type=%s: lines=%d",oldLineNb,patchLines.type,patchLines.lines.length);
             switch (patchLines.type)
             {
               case CONTEXT:
                // find context
+               int     lineNb        = oldLineNb;
                int     contextOffset = 0;
                boolean contextFound  = false;
                do
@@ -1176,24 +1179,31 @@ Dprintf.dprintf("exception=%s",exception);
                // add context line or unsolved chunk
                if (contextFound)
                {
+                 // add not changed lines
+                 while (oldLineNb < lineNb)
+                 {
+                   newLineList.add(oldLineList.get(oldLineNb-1));
+                   oldLineNb++;
+                 }
+
                  // context found -> add context lines
                  for (String line : patchLines.lines)
                  {
                    newLineList.add(line);
-//Dprintf.dprintf("cont %d %d %s",lineNb,patchLines.lines.length,line);
                  }
-                 lineNb += patchLines.lines.length;
+//Dprintf.dprintf("Diff: applied CONTEXT chunk at #%d: %d lines",oldLineNb,patchLines.lines.length);
+
+                 oldLineNb += patchLines.lines.length;
                }
                else
                {
-                 // context not found -> unsolved merge
-newLineList.add("<<<< unsolved begin >>>>");
-                 for (String line : patchLines.lines)
-                 {
-                   newLineList.add(line);
-Dprintf.dprintf("unsolved %s",line);
-                 }
-newLineList.add("<<<< unsolved end >>>>");
+                 // context not found -> add to rejected file
+                 patchChunk.appendToFile(rejectedFile);
+//newLineList.add("<<<< unsolved begin >>>>");
+//for (String line : patchLines.lines) { Dprintf.dprintf("unsolved %s",line); }
+//newLineList.add("<<<< unsolved end >>>>");
+                 rejectedCount++;
+                 System.err.println(String.format("Patch: rejected diff chunk at %d: %d lines",patchChunk.lineNb,patchLines.lines.length));
                }
                break;
               case ADD:
@@ -1201,23 +1211,220 @@ newLineList.add("<<<< unsolved end >>>>");
                for (String line : patchLines.lines)
                {
                  newLineList.add(line);
-//Dprintf.dprintf("add %s",line);
                }
+//Dprintf.dprintf("Diff: applied ADD chunk at #%d: %d lines",oldLineNb,patchLines.lines.length);
                break;
               case REMOVE:
                // remove old lines
-               lineNb += patchLines.lines.length;
+//Dprintf.dprintf("Diff: applied REMOVE chunk at #%d: %d lines",oldLineNb,patchLines.lines.length);
+
+               oldLineNb += patchLines.lines.length;
                break;
             }
           }
         }
 
         // add rest of not changed lines
-        while (lineNb <= oldLineList.size())
+        while (oldLineNb <= oldLineList.size())
         {
-          newLineList.add(oldLineList.get(lineNb-1));
-//Dprintf.dprintf("rest %s",oldLineList.get(lineNb-1));
-          lineNb++;
+          newLineList.add(oldLineList.get(oldLineNb-1));
+          oldLineNb++;
+        }
+
+        // write new file
+        output = new PrintWriter(new FileWriter(newFile));
+        for (String line : newLineList)
+        {
+          output.println(line);
+        }
+        output.close(); output = null;
+
+        // write original file if some patch chunk was rejected
+        if (rejectedCount > 0)
+        {
+          output = new PrintWriter(new FileWriter(originalFile));
+          for (String line : oldLineList)
+          {
+            output.println(line);
+          }
+          output.close(); output = null;
+        }
+      }
+
+      patchChunk.close(); patchChunk = null;
+    }
+    catch (IOException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+      return false;
+    }
+    finally
+    {
+      if (output != null) output.close();
+      if (patchChunk != null) patchChunk.close();
+    }
+
+    return true;
+  }
+
+  /** apply patch
+   * @return true iff patch applied without errors
+   */
+  public boolean apply()
+  {
+    return apply(1000);
+  }
+
+  /** unapply patch
+   * @param maxContextOffset max. offset context can be shifted backward/forward
+   * @return true iff patch unapplied without errors
+   */
+  public boolean unapply(int maxContextOffset)
+  {
+  String[] l = getLines();
+/*
+Dprintf.dprintf("#%d",l.length);
+for (String ll : l) Dprintf.dprintf("ll=%s",ll);
+Dprintf.dprintf("===============");
+/**/
+
+    PatchChunk  patchChunk = null;
+    PrintWriter output     = null;
+    try
+    {
+      patchChunk = new PatchChunk();
+
+      ArrayList<String> oldLineList = new ArrayList<String>();
+      ArrayList<String> newLineList = new ArrayList<String>();
+      while (patchChunk.nextFile())
+      {
+//Dprintf.dprintf("patchChunk=%s",patchChunk);
+        // get old, new file
+        File oldFile = new File(rootPath,patchChunk.oldFileName);
+        File newFile = new File(rootPath,patchChunk.newFileName);
+        if (!oldFile.exists() && patchChunk.oldFileName.startsWith("a/") && patchChunk.newFileName.startsWith("b/"))
+        {
+          oldFile = new File(rootPath,patchChunk.oldFileName.substring(2));
+          newFile = new File(rootPath,patchChunk.newFileName.substring(2));
+        }
+
+        // load old file lines (if not /dev/null => file is new)
+        oldLineList.clear();
+        if (!patchChunk.oldFileName.equals("/dev/null"))
+        {
+          BufferedReader input = null;
+          try
+          {
+            input = new BufferedReader(new FileReader(oldFile));
+            String line;
+            while ((line = input.readLine()) != null)
+            {
+              oldLineList.add(line);
+            }
+            input.close(); input = null;
+          }
+          catch (IOException exception)
+          {
+Dprintf.dprintf("exception=%s",exception);
+            return false;
+          }
+          finally
+          {
+            try { if (input != null) input.close(); } catch (IOException exception) { /* ignored */ }
+          }
+        }
+
+        // apply patch lines and create new file
+        int rejectedCount = 0;
+        int oldLineNb     = 1;
+        newLineList.clear();
+        while (patchChunk.nextChunk())
+        {
+//Dprintf.dprintf("file '%s' -> '%s', line #%d",patchChunk.oldFileName,patchChunk.newFileName,patchChunk.lineNb);
+//for (PatchLines patchLines : patchChunk.patchLineList) Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
+
+          // add not changed lines
+          while (oldLineNb < patchChunk.lineNb)
+          {
+            newLineList.add(oldLineList.get(oldLineNb-1));
+            oldLineNb++;
+          }
+
+          // process diff chunk
+          for (PatchLines patchLines : patchChunk.patchLineList)
+          {
+//Dprintf.dprintf("at #%d:  type=%s: lines=%d",oldLineNb,patchLines.type,patchLines.lines.length);
+            switch (patchLines.type)
+            {
+              case CONTEXT:
+               // find context
+               int     lineNb        = oldLineNb;
+               int     contextOffset = 0;
+               boolean contextFound  = false;
+               do
+               {
+                 if      (patchLines.match(oldLineList,lineNb+contextOffset))
+                 {
+                   lineNb += contextOffset;
+                   contextFound = true;
+                 }
+                 else if (patchLines.match(oldLineList,lineNb-contextOffset))
+                 {
+                   lineNb -= contextOffset;
+                   contextFound = true;
+                 }
+                 else
+                 {
+                   contextOffset++;
+                 }
+               }
+               while (   !contextFound
+                      && (contextOffset < maxContextOffset)
+                     );
+
+               // add context line or unsolved chunk
+               if (contextFound)
+               {
+                 // add not changed lines
+                 while (oldLineNb < lineNb)
+                 {
+                   newLineList.add(oldLineList.get(oldLineNb-1));
+                   oldLineNb++;
+                 }
+
+                 // context found -> add context lines
+                 for (String line : patchLines.lines)
+                 {
+                   newLineList.add(line);
+                 }
+//Dprintf.dprintf("Diff: applied CONTEXT chunk at #%d: %d lines",oldLineNb,patchLines.lines.length);
+
+                 oldLineNb += patchLines.lines.length;
+               }
+               break;
+              case ADD:
+               // remove added new lines
+               oldLineNb += patchLines.lines.length;
+//Dprintf.dprintf("Diff: applied ADD chunk at #%d: %d lines",oldLineNb,patchLines.lines.length);
+               break;
+              case REMOVE:
+               // add removed old lines
+//Dprintf.dprintf("Diff: applied REMOVE chunk at #%d: %d lines",oldLineNb,patchLines.lines.length);
+               for (String line : patchLines.lines)
+               {
+                 newLineList.add(line);
+               }
+
+               break;
+            }
+          }
+        }
+
+        // add rest of not changed lines
+        while (oldLineNb <= oldLineList.size())
+        {
+          newLineList.add(oldLineList.get(oldLineNb-1));
+          oldLineNb++;
         }
 
         // write new file
@@ -1245,12 +1452,12 @@ Dprintf.dprintf("exception=%s",exception);
     return true;
   }
 
-  /** apply patch
-   * @return true iff patch applied without errors
+  /** unapply patch
+   * @return true iff patch unapplied without errors
    */
-  public boolean apply()
+  public boolean unapply()
   {
-    return apply(10);
+    return unapply(1000);
   }
 
   /** convert data to string
@@ -1265,22 +1472,25 @@ Dprintf.dprintf("exception=%s",exception);
 
   /** parse unified diff index
    * @param string diff index string
-   * @return index array [lineNb,length] or null
+   * @param index index array [line nb,length] or null
    */
-  private int[] parseDiffIndex(String string)
+  private void parseDiffIndex(int[] index, String string)
   {
     Object[] data = new Object[2];
     if      (StringParser.parse(string,"%d,%d",data))
     {
-      return new int[]{(Integer)data[0],(Integer)data[1]};
+      index[0] = (Integer)data[0];
+      index[1] = (Integer)data[1];
     }
     else if (StringParser.parse(string,"%d",data))
     {
-      return new int[]{(Integer)data[0],1};
+      index[0] = (Integer)data[0];
+      index[1] = 1;
     }
     else
     {
-      return null;
+      index[0] = 0;
+      index[1] = 0;
     }
   }
 
@@ -1341,11 +1551,14 @@ Dprintf.dprintf("exception=%s",exception);
     // --------------------------- variables --------------------------------
     String                 oldFileName;
     String                 newFileName;
+//??? required
     int                    lineNb;
-    ArrayList<PatchLines>  patchLineList;
+    int[]                  oldIndex;       // chunk index old file (line nb, length)
+    int[]                  newIndex;       // chunk index new file (line nb, length)
+    ArrayList<PatchLines>  patchLineList;  // list of context/add/remove lines
 
-    private int            index;         // line index if lines array given
-    private BufferedReader input;         // file input if file given
+    private int            index;          // line index if lines array given
+    private BufferedReader input;          // file input if file given
     private String         line;
 
     // ------------------------ native functions ----------------------------
@@ -1359,6 +1572,8 @@ Dprintf.dprintf("exception=%s",exception);
     {
       this.oldFileName   = null;
       this.newFileName   = null;
+      this.oldIndex      = new int[2];
+      this.newIndex      = new int[2];
       this.lineNb        = 0;
       this.patchLineList = new ArrayList<PatchLines>();
 
@@ -1410,7 +1625,7 @@ Dprintf.dprintf("exception=%s",exception);
              && !(matcher = PATTERN_OLD_FILENAME2.matcher(line)).matches()
             )
       {
-        Onzen.printWarning("unknown diff line '%s'",line);
+        Onzen.printWarning("unknown diff line1 '%s'",line);
       }
       if ((matcher != null) && matcher.matches())
       {
@@ -1423,7 +1638,7 @@ Dprintf.dprintf("exception=%s",exception);
              && !(matcher = PATTERN_NEW_FILENAME2.matcher(line)).matches()
             )
       {
-        Onzen.printWarning("unknown diff line '%s'",line);
+        Onzen.printWarning("unknown diff line2 '%s'",line);
       }
       if ((matcher != null) && matcher.matches())
       {
@@ -1454,10 +1669,10 @@ Dprintf.dprintf("exception=%s",exception);
           && (matcher = PATTERN_INDEX.matcher(line)).matches()
          )
       {
-        int[] indexOld = parseDiffIndex(matcher.group(1));
-        int[] indexNew = parseDiffIndex(matcher.group(2));
-  //Dprintf.dprintf("%s -- index=%d,%d",matcher.group(1),indexOld[0],indexOld[1]);
-        lineNb = indexOld[0];
+        parseDiffIndex(oldIndex,matcher.group(1));
+        parseDiffIndex(newIndex,matcher.group(2));
+//Dprintf.dprintf("%s -- index=%d,%d",matcher.group(1),indexOld[0],indexOld[1]);
+        lineNb = oldIndex[0];
 
         ArrayList<String> lineList = new ArrayList<String>();
         int               oldLines = 0;
@@ -1528,6 +1743,41 @@ Dprintf.dprintf("exception=%s",exception);
         ungetLine(line);
 
         return false;
+      }
+    }
+
+    /** append chunk to file
+     */
+    public void appendToFile(File file)
+      throws IOException
+    {
+      PrintWriter output = null;
+      try
+      {
+        output = new PrintWriter(new FileWriter(file,true));
+        output.println(String.format("--- %s",oldFileName));
+        output.println(String.format("+++ %s",newFileName));
+        output.println(String.format("@@ -%d,%d +%d,%d @@",oldIndex[0],oldIndex[1],newIndex[0],newIndex[1]));
+        for (PatchLines patchLines : patchLineList)
+        {
+          char prefix = ' ';
+          switch (patchLines.type)
+          {
+            case CONTEXT: prefix = ' '; break;
+            case ADD:     prefix = '+'; break;
+            case REMOVE:  prefix = '-'; break;
+          }
+
+          for (String line : patchLines.lines)
+          {
+            output.println(prefix+line);
+          }
+        }
+        output.close(); output = null;
+      }
+      finally
+      {
+        if (output != null) output.close();
       }
     }
 
