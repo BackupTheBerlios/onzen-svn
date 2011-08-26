@@ -817,6 +817,22 @@ Dprintf.dprintf("");
     }
   }
 
+  /** show incoming changes
+   */
+  public void incomingChanges()
+  {
+    CommandChanges commandChanges = new CommandChanges(shell,this,CommandChanges.ChangesTypes.INCOMING);
+    commandChanges.run();
+  }
+
+  /** show outgoing changes
+   */
+  public void outgoingChanges()
+  {
+    CommandChanges commandChanges = new CommandChanges(shell,this,CommandChanges.ChangesTypes.OUTGOING);
+    commandChanges.run();
+  }
+
   /** pull changes
    */
   public void pullChanges()

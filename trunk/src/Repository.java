@@ -1071,7 +1071,7 @@ class LogData
 
   // --------------------------- variables --------------------------------
   public final String   revision;
-  public final Date     date;
+  public final Date     datetime;
   public final String   author;
   public final String[] commitMessage;
 
@@ -1082,14 +1082,14 @@ class LogData
   /** create log data
    * @param revision revision
    * @param author author name
-   * @param date date
+   * @param datetime date/time
    * @param commitMessage commit message
    */
-  public LogData(String revision, Date date, String author, String[] commitMessage)
+  public LogData(String revision, Date datetime, String author, String[] commitMessage)
   {
     this.revision      = revision;
     this.author        = author;
-    this.date          = date;
+    this.datetime      = datetime;
     this.commitMessage = commitMessage;
   }
 
@@ -1098,7 +1098,99 @@ class LogData
    */
   public String toString()
   {
-    return "LogData {"+revision+", author: "+author+", date: "+date+", commit message: "+commitMessage+"}";
+    return "LogData {"+revision+", author: "+author+", date/time: "+datetime+", commit message: "+commitMessage+"}";
+  }
+}
+
+/** log data comparator
+ */
+class LogDataComparator implements Comparator<LogData>
+{
+  // --------------------------- constants --------------------------------
+  enum SortModes
+  {
+    REVISION,
+    DATETIME,
+    AUTHOR,
+    COMMIT_MESSAGE
+  };
+
+  // --------------------------- variables --------------------------------
+  private SortModes sortMode;
+
+  // ------------------------ native functions ----------------------------
+
+  // ---------------------------- methods ---------------------------------
+
+  /** create log data comparator
+   * @param sortMode sort mode
+   */
+  LogDataComparator(SortModes sortMode)
+  {
+    this.sortMode = sortMode;
+  }
+
+  /** create log data comparator
+   */
+  LogDataComparator()
+  {
+    this(SortModes.REVISION);
+  }
+
+  /** get sort mode
+   * @return sort mode
+   */
+  public SortModes getSortMode()
+  {
+    return sortMode;
+  }
+
+  /** set sort mode
+   * @param sortMode sort mode
+   */
+  public void setSortMode(SortModes sortMode)
+  {
+    this.sortMode = sortMode;
+  }
+
+  /** compare log data
+   * @param logData0, logData1 log data to compare
+   * @return -1 iff logData0 < logData1,
+              0 iff logData0 = logData1,
+              1 iff logData0 > logData1
+   */
+  public int compare(LogData logData0, LogData logData1)
+  {
+    switch (sortMode)
+    {
+      case REVISION:
+        return logData0.revision.compareTo(logData1.revision);
+      case DATETIME:
+        if      (logData0.datetime.before(logData1.datetime)) return -1;
+        else if (logData0.datetime.after(logData1.datetime))  return  1;
+        else                                                  return  0;
+      case AUTHOR:
+        return logData0.author.compareTo(logData1.author);
+      case COMMIT_MESSAGE:
+        if ((logData0.commitMessage != null) && (logData1.commitMessage != null))
+        {
+          return logData0.commitMessage[0].compareTo(logData1.commitMessage[0]);
+        }
+        else if (logData0.commitMessage != null)
+        {
+          return -1;
+        }
+        else if (logData0.commitMessage != null)
+        {
+          return 1;
+        }
+        else
+        {
+          return 0;
+        }
+      default:
+        return 0;
+    }
   }
 }
 
@@ -1585,6 +1677,14 @@ abstract class Repository implements Serializable
    * @return true iff file modes are supported
    */
   public boolean supportSetFileMode()
+  {
+    return false;
+  }
+
+  /** check if repository support incoming/outgoing commands
+   * @return true iff incoming/outgoing commands are supported
+   */
+  public boolean supportIncomingOutgoing()
   {
     return false;
   }
@@ -2416,6 +2516,16 @@ Dprintf.dprintf("fileName=%s",fileName);
    * @param commitMessage commit message
    */
   abstract public void rename(FileData fileData, String newName, CommitMessage commitMessage)
+    throws RepositoryException;
+
+  /** get incoming changes list
+   */
+  abstract public LogData[] getIncomingChanges()
+    throws RepositoryException;
+
+  /** get outgoing changes list
+   */
+  abstract public LogData[] getOutgoingChanges()
     throws RepositoryException;
 
   /** pull changes

@@ -182,6 +182,14 @@ class RepositoryHG extends Repository
     return Types.HG;
   }
 
+  /** check if repository support incoming/outgoing commands
+   * @return true iff incoming/outgoing commands are supported
+   */
+  public boolean supportIncomingOutgoing()
+  {
+    return true;
+  }
+
   /** check if repository support pull/push commands
    * @return true iff pull/push commands are supported
    */
@@ -1693,6 +1701,184 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       throw new RepositoryException(exception);
     }
+  }
+
+  /** get incoming changes list
+   */
+  public LogData[] getIncomingChanges()
+    throws RepositoryException
+  {
+    final Pattern PATTERN_CHANGE = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+
+    ArrayList<LogData> logDataList = new ArrayList<LogData>();
+
+    Command            command           = new Command();
+    Exec               exec;
+    String             line;
+    Matcher            matcher;
+    String             revision          = null;
+    String             changeSet         = null;
+    Date               date              = null;
+    String             author            = null;
+    ArrayList<String>  fileList          = new ArrayList<String>();
+    LinkedList<String> commitMessageList = new LinkedList<String>();
+    try
+    {
+      // get log
+      command.clear();
+      command.append(Settings.hgCommand,"-y","-v","incoming","--template","{rev} {node|short} {date|isodate} {author|person}\\n{files}\\n-----\\n{desc}\\n-----\\n");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // parse revisions in log output
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match revision, node, date author
+        if      ((matcher = PATTERN_CHANGE.matcher(line)).matches())
+        {
+          revision  = matcher.group(1);
+          changeSet = matcher.group(2);
+          date      = parseDate(matcher.group(3));
+          author    = matcher.group(4);
+
+          // get files
+          fileList.clear();
+          while (  ((line = exec.getStdout()) != null)
+                 && !line.startsWith("-----")
+                )
+          {
+            fileList.add(line);
+          }
+
+          // get commit message
+          commitMessageList.clear();
+          while (  ((line = exec.getStdout()) != null)
+                 && !line.startsWith("-----")
+                )
+          {
+            commitMessageList.add(line);
+          }
+          while (   (commitMessageList.peekFirst() != null)
+                 && commitMessageList.peekFirst().trim().isEmpty()
+                )
+          {
+            commitMessageList.removeFirst();
+          }
+          while (   (commitMessageList.peekLast() != null)
+                 && commitMessageList.peekLast().trim().isEmpty()
+                )
+          {
+            commitMessageList.removeLast();
+          }
+
+          logDataList.add(new LogData(revision,
+                                      date,
+                                      author,
+                                      commitMessageList.toArray(new String[commitMessageList.size()])
+                                     )
+                         );
+        }
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return logDataList.toArray(new LogData[logDataList.size()]);
+  }
+
+  /** get outgoing changes list
+   */
+  public LogData[] getOutgoingChanges()
+    throws RepositoryException
+  {
+    final Pattern PATTERN_CHANGE = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+
+    ArrayList<LogData> logDataList = new ArrayList<LogData>();
+
+    Command            command           = new Command();
+    Exec               exec;
+    String             line;
+    Matcher            matcher;
+    String             revision          = null;
+    String             changeSet         = null;
+    Date               date              = null;
+    String             author            = null;
+    ArrayList<String>  fileList          = new ArrayList<String>();
+    LinkedList<String> commitMessageList = new LinkedList<String>();
+    try
+    {
+      // get log
+      command.clear();
+      command.append(Settings.hgCommand,"-y","-v","outgoing","--template","{rev} {node|short} {date|isodate} {author|person}\\n{files}\\n-----\\n{desc}\\n-----\\n");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // parse revisions in log output
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match revision, node, date author
+        if      ((matcher = PATTERN_CHANGE.matcher(line)).matches())
+        {
+          revision  = matcher.group(1);
+          changeSet = matcher.group(2);
+          date      = parseDate(matcher.group(3));
+          author    = matcher.group(4);
+
+          // get files
+          fileList.clear();
+          while (  ((line = exec.getStdout()) != null)
+                 && !line.startsWith("-----")
+                )
+          {
+            fileList.add(line);
+          }
+
+          // get commit message
+          commitMessageList.clear();
+          while (  ((line = exec.getStdout()) != null)
+                 && !line.startsWith("-----")
+                )
+          {
+            commitMessageList.add(line);
+          }
+          while (   (commitMessageList.peekFirst() != null)
+                 && commitMessageList.peekFirst().trim().isEmpty()
+                )
+          {
+            commitMessageList.removeFirst();
+          }
+          while (   (commitMessageList.peekLast() != null)
+                 && commitMessageList.peekLast().trim().isEmpty()
+                )
+          {
+            commitMessageList.removeLast();
+          }
+
+          logDataList.add(new LogData(revision,
+                                      date,
+                                      author,
+                                      commitMessageList.toArray(new String[commitMessageList.size()])
+                                     )
+                         );
+        }
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+
+    return logDataList.toArray(new LogData[logDataList.size()]);
   }
 
   /** pull changes

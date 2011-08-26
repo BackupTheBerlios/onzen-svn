@@ -239,6 +239,22 @@ class RepositoryGit extends Repository
   {
   }
 
+  /** get incoming changes list
+   */
+  public LogData[] getIncomingChanges()
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get outgoing changes list
+   */
+  public LogData[] getOutgoingChanges()
+    throws RepositoryException
+  {
+    return null;
+  }
+
   /** pull changes
    */
   public void pullChanges()
