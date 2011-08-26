@@ -637,6 +637,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisions              = new Point(800,400);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryChanges                = new Point(800,400);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryChangesColumn          = new ColumnSizes(70,150,120);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisionBox            = new Point(200, 70);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisionInfo           = new Point(600,500);
@@ -768,6 +772,10 @@ public class Settings
   public static int                      keyApplyPatches                = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyUnapplyPatches              = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyIncomingChanges             = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyOutgoingChanges             = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyPullChanges                 = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
