@@ -332,6 +332,8 @@ public class Onzen
 
   private MenuItem                          menuItemApplyPatches;
   private MenuItem                          menuItemUnapplyPatches;
+  private MenuItem                          menuItemIncomingChanges;
+  private MenuItem                          menuItemOutgoingChanges;
   private MenuItem                          menuItemPullChanges;
   private MenuItem                          menuItemPushChanges;
   private MenuItem                          menuSetFileMode;
@@ -1445,6 +1447,40 @@ Dprintf.dprintf("");
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.unapplyPatches();
+          }
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItemIncomingChanges = Widgets.addMenuItem(menu,"Incoming changes",Settings.keyIncomingChanges);
+      menuItemIncomingChanges.setEnabled(false);
+      menuItemIncomingChanges.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.incomingChanges();
+          }
+        }
+      });
+
+      menuItemOutgoingChanges = Widgets.addMenuItem(menu,"Outgoing changes",Settings.keyOutgoingChanges);
+      menuItemOutgoingChanges.setEnabled(false);
+      menuItemOutgoingChanges.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.outgoingChanges();
           }
         }
       });
@@ -4050,6 +4086,8 @@ exception.printStackTrace();
       // enable/disable menu entries
       menuItemApplyPatches.setEnabled(repositoryTab.repository.supportPatchQueues());
       menuItemUnapplyPatches.setEnabled(repositoryTab.repository.supportPatchQueues());
+      menuItemIncomingChanges.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
+      menuItemOutgoingChanges.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
       menuItemPullChanges.setEnabled(repositoryTab.repository.supportPullPush());
       menuItemPushChanges.setEnabled(repositoryTab.repository.supportPullPush());
       menuSetFileMode.setEnabled(repositoryTab.repository.supportSetFileMode());
@@ -4059,6 +4097,8 @@ exception.printStackTrace();
       // disable menu entries
       menuItemApplyPatches.setEnabled(false);
       menuItemUnapplyPatches.setEnabled(false);
+      menuItemIncomingChanges.setEnabled(false);
+      menuItemOutgoingChanges.setEnabled(false);
       menuItemPullChanges.setEnabled(false);
       menuItemPushChanges.setEnabled(false);
       menuSetFileMode.setEnabled(false);
@@ -4078,6 +4118,8 @@ exception.printStackTrace();
       // enable/disable menu entries
       menuItemApplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
       menuItemUnapplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
+      menuItemIncomingChanges.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
+      menuItemOutgoingChanges.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
       menuItemPullChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
       menuItemPushChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
       menuSetFileMode.setEnabled(selectedRepositoryTab.repository.supportSetFileMode());
@@ -4087,6 +4129,8 @@ exception.printStackTrace();
       // disable menu entries
       menuItemApplyPatches.setEnabled(false);
       menuItemUnapplyPatches.setEnabled(false);
+      menuItemIncomingChanges.setEnabled(false);
+      menuItemOutgoingChanges.setEnabled(false);
       menuItemPullChanges.setEnabled(false);
       menuItemPushChanges.setEnabled(false);
       menuSetFileMode.setEnabled(false);
