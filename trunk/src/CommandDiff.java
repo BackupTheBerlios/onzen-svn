@@ -1241,7 +1241,7 @@ class CommandDiff
           }
           else
           {
-            show(data.revisionNames[event.index],null);
+            show(data.revisionNames[event.index]);
           }
         }
       }
@@ -2150,23 +2150,32 @@ class CommandDiff
    */
   private void show(String revisionLeft, String revisionRight)
   {
-    // clear
+    int topIndexLeft  = -1;
+    int topIndexRight = -1;
+
+    // save top line-numbers, clear
     if (!dialog.isDisposed())
     {
+      final int[] result = new int[2];
       display.syncExec(new Runnable()
       {
         public void run()
         {
+          result[0] = widgetTextLeft.getTopIndex();
+          result[1] = widgetTextRight.getTopIndex();
+
           data.diffData = null;
           Widgets.modified(data);
          }
       });
+      topIndexLeft  = result[0];
+      topIndexRight = result[1];
     }
 
     // start show diff
-    Background.run(new BackgroundRunnable(fileData,revisionLeft,revisionRight)
+    Background.run(new BackgroundRunnable(fileData,revisionLeft,revisionRight,topIndexLeft,topIndexRight)
     {
-      public void run(FileData fileData, final String revisionLeft, final String revisionRight)
+      public void run(FileData fileData, final String revisionLeft, final String revisionRight, final Integer topIndexLeft, final Integer topIndexRight)
       {
         // get diff data
         repositoryTab.setStatusText("Get differences for '%s'...",fileData.getFileName());
@@ -2192,7 +2201,7 @@ class CommandDiff
           {
             public void run()
             {
-                Dialogs.error(dialog,"Getting file differences fail: %s",exceptionMessage);
+              Dialogs.error(dialog,"Getting file differences fail: %s",exceptionMessage);
             }
           });
           return;
@@ -2237,6 +2246,42 @@ class CommandDiff
                                        widgetHorizontalScrollBarRight,
                                        widgetVerticalScrollBarRight
                                       );
+
+              // set top lines
+              if      ((topIndexLeft >= 0) && (topIndexLeft < widgetTextLeft.getLineCount()))
+              {
+                // set top line right
+                widgetLineNumbersLeft.setTopIndex(topIndexLeft);
+                widgetTextLeft.setTopIndex(topIndexLeft);
+                widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndexLeft));
+                widgetBar.redraw();
+
+                // sync to right
+                if (widgetSync.getSelection())
+                {
+                  widgetLineNumbersRight.setTopIndex(topIndexLeft);
+                  widgetTextRight.setTopIndex(topIndexLeft);
+                  widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndexLeft));
+                }
+              }
+              else if ((topIndexRight >= 0) && (topIndexRight < widgetTextRight.getLineCount()))
+              {
+                // set top line right
+                widgetLineNumbersRight.setTopIndex(topIndexRight);
+                widgetTextRight.setTopIndex(topIndexRight);
+                widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndexRight));
+                widgetBar.redraw();
+
+                // sync to left
+                if (widgetSync.getSelection())
+                {
+                  widgetLineNumbersLeft.setTopIndex(topIndexRight);
+                  widgetTextLeft.setTopIndex(topIndexRight);
+                  widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndexRight));
+                }
+              }
+
+              // update colors
               Widgets.notify(dialog,USER_EVENT_REFRESH_COLORS);
 
               // update colors, redraw bar
