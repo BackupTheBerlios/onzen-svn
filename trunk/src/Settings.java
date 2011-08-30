@@ -877,9 +877,11 @@ public class Settings
   @SettingValue
   public static String           reviewServerPassword                   = "";
 
-  @SettingComment(text={"","Review commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
+  @SettingComment(text={"","Review commands","Macros ${<name> [<format>]}:","  server - server name","  login - user login name","  password - user login password","  repository - repository id","  reference - review reference id","  summary - summary text","  description - description text","  tests - tests","  file - diff file name"})
   @SettingValue
   public static String           commandPostReviewServer                = "post-review --server=${server} --username=${login} --password=${password} --repoid=${repository} --publish --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
+  @SettingValue
+  public static String           commandUpdateReviewServer              = "post-review --server=${server} --username=${login} --password=${password} --repoid=${repository} --publish --review-request-id ${reference} --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
 
   // general flags
   @SettingComment(text={"","Flags"})

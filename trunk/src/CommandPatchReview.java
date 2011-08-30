@@ -15,6 +15,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.sql.SQLException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -155,10 +157,10 @@ class CommandPatchReview
   private final int USER_EVENT_ADD_NEW_TEST = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
-  public String               summary;
-  public String[]             message;
-  public String[]             comment;
-  LinkedHashSet<String>       testSet;
+  public String                summary;
+  public String[]              message;
+  public String[]              comment;
+  public LinkedHashSet<String> testSet;
 
   // global variable references
   private final RepositoryTab repositoryTab;
@@ -1321,98 +1323,119 @@ class CommandPatchReview
   {
   }
 
-  /** post to review server
+  /** post to review server/update on review server
    * @param patch patch
-   * @return true iff review posted
+   * @return true iff review posted/updated
    */
   private boolean postReview(Patch patch)
   {
-    if (!Settings.commandPostReviewServer.isEmpty())
+    if (patch.reference.isEmpty())
     {
-      Exec exec = null;
-      CommitMessage commitMessage = null;
-      try
+      if (!Settings.commandPostReviewServer.isEmpty())
       {
-        // review server post command
-        final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
-
-        // get tests
-        LinkedHashSet<String> tests = new LinkedHashSet<String>();
-        for (TableItem tableItem : widgetTests.getItems())
+        Exec exec = null;
+        CommitMessage commitMessage = null;
+        try
         {
-          if (tableItem.getChecked()) tests.add((String)tableItem.getData());
-        }
+          // get review server password
+          final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
 
-/*
-        // create command
-        Macro macro = new Macro(StringUtils.split(Settings.commandPostReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
-        macro.expand("server",     repositoryTab.repository.reviewServerHost     );
-        macro.expand("login",      repositoryTab.repository.reviewServerLogin    );
-        macro.expand("password",   (password != null) ? password : ""            );
-        macro.expand("summary",    widgetReviewServerSummary.getText().trim()    );
-        macro.expand("groups",     repositoryTab.repository.reviewServerGroups   );
-        macro.expand("persons",    repositoryTab.repository.reviewServerPersons  );
-        macro.expand("description",widgetReviewServerDescription.getText().trim());
-        macro.expand("tests",      tests,","                                     );
-        macro.expand("file",       patchFile.getAbsolutePath()                );
-        String[] commandArray = macro.getValueArray();
-    //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+          // get tests
+          LinkedHashSet<String> tests = new LinkedHashSet<String>();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) tests.add((String)tableItem.getData());
+          }
 
-        // execute
-        exec = new Exec(commandArray);
-        String line;
-        while ((line = exec.getStdout()) != null)
-        {
-    //Dprintf.dprintf("stdout %s",line);
-        }
-        while ((line = exec.getStderr()) != null)
-        {
-    //Dprintf.dprintf("stderr %s",line);
-        }
-        int exitcode = exec.waitFor();
-        if (exitcode != 0)
-        {
-          Dialogs.error(dialog,"Cannot post patch to review server (exitcode: %d)",exitcode);
-          return;
-        }
-        exec.done(); exec = null;
-*/
-        
-        // get commit message
-        commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
-                                          StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
-                                         );
-
-        repositoryTab.repository.postReview(password,
-                                            FileData.toSet(patch.getFileNames()),
-                                            commitMessage,
-                                            tests
+          // get commit message
+          commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
+                                            StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
                                            );
-        commitMessage.done(); commitMessage = null;
+
+          // post review to server/update review on server
+          patch.reference = repositoryTab.repository.postReview(password,
+                                                                FileData.toSet(patch.getFileNames()),
+                                                                commitMessage,
+                                                                tests
+                                                               );
+          patch.save();
+
+          // free resources
+          commitMessage.done(); commitMessage = null;
+        }
+        catch (RepositoryException exception)
+        {
+          Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
+          return false;
+        }
+        catch (SQLException exception)
+        {
+          Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+          return false;
+        }
+        finally
+        {
+          if (exec != null) exec.done();
+          if (commitMessage != null) commitMessage.done();
+        }
       }
-/*
-      catch (IOException exception)
+      else
       {
-        Dialogs.error(dialog,"Cannot post patch to review server (error: %d)",exception.getMessage());
-        return;
-      }
-*/
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
+        Dialogs.error(dialog,"No review server post command configured.\nPlease check settings.");
         return false;
-      }
-      finally
-      {
-        if (exec != null) exec.done();
-        if (commitMessage != null) commitMessage.done();
       }
     }
     else
     {
-      Dialogs.error(dialog,"No review server configured.\nPlease check settings.");
-      return false;
-    }
+      if (!Settings.commandUpdateReviewServer.isEmpty())
+      {
+        Exec exec = null;
+        CommitMessage commitMessage = null;
+        try
+        {
+          // get review server password
+          final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.reviewServerLogin,repositoryTab.repository.reviewServerHost);
+
+          // get tests
+          LinkedHashSet<String> tests = new LinkedHashSet<String>();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) tests.add((String)tableItem.getData());
+          }
+
+          // get commit message
+          commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
+                                            StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
+                                           );
+
+          // post review to server/update review on server
+          repositoryTab.repository.updateReview(password,
+                                                patch.reference,
+                                                FileData.toSet(patch.getFileNames()),
+                                                commitMessage,
+                                                tests
+                                               );
+
+          // free resources
+          commitMessage.done(); commitMessage = null;
+        }
+        catch (RepositoryException exception)
+        {
+          Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
+          return false;
+        }
+        finally
+        {
+          if (exec != null) exec.done();
+          if (commitMessage != null) commitMessage.done();
+        }
+      }
+      else
+      {
+        Dialogs.error(dialog,"No review server update command configured.\nPlease check settings.");
+        return false;
+      }
+     }
 
     return true;
   }

@@ -2024,15 +2024,19 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
   }
 
-  /** post to review server
+  /** post to review server/update review server
    */
-  public void postReview(String password, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
+  protected String postReview(String password, String reference, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
     throws RepositoryException
   {
+    final Pattern PATTERN_REFERENCE = Pattern.compile("^review\\s+.*:\\s+.*/r/(\\d+.)/",Pattern.CASE_INSENSITIVE);
+
     try
     {
       Command command = new Command();
       Exec    exec;
+      String  line;
+      Matcher matcher;
       int     exitCode;
 
       // post review for files
@@ -2042,6 +2046,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (reviewServerLogin != null) command.append("--username",reviewServerLogin);
       if (password != null) command.append("--password",password);
       if (reviewServerRepository != null) command.append("--repoid",reviewServerRepository);
+      if (!reference.isEmpty()) command.append("--existing",reference);
       command.append("--publish");
       command.append("--summary",commitMessage.getSummary());
       command.append("--description",commitMessage.getMessage());
@@ -2052,14 +2057,19 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
-      String line;
+
       while ((line = exec.getStdout()) != null)
       {
-//Dprintf.dprintf("stdout %s",line);
+Dprintf.dprintf("stdout %s",line);
+        if  ((matcher = PATTERN_REFERENCE.matcher(line)).matches())
+        {
+          reference = matcher.group(1);
+//Dprintf.dprintf("reference %s",reference);
+        }
       }
       while ((line = exec.getStderr()) != null)
       {
-//Dprintf.dprintf("stderr %s",line);
+Dprintf.dprintf("stderr %s",line);
       }
       exitCode = exec.waitFor();
       if (exitCode != 0)
@@ -2071,6 +2081,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       throw new RepositoryException(exception);
     }
+
+    return reference;
   }
 
   //-----------------------------------------------------------------------

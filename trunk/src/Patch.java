@@ -103,6 +103,7 @@ class Patch
   public  String                revision1,revision2;    // revision
   public  boolean               ignoreWhitespaces;      // true when whitespaces are ignored
   public  LinkedHashSet<String> testSet;                // tests done
+  public  String                reference;              // reference text, e. g. ReviewBoard id
 
   private HashSet<String>       fileNameSet;            // files belonging to patch
   private String[]              lines;                  // patch lines or null
@@ -148,6 +149,7 @@ class Patch
                                             "  patches.summary, "+
                                             "  patches.message, "+
                                             "  patches.comment, "+
+                                            "  patches.reference, "+
                                             "  patches.revision1, "+
                                             "  patches.revision2, "+
                                             "  patches.ignoreWhitespaces, "+
@@ -188,6 +190,7 @@ class Patch
           String   summary           = resultSet1.getString("summary"); if (summary == null) summary = "";
           String[] message           = Database.dataToLines(resultSet1.getString("message"));
           String[] comment           = Database.dataToLines(resultSet1.getString("comment"));
+          String   reference         = resultSet1.getString("reference");
           String   revision1         = resultSet1.getString("revision1");
           String   revision2         = resultSet1.getString("revision2");
           boolean  ignoreWhitespaces = resultSet1.getInt("ignoreWhitespaces") == 1;
@@ -244,6 +247,7 @@ class Patch
                                   revision1,
                                   revision2,
                                   ignoreWhitespaces,
+                                  reference,
                                   fileNameSet,
                                   testSet,
                                   lines,
@@ -285,6 +289,7 @@ class Patch
    * @param comment comment lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
+   * @param reference reference text
    * @param fileNameSet file names
    * @param testSet tests done
    * @param file file with patch
@@ -299,6 +304,7 @@ class Patch
                 String                revision1,
                 String                revision2,
                 boolean               ignoreWhitespaces,
+                String                reference,
                 HashSet<String>       fileNameSet,
                 LinkedHashSet<String> testSet,
                 String[]              lines,
@@ -313,6 +319,7 @@ class Patch
     this.revision1         = revision1;
     this.revision2         = revision2;
     this.ignoreWhitespaces = ignoreWhitespaces;
+    this.reference         = reference;
     this.fileNameSet       = fileNameSet;
     this.testSet           = testSet;
 
@@ -332,6 +339,7 @@ class Patch
    * @param comment coment lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
+   * @param reference reference text
    * @param fileNameSet file names
    * @param testSet tests done
    * @param lines patch lines
@@ -345,6 +353,7 @@ class Patch
                String                revision1,
                String                revision2,
                boolean               ignoreWhitespaces,
+               String                reference,
                HashSet<String>       fileNameSet,
                LinkedHashSet<String> testSet,
                String[]              lines
@@ -360,6 +369,7 @@ class Patch
          revision1,
          revision2,
          ignoreWhitespaces,
+         reference,
          fileNameSet,
          testSet,
          lines,
@@ -391,6 +401,7 @@ class Patch
          revision1,
          revision2,
          ignoreWhitespaces,
+         "",
          new HashSet<String>(),
          new LinkedHashSet<String>(),
          lines
@@ -439,6 +450,7 @@ class Patch
    * @param comment comment lines
    * @param revision1,revision2 revisions
    * @param ignoreWhitespaces true iff whitespaces are ignored
+   * @param reference reference text
    * @param fileNameSet file names
    * @param testSet tests done
    * @param file file with patch
@@ -452,6 +464,7 @@ class Patch
                String                revision1,
                String                revision2,
                boolean               ignoreWhitespaces,
+               String                reference,
                HashSet<String>       fileNameSet,
                LinkedHashSet<String> testSet,
                File                  file
@@ -467,6 +480,7 @@ class Patch
          revision1,
          revision2,
          ignoreWhitespaces,
+         reference,
          fileNameSet,
          testSet,
          null,
@@ -500,6 +514,7 @@ class Patch
          revision1,
          revision2,
          ignoreWhitespaces,
+         "",
          new HashSet<String>(),
          testSet,
          file
@@ -562,6 +577,7 @@ class Patch
          null,
          null,
          false,
+         "",
          new HashSet<String>(),
          new LinkedHashSet<String>(),
          (String[])null
@@ -797,26 +813,28 @@ Dprintf.dprintf("");
       if (databaseId >= 0)
       {
         // update
-        preparedStatement = database.connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,comment=?,data=? WHERE id=?;");
+        preparedStatement = database.connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,comment=?,reference=?,data=? WHERE id=?;");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,Database.linesToData(message));
         preparedStatement.setString(5,Database.linesToData(comment));
-        preparedStatement.setString(6,Database.linesToData(getLines()));
-        preparedStatement.setInt(7,databaseId);
+        preparedStatement.setString(6,reference);
+        preparedStatement.setString(7,Database.linesToData(getLines()));
+        preparedStatement.setInt(8,databaseId);
         preparedStatement.executeUpdate();
       }
       else
       {
         // insert
-        preparedStatement = database.connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,comment,data) VALUES (?,?,?,?,?);");
+        preparedStatement = database.connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,comment,reference,data) VALUES (?,?,?,?,?,?,?);");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
         preparedStatement.setString(4,Database.linesToData(message));
         preparedStatement.setString(5,Database.linesToData(comment));
-        preparedStatement.setString(6,Database.linesToData(getLines()));
+        preparedStatement.setString(6,reference);
+        preparedStatement.setString(7,Database.linesToData(getLines()));
         preparedStatement.executeUpdate();
         databaseId = database.getLastInsertId();
 
@@ -895,6 +913,7 @@ Dprintf.dprintf("");
                                                                  "  summary, "+
                                                                  "  message, "+
                                                                  "  comment, "+
+                                                                 "  reference, "+
                                                                  "  data "+
                                                                  "FROM patches "+
                                                                  "WHERE id=? "+
@@ -907,12 +926,13 @@ Dprintf.dprintf("");
           resultSet = preparedStatement.executeQuery();
           if (resultSet.next())
           {
-            rootPath = resultSet.getString("rootPath");
-            state    = States.toEnum(resultSet.getInt("state"));
-            summary  = resultSet.getString("summary"); if (summary == null) summary = "";
-            message  = Database.dataToLines(resultSet.getString("message"));
-            comment  = Database.dataToLines(resultSet.getString("comment"));
-            lines    = Database.dataToLines(resultSet.getString("data"));
+            rootPath  = resultSet.getString("rootPath");
+            state     = States.toEnum(resultSet.getInt("state"));
+            summary   = resultSet.getString("summary"); if (summary == null) summary = "";
+            message   = Database.dataToLines(resultSet.getString("message"));
+            comment   = Database.dataToLines(resultSet.getString("comment"));
+            reference = resultSet.getString("reference");
+            lines     = Database.dataToLines(resultSet.getString("data"));
           }
           else
           {
@@ -1919,6 +1939,7 @@ Dprintf.dprintf("exception=%s",exception);
                               "  summary           TEXT, "+
                               "  message           TEXT, "+
                               "  comment           TEXT, "+
+                              "  reference         TEXT, "+
                               "  data              TEXT,"+
                               "  revision1         TEXT, "+
                               "  revision2         TEXT, "+

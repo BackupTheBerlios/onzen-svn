@@ -136,6 +136,7 @@ class Preferences
   private final Text          widgetReviewServerHost;
   private final Text          widgetReviewServerLogin;
   private final Text          widgetCommandPostReviewServer;
+  private final Text          widgetCommandUpdateReviewServer;
 
   private final Text          widgetCVSCommand;
   private final Button        widgetCVSPruneEmptyDirectories;
@@ -495,12 +496,19 @@ class Preferences
           Widgets.layout(widgetReviewServerLogin,1,1,TableLayoutData.WE);
           widgetReviewServerLogin.setToolTipText("Default review server login name.\n");
 
-          label = Widgets.newLabel(subComposite,"Command:");
+          label = Widgets.newLabel(subComposite,"Post command:");
           Widgets.layout(label,2,0,TableLayoutData.W);
           widgetCommandPostReviewServer = Widgets.newText(subComposite);
           widgetCommandPostReviewServer.setText(Settings.commandPostReviewServer);
           Widgets.layout(widgetCommandPostReviewServer,2,1,TableLayoutData.WE);
           widgetCommandPostReviewServer.setToolTipText("Post review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
+
+          label = Widgets.newLabel(subComposite,"Update command:");
+          Widgets.layout(label,3,0,TableLayoutData.W);
+          widgetCommandUpdateReviewServer = Widgets.newText(subComposite);
+          widgetCommandUpdateReviewServer.setText(Settings.commandUpdateReviewServer);
+          Widgets.layout(widgetCommandUpdateReviewServer,3,1,TableLayoutData.WE);
+          widgetCommandUpdateReviewServer.setToolTipText("Update review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${reference} - reference\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
         }
       }
 
@@ -1164,6 +1172,7 @@ class Preferences
           Settings.reviewServerLogin                      = widgetReviewServerLogin.getText().trim();
 //          onzen.setPassword(Settings.reviewServerLogin,Settings.reviewServerHost,widgetReviewServerPassword.getText());
           Settings.commandPostReviewServer                = widgetCommandPostReviewServer.getText().trim();
+          Settings.commandUpdateReviewServer              = widgetCommandUpdateReviewServer.getText().trim();
 
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();

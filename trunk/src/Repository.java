@@ -2572,75 +2572,161 @@ Dprintf.dprintf("fileName=%s",fileName);
 
   /** post to review server
    */
-  public void postReview(String password, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
+  protected String postReview(String password, String reference, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
     throws RepositoryException
   {
-    if (!Settings.commandPostReviewServer.isEmpty())
+Dprintf.dprintf("xxxxxxxxxxxxxxxxxxxxxxxxxx");
+    if (reference.isEmpty())
     {
-Dprintf.dprintf("");
-      File patchFile = null;
-      try
+      if (!Settings.commandPostReviewServer.isEmpty())
       {
-        // get patch file
-        patchFile = getPatchFile(fileDataSet);
-Dprintf.dprintf("");
-
-        // create command
-        Macro macro = new Macro(StringUtils.split(Settings.commandPostReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
-        macro.expand("server",     reviewServerHost);
-        macro.expand("login",      reviewServerLogin);
-        macro.expand("password",   (password != null) ? password : "");
-        macro.expand("summary",    commitMessage.getSummary());
-        macro.expand("groups",     reviewServerGroups);
-        macro.expand("persons",    reviewServerPersons);
-        macro.expand("description",commitMessage.getMessage());
-        macro.expand("tests",      testSet,",");
-        macro.expand("file",       patchFile.getAbsolutePath());
-        String[] commandArray = macro.getValueArray();
-    //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
-Dprintf.dprintf("");
-
-        Exec exec = null;
+        File patchFile = null;
         try
         {
-          // execute
-          exec = new Exec(commandArray);
-          String line;
-          while ((line = exec.getStdout()) != null)
+          // get patch file
+          patchFile = getPatchFile(fileDataSet);
+
+          // create command
+          Macro macro = new Macro(StringUtils.split(Settings.commandPostReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+          macro.expand("server",     reviewServerHost);
+          macro.expand("login",      reviewServerLogin);
+          macro.expand("password",   (password != null) ? password : "");
+          macro.expand("summary",    commitMessage.getSummary());
+          macro.expand("groups",     reviewServerGroups);
+          macro.expand("persons",    reviewServerPersons);
+          macro.expand("description",commitMessage.getMessage());
+          macro.expand("tests",      testSet,",");
+          macro.expand("file",       patchFile.getAbsolutePath());
+          String[] commandArray = macro.getValueArray();
+  //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+
+          Exec exec = null;
+          try
           {
+            // execute
+            exec = new Exec(commandArray);
+            String line;
+            while ((line = exec.getStdout()) != null)
+            {
 Dprintf.dprintf("stdout %s",line);
-          }
-          while ((line = exec.getStderr()) != null)
-          {
+            }
+            while ((line = exec.getStderr()) != null)
+            {
 Dprintf.dprintf("stderr %s",line);
+            }
+            int exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitCode+")");
+            }
+            exec.done(); exec = null;
           }
-          int exitCode = exec.waitFor();
-          if (exitCode != 0)
+          catch (IOException exception)
           {
-            throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitCode+")");
+            throw new RepositoryException(exception);
           }
-          exec.done(); exec = null;
-        }
-        catch (IOException exception)
-        {
-          throw new RepositoryException(exception);
+          finally
+          {
+            if (exec != null) exec.done();
+          }
+
+          patchFile.delete(); patchFile = null;
         }
         finally
         {
-          if (exec != null) exec.done();
+          if (patchFile != null) patchFile.delete();
         }
-
-        patchFile.delete(); patchFile = null;
       }
-      finally
+      else
       {
-        if (patchFile != null) patchFile.delete();
+        throw new RepositoryException("No review server post command configured.");
       }
     }
     else
     {
-      throw new RepositoryException("No review server post command configured.");
+      if (!Settings.commandUpdateReviewServer.isEmpty())
+      {
+        File patchFile = null;
+        try
+        {
+          // get patch file
+          patchFile = getPatchFile(fileDataSet);
+
+          // create command
+          Macro macro = new Macro(StringUtils.split(Settings.commandUpdateReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+          macro.expand("server",     reviewServerHost);
+          macro.expand("login",      reviewServerLogin);
+          macro.expand("password",   (password != null) ? password : "");
+          macro.expand("reference",  reference);
+          macro.expand("summary",    commitMessage.getSummary());
+          macro.expand("groups",     reviewServerGroups);
+          macro.expand("persons",    reviewServerPersons);
+          macro.expand("description",commitMessage.getMessage());
+          macro.expand("tests",      testSet,",");
+          macro.expand("file",       patchFile.getAbsolutePath());
+          String[] commandArray = macro.getValueArray();
+  //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+
+          Exec exec = null;
+          try
+          {
+            // execute
+            exec = new Exec(commandArray);
+            String line;
+            while ((line = exec.getStdout()) != null)
+            {
+Dprintf.dprintf("stdout %s",line);
+            }
+            while ((line = exec.getStderr()) != null)
+            {
+Dprintf.dprintf("stderr %s",line);
+            }
+            int exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitCode+")");
+            }
+            exec.done(); exec = null;
+          }
+          catch (IOException exception)
+          {
+            throw new RepositoryException(exception);
+          }
+          finally
+          {
+            if (exec != null) exec.done();
+          }
+
+          patchFile.delete(); patchFile = null;
+        }
+        finally
+        {
+          if (patchFile != null) patchFile.delete();
+        }
+      }
+      else
+      {
+        throw new RepositoryException("No review server update command configured.");
+      }
     }
+
+    return reference;
+  }
+
+  /** post to review server
+   */
+  public String postReview(String password, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
+    throws RepositoryException
+  {
+    return postReview(password,"",fileDataSet,commitMessage,testSet);
+  }
+
+  /** update review server
+   */
+  public String updateReview(String password, String reference, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
+    throws RepositoryException
+  {
+    return postReview(password,reference,fileDataSet,commitMessage,testSet);
   }
 
   /** convert data to string
