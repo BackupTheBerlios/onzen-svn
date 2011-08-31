@@ -125,6 +125,9 @@ class CommandPatches
 
   // --------------------------- constants --------------------------------
 
+  // colors
+  private final Color COLOR_FIND_TEXT;
+
   // user events
   private final int USER_EVENT_FILTER_PATCHES = 0xFFFF+0;
   private final int USER_EVENT_ADD_NEW_TEST   = 0xFFFF+1;
@@ -142,7 +145,7 @@ class CommandPatches
 
   // widgets
   private final Table         widgetPatches;
-  private final StyledText    widgetChanges;
+  private final StyledText    widgetPatch;
   private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final List          widgetFileNames;
   private final Text          widgetFind;
@@ -182,6 +185,9 @@ class CommandPatches
     // get shell, display
     this.shell   = shell;
     this.display = shell.getDisplay();
+
+    // init colors
+    COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
 
     // add files dialog
     dialog = Dialogs.open(shell,"Patches",new double[]{1.0,0.0},1.0);
@@ -578,12 +584,12 @@ Dprintf.dprintf("");
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
-          widgetChanges = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
-          widgetChanges.setBackground(Onzen.COLOR_GRAY);
-          Widgets.layout(widgetChanges,0,0,TableLayoutData.NSWE);
-          widgetChanges.setToolTipText("Changes to commit.");
-          widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
-          widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
+          widgetPatch = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetPatch.setBackground(Onzen.COLOR_GRAY);
+          Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
+          widgetPatch.setToolTipText("Changes to commit.");
+          widgetHorizontalScrollBar = widgetPatch.getHorizontalBar();
+          widgetVerticalScrollBar   = widgetPatch.getVerticalBar();
 
           subSubComposite = Widgets.newComposite(subComposite);
           subSubComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
@@ -1261,7 +1267,6 @@ Dprintf.dprintf("");
       });
     }
 
-    // listeners
     widgetPatches.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1276,6 +1281,32 @@ Dprintf.dprintf("");
       }
     });
 
+    widgetPatch.addLineStyleListener(new LineStyleListener()
+    {
+      public void lineGetStyle(LineStyleEvent lineStyleEvent)
+      {
+//Dprintf.dprintf("x %d %s",lineStyleEvent.lineOffset,lineStyleEvent.lineText);
+         String findText = widgetFind.getText().toLowerCase();
+         int    findTextLength = findText.length();
+         if (findTextLength > 0)
+         {
+           ArrayList<StyleRange> styleRangeList = new ArrayList<StyleRange>();
+           int                   index = 0;
+           while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
+           {
+             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_FIND_TEXT,null));
+             index += findTextLength;
+           }
+           lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
+//Dprintf.dprintf("lineStyleEvent.styles=%d",lineStyleEvent.styles.length);
+         }
+         else
+         {
+           lineStyleEvent.styles = null;
+         }
+      }
+    });
+
     widgetFind.addKeyListener(new KeyListener()
     {
       public void keyPressed(KeyEvent leyEvent)
@@ -1283,14 +1314,14 @@ Dprintf.dprintf("");
       }
       public void keyReleased(KeyEvent leyEvent)
       {
-        find(widgetChanges,widgetFind);
+        find(widgetPatch,widgetFind);
       }
     });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        findNext(widgetChanges,widgetFind);
+        findNext(widgetPatch,widgetFind);
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
@@ -1303,7 +1334,7 @@ Dprintf.dprintf("");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        findPrev(widgetChanges,widgetFind);
+        findPrev(widgetPatch,widgetFind);
       }
     });
     widgetFindNext.addSelectionListener(new SelectionListener()
@@ -1313,7 +1344,7 @@ Dprintf.dprintf("");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        findNext(widgetChanges,widgetFind);
+        findNext(widgetPatch,widgetFind);
       }
     });
 
@@ -1481,26 +1512,24 @@ Dprintf.dprintf("");
   /** set changes text
    * @param lines changes lines
    * @param widgetText text widget
-   * @param widgetHorizontalScrollBar horizontal scrollbar widget
-   * @param widgetVerticalScrollBar horizontal scrollbar widget
    */
   private void setChangesText(String[] lines)
   {
-    if (   !widgetChanges.isDisposed()
+    if (   !widgetPatch.isDisposed()
         && !widgetVerticalScrollBar.isDisposed()
         && !widgetHorizontalScrollBar.isDisposed()
        )
     {
       // set text
-      widgetChanges.setText(StringUtils.join(lines,"\n"));
+      widgetPatch.setText(StringUtils.join(lines,"\n"));
 
       // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
-      widgetChanges.redraw();
-      widgetChanges.update();
+      widgetPatch.redraw();
+      widgetPatch.update();
 
       // show top
-      widgetChanges.setTopIndex(0);
-      widgetChanges.setCaretOffset(0);
+      widgetPatch.setTopIndex(0);
+      widgetPatch.setCaretOffset(0);
       widgetVerticalScrollBar.setSelection(0);
     }
   }
@@ -1573,7 +1602,7 @@ Dprintf.dprintf("");
     else
     {
       // clear changes text, file names, message
-      widgetChanges.setText("");
+      widgetPatch.setText("");
       widgetFileNames.removeAll();
       widgetMessage.setText("");
       widgetComment.setText("");
@@ -1603,7 +1632,7 @@ Dprintf.dprintf("");
    */
   private void clearSelectedPatch()
   {
-    widgetChanges.setText("");
+    widgetPatch.setText("");
     widgetFileNames.removeAll();
     widgetMessage.setText("");
     widgetComment.setText("");
@@ -1623,13 +1652,13 @@ Dprintf.dprintf("");
       if (!findText.isEmpty())
       {
         // get cursor position, text before cursor
-        int cursorIndex = widgetChanges.getCaretOffset();
+        int cursorIndex = widgetPatch.getCaretOffset();
 
         // search
-        int offset = widgetChanges.getText().substring(cursorIndex).indexOf(findText);
+        int offset = widgetPatch.getText().toLowerCase().substring(cursorIndex).indexOf(findText);
         if (offset >= 0)
         {
-          widgetChanges.redraw();
+          widgetPatch.redraw();
         }
         else
         {
@@ -1638,7 +1667,7 @@ Dprintf.dprintf("");
       }
       else
       {
-        widgetChanges.redraw();
+        widgetPatch.redraw();
       }
     }
   }
@@ -1653,16 +1682,16 @@ Dprintf.dprintf("");
     if (!findText.isEmpty())
     {
       // get cursor position, text before cursor
-      int cursorIndex = widgetChanges.getCaretOffset();
+      int cursorIndex = widgetPatch.getCaretOffset();
 
-      int offset = (cursorIndex > 0) ? widgetChanges.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
+      int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
       if (offset >= 0)
       {
         int index = offset;
 
-        widgetChanges.setCaretOffset(index);
-        widgetChanges.setSelection(index);
-        widgetChanges.redraw();
+        widgetPatch.setCaretOffset(index);
+        widgetPatch.setSelection(index);
+        widgetPatch.redraw();
       }
       else
       {
@@ -1681,18 +1710,18 @@ Dprintf.dprintf("");
     if (!findText.isEmpty())
     {
       // get cursor position, text before cursor
-      int cursorIndex = widgetChanges.getCaretOffset();
+      int cursorIndex = widgetPatch.getCaretOffset();
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = (cursorIndex > 0) ? widgetChanges.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+      int offset = (cursorIndex > 0) ? widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;
 
-        widgetChanges.setCaretOffset(index);
-        widgetChanges.setSelection(index);
-        widgetChanges.redraw();
+        widgetPatch.setCaretOffset(index);
+        widgetPatch.setSelection(index);
+        widgetPatch.redraw();
       }
       else
       {
