@@ -116,7 +116,8 @@ class CommandDiff
   private final Color COLOR_DIFF_DELETED;
   private final Color COLOR_DIFF_CHANGED;
   private final Color COLOR_DIFF_CHANGED_WHITESPACES;
-  private final Color COLOR_DIFF_SEARCH_TEXT;
+
+  private final Color COLOR_FIND_TEXT;
 
   // user events
   private final int   USER_EVENT_NEW_REVISION   = 0xFFFF+0;
@@ -201,7 +202,7 @@ class CommandDiff
     COLOR_DIFF_DELETED             = new Color(display,Settings.colorDiffDeleted.background           );
     COLOR_DIFF_CHANGED             = new Color(display,Settings.colorDiffChanged.background           );
     COLOR_DIFF_CHANGED_WHITESPACES = new Color(display,Settings.colorDiffChangedWhitespaces.background);
-    COLOR_DIFF_SEARCH_TEXT         = new Color(display,Settings.colorDiffSearchText.foreground        );
+    COLOR_FIND_TEXT                = new Color(display,Settings.colorFindText.foreground              );
 
     // show diff dialog
     dialog = Dialogs.open(shell,"Diff: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
@@ -720,7 +721,7 @@ class CommandDiff
            int                   index = 0;
            while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
            {
-             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_DIFF_SEARCH_TEXT,null));
+             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_FIND_TEXT,null));
              index += findTextLength;
            }
            lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
@@ -829,7 +830,7 @@ class CommandDiff
            int                   index = 0;
            while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
            {
-             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_DIFF_SEARCH_TEXT,null));
+             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_FIND_TEXT,null));
              index += findTextLength;
            }
            lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
