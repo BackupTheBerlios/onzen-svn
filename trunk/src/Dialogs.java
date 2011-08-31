@@ -564,14 +564,16 @@ class Dialogs
   /** error dialog
    * @param parentShell parent shell
    * @param message error message
+   * @param extendedMessage extended message
    */
-  public static void error(Shell parentShell, String message)
+  public static void error(Shell parentShell, String[] extendedMessage, String message)
   {
     final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"error.png");
 
     Composite composite;
     Label     label;
     Button    button;
+    Text      text;
 
     if (!parentShell.isDisposed())
     {
@@ -590,6 +592,17 @@ class Dialogs
         label = new Label(composite,SWT.LEFT|SWT.WRAP);
         label.setText(message);
         label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+
+        if (extendedMessage != null)
+        {
+          label = new Label(composite,SWT.LEFT);
+          label.setText("Extended error:");
+          label.setLayoutData(new TableLayoutData(1,1,TableLayoutData.NSWE,0,0,4));
+
+          text = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.V_SCROLL|SWT.READ_ONLY);
+          text.setLayoutData(new TableLayoutData(2,1,TableLayoutData.NSWE,0,0,0,0,SWT.DEFAULT,100));
+          text.setText(StringUtils.join(extendedMessage,text.DELIMITER));
+        }
       }
 
       // buttons
@@ -619,12 +632,32 @@ class Dialogs
 
   /** error dialog
    * @param parentShell parent shell
+   * @param message error message
+   */
+  public static void error(Shell parentShell, String message)
+  {
+    error(parentShell,null,message);
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
+   * @param format format string
+   * @param extendedMessage extended message
+   * @param arguments optional arguments
+   */
+  public static void error(Shell parentShell, String[] extendedMessage, String format, Object... arguments)
+  {
+    error(parentShell,extendedMessage,String.format(format,arguments));
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
    * @param format format string
    * @param arguments optional arguments
    */
   public static void error(Shell parentShell, String format, Object... arguments)
   {
-    error(parentShell,String.format(format,arguments));
+    error(parentShell,null,format,arguments);
   }
 
   /** confirmation dialog
