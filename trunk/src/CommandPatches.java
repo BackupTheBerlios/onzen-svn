@@ -145,6 +145,9 @@ class CommandPatches
   private final StyledText    widgetChanges;
   private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final List          widgetFileNames;
+  private final Text          widgetFind;
+  private final Button        widgetFindPrev;
+  private final Button        widgetFindNext;
   private final Text          widgetSummary;
   private final Text          widgetMessage;
   private final Text          widgetComment;
@@ -582,64 +585,81 @@ Dprintf.dprintf("");
           widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
           widgetVerticalScrollBar   = widgetChanges.getVerticalBar();
 
-          button = Widgets.newButton(subComposite,"Refresh...");
-          button.setEnabled(false);
-          Widgets.layout(button,1,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          Widgets.addModifyListener(new WidgetListener(button,data)
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.WE);
           {
-            public void modified(Control control)
+            label = Widgets.newLabel(subSubComposite,"Find:");
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetFind = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+            Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
+
+            widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+
+            widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+
+            button = Widgets.newButton(subSubComposite,"Refresh...");
+            button.setEnabled(false);
+            Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            Widgets.addModifyListener(new WidgetListener(button,data)
             {
-              Widgets.setEnabled(control,(data.patch != null));
-            }
-          });
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              if (data.patch != null)
+              public void modified(Control control)
               {
-                if (Dialogs.confirm(dialog,"Confirmation","Really refresh patch?"))
+                Widgets.setEnabled(control,(data.patch != null));
+              }
+            });
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                if (data.patch != null)
                 {
-                  repositoryTab.setStatusText("Refresh patch...");
-                  try
+                  if (Dialogs.confirm(dialog,"Confirmation","Really refresh patch?"))
                   {
-                    // get repository instance
-                    Repository repository = Repository.newInstance(data.patch.rootPath);
+                    repositoryTab.setStatusText("Refresh patch...");
+                    try
+                    {
+                      // get repository instance
+                      Repository repository = Repository.newInstance(data.patch.rootPath);
 
-                    // refresh patch
-                    String[] newLines = repository.getPatchLines(data.patch.getFileNames(),
-                                                                 data.patch.revision1,
-                                                                 data.patch.revision2,
-                                                                 data.patch.ignoreWhitespaces
-                                                                );
-                    data.patch.setLines(newLines);
-                    setChangesText(newLines);
+                      // refresh patch
+                      String[] newLines = repository.getPatchLines(data.patch.getFileNames(),
+                                                                   data.patch.revision1,
+                                                                   data.patch.revision2,
+                                                                   data.patch.ignoreWhitespaces
+                                                                  );
+                      data.patch.setLines(newLines);
+                      setChangesText(newLines);
 
-                    // save new patch lines
-                    data.patch.save();
-                  }
-                  catch (RepositoryException exception)
-                  {
-                    Dialogs.error(dialog,"Cannot get patch (error: %s)",exception.getMessage());
-                    return;
-                  }
-                  catch (SQLException exception)
-                  {
-                    Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
-                    return;
-                  }
-                  finally
-                  {
-                    repositoryTab.clearStatusText();
+                      // save new patch lines
+                      data.patch.save();
+                    }
+                    catch (RepositoryException exception)
+                    {
+                      Dialogs.error(dialog,"Cannot get patch (error: %s)",exception.getMessage());
+                      return;
+                    }
+                    catch (SQLException exception)
+                    {
+                      Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+                      return;
+                    }
+                    finally
+                    {
+                      repositoryTab.clearStatusText();
+                    }
                   }
                 }
               }
-            }
-          });
-          button.setToolTipText("Refresh patch.");
+            });
+            button.setToolTipText("Refresh patch.");
+          }
         }
 
         subComposite = Widgets.addTab(tabFolder,"Files");
@@ -1255,6 +1275,48 @@ Dprintf.dprintf("");
         setSelectedPatch(tableItem,(Patch)tableItem.getData());
       }
     });
+
+    widgetFind.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent leyEvent)
+      {
+      }
+      public void keyReleased(KeyEvent leyEvent)
+      {
+        find(widgetChanges,widgetFind);
+      }
+    });
+    widgetFind.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        findNext(widgetChanges,widgetFind);
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetFindPrev.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        findPrev(widgetChanges,widgetFind);
+      }
+    });
+    widgetFindNext.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        findNext(widgetChanges,widgetFind);
+      }
+    });
+
     widgetSummary.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
@@ -1547,6 +1609,96 @@ Dprintf.dprintf("");
     widgetComment.setText("");
 
     Widgets.modified(data);
+  }
+
+  /** search text
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void find(StyledText widgetText, Text widgetFind)
+  {
+    if (!widgetText.isDisposed())
+    {
+      String findText = widgetFind.getText();
+      if (!findText.isEmpty())
+      {
+        // get cursor position, text before cursor
+        int cursorIndex = widgetChanges.getCaretOffset();
+
+        // search
+        int offset = widgetChanges.getText().substring(cursorIndex).indexOf(findText);
+        if (offset >= 0)
+        {
+          widgetChanges.redraw();
+        }
+        else
+        {
+          Widgets.flash(widgetFind);
+        }
+      }
+      else
+      {
+        widgetChanges.redraw();
+      }
+    }
+  }
+
+  /** search previous text in patch
+   * @param widgetPatch text widget
+   * @param widgetFind search text widget
+   */
+  private void findPrev(StyledText widgetPatch, Text widgetFind)
+  {
+    String findText = widgetFind.getText().toLowerCase();
+    if (!findText.isEmpty())
+    {
+      // get cursor position, text before cursor
+      int cursorIndex = widgetChanges.getCaretOffset();
+
+      int offset = (cursorIndex > 0) ? widgetChanges.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
+      if (offset >= 0)
+      {
+        int index = offset;
+
+        widgetChanges.setCaretOffset(index);
+        widgetChanges.setSelection(index);
+        widgetChanges.redraw();
+      }
+      else
+      {
+        Widgets.flash(widgetFind);
+      }
+    }
+  }
+
+  /** search next text in patch
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void findNext(StyledText widgetPatch, Text widgetFind)
+  {
+    String findText = widgetFind.getText().toLowerCase();
+    if (!findText.isEmpty())
+    {
+      // get cursor position, text before cursor
+      int cursorIndex = widgetChanges.getCaretOffset();
+//Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
+
+      // search
+      int offset = (cursorIndex > 0) ? widgetChanges.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+      if (offset >= 0)
+      {
+        int index = cursorIndex+1+offset;
+
+        widgetChanges.setCaretOffset(index);
+        widgetChanges.setSelection(index);
+        widgetChanges.redraw();
+      }
+      else
+      {
+        Widgets.flash(widgetFind);
+      }
+    }
   }
 
   /** save patch into file
