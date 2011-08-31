@@ -1239,14 +1239,27 @@ class AnnotationData
  */
 class RepositoryException extends Exception
 {
+  private String[] extendedErrorMessage = null;
+
   /** create repository exception
    * @param message message
    * @param cause exception cause
    * @param arguments optional format arguments for message
    */
-  RepositoryException(String message, Exception cause, Object... arguments)
+  RepositoryException(String message, Exception cause, String[] extendedErrorMessage, Object... arguments)
   {
     super(String.format(message,arguments),cause);
+    this.extendedErrorMessage = extendedErrorMessage;
+  }
+
+  /** create repository exception
+   * @param message message
+   * @param cause exception cause
+   * @param arguments optional format arguments for message
+   */
+  RepositoryException(String message, String[] extendedErrorMessage, Object... arguments)
+  {
+    this(message,null,extendedErrorMessage,arguments);
   }
 
   /** create repository exception
@@ -1254,7 +1267,7 @@ class RepositoryException extends Exception
    */
   RepositoryException(Exception cause)
   {
-    this(cause.getMessage(),cause);
+    this(cause.getMessage(),null,cause);
   }
 
   /** create repository exception
@@ -1264,6 +1277,14 @@ class RepositoryException extends Exception
   RepositoryException(String message, Object... arguments)
   {
     this(message,null,arguments);
+  }
+
+  /** get extended error message lines
+   * @return message lines array
+   */
+  public String[] getExtendedErrorMessage()
+  {
+    return extendedErrorMessage;
   }
 }
 
@@ -2575,7 +2596,6 @@ Dprintf.dprintf("fileName=%s",fileName);
   protected String postReview(String password, String reference, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
     throws RepositoryException
   {
-Dprintf.dprintf("xxxxxxxxxxxxxxxxxxxxxxxxxx");
     if (reference.isEmpty())
     {
       if (!Settings.commandPostReviewServer.isEmpty())
