@@ -2044,7 +2044,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(Settings.hgCommand,"lpostreview");
       if (reviewServerHost != null) command.append("--server",reviewServerHost);
       if (reviewServerLogin != null) command.append("--username",reviewServerLogin);
-      if (password != null) command.append("--password",password);
+      if (password != null) command.append("--password",command.hidden(password));
       if (reviewServerRepository != null) command.append("--repoid",reviewServerRepository);
       if (!reference.isEmpty()) command.append("--existing",reference);
       command.append("--publish");
@@ -2056,25 +2056,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 //command.append("--debug");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
 
-      while ((line = exec.getStdout()) != null)
-      {
-Dprintf.dprintf("stdout %s",line);
-        if  ((matcher = PATTERN_REFERENCE.matcher(line)).matches())
-        {
-          reference = matcher.group(1);
-//Dprintf.dprintf("reference %s",reference);
-        }
-      }
-      while ((line = exec.getStderr()) != null)
-      {
-Dprintf.dprintf("stderr %s",line);
-      }
+      exec = new Exec(rootPath,command);
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("post review fail (exit code: %d)",exitCode);
+        System.out.println("Command: "+command.toString());
+        exec.printStderr();
+        throw new RepositoryException("post review fail (exit code: %d)",exec.getExtendedErrorMessage(),exitCode);
       }
     }
     catch (IOException exception)
