@@ -746,7 +746,7 @@ Dprintf.dprintf("");
         int cursorIndex = widgetPatch.getCaretOffset();
 
         // search
-        int offset = widgetPatch.getText().substring(cursorIndex).indexOf(findText);
+        int offset = widgetPatch.getText().toLowerCase().substring(cursorIndex).indexOf(findText);
         if (offset >= 0)
         {
           widgetPatch.redraw();
