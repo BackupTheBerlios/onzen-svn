@@ -31,10 +31,26 @@ import java.util.Stack;
  */
 class Command
 {
+  class Hidden
+  {
+    String string;
+
+    Hidden(String string)
+    {
+      this.string = string;
+    }
+
+    public String toString()
+    {
+      return string;
+    }
+  };
+
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
   private ArrayList<String> commandLine;
+  private ArrayList<String> printableCommandLine;
 
   // ------------------------ native functions ----------------------------
 
@@ -44,7 +60,8 @@ class Command
    */
   Command()
   {
-    commandLine = new ArrayList<String>();
+    commandLine          = new ArrayList<String>();
+    printableCommandLine = new ArrayList<String>();
   }
 
   /** clear command array
@@ -52,6 +69,7 @@ class Command
   public void clear()
   {
     commandLine.clear();
+    printableCommandLine.clear();
   }
 
   /** append arguments to command array
@@ -62,6 +80,14 @@ class Command
     for (Object object : arguments)
     {
       commandLine.add(object.toString());
+      if (object instanceof Hidden)
+      {
+        printableCommandLine.add("********");
+      }
+      else
+      {
+        printableCommandLine.add(object.toString());
+      }
     }
   }
 
@@ -73,6 +99,7 @@ class Command
     for (String string : strings)
     {
       commandLine.add(string);
+      printableCommandLine.add(string);
     }
   }
 
@@ -84,16 +111,32 @@ class Command
     return commandLine.toArray(new String[commandLine.size()]);
   }
 
+  /** create hidden argument
+   * @param string argument
+   * @return hidden argument
+   */
+  public Hidden hidden(String string)
+  {
+    return new Hidden(string);
+  }
+
   /** convert data to string
    * @return string
    */
   public String toString()
   {
     StringBuilder buffer = new StringBuilder();
-    for (String string : commandLine)
+    for (String string : printableCommandLine)
     {
       if (buffer.length() > 0) buffer.append(' ');
-      buffer.append(string);
+      if (string.isEmpty() || string.indexOf(' ') >= 0)
+      {
+        buffer.append(StringUtils.escape(string,'\''));
+      }
+      else
+      {
+        buffer.append(string);
+      }
     }
 
     return buffer.toString();
@@ -109,15 +152,18 @@ class Exec
   // --------------------------- variables --------------------------------
   private static HashSet<Process> processHash = new HashSet<Process>();
 
-  private final BufferedWriter  stdin;
-  private final BufferedReader  stdout;
-  private final BufferedReader  stderr;
-  private final Stack<String>   stdoutStack = new Stack<String>();
-  private final Stack<String>   stderrStack = new Stack<String>();
-  private final DataInputStream stdoutBinary;
+  private final BufferedWriter    stdin;
+  private final BufferedReader    stdout;
+  private final BufferedReader    stderr;
+  private final Stack<String>     stdoutStack = new Stack<String>();
+  private final Stack<String>     stderrStack = new Stack<String>();
+  private final DataInputStream   stdoutBinary;
 
-  private Process               process;
-  private int                   pid;
+  private Process                 process;
+  private int                     pid;
+  private ArrayList<String>       stdoutList = new ArrayList<String>();
+  private ArrayList<String>       stderrList = new ArrayList<String>();
+  private int                     exitCode = -1;
 
   // ------------------------ native functions ----------------------------
 
@@ -137,13 +183,17 @@ class Exec
       System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+StringUtils.join(commandArray));
     }
 
-    // start process
+    // get workiing directory
     File workingDirectory;
     if      ((path != null) && (subDirectory != null)) workingDirectory = new File(path,subDirectory);
     else if (path != null)                             workingDirectory = new File(path);
     else                                               workingDirectory = null;
+
+    // start process
     process = Runtime.getRuntime().exec(commandArray,null,workingDirectory);
     processHash.add(process);
+
+    // get stdin, stdout, stderr
     stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
     if (binaryFlag)
     {
@@ -340,8 +390,18 @@ class Exec
    */
   public int waitFor()
   {
-    int exitCode = -1;
+    // store stdout, stderr
+    String line;
+    while ((line = getStdout()) != null)
+    {
+      stdoutList.add(line);
+    }
+    while ((line = getStderr()) != null)
+    {
+      stderrList.add(line);
+    }
 
+    // wait for process
     try
     {
       exitCode = process.waitFor();
@@ -368,6 +428,52 @@ class Exec
     catch (IllegalThreadStateException exception)
     {
       return false;
+    }
+  }
+
+  /** get extended error message lines
+   * @return message lines array
+   */
+  public String[] getExtendedErrorMessage()
+  {
+    ArrayList<String> extendedErrorMessageList = new ArrayList<String>();
+
+    extendedErrorMessageList.add("Stderr:");
+    for (String line : stderrList)
+    {
+      extendedErrorMessageList.add(line);
+    }
+
+    return extendedErrorMessageList.toArray(new String[extendedErrorMessageList.size()]);
+  }
+
+  /** print stdout output to stdout
+   */
+  public void printStdout()
+  {
+    if (stdoutList.size() > 0)
+    {
+      System.out.println("Stdout:");
+      System.out.println("");
+      for (String string : stdoutList)
+      {
+        System.out.println(string);
+      }
+    }
+  }
+
+  /** print stderr output to stdout
+   */
+  public void printStderr()
+  {
+    if (stderrList.size() > 0)
+    {
+      System.out.println("Stderr:");
+      System.out.println("");
+      for (String string : stderrList)
+      {
+        System.out.println(string);
+      }
     }
   }
 
