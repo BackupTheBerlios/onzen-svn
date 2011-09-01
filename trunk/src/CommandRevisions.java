@@ -100,6 +100,11 @@ class CommandRevisions
     Rectangle    container;
     Rectangle    handle;
 
+    /** create draw info
+     * @param revisionData revision data
+     * @param container container size
+     * @param handle handle size
+     */
     DrawInfo(RevisionData revisionData, Rectangle container, Rectangle handle)
     {
       this.revisionData = revisionData;
@@ -121,7 +126,7 @@ class CommandRevisions
     Point          containerResizeDelta;
     Rectangle      containerResizeRectangle;
     RevisionData   selectedRevisionData0,selectedRevisionData1;
-    RevisionData   selectedRevisionData;
+//    RevisionData   selectedRevisionData;
 
     Data()
     {
@@ -187,8 +192,9 @@ class CommandRevisions
    * @param shell shell
    * @param repositoryTab repository tab
    * @param fileData file data
+   * @param revision revision to show or null
    */
-  CommandRevisions(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData)
+  CommandRevisions(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData, String revision)
   {
     Composite         composite;
     ScrolledComposite scrolledComposite;
@@ -210,7 +216,7 @@ class CommandRevisions
     widgetRevisions.setBackground(Onzen.COLOR_WHITE);
     Widgets.layout(widgetRevisions,0,0,TableLayoutData.NSWE,0,0,4);
     widgetHorizontalScrollBar = widgetRevisions.getHorizontalBar();
-    widgetVerticalScrollBar = widgetRevisions.getVerticalBar();
+    widgetVerticalScrollBar   = widgetRevisions.getVerticalBar();
 
     // buttons
     composite = Widgets.newComposite(dialog);
@@ -221,6 +227,7 @@ class CommandRevisions
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       widgetSelectedRevision0 = Widgets.newStringView(composite);
+      widgetSelectedRevision0.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetSelectedRevision0,0,1,TableLayoutData.WE);
       Widgets.addModifyListener(new WidgetListener(widgetSelectedRevision0,data)
       {
@@ -234,6 +241,7 @@ class CommandRevisions
       Widgets.layout(label,0,2,TableLayoutData.W);
 
       widgetSelectedRevision1 = Widgets.newStringView(composite);
+      widgetSelectedRevision1.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetSelectedRevision1,0,3,TableLayoutData.WE);
       Widgets.addModifyListener(new WidgetListener(widgetSelectedRevision1,data)
       {
@@ -292,7 +300,7 @@ class CommandRevisions
         {
           Button widget = (Button)selectionEvent.widget;
 
-          if (data.selectedRevisionData != null)
+          if (data.selectedRevisionData1 != null)
           {
             try
             {
@@ -311,12 +319,13 @@ throw new RepositoryException("NYI");
       Widgets.layout(label,0,7,TableLayoutData.W);
 
       widgetSelectedRevision = Widgets.newStringView(composite);
+      widgetSelectedRevision.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetSelectedRevision,0,8,TableLayoutData.WE);
       Widgets.addModifyListener(new WidgetListener(widgetSelectedRevision,data)
       {
         public void modified(Control control)
         {
-          if (!widgetSelectedRevision.isDisposed()) widgetSelectedRevision.setText((data.selectedRevisionData != null) ? data.selectedRevisionData.revision : "");
+          if (!widgetSelectedRevision.isDisposed()) widgetSelectedRevision.setText((data.selectedRevisionData1 != null) ? data.selectedRevisionData1.revision : "");
         }
       });
 
@@ -330,7 +339,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData != null);
+          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData0 != null);
         }
       });
       widgetView.addSelectionListener(new SelectionListener()
@@ -342,9 +351,9 @@ throw new RepositoryException("NYI");
         {
           Button widget = (Button)selectionEvent.widget;
 
-          if (data.selectedRevisionData != null)
+          if (data.selectedRevisionData1 != null)
           {
-            CommandView commandView = new CommandView(dialog,repositoryTab,fileData,data.selectedRevisionData.revision);
+            CommandView commandView = new CommandView(dialog,repositoryTab,fileData,data.selectedRevisionData1.revision);
             commandView.run();
           }
         }
@@ -357,7 +366,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData1 != null));
         }
       });
       widgetSave.addSelectionListener(new SelectionListener()
@@ -369,12 +378,12 @@ throw new RepositoryException("NYI");
         {
           Button widget = (Button)selectionEvent.widget;
 
-          if (data.selectedRevisionData != null)
+          if (data.selectedRevisionData1 != null)
           {
             try
             {
               // get file
-              byte[] fileDataBytes =  repositoryTab.repository.getFileBytes(fileData,data.selectedRevisionData.revision);
+              byte[] fileDataBytes =  repositoryTab.repository.getFileBytes(fileData,data.selectedRevisionData1.revision);
 
               // save to file
               String fileName = Dialogs.fileSave(dialog,"Save file");
@@ -407,7 +416,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedRevisionData1 != null));
         }
       });
       widgetRevert.addSelectionListener(new SelectionListener()
@@ -419,14 +428,14 @@ throw new RepositoryException("NYI");
         {
           Button widget = (Button)selectionEvent.widget;
 
-          if (data.selectedRevisionData != null)
+          if (data.selectedRevisionData1 != null)
           {
-            if (Dialogs.confirm(dialog,String.format("Revert file '%s' to revision %s?",fileData.getFileName(),data.selectedRevisionData.revision)))
+            if (Dialogs.confirm(dialog,String.format("Revert file '%s' to revision %s?",fileData.getFileName(),data.selectedRevisionData1.revision)))
             {
               try
               {
                 // revert file
-                repositoryTab.repository.revert(fileData,data.selectedRevisionData.revision);
+                repositoryTab.repository.revert(fileData,data.selectedRevisionData1.revision);
 
                 // update state
                 repositoryTab.repository.updateStates(fileData);
@@ -559,7 +568,6 @@ throw new RepositoryException("NYI");
                 // selected revision
                 data.selectedRevisionData0 = data.selectedRevisionData1;
                 data.selectedRevisionData1 = drawInfo.revisionData;
-                data.selectedRevisionData  = drawInfo.revisionData;
 
                 // notify modification
                 Widgets.modified(data);
@@ -618,7 +626,17 @@ throw new RepositoryException("NYI");
     Dialogs.show(dialog,Settings.geometryRevisions);
 
     // show
-    show();
+    show(revision);
+  }
+
+  /** create revision view
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param fileData file data
+   */
+  CommandRevisions(Shell shell, RepositoryTab repositoryTab, FileData fileData)
+  {
+    this(shell,repositoryTab,fileData,null);
   }
 
   /** set scroll value
@@ -689,6 +707,105 @@ throw new RepositoryException("NYI");
     return size;
   }
 
+  /** get revision in revision tree
+   * @param revisionDataTree revision data tree
+   * @param revision revision
+   * @return revision data or null
+   */
+  private RevisionData getRevision(RevisionData[] revisionDataTree, String revision)
+  {
+    for (RevisionData revisionData : revisionDataTree)
+    {
+      if (revisionData.revision.equals(revision))
+      {
+        return revisionData;
+      }
+      else
+      {
+        if (revisionData.branches != null)
+        {
+          for (BranchData branchData : revisionData.branches)
+          {
+            RevisionData subRevisionData = getRevision(branchData.revisionDataTree,revision);
+            if (subRevisionData != null)
+            {
+              return subRevisionData;
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /** get origin (x0,y0) of revision in revision tree
+   * @param revisionDataTree revision data tree
+   * @param revision revision
+   * @return point (in pixel) or null
+   */
+  private Point getRevisionX0Y0(RevisionData[] revisionDataTree, String revision)
+  {
+    final int ENTRY_WIDTH  = Settings.geometryRevisionBox.x;
+    final int ENTRY_HEIGHT = Settings.geometryRevisionBox.y;
+
+    Point point = new Point(0,0);
+
+    boolean firstFlag = true;
+    for (RevisionData revisionData : revisionDataTree)
+    {
+      if (revisionData.revision.equals(revision))
+      {
+        point.x += MARGIN;
+        point.y += MARGIN;
+        return point;
+      }
+      else
+      {
+        if (!firstFlag)
+        {
+          point.y += PADDING;
+        }
+
+        point.y += ENTRY_HEIGHT;
+  //Dprintf.dprintf("size=%s",size);
+
+        if (revisionData.branches != null)
+        {
+          Point maxSubSize = new Point(0,0);
+          for (BranchData branchData : revisionData.branches)
+          {
+            Point subPoint = getRevisionX0Y0(branchData.revisionDataTree,revision);
+Dprintf.dprintf("subPoint=%s",subPoint);
+            if (subPoint != null)
+            {
+              point.x += subPoint.x;
+              point.y += subPoint.y;
+
+              return point;
+            }
+            else
+            {
+              Point subSize = getSize(branchData.revisionDataTree);
+
+              maxSubSize.x = Math.max(maxSubSize.x,subSize.x);
+              maxSubSize.y = Math.max(maxSubSize.y,subSize.y);
+            }
+          }
+  //Dprintf.dprintf("maxSubSize=%s",maxSubSize);
+
+          // next column, get max. dy
+//          point.x = Math.max(point.x,ENTRY_WIDTH+PADDING+maxSubSize.x);
+//          point.y = point.y+maxSubSize.y;
+        }
+
+        firstFlag = false;
+      }
+    }
+
+    return null;
+  }
+
   /** redraw revision data tree
    * @param view draw bounds
    * @param gc graphics context
@@ -714,8 +831,6 @@ throw new RepositoryException("NYI");
     final int ENTRY_WIDTH  = Math.max(Settings.geometryRevisionBox.x+containerDeltaWidth, CONTAINER_MIN_WIDTH );
     final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y+containerDeltaHeight,CONTAINER_MIN_HEIGHT);
     final int FONT_HEIGHT  = Widgets.getTextHeight(widgetRevisions);
-
-//    Rectangle bounds = new Rectangle(x,y,0,0);
 
     boolean firstFlag    = true;
     int     widthColumn0 = Widgets.getTextWidth(widgetRevisions,new String[]{"Revision:","Date:","Autor:"});
@@ -836,8 +951,9 @@ throw new RepositoryException("NYI");
   }
 
   /** redraw revision tree and update draw info
+   * @param clearFlag true to clear background
    */
-  private void redraw()
+  private void redraw(boolean clearFlag)
   {
     if (data.revisionDataTree != null)
     {
@@ -846,9 +962,17 @@ throw new RepositoryException("NYI");
 
       ArrayList<DrawInfo> drawInfoList = new ArrayList<DrawInfo>();
 
-      GC    gc      = new GC(widgetRevisions);
-      Image image   = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
-      GC    imageGC = new GC(image);
+      Rectangle clientArea = widgetRevisions.getClientArea();
+      GC        gc         = new GC(widgetRevisions);
+      Image     image      = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
+      GC        imageGC    = new GC(image);
+
+      if (clearFlag)
+      {
+        // clear
+        gc.setBackground(Onzen.COLOR_WHITE);
+        gc.fillRectangle(0,0,clientArea.width,clientArea.height);
+      }
 
       redraw(data.view,
              gc,
@@ -867,6 +991,13 @@ throw new RepositoryException("NYI");
       // get container, handles coordinates
       data.drawInfos = drawInfoList.toArray(new DrawInfo[drawInfoList.size()]);
     }
+  }
+
+  /** redraw revision tree and update draw info
+   */
+  private void redraw()
+  {
+    redraw(false);
   }
 
   /** redraw revision tree with container delta width/height (no update of draw infos)
@@ -916,20 +1047,14 @@ throw new RepositoryException("NYI");
       data.size.y += 2*MARGIN;
 
       // set scroll bars
-      Rectangle clientArea = widgetRevisions.getClientArea ();
+      Rectangle clientArea = widgetRevisions.getClientArea();
       widgetHorizontalScrollBar.setMaximum(data.size.x);
       widgetVerticalScrollBar.setMaximum(data.size.y);
       widgetHorizontalScrollBar.setThumb(Math.min(clientArea.width,data.size.x));
       widgetVerticalScrollBar.setThumb(Math.min(clientArea.height,data.size.y));
 
-      // clear
-      GC gc = new GC(widgetRevisions);
-      gc.setBackground(Onzen.COLOR_WHITE);
-      gc.fillRectangle(0,0,clientArea.width,clientArea.height);
-      gc.dispose();
-
       // redraw
-      redraw();
+      redraw(true);
     }
   }
 
@@ -953,7 +1078,7 @@ throw new RepositoryException("NYI");
     // start show revision tree
     Background.run(new BackgroundRunnable(fileData,revision)
     {
-      public void run(FileData fileData, String revision)
+      public void run(FileData fileData, final String revision)
       {
         // get revision tree
         repositoryTab.setStatusText("Get revision data for '%s'...",fileData.getFileName());
@@ -988,6 +1113,25 @@ throw new RepositoryException("NYI");
             {
               // set canvas size and redraw
               setSize();
+
+              // scroll to selected revision
+              data.selectedRevisionData1 = getRevision(data.revisionDataTree,revision);
+              if (data.selectedRevisionData1 != null)
+              {
+                // get x,y-offset of revision
+                Point point = getRevisionX0Y0(data.revisionDataTree,revision);
+
+                // scroll
+                Rectangle clientArea = widgetRevisions.getClientArea();
+                if (point.x > clientArea.width ) data.view.x = -point.x;
+                if (point.y > clientArea.height) data.view.y = -point.y;
+                widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
+                widgetHorizontalScrollBar.setSelection(point.x);
+                widgetVerticalScrollBar.setSelection(point.y);
+
+                // redraw
+                redraw(true);
+              }
 
               // notify modification
               Widgets.modified(data);
