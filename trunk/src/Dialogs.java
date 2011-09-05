@@ -188,12 +188,20 @@ class Dialogs
    * @param columnWeight column weight
    * @return dialog shell
    */
-  public static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double columnWeight)
+  private static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double columnWeight, int style)
   {
     TableLayout tableLayout;
 
     // create dialog
-    final Shell dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|SWT.APPLICATION_MODAL);
+    final Shell dialog;
+    if ((style & SWT.APPLICATION_MODAL) == SWT.APPLICATION_MODAL)
+    {
+      dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    else
+    {
+      dialog = new Shell(parentShell.getDisplay(),SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
     dialog.setText(title);
     tableLayout = new TableLayout(rowWeight,columnWeight,4);
     tableLayout.minWidth  = minWidth;
@@ -201,6 +209,34 @@ class Dialogs
     dialog.setLayout(tableLayout);
 
     return dialog;
+  }
+
+  /** open a new dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeight row weight
+   * @param columnWeight column weight
+   * @return dialog shell
+   */
+  public static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double columnWeight)
+  {
+    return open(parentShell,title,minWidth,minHeight,rowWeight,columnWeight,SWT.NONE);
+  }
+
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeight row weight
+   * @param columnWeight column weight
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double columnWeight)
+  {
+    return open(parentShell,title,minWidth,minHeight,rowWeight,columnWeight,SWT.APPLICATION_MODAL);
   }
 
   /** open a new dialog
@@ -218,6 +254,50 @@ class Dialogs
   /** open a new dialog
    * @param parentShell parent shell
    * @param title title string
+   * @param rowWeight row weight
+   * @param columnWeight column weight
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, double rowWeight, double columnWeight)
+  {
+    return openModal(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeight,columnWeight);
+  }
+
+  /** open a new dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeights row weights or null
+   * @param columnWeight column weight
+   * @return dialog shell
+   */
+  private static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double[] rowWeights, double columnWeight, int style)
+  {
+    TableLayout tableLayout;
+
+    // create dialog
+    final Shell dialog;
+    if ((style & SWT.APPLICATION_MODAL) == SWT.APPLICATION_MODAL)
+    {
+      dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    else
+    {
+      dialog = new Shell(parentShell.getDisplay(),SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    dialog.setText(title);
+    tableLayout = new TableLayout(rowWeights,columnWeight,4);
+    tableLayout.minWidth  = minWidth;
+    tableLayout.minHeight = minHeight;
+    dialog.setLayout(tableLayout);
+
+    return dialog;
+  }
+
+  /** open a new dialog
+   * @param parentShell parent shell
+   * @param title title string
    * @param minWidth minimal width
    * @param minHeight minimal height
    * @param rowWeights row weights or null
@@ -226,17 +306,21 @@ class Dialogs
    */
   public static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double[] rowWeights, double columnWeight)
   {
-    TableLayout tableLayout;
+    return open(parentShell,title,minWidth,minHeight,rowWeights,columnWeight,SWT.RESIZE);
+  }
 
-    // create dialog
-    final Shell dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|SWT.APPLICATION_MODAL);
-    dialog.setText(title);
-    tableLayout = new TableLayout(rowWeights,columnWeight,4);
-    tableLayout.minWidth  = minWidth;
-    tableLayout.minHeight = minHeight;
-    dialog.setLayout(tableLayout);
-
-    return dialog;
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeights row weights or null
+   * @param columnWeight column weight
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, int minWidth, int minHeight, double[] rowWeights, double columnWeight)
+  {
+    return open(parentShell,title,minWidth,minHeight,rowWeights,columnWeight,SWT.RESIZE|SWT.APPLICATION_MODAL);
   }
 
   /** open a new dialog
@@ -251,6 +335,50 @@ class Dialogs
     return open(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeights,columnWeight);
   }
 
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param rowWeights row weights or null
+   * @param columnWeight column weight
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, double[] rowWeights, double columnWeight)
+  {
+    return openModal(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeights,columnWeight);
+  }
+
+  /** open a new dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeight row weight
+   * @param columnWeights column weights or null
+   * @return dialog shell
+   */
+  private static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double[] columnWeights, int style)
+  {
+    TableLayout tableLayout;
+
+    // create dialog
+    final Shell dialog;
+    if ((style & SWT.APPLICATION_MODAL) == SWT.APPLICATION_MODAL)
+    {
+      dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    else
+    {
+      dialog = new Shell(parentShell.getDisplay(),SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    dialog.setText(title);
+    tableLayout = new TableLayout(rowWeight,columnWeights,4);
+    tableLayout.minWidth  = minWidth;
+    tableLayout.minHeight = minHeight;
+    dialog.setLayout(tableLayout);
+
+    return dialog;
+  }
+
   /** open a new dialog
    * @param parentShell parent shell
    * @param title title string
@@ -262,17 +390,21 @@ class Dialogs
    */
   public static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double[] columnWeights)
   {
-    TableLayout tableLayout;
+    return open(parentShell,title,minWidth,minHeight,rowWeight,columnWeights,SWT.NONE);
+  }
 
-    // create dialog
-    final Shell dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|SWT.APPLICATION_MODAL);
-    dialog.setText(title);
-    tableLayout = new TableLayout(rowWeight,columnWeights,4);
-    tableLayout.minWidth  = minWidth;
-    tableLayout.minHeight = minHeight;
-    dialog.setLayout(tableLayout);
-
-    return dialog;
+  /** open a new dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeight row weight
+   * @param columnWeights column weights or null
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, int minWidth, int minHeight, double rowWeight, double[] columnWeights)
+  {
+    return open(parentShell,title,minWidth,minHeight,rowWeight,columnWeights,SWT.APPLICATION_MODAL);
   }
 
   /** open a new dialog
@@ -287,6 +419,50 @@ class Dialogs
     return open(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeight,columnWeights);
   }
 
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param rowWeight row weight
+   * @param columnWeights column weights or null
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, double rowWeight, double[] columnWeights)
+  {
+    return openModal(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeight,columnWeights);
+  }
+
+  /** open a new dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeights row weights or null
+   * @param columnWeights column weights or null
+   * @return dialog shell
+   */
+  private static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double[] rowWeights, double[] columnWeights, int style)
+  {
+    TableLayout tableLayout;
+
+    // create dialog
+    final Shell dialog;
+    if ((style & SWT.APPLICATION_MODAL) == SWT.APPLICATION_MODAL)
+    {
+      dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    else
+    {
+      dialog = new Shell(parentShell.getDisplay(),SWT.DIALOG_TRIM|SWT.RESIZE|style);
+    }
+    dialog.setText(title);
+    tableLayout = new TableLayout(rowWeights,columnWeights,4);
+    tableLayout.minWidth  = minWidth;
+    tableLayout.minHeight = minHeight;
+    dialog.setLayout(tableLayout);
+
+    return dialog;
+  }
+
   /** open a new dialog
    * @param parentShell parent shell
    * @param title title string
@@ -298,17 +474,21 @@ class Dialogs
    */
   public static Shell open(Shell parentShell, String title, int minWidth, int minHeight, double[] rowWeights, double[] columnWeights)
   {
-    TableLayout tableLayout;
+    return open(parentShell,title,minWidth,minHeight,rowWeights,columnWeights,SWT.NONE);
+  }
 
-    // create dialog
-    final Shell dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|SWT.APPLICATION_MODAL);
-    dialog.setText(title);
-    tableLayout = new TableLayout(rowWeights,columnWeights,4);
-    tableLayout.minWidth  = minWidth;
-    tableLayout.minHeight = minHeight;
-    dialog.setLayout(tableLayout);
-
-    return dialog;
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @param rowWeights row weights or null
+   * @param columnWeights column weights or null
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, int minWidth, int minHeight, double[] rowWeights, double[] columnWeights)
+  {
+    return open(parentShell,title,minWidth,minHeight,rowWeights,columnWeights,SWT.APPLICATION_MODAL);
   }
 
   /** open a new dialog
@@ -323,6 +503,18 @@ class Dialogs
     return open(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeights,columnWeights);
   }
 
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param rowWeights row weights or null
+   * @param columnWeights column weights or null
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, double[] rowWeights, double[] columnWeights)
+  {
+    return openModal(parentShell,title,SWT.DEFAULT,SWT.DEFAULT,rowWeights,columnWeights);
+  }
+
   /** open a new dialog
    * @param parentShell parent shell
    * @param title title string
@@ -335,6 +527,18 @@ class Dialogs
     return open(parentShell,title,minWidth,minHeight,new double[]{1,0},1.0);
   }
 
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param minWidth minimal width
+   * @param minHeight minimal height
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title, int minWidth, int minHeight)
+  {
+    return openModal(parentShell,title,minWidth,minHeight,new double[]{1,0},1.0);
+  }
+
   /** open a new dialog
    * @param parentShell parent shell
    * @param title title string
@@ -343,6 +547,16 @@ class Dialogs
   public static Shell open(Shell parentShell, String title)
   {
     return open(parentShell,title,SWT.DEFAULT,SWT.DEFAULT);
+  }
+
+  /** open a new modal dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @return dialog shell
+   */
+  public static Shell openModal(Shell parentShell, String title)
+  {
+    return openModal(parentShell,title,SWT.DEFAULT,SWT.DEFAULT);
   }
 
   /** close a dialog
@@ -376,7 +590,7 @@ class Dialogs
       dialog.pack();
 
       // get location for dialog (keep 16/64 pixel away form right/bottom)
-      Display display = dialog.getParent().getDisplay();
+      Display display = dialog.getDisplay();
       Point cursorPoint = display.getCursorLocation();
       Rectangle displayBounds = display.getBounds();
       Rectangle bounds = dialog.getBounds();
@@ -422,13 +636,13 @@ class Dialogs
    * @param dialog dialog shell
    * @param escapeKeyReturnValue value to return on ESC key
    */
-  public static Object run(final Shell dialog, final Object escapeKeyReturnValue)
+  public static Object run(final Shell dialog, final Object escapeKeyReturnValue, Listener closeListener)
   {
     final Object[] result = new Object[1];
 
     if (!dialog.isDisposed())
     {
-      Display display = dialog.getParent().getDisplay();
+      Display display = dialog.getDisplay();
 
       // add escape key handler
       dialog.addTraverseListener(new TraverseListener()
@@ -439,7 +653,8 @@ class Dialogs
 
           if (traverseEvent.detail == SWT.TRAVERSE_ESCAPE)
           {
-            // store ESC result
+            // store ESC resultDprintf.dprintf("");
+
             widget.setData(escapeKeyReturnValue);
 
             /* stop processing key, send close event. Note: this is required
@@ -455,6 +670,7 @@ class Dialogs
       });
 
       // close handler to get result
+      if (closeListener != null) dialog.addListener(SWT.Close,closeListener);
       dialog.addListener(SWT.Close,new Listener()
       {
         public void handleEvent(Event event)
@@ -473,17 +689,41 @@ class Dialogs
       // show
       show(dialog);
 
-      // run dialog
-      while (!dialog.isDisposed())
+      if ((dialog.getStyle() & SWT.APPLICATION_MODAL) == SWT.APPLICATION_MODAL)
       {
-        if (!display.readAndDispatch()) display.sleep();
-      }
+        // run dialog
+        while (!dialog.isDisposed())
+        {
+          if (!display.readAndDispatch()) display.sleep();
+        }
 
-      // update all
-      display.update();
+        // update all
+        display.update();
+      }
+      else
+      {
+        result[0] = null;
+      }
     }
 
     return result[0];
+  }
+
+  /** run dialog
+   * @param dialog dialog shell
+   * @param escapeKeyReturnValue value to return on ESC key
+   */
+  public static Object run(final Shell dialog, final Object escapeKeyReturnValue)
+  {
+    return run(dialog,escapeKeyReturnValue,null);
+  }
+
+  /** run dialog
+   * @param dialog dialog shell
+   */
+  public static Object run(Shell dialog, Listener closeListener)
+  {
+    return run(dialog,null,closeListener);
   }
 
   /** run dialog

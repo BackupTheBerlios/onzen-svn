@@ -1439,8 +1439,13 @@ class CommandDiff
   public void run()
   {
     widgetClose.setFocus();
-    Dialogs.run(dialog);
-    display.removeFilter(SWT.KeyDown,filterListener);
+    Dialogs.run(dialog,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        display.removeFilter(SWT.KeyDown,filterListener);
+      }
+    });
   }
 
   /** convert data to string

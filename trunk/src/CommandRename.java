@@ -154,7 +154,7 @@ class CommandRename
     history = CommitMessage.getHistory();
 
     // rename files dialog
-    dialog = Dialogs.open(shell,"Rename file",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Rename file",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,0.0,1.0},1.0,4));

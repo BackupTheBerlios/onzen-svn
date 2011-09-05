@@ -158,7 +158,7 @@ class CommandAdd
     data.immediateCommitFlag = Settings.immediateCommit;
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Add files",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Add files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0},1.0,4));

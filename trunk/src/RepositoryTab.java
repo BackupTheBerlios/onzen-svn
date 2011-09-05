@@ -1038,7 +1038,7 @@ Dprintf.dprintf("");
       data.mimeType = mimeType;
 
       // command selection dialog
-      final Shell dialog = Dialogs.open(shell,"Select command to open file",300,200,new double[]{1.0,0.0},1.0);
+      final Shell dialog = Dialogs.openModal(shell,"Select command to open file",300,200,new double[]{1.0,0.0},1.0);
 
       // create widgets
       final Table  widgetEditors;
@@ -1279,7 +1279,7 @@ Dprintf.dprintf("");
     Button      button;
 
     // new directory dialog
-    dialog = Dialogs.open(shell,"Open file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Open file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetCommand;
     final Button widgetOpen;
@@ -1440,7 +1440,7 @@ Dprintf.dprintf("");
     }
 
     // new directory dialog
-    dialog = Dialogs.open(shell,"New file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"New file",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetFileName;
     final Button widgetCreate;
@@ -1576,7 +1576,7 @@ Dprintf.dprintf("");
     }
 
     // new directory dialog
-    dialog = Dialogs.open(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetPath;
     final Button widgetCreate;
@@ -1706,7 +1706,7 @@ Dprintf.dprintf("");
       Button      button;
 
       // rename file/directory dialog
-      dialog = Dialogs.open(shell,"Rename file/directory",new double[]{1.0,0.0},1.0);
+      dialog = Dialogs.openModal(shell,"Rename file/directory",new double[]{1.0,0.0},1.0);
 
       final Text   widgetNewFileName;
       final Button widgetRename;
@@ -1826,7 +1826,7 @@ Dprintf.dprintf("");
       Button      button;
 
       // delete dialog
-      dialog = Dialogs.open(shell,"Delete files/directories",new double[]{1.0,0.0},1.0);
+      dialog = Dialogs.openModal(shell,"Delete files/directories",new double[]{1.0,0.0},1.0);
 
       final List   widgetFiles;
       final Button widgetDelete;

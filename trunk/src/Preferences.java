@@ -195,7 +195,7 @@ class Preferences
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Preferences",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Preferences",new double[]{1.0,0.0},1.0);
 
     // create tab
     tabFolder = Widgets.newTabFolder(dialog);
@@ -1639,7 +1639,7 @@ class Preferences
     data.key = key;
 
     // add editor dialog
-    final Shell dialog = Dialogs.open(this.dialog,"Edit keyboard shortcut",300,SWT.DEFAULT,new double[]{1.0,0.0,0.0},1.0);
+    final Shell dialog = Dialogs.openModal(this.dialog,"Edit keyboard shortcut",300,SWT.DEFAULT,new double[]{1.0,0.0,0.0},1.0);
 
     final Text   widgetKey;
     final Button widgetSave;
@@ -1753,7 +1753,7 @@ class Preferences
     Button    button;
 
     // add editor dialog
-    final Shell dialog = Dialogs.open(this.dialog,"Edit color",100,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    final Shell dialog = Dialogs.openModal(this.dialog,"Edit color",100,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
@@ -1864,7 +1864,7 @@ class Preferences
     Button    button;
 
     // add editor dialog
-    final Shell dialog = Dialogs.open(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetMimeTypePattern;
     final Text   widgetCommand;

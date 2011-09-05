@@ -235,7 +235,7 @@ class CommandPatchReview
     COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Send patch review",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Send patch review",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(1.0,1.0,4));

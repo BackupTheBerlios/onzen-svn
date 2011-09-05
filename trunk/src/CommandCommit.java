@@ -160,7 +160,7 @@ class CommandCommit
     history = CommitMessage.getHistory();
 
     // commit files dialog
-    dialog = Dialogs.open(shell,"Commit files",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Commit files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.5,0.0,0.15,0.0,0.35},1.0,4));

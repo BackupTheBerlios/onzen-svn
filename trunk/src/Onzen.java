@@ -932,7 +932,7 @@ exception.printStackTrace();
     Label     label;
 
     // create window
-    shell = new Shell(display);
+    shell = new Shell(display,SWT.SHELL_TRIM);
     shell.setText("Onzen");
     shell.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
@@ -1775,7 +1775,7 @@ Dprintf.dprintf("");
           Label     label;
           Button    button;
 
-          final Shell dialog = Dialogs.open(shell,"New master password",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+          final Shell dialog = Dialogs.openModal(shell,"New master password",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
           final Text   widgetOldMasterPassword;
           final Text   widgetNewMasterPassword1,widgetNewMasterPassword2;
@@ -2491,7 +2491,7 @@ exception.printStackTrace();
     data.names = RepositoryList.listNames();
 
     // name dialog
-    dialog = Dialogs.open(shell,title,300,300,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,title,300,300,new double[]{1.0,0.0},1.0);
 
     final List   widgetNames;
     final Text   widgetNewName;
@@ -2711,7 +2711,7 @@ exception.printStackTrace();
    */
   private String getNewRepositoryListName()
   {
-    return getRepositoryListName("New repository list",false);
+    return getRepositoryListName("New repository",false);
   }
 
   /** get repository list name
@@ -2719,7 +2719,7 @@ exception.printStackTrace();
    */
   private String getRepositoryListName()
   {
-    return getRepositoryListName("Select repository list",true);
+    return getRepositoryListName("Select repository",true);
   }
 
   /** create new repository list
@@ -2819,7 +2819,7 @@ exception.printStackTrace();
     Button      button;
 
     // repository edit dialog
-    dialog = Dialogs.open(shell,"Edit repository list",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Edit repository list",new double[]{1.0,0.0},1.0);
 
     final List   widgetList;
     final Button widgetSave;
@@ -3113,7 +3113,7 @@ exception.printStackTrace();
     MenuItem    menuItem;
 
     // repository edit dialog
-    dialog = Dialogs.open(shell,"Edit repository",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Edit repository",new double[]{1.0,0.0},1.0);
 
     final Text                  widgetTitle;
     final Text                  widgetRootPath;

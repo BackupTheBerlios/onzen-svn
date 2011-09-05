@@ -149,7 +149,7 @@ class CommandSetFileMode
     history = CommitMessage.getHistory();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Set file mode",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Set file mode",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,1.0,0.0,1.0,0.0,0.0},1.0,4));
