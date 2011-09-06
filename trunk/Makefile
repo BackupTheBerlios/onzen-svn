@@ -375,11 +375,11 @@ onzen: onzen.in onzen-linux.jar onzen-linux_64.jar
 
 ifneq ($(LAUNCH4J),)
 # create Windows executable
-onzen.exe: onzen-windows.jar
+onzen.exe: onzen-windows.jar onzen-windows_64.jar
 	$(LAUNCH4J) onzen.xml
 else
 # create Windows start script
-onzen.bat: onzen.bat.in onzen-windows.jar
+onzen.bat: onzen.bat.in onzen-windows.jar onzen-windows_64.jar
 	$(CAT) onzen.bat.in | \
         ( \
           while IFS="" read line; do \
