@@ -748,7 +748,7 @@ class Dialogs
 
     if (!parentShell.isDisposed())
     {
-      final Shell dialog = open(parentShell,title,300,70);
+      final Shell dialog = openModal(parentShell,title,300,70);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
       // message
@@ -817,7 +817,7 @@ class Dialogs
 
     if (!parentShell.isDisposed())
     {
-      final Shell dialog = open(parentShell,"Error",300,70);
+      final Shell dialog = openModal(parentShell,"Error",300,70);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
       // message
@@ -920,7 +920,7 @@ class Dialogs
     {
       final boolean[] result = new boolean[1];
 
-      final Shell dialog = open(parentShell,title,300,70);
+      final Shell dialog = openModal(parentShell,title,300,70);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
       // message
@@ -1104,7 +1104,7 @@ class Dialogs
     {
       final int[] result = new int[1];
 
-      final Shell dialog = open(parentShell,title);
+      final Shell dialog = openModal(parentShell,title);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
       composite = new Composite(dialog,SWT.NONE);
@@ -1308,7 +1308,7 @@ class Dialogs
     {
       final BitSet result = new BitSet(texts.length);
 
-      final Shell dialog = open(parentShell,title);
+      final Shell dialog = openModal(parentShell,title);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
       composite = new Composite(dialog,SWT.NONE);
@@ -1452,7 +1452,7 @@ class Dialogs
     {
       final String[] result = new String[1];
 
-      final Shell dialog = open(parentShell,title,450,SWT.DEFAULT);
+      final Shell dialog = openModal(parentShell,title,450,SWT.DEFAULT);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
 
       // password
@@ -1745,7 +1745,7 @@ class Dialogs
     {
       final String[] result = new String[1];
 
-      final Shell dialog = open(parentShell,title,450,SWT.DEFAULT);
+      final Shell dialog = openModal(parentShell,title,450,SWT.DEFAULT);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
       // string
