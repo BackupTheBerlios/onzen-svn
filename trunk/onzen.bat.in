@@ -1,6 +1,6 @@
 @echo off
 
-java.exe @JAVA_FLAGS@ -cp onzen-windows.jar DataModel
+java.exe @JAVA_FLAGS@ -cp onzen-windows.jar DataModel > NUL:
 if errorlevel 64 goto 64
 if errorlevel 32 goto 32
 goto error
