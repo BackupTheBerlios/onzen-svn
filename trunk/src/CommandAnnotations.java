@@ -209,7 +209,7 @@ class CommandAnnotations
           Widgets.setEnabled(control,(data.annotationData != null));
         }
       });
-      Widgets.addTableColumn(widgetAnnotations,0,"Revision",SWT.LEFT );
+      Widgets.addTableColumn(widgetAnnotations,0,"Revision",SWT.RIGHT);
       Widgets.addTableColumn(widgetAnnotations,1,"Author",  SWT.LEFT );
       Widgets.addTableColumn(widgetAnnotations,2,"Date",    SWT.LEFT );
       Widgets.addTableColumn(widgetAnnotations,3,"Line Nb.",SWT.RIGHT);
