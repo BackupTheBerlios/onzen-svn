@@ -84,7 +84,7 @@ class BusyDialog
 
     display = parentShell.getDisplay();
 
-    dialog = Dialogs.open(parentShell,title,250,70);
+    dialog = Dialogs.openModal(parentShell,title,250,70);
     dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
     // message
