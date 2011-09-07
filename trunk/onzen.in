@@ -48,7 +48,7 @@ case $HOST_PLATFORM in
   solaris)
     JAVA_FLAGS="@JAVA_FLAGS@"
 
-    BARCONTROL_JAR="$BASE_DIRECTORY/barcontrol-solaris.jar"
+    ONZEN_JAR="$BASE_DIRECTORY/onzen-solaris.jar"
     ;;
   macos)
     JAVA_FLAGS="@JAVA_FLAGS@ -XstartOnFirstThread"
@@ -66,12 +66,14 @@ case $HOST_PLATFORM in
     ;;
 esac
 
-# check X11 server connection
-xset -q > /dev/null
-rc=$?
-if test $rc -ne 0; then
-  echo >&2 "ERROR: cannot connect to X11 server. Please check DISPLAY variable and rights to connect to X11 server."
-  exit 1
+# check X11 server connection if possible
+if test -n "`sh xset 2>/dev/null`"; then
+  xset -q > /dev/null
+  rc=$?
+  if test $rc -ne 0; then
+    echo >&2 "ERROR: cannot connect to X11 server. Please check DISPLAY variable and rights to connect to X11 server."
+    exit 1
+  fi
 fi
 
 # run main
