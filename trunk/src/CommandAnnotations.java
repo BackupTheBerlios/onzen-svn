@@ -114,14 +114,14 @@ class CommandAnnotations
   private final Shell         dialog;
 
   // widgets
+  private final Combo         widgetRevision;
+  private final Button        widgetRevisionPrev;
+  private final Button        widgetRevisionNext;
   private final Table         widgetAnnotations;
   private final TableColumn   widgetAnnotationLineColumn;
   private final Text          widgetFind;
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
-  private final Combo         widgetRevision;
-  private final Button        widgetRevisionPrev;
-  private final Button        widgetRevisionNext;
 
   // ------------------------ native functions ----------------------------
 
@@ -713,7 +713,10 @@ class CommandAnnotations
           });
           return;
         }
-        repositoryTab.clearStatusText();
+        finally
+        {
+          repositoryTab.clearStatusText();
+        }
 
         // show
         if (!dialog.isDisposed())
