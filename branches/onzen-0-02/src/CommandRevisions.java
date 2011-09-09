@@ -339,7 +339,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData0 != null);
+          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData1 != null);
         }
       });
       widgetView.addSelectionListener(new SelectionListener()
