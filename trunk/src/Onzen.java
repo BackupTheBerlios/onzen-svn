@@ -3439,6 +3439,23 @@ exception.printStackTrace();
             }
           });
           button.setToolTipText("Remove selected test description.");
+
+          button = Widgets.newButton(subSubComposite,"Sort...");
+          Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              if (Dialogs.confirm(dialog,"Really sort test descriptions?"))
+              {
+                Widgets.sortList(widgetPatchTests);
+              }
+            }
+          });
+          button.setToolTipText("Sort test descriptions.");
         }
 
         {
