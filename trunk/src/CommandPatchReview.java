@@ -452,6 +452,21 @@ class CommandPatchReview
                   }
                 }
               });
+
+              menuItem = Widgets.addMenuSeparator(menu);
+
+              menuItem = Widgets.addMenuItem(menu,"Sort");
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  Widgets.sortTable(widgetTests);
+                  updateText();
+                }
+              });
             }
             widgetTests.setMenu(menu);
             widgetTests.setToolTipText("Executed tests for patch.\nRight-click to open context menu.");
