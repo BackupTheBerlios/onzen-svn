@@ -2568,10 +2568,20 @@ class Widgets
           {
             // save data
             Object   data = tableItems[i].getData();
-            String[] texts = new String[table.getColumnCount()];
-            for (int z = 0; z < table.getColumnCount(); z++)
+            int columnCount = table.getColumnCount();
+            String[] texts;
+            if (columnCount > 0)
             {
-              texts[z] = tableItems[i].getText(z);
+              texts = new String[table.getColumnCount()];
+              for (int z = 0; z < table.getColumnCount(); z++)
+              {
+                texts[z] = tableItems[i].getText(z);
+              }
+            }
+            else
+            {
+              texts = new String[1];
+              texts[0] = tableItems[i].getText();
             }
             Color foregroundColor = tableItems[i].getForeground();
             Color backgroundColor = tableItems[i].getBackground();
@@ -2583,7 +2593,14 @@ class Widgets
             // create new item
             TableItem tableItem = new TableItem(table,SWT.NONE,j);
             tableItem.setData(data);
-            tableItem.setText(texts);
+            if (columnCount > 0)
+            {
+              tableItem.setText(texts);
+            }
+            else
+            {
+              tableItem.setText(texts[0]);
+            }
             tableItem.setForeground(foregroundColor);
             tableItem.setBackground(backgroundColor);
             tableItem.setChecked(checked);
@@ -2619,13 +2636,21 @@ class Widgets
     sortTable(table,table.getColumn(columnNb),sortDirection);
   }
 
-  /** sort table column
+  /** sort table column (ascending)
    * @param table table
    * @param columnNb column index (0..n-1)
    */
   public static void sortTable(Table table, int columnNb)
   {
     sortTable(table,columnNb,SWT.UP);
+  }
+
+  /** sort table (ascending)
+   * @param table table
+   */
+  public static void sortTable(Table table)
+  {
+    sortTableColumn(table,String.CASE_INSENSITIVE_ORDER);
   }
 
   /** get insert position in sorted table
