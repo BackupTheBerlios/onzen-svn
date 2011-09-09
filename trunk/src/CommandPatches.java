@@ -190,7 +190,7 @@ class CommandPatches
     COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
 
     // add files dialog
-    dialog = Dialogs.openModal(shell,"Patches",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Patches",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0,1.0},1.0,4));
@@ -1482,20 +1482,6 @@ Dprintf.dprintf("");
     {
       widgetPatches.setFocus();
       Dialogs.run(dialog);
-    }
-  }
-
-  /** run and wait for dialog
-   */
-  public boolean execute()
-  {
-    if ((Boolean)Dialogs.run(dialog,false))
-    {
-      return true;
-    }
-    else
-    {
-      return false;
     }
   }
 
