@@ -13,6 +13,7 @@
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -2119,6 +2120,28 @@ class Widgets
   public static List newList(Composite composite)
   {
     return newList(composite,SWT.BORDER|SWT.MULTI|SWT.V_SCROLL);
+  }
+
+  /** sort list
+   * @param list list
+   * @param comparator list data comparator
+   */
+  public static void sortList(List list, Comparator comparator)
+  {
+    if (!list.isDisposed())
+    {
+      String[] texts = list.getItems();
+      Arrays.sort(texts,comparator);
+      list.setItems(texts);
+    }
+  }
+
+  /** sort list
+   * @param list list
+   */
+  public static void sortList(List list)
+  {
+    sortList(list,String.CASE_INSENSITIVE_ORDER);
   }
 
   //-----------------------------------------------------------------------
