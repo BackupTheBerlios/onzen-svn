@@ -121,6 +121,8 @@ class CommandView
 
   // widgets
   private final Combo         widgetRevision;
+  private final Button        widgetRevisionPrev;
+  private final Button        widgetRevisionNext;
   private final Text          widgetLineNumbers;
   private final StyledText    widgetText;
   private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
@@ -170,7 +172,39 @@ class CommandView
         widgetRevision = Widgets.newSelect(subComposite);
         widgetRevision.setEnabled(false);
         Widgets.layout(widgetRevision,0,1,TableLayoutData.WE);
+        Widgets.addModifyListener(new WidgetListener(widgetRevision,data)
+        {
+          public void modified(Control control)
+          {
+            Widgets.setEnabled(control,(data.revisionNames != null));
+          }
+        });
         widgetRevision.setToolTipText("Revision to view.");
+
+        widgetRevisionPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_LEFT);
+        widgetRevisionPrev.setEnabled(false);
+        Widgets.layout(widgetRevisionPrev,0,2,TableLayoutData.W);
+        Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
+        {
+          public void modified(Control control)
+          {
+            Widgets.setEnabled(control,(data.revisionNames != null) && (widgetRevision.getSelectionIndex() > 0));
+          }
+        });
+        widgetRevisionPrev.setToolTipText("Show previous revision.");
+
+        widgetRevisionNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_RIGHT);
+        widgetRevisionNext.setEnabled(false);
+        Widgets.layout(widgetRevisionNext,0,3,TableLayoutData.W);
+        Widgets.addModifyListener(new WidgetListener(widgetRevisionNext,data)
+        {
+          public void modified(Control control)
+          {
+
+            Widgets.setEnabled(control,(data.revisionNames != null) && (widgetRevision.getSelectionIndex() < data.revisionNames.length-1));
+          }
+        });
+        widgetRevisionNext.setToolTipText("Show next revision.");
       }
 
       subComposite = Widgets.newComposite(composite,SWT.H_SCROLL|SWT.V_SCROLL);
@@ -273,6 +307,34 @@ class CommandView
         if ((data.revisionNames != null) && (index >= 0) && (index < data.revisionNames.length))
         {
           show(data.revisionNames[index]);
+        }
+      }
+    });
+    widgetRevisionPrev.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        int index = widgetRevision.getSelectionIndex();
+        if (index > 0)
+        {
+          show(data.revisionNames[index-1]);
+        }
+      }
+    });
+    widgetRevisionNext.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        int index = widgetRevision.getSelectionIndex();
+        if ((data.revisionNames != null) && (index < data.revisionNames.length-1))
+        {
+          show(data.revisionNames[index+1]);
         }
       }
     });
@@ -454,20 +516,22 @@ class CommandView
                 if (!widgetRevision.isDisposed())
                 {
                   int selectIndex = -1;
-
-                  widgetRevision.removeAll();
                   for (int z = 0; z < data.revisionNames.length; z++)
                   {
                     widgetRevision.add(data.revisionNames[z]);
-                    if ((revision != null) && revision.equals(data.revisionNames[z])) selectIndex = z;
+                    if ((revision != null) && revision.equals(data.revisionNames[z]))
+                    {
+                      selectIndex = z;
+                    }
                   }
                   widgetRevision.add(repositoryTab.repository.getLastRevision());
                   if ((revision != null) && revision.equals(repositoryTab.repository.getLastRevision())) selectIndex = data.revisionNames.length;
-                  if (selectIndex < 0) selectIndex = data.revisionNames.length;
-
+                  if (selectIndex == -1) selectIndex = data.revisionNames.length;
                   widgetRevision.select(selectIndex);
-                  widgetRevision.setEnabled(true);
                 }
+
+                // notify modification
+                Widgets.modified(data);
               }
             });
           }
@@ -666,7 +730,7 @@ class CommandView
 
     Background.run(new BackgroundRunnable(fileData,revision)
     {
-      public void run(FileData fileData, String revision)
+      public void run(FileData fileData, final String revision)
       {
         // get new revision
         repositoryTab.setStatusText("Get file '%s'...",fileData.getFileName());
@@ -691,12 +755,16 @@ class CommandView
           repositoryTab.clearStatusText();
         }
 
+        // show
         if (!dialog.isDisposed())
         {
           display.syncExec(new Runnable()
           {
             public void run()
             {
+              // set new revision
+              widgetRevision.setText(revision);
+
               if (data.lines != null)
               {
                 // set new text
@@ -706,13 +774,13 @@ class CommandView
                         widgetHorizontalScrollBar,
                         widgetVerticalScrollBar
                        );
-
-                // notify modification
-                Widgets.modified(data);
-
-                // focus find
-                if (!widgetFind.isDisposed()) widgetFind.setFocus();
               }
+
+              // notify modification
+              Widgets.modified(data);
+
+              // focus text find
+              widgetFind.setFocus();
             }
           });
         }
