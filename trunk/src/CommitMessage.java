@@ -60,6 +60,7 @@ class CommitMessageReceiveBroadcast extends Thread
   {
     this.history  = history;
     this.socket   = new MulticastSocket(port);
+    this.socket.joinGroup(address);
     this.packet   = new DatagramPacket(buffer,buffer.length);
   }
 
