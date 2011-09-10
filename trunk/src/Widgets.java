@@ -4613,6 +4613,9 @@ private static void printTree(Tree tree)
     });
   }
 
+  /** flash widget
+   * @param control control
+   */
   public static void flash(Control control)
   {
     Display display = control.getDisplay();
