@@ -596,7 +596,7 @@ public class Settings
 
   @SettingComment(text={"","UDP message broadcasting"})
   @SettingValue
-  public static String                   messageBroadcastAddress        = "192.168.11.255";
+  public static String                   messageBroadcastAddress        = "230.0.95.83";
   @SettingValue
   public static int                      messageBroadcastPort           = 9583;
 
