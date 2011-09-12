@@ -23,7 +23,6 @@ import org.eclipse.swt.custom.CaretListener;
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
@@ -118,6 +117,7 @@ class CommandRevisions
   class Data
   {
     RevisionData[] revisionDataTree;
+    RevisionData[] revisionData;
     Rectangle      view;
     Point          size;
     DrawInfo[]     drawInfos;
@@ -126,11 +126,11 @@ class CommandRevisions
     Point          containerResizeDelta;
     Rectangle      containerResizeRectangle;
     RevisionData   selectedRevisionData0,selectedRevisionData1;
-//    RevisionData   selectedRevisionData;
 
     Data()
     {
       this.revisionDataTree         = null;
+      this.revisionData             = null;
       this.view                     = new Rectangle(0,0,0,0);
       this.size                     = new Point(0,0);
       this.drawInfos                = null;
@@ -176,6 +176,9 @@ class CommandRevisions
   private final Canvas        widgetRevisions;
   private final ScrollBar     widgetHorizontalScrollBar;
   private final ScrollBar     widgetVerticalScrollBar;
+  private final Text          widgetFind;
+  private final Button        widgetFindPrev;
+  private final Button        widgetFindNext;
   private final Button        widgetDiff;
   private final Button        widgetPatch;
   private final Text          widgetSelectedRevision;
@@ -196,10 +199,9 @@ class CommandRevisions
    */
   CommandRevisions(final Shell shell, final RepositoryTab repositoryTab, final FileData fileData, String revision)
   {
-    Composite         composite;
-    ScrolledComposite scrolledComposite;
-    Label             label;
-    Button            button;
+    Composite composite,subComposite;
+    Label     label;
+    Button    button;
 
     // initialize variables
     this.repositoryTab = repositoryTab;
@@ -212,11 +214,51 @@ class CommandRevisions
     // create dialog
     dialog = Dialogs.open(shell,"Revisions: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
-    widgetRevisions = Widgets.newCanvas(dialog,SWT.H_SCROLL|SWT.V_SCROLL);
-    widgetRevisions.setBackground(Onzen.COLOR_WHITE);
-    Widgets.layout(widgetRevisions,0,0,TableLayoutData.NSWE,0,0,4);
-    widgetHorizontalScrollBar = widgetRevisions.getHorizontalBar();
-    widgetVerticalScrollBar   = widgetRevisions.getVerticalBar();
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      // tree view
+      widgetRevisions = Widgets.newCanvas(composite,SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetRevisions.setBackground(Onzen.COLOR_WHITE);
+      Widgets.layout(widgetRevisions,0,0,TableLayoutData.NSWE,0,0,4);
+      widgetHorizontalScrollBar = widgetRevisions.getHorizontalBar();
+      widgetVerticalScrollBar   = widgetRevisions.getVerticalBar();
+
+      // find
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+      {
+        label = Widgets.newLabel(subComposite,"Find:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
+
+        widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
+        widgetFindPrev.setEnabled(false);
+        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+        Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
+        {
+          public void modified(Control control)
+          {
+            Widgets.setEnabled(control,(data.revisionDataTree != null) && (data.revisionData != null));
+          }
+        });
+
+        widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
+        widgetFindNext.setEnabled(false);
+        Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+        Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
+        {
+          public void modified(Control control)
+          {
+            Widgets.setEnabled(control,(data.revisionDataTree != null) && (data.revisionData != null));
+          }
+        });
+      }
+    }
 
     // buttons
     composite = Widgets.newComposite(dialog);
@@ -339,7 +381,7 @@ throw new RepositoryException("NYI");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData0 != null);
+          if (!control.isDisposed()) control.setEnabled(data.selectedRevisionData1 != null);
         }
       });
       widgetView.addSelectionListener(new SelectionListener()
@@ -621,6 +663,66 @@ throw new RepositoryException("NYI");
         }
       }
     });
+    widgetFind.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        RevisionData revisionData = findNext(widgetFind);
+        if (revisionData != null)
+        {
+          // select revision and show
+          data.selectedRevisionData0 = null;
+          data.selectedRevisionData1 = revisionData;
+          show(revisionData);
+
+          // notify modification
+          Widgets.modified(data);
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetFindPrev.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        RevisionData revisionData = findPrev(widgetFind);
+        if (revisionData != null)
+        {
+          // select revision and show
+          data.selectedRevisionData0 = null;
+          data.selectedRevisionData1 = revisionData;
+          show(revisionData);
+
+          // notify modification
+          Widgets.modified(data);
+        }
+      }
+    });
+    widgetFindNext.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        RevisionData revisionData = findNext(widgetFind);
+        if (revisionData != null)
+        {
+          // select revision and show
+          data.selectedRevisionData0 = null;
+          data.selectedRevisionData1 = revisionData;
+          show(revisionData);
+
+          // notify modification
+          Widgets.modified(data);
+        }
+      }
+    });
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryRevisions);
@@ -653,7 +755,7 @@ throw new RepositoryException("NYI");
    */
   public void run()
   {
-    widgetClose.setFocus();
+    widgetFind.setFocus();
     Dialogs.run(dialog);
   }
 
@@ -804,6 +906,24 @@ Dprintf.dprintf("subPoint=%s",subPoint);
     }
 
     return null;
+  }
+
+  /** get origin (x0,y0) of revision in revision tree
+   * @param revision revision
+   * @return point (in pixel) or null
+   */
+  private Point getRevisionX0Y0(String revision)
+  {
+    return getRevisionX0Y0(data.revisionDataTree,revision);
+  }
+
+  /** get origin (x0,y0) of revision in revision tree
+   * @param revisionData revision data
+   * @return point (in pixel) or null
+   */
+  private Point getRevisionX0Y0(RevisionData revisionData)
+  {
+    return getRevisionX0Y0(revisionData.revision);
   }
 
   /** redraw revision data tree
@@ -1058,6 +1178,25 @@ Dprintf.dprintf("subPoint=%s",subPoint);
     }
   }
 
+  /** append revision data to revision data array
+   * @param revisionDataArray array
+   * @param revisionData_ revision data to append
+   */
+  private void revisionDataTreeToArray(ArrayList<RevisionData> revisionDataArray, RevisionData[] revisionData_)
+  {
+    for (RevisionData revisionData : revisionData_)
+    {
+      revisionDataArray.add(revisionData);
+      if (revisionData.branches != null)
+      {
+        for (BranchData branchData : revisionData.branches)
+        {
+          revisionDataTreeToArray(revisionDataArray,branchData.revisionDataTree);
+        }
+      }
+    }
+  }
+
   /** show revisions: set canvas size and draw revision tree
    */
   private void show(String revision)
@@ -1104,6 +1243,11 @@ Dprintf.dprintf("subPoint=%s",subPoint);
         }
 //printRevisionDataTree(data.revisionDataTree);
 
+        // convert tree into array for find function
+        ArrayList<RevisionData> revisionDataArray = new ArrayList<RevisionData>();
+        revisionDataTreeToArray(revisionDataArray,data.revisionDataTree);
+        data.revisionData = revisionDataArray.toArray(new RevisionData[revisionDataArray.size()]);
+
         // show
         if (!dialog.isDisposed())
         {
@@ -1119,12 +1263,14 @@ Dprintf.dprintf("subPoint=%s",subPoint);
               if (data.selectedRevisionData1 != null)
               {
                 // get x,y-offset of revision
-                Point point = getRevisionX0Y0(data.revisionDataTree,revision);
+                Point point = getRevisionX0Y0(revision);
 
                 // scroll
                 Rectangle clientArea = widgetRevisions.getClientArea();
-                if (point.x > clientArea.width ) data.view.x = -point.x;
-                if (point.y > clientArea.height) data.view.y = -point.y;
+                clientArea.x = widgetHorizontalScrollBar.getSelection();
+                clientArea.y = widgetVerticalScrollBar.getSelection();
+                if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -point.x;
+                if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -point.y;
                 widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
                 widgetHorizontalScrollBar.setSelection(point.x);
                 widgetVerticalScrollBar.setSelection(point.y);
@@ -1147,6 +1293,135 @@ Dprintf.dprintf("subPoint=%s",subPoint);
   private void show()
   {
     show(repositoryTab.repository.getLastRevision());
+  }
+
+  /** search previous revision
+   * @param widgetFind search text widget
+   * @return revision data or null
+   */
+  private RevisionData findPrev(Text widgetFind)
+  {
+    RevisionData revisionData = null;
+
+    if (!widgetFind.isDisposed() && (data.revisionData != null))
+    {
+      String findText = widgetFind.getText().toLowerCase();
+      if (!findText.isEmpty())
+      {
+        // get selected/first revision
+        RevisionData selectedRevisionData = (data.selectedRevisionData1 != null) ? data.selectedRevisionData1 : data.revisionData[0];
+
+        // find current revision
+        int z = 0;
+        while ((z < data.revisionData.length) && (data.revisionData[z] != selectedRevisionData))
+        {
+          z++;
+        }
+
+        // find previous matching revision
+        do
+        {
+          z--;
+        }
+        while (   (z >= 0)
+               && !data.revisionData[z].match(findText)
+              );
+
+        if (z >= 0)
+        {
+          // select previsous revision
+          revisionData = data.revisionData[z];
+        }
+        else
+        {
+          // not found
+          Widgets.flash(widgetFind);
+        }
+      }
+    }
+
+    return revisionData;
+  }
+
+  /** search next revision
+   * @param widgetFind search text widget
+   * @return revision data or null
+   */
+  private RevisionData findNext(Text widgetFind)
+  {
+    RevisionData revisionData = null;
+
+    if (!widgetFind.isDisposed() && (data.revisionData != null))
+    {
+      String findText = widgetFind.getText().toLowerCase();
+      if (!findText.isEmpty())
+      {
+        // find current revision index or -1 if non selected
+        int z;
+        if (data.selectedRevisionData1 != null)
+        {
+          z = 0;
+          while ((z < data.revisionData.length) && (data.revisionData[z] != data.selectedRevisionData1))
+          {
+            z++;
+          }
+        }
+        else
+        {
+          z = -1;
+        }
+
+        // find next matching revision
+        do
+        {
+          z++;
+        }
+        while (   (z < data.revisionData.length)
+               && !data.revisionData[z].match(findText)
+              );
+
+        if (z < data.revisionData.length)
+        {
+          // select next revision
+          revisionData = data.revisionData[z];
+        }
+        else
+        {
+          // not found
+          Widgets.flash(widgetFind);
+        }
+      }
+    }
+
+    return revisionData;
+  }
+
+  private void show(final RevisionData revisionData)
+  {
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          // get x,y-offset of revision
+          Point point = getRevisionX0Y0(revisionData);
+
+          // scroll
+          Rectangle clientArea = widgetRevisions.getClientArea();
+          clientArea.x = widgetHorizontalScrollBar.getSelection();
+          clientArea.y = widgetVerticalScrollBar.getSelection();
+          if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -point.x;
+          if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -point.y;
+          widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
+          widgetHorizontalScrollBar.setSelection(point.x);
+          widgetVerticalScrollBar.setSelection(point.y);
+
+          // redraw
+          redraw(true);
+        }
+      });
+    }
   }
 
   /** print revision tree (for debugging)
