@@ -1054,6 +1054,24 @@ class RevisionData
     branches[branches.length-1] = branchData;
   }
 
+  /** match author/commit message with text
+   * @param text text
+   * @return true if text match to (is contained in) author or commit message
+   */
+  public boolean match(String text)
+  {
+    text = text.toLowerCase();
+
+    if (author.toLowerCase().indexOf(text) >= 0) return true;
+
+    for (String string : commitMessage)
+    {
+      if (string.toLowerCase().indexOf(text) >= 0) return true;
+    }
+
+    return false;
+  }
+
   /** convert data to string
    * @return string
    */
