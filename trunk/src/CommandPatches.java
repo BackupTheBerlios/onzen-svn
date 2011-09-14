@@ -573,6 +573,20 @@ Dprintf.dprintf("");
             }
           }
         });
+        menuItem = Widgets.addMenuItem(menu,"Edit reference...");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            for (TableItem tableItem : widgetPatches.getSelection())
+            {
+              editReference((Patch)tableItem.getData());
+            }
+          }
+        });
       }
       widgetPatches.setMenu(menu);
       widgetPatches.setToolTipText("Patches.\nRight-click to open context menu.");
@@ -1943,6 +1957,27 @@ Dprintf.dprintf("NYI");
   private void unapply()
   {
 Dprintf.dprintf("NYI");
+  }
+
+  /** edit reference of patch
+   * @param patch patch to commit
+   */
+  private void editReference(Patch patch)
+  {
+    String reference = Dialogs.string(dialog,"Edit patch reference","Reference:",patch.reference);
+    if (reference != null)
+    {
+      try
+      {
+        patch.reference = reference;
+        patch.save();
+      }
+      catch (SQLException exception)
+      {
+        Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+        return;
+      }
+    }
   }
 }
 
