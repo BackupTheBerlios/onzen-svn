@@ -1911,19 +1911,34 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void pushChanges()
     throws RepositoryException
   {
+    final Pattern PATTERN_ABORT = Pattern.compile("^\\s*abort:.*",Pattern.CASE_INSENSITIVE);
+
     try
     {
       Command command = new Command();
       int     exitCode;
+      Exec    exec;
+      String  line;
+      Matcher matcher;
 
       command.clear();
       command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpush":"push");
       command.append("--");
       if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // bug in hg: hg does not report an exitcode != 0 if something go wrong => check error output
+      exitCode = 0;
+      while ((line = exec.getStderr()) != null)
+      {
+        if ((matcher = PATTERN_ABORT.matcher(line)).matches())
+        {
+          exitCode = 1;
+        }
+      }
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
     }
     catch (IOException exception)
