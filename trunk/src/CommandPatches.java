@@ -506,8 +506,8 @@ class CommandPatches
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             for (TableItem tableItem : widgetPatches.getSelection())
-            {
-Dprintf.dprintf("");
+            {            
+              apply((Patch)tableItem.getData());
             }
           }
         });
@@ -521,7 +521,7 @@ Dprintf.dprintf("");
           {
             for (TableItem tableItem : widgetPatches.getSelection())
             {
-Dprintf.dprintf("");
+              unapply((Patch)tableItem.getData());
             }
           }
         });
@@ -535,7 +535,7 @@ Dprintf.dprintf("");
           {
             for (TableItem tableItem : widgetPatches.getSelection())
             {
-Dprintf.dprintf("");
+              discard((Patch)tableItem.getData());
             }
           }
         });
@@ -554,17 +554,7 @@ Dprintf.dprintf("");
                 // delete patches
                 for (TableItem tableItem : widgetPatches.getSelection())
                 {
-                  try
-                  {
-                    Patch patch = (Patch)tableItem.getData();
-
-                    patch.delete();
-                  }
-                  catch (SQLException exception)
-                  {
-                    Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-                    return;
-                  }
+                  delete((Patch)tableItem.getData());
                 }
 
                 // clear selection
@@ -1061,51 +1051,7 @@ Dprintf.dprintf("");
         {
           if (data.patch != null)
           {
-            try
-            {
-              StoredFiles storedFiles = null;
-              try
-              {
-                // create files backup of all local changes (in case there occur some error)
-                storedFiles = new StoredFiles(repositoryTab.repository.rootPath,repositoryTab.repository.getChangedFiles());
-
-                // apply patch
-                if (!data.patch.apply())
-                {
-                  Dialogs.error(dialog,"Cannot apply patch!");
-                  storedFiles.restore(); storedFiles = null;
-                  return;
-                }
-
-                // discard files backup
-                storedFiles.discard(); storedFiles = null;
-
-                // update file states
-                HashSet<FileData> fileDataSet = FileData.toSet(data.patch.getFileNames());
-                repositoryTab.asyncUpdateFileStates(fileDataSet);
-
-                // save new state
-                data.patch.state = Patch.States.APPLIED;
-                data.patch.save();
-
-                // notify change of data
-                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              }
-              finally
-              {
-                if (storedFiles != null) storedFiles.restore();
-              }
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(dialog,"Cannot apply patch (error: %s)",exception.getMessage());
-              return;
-            }
-            catch (SQLException exception)
-            {
-              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-              return;
-            }
+            apply(data.patch);
           }
         }
       });
@@ -1130,52 +1076,7 @@ Dprintf.dprintf("");
         {
           if (data.patch != null)
           {
-            try
-            {
-              StoredFiles storedFiles = null;
-              try
-              {
-                // create files backup of all local changes (in case there occur some error)
-                storedFiles = new StoredFiles(repositoryTab.repository.rootPath,repositoryTab.repository.getChangedFiles());
-
-                // unapply patch
-Dprintf.dprintf("");
-                if (!data.patch.unapply())
-                {
-                  Dialogs.error(dialog,"Cannot unapply patch!");
-                  storedFiles.restore(); storedFiles = null;
-                  return;
-                }
-
-                // discard files backup
-                storedFiles.discard(); storedFiles = null;
-
-                // update file states
-                HashSet<FileData> fileDataSet = FileData.toSet(data.patch.getFileNames());
-                repositoryTab.asyncUpdateFileStates(fileDataSet);
-
-                // save new state
-                data.patch.state = Patch.States.NONE;
-                data.patch.save();
-
-                // notify change of data
-                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              }
-              finally
-              {
-                if (storedFiles != null) storedFiles.restore();
-              }
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(dialog,"Cannot unapply patch (error: %s)",exception.getMessage());
-              return;
-            }
-            catch (SQLException exception)
-            {
-              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-              return;
-            }
+            unapply(data.patch);
           }
         }
       });
@@ -1200,20 +1101,7 @@ Dprintf.dprintf("");
         {
           if (data.patch != null)
           {
-            try
-            {
-              // save new state
-              data.patch.state = Patch.States.DISCARDED;
-              data.patch.save();
-
-              // notify change of data
-              Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-            }
-            catch (SQLException exception)
-            {
-              Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-              return;
-            }
+            discard(data.patch);
           }
         }
       });
@@ -1240,20 +1128,9 @@ Dprintf.dprintf("");
           {
             if (Dialogs.confirm(dialog,"Confirmation","Really delete patch?","Delete","Cancel"))
             {
-              try
-              {
-                // delete
-                data.patch.delete();
-                data.patch = null;
-
-                // notify change of data
-                Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
-              }
-              catch (SQLException exception)
-              {
-                Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
-                return;
-              }
+              // delete
+              delete(data.patch);
+              data.patch = null;
             }
           }
         }
@@ -1949,14 +1826,149 @@ Dprintf.dprintf("");
     Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
   }
 
-  private void apply()
+  /** apply patch
+   * @param patch patch to apply
+   */
+  private void apply(Patch patch)
   {
-Dprintf.dprintf("NYI");
+    try
+    {
+      StoredFiles storedFiles = null;
+      try
+      {
+        // create files backup of all local changes (in case there occur some error)
+        storedFiles = new StoredFiles(repositoryTab.repository.rootPath,repositoryTab.repository.getChangedFiles());
+
+        // apply patch
+        if (!patch.apply())
+        {
+          Dialogs.error(dialog,"Cannot apply patch!");
+          storedFiles.restore(); storedFiles = null;
+          return;
+        }
+
+        // discard files backup
+        storedFiles.discard(); storedFiles = null;
+
+        // update file states
+        HashSet<FileData> fileDataSet = FileData.toSet(patch.getFileNames());
+        repositoryTab.asyncUpdateFileStates(fileDataSet);
+
+        // save new state
+        patch.state = Patch.States.APPLIED;
+        patch.save();
+
+        // notify change of data
+        Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+      }
+      finally
+      {
+        if (storedFiles != null) storedFiles.restore();
+      }
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(dialog,"Cannot apply patch (error: %s)",exception.getMessage());
+      return;
+    }
+    catch (SQLException exception)
+    {
+      Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+      return;
+    }
   }
 
-  private void unapply()
+  /** unapply patch
+   * @param patch patch to unapply
+   */
+  private void unapply(Patch patch)
   {
-Dprintf.dprintf("NYI");
+    try
+    {
+      StoredFiles storedFiles = null;
+      try
+      {
+        // create files backup of all local changes (in case there occur some error)
+        storedFiles = new StoredFiles(repositoryTab.repository.rootPath,repositoryTab.repository.getChangedFiles());
+
+        // unapply patch
+        if (!patch.unapply())
+        {
+          Dialogs.error(dialog,"Cannot unapply patch!");
+          storedFiles.restore(); storedFiles = null;
+          return;
+        }
+
+        // discard files backup
+        storedFiles.discard(); storedFiles = null;
+
+        // update file states
+        HashSet<FileData> fileDataSet = FileData.toSet(patch.getFileNames());
+        repositoryTab.asyncUpdateFileStates(fileDataSet);
+
+        // save new state
+        patch.state = Patch.States.NONE;
+        patch.save();
+
+        // notify change of data
+        Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+      }
+      finally
+      {
+        if (storedFiles != null) storedFiles.restore();
+      }
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(dialog,"Cannot unapply patch (error: %s)",exception.getMessage());
+      return;
+    }
+    catch (SQLException exception)
+    {
+      Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+      return;
+    }
+  }
+
+  /** discard patch
+   * @param patch patch to discard
+   */
+  private void discard(Patch patch)
+  {
+    try
+    {
+      // save new state
+      patch.state = Patch.States.DISCARDED;
+      patch.save();
+
+      // notify change of data
+      Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+    }
+    catch (SQLException exception)
+    {
+      Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+      return;
+    }
+  }
+
+  /** delete patch
+   * @param patch patch to delete
+   */
+  private void delete(Patch patch)
+  {
+    try
+    {
+      // delete
+      patch.delete();
+
+      // notify change of data
+      Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);
+    }
+    catch (SQLException exception)
+    {
+      Dialogs.error(dialog,"Cannot update patch data in database (error: %s)",exception.getMessage());
+      return;
+    }
   }
 
   /** edit reference of patch
