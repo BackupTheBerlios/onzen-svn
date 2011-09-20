@@ -2719,7 +2719,7 @@ exception.printStackTrace();
    */
   private String getRepositoryListName()
   {
-    return getRepositoryListName("Select repository",true);
+    return getRepositoryListName("Select repository list",true);
   }
 
   /** create new repository list
