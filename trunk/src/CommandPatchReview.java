@@ -1193,14 +1193,14 @@ class CommandPatchReview
   {
     if (!widgetText.isDisposed())
     {
-      String findText = widgetFind.getText();
+      String findText = widgetFind.getText().toLowerCase();
       if (!findText.isEmpty())
       {
         // get cursor position, text before cursor
         int cursorIndex = widgetPatch.getCaretOffset();
 
         // search
-        int offset = widgetPatch.getText().toLowerCase().substring(cursorIndex).indexOf(findText);
+        int offset = (cursorIndex >= 0) ? widgetPatch.getText().substring(cursorIndex).toLowerCase().indexOf(findText) : -1;
         if (offset >= 0)
         {
           widgetPatch.redraw();
@@ -1259,7 +1259,7 @@ class CommandPatchReview
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = (cursorIndex > 0) ? widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+      int offset = (cursorIndex >= 0) ? widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;
