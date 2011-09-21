@@ -33,6 +33,7 @@ import java.sql.Statement;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -102,10 +103,10 @@ class Patch
   public  String[]              comment;                // comment
   public  String                revision1,revision2;    // revision
   public  boolean               ignoreWhitespaces;      // true when whitespaces are ignored
+  public  HashSet<String>       fileNameSet;            // files belonging to patch
   public  LinkedHashSet<String> testSet;                // tests done
   public  String                reference;              // reference text, e. g. ReviewBoard id
 
-  private HashSet<String>       fileNameSet;            // files belonging to patch
   private String[]              lines;                  // patch lines or null
   private File                  file;                   // file with patch or null
   private int                   databaseId;             // id in database or Database.ID_NONE
@@ -633,11 +634,38 @@ class Patch
   }
 
   /** get file names of patch
-   * @return file names
+   * @return sorted file names
    */
   public String[] getFileNames()
   {
-    return fileNameSet.toArray(new String[fileNameSet.size()]);
+    String[] fileNames = fileNameSet.toArray(new String[fileNameSet.size()]);
+    Arrays.sort(fileNames);
+
+    return fileNames;
+  }
+
+  /** get file name set of patch
+   * @return file name set
+   */
+  public HashSet<String> getFileNameSet()
+  {
+    return (HashSet<String>)fileNameSet.clone();
+  }
+
+  /** add file name to patch
+   * @param fileName file name to add
+   */
+  public void addFileName(String fileName)
+  {
+    fileNameSet.add(fileName);
+  }
+
+  /** remove file name from patch
+   * @param fileName file name to remove
+   */
+  public void removeFileName(String fileName)
+  {
+    fileNameSet.remove(fileName);
   }
 
   /** get tests of patch
@@ -646,6 +674,14 @@ class Patch
   public String[] getTests()
   {
     return testSet.toArray(new String[testSet.size()]);
+  }
+
+  /** get test set of patch
+   * @return test set
+   */
+  public LinkedHashSet<String> getTestSet()
+  {
+    return ( LinkedHashSet<String>)testSet.clone();
   }
 
   /** allocate a patch number
