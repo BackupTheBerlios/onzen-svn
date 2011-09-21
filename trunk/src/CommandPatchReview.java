@@ -670,9 +670,15 @@ class CommandPatchReview
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.summary = widgetSummary.getText();
-          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
-          data.comment = StringUtils.split(widgetComment.getText(),widgetComment.DELIMITER);
+          // store data
+          data.summary = widgetSummary.getText().trim();
+          data.message = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
+          data.comment = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          data.testSet.clear();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
+          }
 
           // get patch review methods if not already set
           if (!data.patchMailFlag && !data.reviewServerFlag)
@@ -690,174 +696,20 @@ class CommandPatchReview
             }
           }
 
-          File tmpPatchFile = null;
-          try
+          // mail/post review
+          if (data.patchMailFlag)
           {
-            // create patch file
-            tmpPatchFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
-            patch.write(tmpPatchFile);
-
-            if (data.patchMailFlag)
+            if (!mailReview(patch))
             {
-              if (repositoryTab.repository.mailSMTPHost != null)
-              {
-                // send mail with JavaMail
-//int port = 587;
-//int port = 25;
-                try
-                {
-                  final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
-
-                  // mail mime type handlers
-                  MailcapCommandMap mailcapCommandMap = (MailcapCommandMap) CommandMap.getDefaultCommandMap();
-                  mailcapCommandMap.addMailcap("text/html;; x-java-content-handler=com.sun.mail.handlers.text_html");
-                  mailcapCommandMap.addMailcap("text/xml;; x-java-content-handler=com.sun.mail.handlers.text_xml");
-                  mailcapCommandMap.addMailcap("text/plain;; x-java-content-handler=com.sun.mail.handlers.text_plain");
-                  mailcapCommandMap.addMailcap("multipart/*;; x-java-content-handler=com.sun.mail.handlers.multipart_mixed");
-                  mailcapCommandMap.addMailcap("message/rfc822;; x-java-content-handler=com.sun.mail.handlers.message_rfc822");
-                  CommandMap.setDefaultCommandMap(mailcapCommandMap);
-
-                  // create mail session
-                  Properties properties = new Properties();
-                  properties.put("mail.transport.protocol","smtp");
-                  properties.put("mail.smtp.host",repositoryTab.repository.mailSMTPHost);
-                  properties.put("mail.smtp.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
-                  properties.put("mail.from",repositoryTab.repository.mailFrom);
-//properties.put("mail.smtp.starttls.enable","true");
-                  properties.put("mail.smtp.auth",(password != null) && !password.isEmpty());
-                  if (repositoryTab.repository.mailSMTPSSL)
-                  {
-                    properties.put("mail.smtp.socketFactory.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
-                    properties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
-                    properties.put("mail.smtp.socketFactory.fallback","false");
-                  }
-
-//properties.put("mail.smtps.starttls.enable","true");
-//                  if (Settings.debugFlag) properties.put("mail.debug","true");
-                  Authenticator auth = new Authenticator()
-                  {
-                    public PasswordAuthentication getPasswordAuthentication()
-                    {
-                      return new PasswordAuthentication(repositoryTab.repository.mailLogin,password);
-                    }
-                  };
-                  Session session = Session.getInstance(properties,auth);
-
-                  // create message
-                  MimeMultipart mimeMultipart = new MimeMultipart();
-
-                  MimeBodyPart text = new MimeBodyPart();
-                  text.setText(widgetPatchMailText.getText().trim());
-                  text.setDisposition(MimeBodyPart.INLINE);
-                  mimeMultipart.addBodyPart(text);
-
-                  MimeBodyPart attachment = new MimeBodyPart();
-                  attachment.attachFile(tmpPatchFile);
-                  attachment.setFileName("file.patch");
-                  attachment.setDisposition(Part.ATTACHMENT);
-                  attachment.setDescription("Attached File: "+"patch");
-// detect mime type?
-//                  FileDataSource fileDataSource = new FileDataSource(tmpPatchFile);
-//                  DataHandler dataHandler = new DataHandler(fileDataSource);
-                  DataHandler dataHandler = new DataHandler(StringUtils.join(patch.getLines(),"\n"),"text/plain");
-                  attachment.setDataHandler(dataHandler);
-                  mimeMultipart.addBodyPart(attachment);
-
-                  InternetAddress toAddress = new InternetAddress(widgetPatchMailTo.getText().trim());
-                  ArrayList<InternetAddress> ccAddressList = new ArrayList<InternetAddress>();
-                  if ((repositoryTab.repository.patchMailCC != null) && !repositoryTab.repository.patchMailCC.trim().isEmpty())
-                  {
-                    for (String address : repositoryTab.repository.patchMailCC.split("\\s"))
-                    {
-                      ccAddressList.add(new InternetAddress(address));
-                    }
-                  }
-                  Message message = new MimeMessage(session);
-                  message.setFrom(new InternetAddress(repositoryTab.repository.mailFrom));
-                  message.setSubject(widgetPatchMailSubject.getText().trim());
-                  message.setRecipient(Message.RecipientType.TO,toAddress);
-                  message.setRecipients(Message.RecipientType.CC,ccAddressList.toArray(new InternetAddress[ccAddressList.size()]));
-                  message.setSentDate(new Date());
-                  message.setContent(mimeMultipart);
-                  message.saveChanges();
-
-                  // send message
-                  Transport.send(message);
-                }
-                catch (MessagingException exception)
-                {
-                  Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
-                  return;
-                }
-              }
-              else if (!Settings.commandMailAttachment.isEmpty())
-              {
-                // use external mail command
-                try
-                {
-                  // create command
-                  Macro macro = new Macro(StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
-                  macro.expand("to",     widgetPatchMailTo.getText().trim()     );
-                  macro.expand("cc",     widgetPatchMailCC.getText().trim()     );
-                  macro.expand("subject",widgetPatchMailSubject.getText().trim());
-                  macro.expand("file",   tmpPatchFile.getAbsolutePath()         );
-                  String[] commandArray = macro.getValueArray();
-//for (String s : commandArray) Dprintf.dprintf("command=%s",s);
-
-                  // execute and add text
-                  Process process = Runtime.getRuntime().exec(commandArray);
-                  PrintWriter processOutput = new PrintWriter(process.getOutputStream());
-                  for (String line : StringUtils.split(widgetPatchMailText.getText().trim(),widgetPatchMailText.DELIMITER))
-                  {
-                    processOutput.println(line);
-                  }
-                  processOutput.close();
-
-                  // wait done
-                  int exitcode = process.waitFor();
-                  if (exitcode != 0)
-                  {
-                    Dialogs.error(dialog,"Cannot send patch (exitcode: %d)",exitcode);
-                    return;
-                  }
-                }
-                catch (InterruptedException exception)
-                {
-                  Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
-                  return;
-                }
-              }
-              else
-              {
-                Dialogs.error(dialog,"No mail command configured.\nPlease check settings.");
-                return;
-              }
+              return;
             }
-            if (data.reviewServerFlag)
+          }
+          if (data.reviewServerFlag)
+          {
+            if (!postReview(patch))
             {
-              if (!postReview(patch))
-              {
-                return;
-              }
+              return;
             }
-
-            // free resources
-            tmpPatchFile.delete(); tmpPatchFile = null;
-          }
-          catch (IOException exception)
-          {
-            Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
-            return;
-          }
-          finally
-          {
-            if (tmpPatchFile != null) tmpPatchFile.delete();
-          }
-
-          data.testSet.clear();
-          for (TableItem tableItem : widgetTests.getItems())
-          {
-            if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
           }
 
           Settings.geometryPatchReview = dialog.getSize();
@@ -1330,12 +1182,182 @@ class CommandPatchReview
     widgetReviewServerDescription.setText(macro.getValue());
   }
 
-  private void mail(File patchFile)
+  /** mail to review
+   * @param patch patch
+   * @return true iff review mailed
+   */
+  private boolean mailReview(Patch patch)
   {
-  }
+    if (repositoryTab.repository.mailSMTPHost != null)
+    {
+      // send mail with JavaMail
+      File tmpPatchFile = null;
+//int port = 587;
+//int port = 25;
+      try
+      {
+        // create patch file
+        tmpPatchFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
+        patch.write(tmpPatchFile);
 
-  private void mailExternal(File patchFile)
-  {
+        // get mail login password
+        final String password = repositoryTab.onzen.getPassword(repositoryTab.repository.mailLogin,repositoryTab.repository.mailSMTPHost);
+
+        // mail mime type handlers
+        MailcapCommandMap mailcapCommandMap = (MailcapCommandMap) CommandMap.getDefaultCommandMap();
+        mailcapCommandMap.addMailcap("text/html;; x-java-content-handler=com.sun.mail.handlers.text_html");
+        mailcapCommandMap.addMailcap("text/xml;; x-java-content-handler=com.sun.mail.handlers.text_xml");
+        mailcapCommandMap.addMailcap("text/plain;; x-java-content-handler=com.sun.mail.handlers.text_plain");
+        mailcapCommandMap.addMailcap("multipart/*;; x-java-content-handler=com.sun.mail.handlers.multipart_mixed");
+        mailcapCommandMap.addMailcap("message/rfc822;; x-java-content-handler=com.sun.mail.handlers.message_rfc822");
+        CommandMap.setDefaultCommandMap(mailcapCommandMap);
+
+        // create mail session
+        Properties properties = new Properties();
+        properties.put("mail.transport.protocol","smtp");
+        properties.put("mail.smtp.host",repositoryTab.repository.mailSMTPHost);
+        properties.put("mail.smtp.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
+        properties.put("mail.from",repositoryTab.repository.mailFrom);
+//properties.put("mail.smtp.starttls.enable","true");
+        properties.put("mail.smtp.auth",(password != null) && !password.isEmpty());
+        if (repositoryTab.repository.mailSMTPSSL)
+        {
+          properties.put("mail.smtp.socketFactory.port",Integer.toString(repositoryTab.repository.mailSMTPPort));
+          properties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+          properties.put("mail.smtp.socketFactory.fallback","false");
+        }
+
+//properties.put("mail.smtps.starttls.enable","true");
+//                  if (Settings.debugFlag) properties.put("mail.debug","true");
+        Authenticator auth = new Authenticator()
+        {
+          public PasswordAuthentication getPasswordAuthentication()
+          {
+            return new PasswordAuthentication(repositoryTab.repository.mailLogin,password);
+          }
+        };
+        Session session = Session.getInstance(properties,auth);
+
+        // create message
+        MimeMultipart mimeMultipart = new MimeMultipart();
+
+        MimeBodyPart text = new MimeBodyPart();
+        text.setText(widgetPatchMailText.getText().trim());
+        text.setDisposition(MimeBodyPart.INLINE);
+        mimeMultipart.addBodyPart(text);
+
+        MimeBodyPart attachment = new MimeBodyPart();
+        attachment.attachFile(tmpPatchFile);
+        attachment.setFileName("file.patch");
+        attachment.setDisposition(Part.ATTACHMENT);
+        attachment.setDescription("Attached File: "+"patch");
+// detect mime type?
+//                  FileDataSource fileDataSource = new FileDataSource(tmpPatchFile);
+//                  DataHandler dataHandler = new DataHandler(fileDataSource);
+        DataHandler dataHandler = new DataHandler(StringUtils.join(patch.getLines(),"\n"),"text/plain");
+        attachment.setDataHandler(dataHandler);
+        mimeMultipart.addBodyPart(attachment);
+
+        InternetAddress toAddress = new InternetAddress(widgetPatchMailTo.getText().trim());
+        ArrayList<InternetAddress> ccAddressList = new ArrayList<InternetAddress>();
+        if ((repositoryTab.repository.patchMailCC != null) && !repositoryTab.repository.patchMailCC.trim().isEmpty())
+        {
+          for (String address : repositoryTab.repository.patchMailCC.split("\\s"))
+          {
+            ccAddressList.add(new InternetAddress(address));
+          }
+        }
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(repositoryTab.repository.mailFrom));
+        message.setSubject(widgetPatchMailSubject.getText().trim());
+        message.setRecipient(Message.RecipientType.TO,toAddress);
+        message.setRecipients(Message.RecipientType.CC,ccAddressList.toArray(new InternetAddress[ccAddressList.size()]));
+        message.setSentDate(new Date());
+        message.setContent(mimeMultipart);
+        message.saveChanges();
+
+        // send message
+        Transport.send(message);
+
+        // free resources
+        tmpPatchFile.delete(); tmpPatchFile = null;
+      }
+      catch (IOException exception)
+      {
+        Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
+        return false;
+      }
+      catch (MessagingException exception)
+      {
+        Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
+        return false;
+      }
+      finally
+      {
+        if (tmpPatchFile != null) tmpPatchFile.delete();
+      }
+    }
+    else if (!Settings.commandMailAttachment.isEmpty())
+    {
+      // use external mail command
+      File tmpPatchFile = null;
+      try
+      {
+        // create patch file
+        tmpPatchFile = File.createTempFile("patch",".patch",new File(Settings.tmpDirectory));
+        patch.write(tmpPatchFile);
+
+        // create command
+        Macro macro = new Macro(StringUtils.split(Settings.commandMailAttachment,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
+        macro.expand("to",     widgetPatchMailTo.getText().trim()     );
+        macro.expand("cc",     widgetPatchMailCC.getText().trim()     );
+        macro.expand("subject",widgetPatchMailSubject.getText().trim());
+        macro.expand("file",   tmpPatchFile.getAbsolutePath()         );
+        String[] commandArray = macro.getValueArray();
+//for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+
+        // execute and add text
+        Process process = Runtime.getRuntime().exec(commandArray);
+        PrintWriter processOutput = new PrintWriter(process.getOutputStream());
+        for (String line : StringUtils.split(widgetPatchMailText.getText().trim(),widgetPatchMailText.DELIMITER))
+        {
+          processOutput.println(line);
+        }
+        processOutput.close();
+
+        // wait done
+        int exitcode = process.waitFor();
+        if (exitcode != 0)
+        {
+          Dialogs.error(dialog,"Cannot send patch (exitcode: %d)",exitcode);
+          return false;
+        }
+
+        // free resources
+        tmpPatchFile.delete(); tmpPatchFile = null;
+      }
+      catch (IOException exception)
+      {
+        Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
+        return false;
+      }
+      catch (InterruptedException exception)
+      {
+        Dialogs.error(dialog,"Cannot send patch (error: %s)",exception.getMessage());
+        return false;
+      }
+      finally
+      {
+        if (tmpPatchFile != null) tmpPatchFile.delete();
+      }
+    }
+    else
+    {
+      Dialogs.error(dialog,"No mail command configured.\nPlease check settings.");
+      return false;
+    }
+
+    return true;
   }
 
   /** post to review server/update on review server
