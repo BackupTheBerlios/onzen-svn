@@ -18,6 +18,7 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -108,6 +109,7 @@ class CommandPatches
     String                oldSummary;
     String                oldMessage;
     String                oldComment;
+    HashSet<String>       oldFileNameSet;
     LinkedHashSet<String> oldTestSet;
 
     Data()
@@ -119,6 +121,7 @@ class CommandPatches
       this.oldSummary          = null;
       this.oldMessage          = null;
       this.oldComment          = null;
+      this.oldFileNameSet      = null;
       this.oldTestSet          = null;
     }
   };
@@ -680,6 +683,57 @@ class CommandPatches
           widgetFileNames.setBackground(Onzen.COLOR_GRAY);
           Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
           widgetFileNames.setToolTipText("Files of patch.");
+
+          menu = Widgets.newPopupMenu(dialog);
+          {
+            menuItem = Widgets.addMenuItem(menu,"Add file...");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String newFileName = Dialogs.fileOpen(dialog,"Add file to patch",data.patch.rootPath);
+                if (newFileName != null)
+                {
+                  data.patch.addFileName(newFileName);
+                  
+                  widgetFileNames.removeAll();
+                  for (String fileName : data.patch.getFileNames())
+                  {
+                    widgetFileNames.add(fileName);
+                  }
+
+                  Widgets.modified(data);
+                }
+              }
+            });
+            menuItem = Widgets.addMenuItem(menu,"Remove files...");
+            menuItem.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                for (String fileName : widgetFileNames.getSelection())
+                {
+                  data.patch.removeFileName(fileName);
+                }
+
+                widgetFileNames.removeAll();
+                for (String fileName : data.patch.getFileNames())
+                {
+                  widgetFileNames.add(fileName);
+                }
+
+                Widgets.modified(data);
+              }
+            });
+          }
+          widgetFileNames.setMenu(menu);
+          widgetFileNames.setToolTipText("Files.\nRight-click to open context menu.");
         }
       }
 
@@ -883,10 +937,13 @@ class CommandPatches
       {
         public void modified(Control control)
         {
-          boolean summaryChanged = (data.oldSummary != null) && !data.oldSummary.equals(widgetSummary.getText().trim());
-          boolean messageChanged = (data.oldMessage != null) && !data.oldMessage.equals(widgetMessage.getText().trim());
-          boolean commentChanged = (data.oldComment != null) && !data.oldComment.equals(widgetComment.getText().trim());
-          boolean testSetChanged = false;
+          boolean summaryChanged     = (data.oldSummary != null) && !data.oldSummary.equals(widgetSummary.getText().trim());
+          boolean messageChanged     = (data.oldMessage != null) && !data.oldMessage.equals(widgetMessage.getText().trim());
+          boolean commentChanged     = (data.oldComment != null) && !data.oldComment.equals(widgetComment.getText().trim());
+          boolean fileNameSetChanged = (data.oldFileNameSet != null) && !data.oldFileNameSet.equals(new HashSet(Arrays.asList(widgetFileNames.getItems())));;
+//Dprintf.dprintf("fileNameSetChanged=%s",fileNameSetChanged);
+//if (data.oldFileNameSet!=null) { Dprintf.dprintf("%d %d",data.oldFileNameSet.size(),new HashSet(Arrays.asList(widgetFileNames.getItems())).size()); }
+          boolean testSetChanged     = false;
           for (TableItem tableItem : widgetTests.getItems())
           {
             if (tableItem.getChecked())
@@ -900,7 +957,7 @@ class CommandPatches
             if (testSetChanged) break;
           }
 
-          Widgets.setEnabled(control,summaryChanged || messageChanged || commentChanged || testSetChanged);
+          Widgets.setEnabled(control,summaryChanged || messageChanged || commentChanged || fileNameSetChanged || testSetChanged);
         }
       });
       widgetMessageSave.addSelectionListener(new SelectionListener()
@@ -919,6 +976,13 @@ class CommandPatches
               String message = widgetMessage.getText().trim();
               String comment = widgetComment.getText().trim();
 
+              // get file names
+              HashSet<String> fileNameSet = new HashSet<String>();
+              for (String fileName : widgetFileNames.getItems())
+              {
+                fileNameSet.add(fileName);
+              }              
+
               // get tests
               LinkedHashSet<String> testSet = new LinkedHashSet<String>();
               for (TableItem tableItem : widgetTests.getItems())
@@ -927,18 +991,20 @@ class CommandPatches
               }              
 
               // save patch
-              data.patch.summary = summary;
-              data.patch.message = StringUtils.split(message,widgetMessage.DELIMITER);
-              data.patch.comment = StringUtils.split(comment,widgetComment.DELIMITER);
-              data.patch.testSet = (LinkedHashSet)testSet.clone();
+              data.patch.summary     = summary;
+              data.patch.message     = StringUtils.split(message,widgetMessage.DELIMITER);
+              data.patch.comment     = StringUtils.split(comment,widgetComment.DELIMITER);
+              data.patch.fileNameSet = (HashSet)fileNameSet.clone();
+              data.patch.testSet     = (LinkedHashSet)testSet.clone();
               data.patch.save();
 
               // update
               data.tableItem.setText(2,summary);
-              data.oldSummary = summary;
-              data.oldMessage = message;
-              data.oldComment = comment;
-              data.oldTestSet = testSet;
+              data.oldSummary     = summary;
+              data.oldMessage     = message;
+              data.oldComment     = comment;
+              data.oldFileNameSet = fileNameSet;
+              data.oldTestSet     = testSet;
               Widgets.modified(data);
             }
             catch (SQLException exception)
@@ -1452,6 +1518,7 @@ class CommandPatches
       {
         widgetFileNames.add(fileName);
       }
+      data.oldFileNameSet = (HashSet)patch.getFileNameSet();
 
       // set summary
       widgetSummary.setText(data.patch.summary);
@@ -1474,7 +1541,7 @@ class CommandPatches
         TableItem testTableItem = Widgets.addTableEntry(widgetTests,test,test);
         testTableItem.setChecked(true);
       }
-      data.oldTestSet = (LinkedHashSet)patch.testSet.clone();
+      data.oldTestSet = (LinkedHashSet)patch.getTestSet();
     }
     else
     {
