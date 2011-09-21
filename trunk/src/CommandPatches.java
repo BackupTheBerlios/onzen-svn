@@ -1738,9 +1738,6 @@ class CommandPatches
         patch.comment = commandPatchReview.comment;
         patch.testSet = commandPatchReview.testSet;
         patch.save();
-
-        // close dialog
-        Dialogs.close(dialog,true);
       }
       catch (SQLException exception)
       {
