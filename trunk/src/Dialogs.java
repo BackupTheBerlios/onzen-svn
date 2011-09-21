@@ -10,6 +10,7 @@
 
 /****************************** Imports ********************************/
 import java.io.File;
+import java.io.IOException;
 import java.util.BitSet;
 
 import org.eclipse.swt.events.TraverseEvent;
@@ -1631,14 +1632,16 @@ class Dialogs
    * @param fileExtensions array with {name,pattern} or null
    * @return file name or null
    */
-  private static String file(Shell parentShell, int type, String title, String fileName, String[] fileExtensions)
+  private static String file(Shell parentShell, int type, String title, String oldFileName, String[] fileExtensions)
   {
+    File oldFile = new File(oldFileName);
+
     FileDialog dialog = new FileDialog(parentShell,type);
     dialog.setText(title);
-    if (fileName != null)
+    if (oldFileName != null)
     {
-      dialog.setFilterPath(new File(fileName).getParent());
-      dialog.setFileName(new File(fileName).getName());
+      dialog.setFilterPath(oldFile.getParent());
+      dialog.setFileName(oldFile.getName());
     }
     dialog.setOverwrite(false);
     if (fileExtensions != null)
@@ -1659,7 +1662,24 @@ class Dialogs
       dialog.setFilterExtensions(fileExtensionPatterns);
     }
 
-    return dialog.open();
+    String fileName = dialog.open();
+    if (fileName != null)
+    {
+      // convert to relative path (when possible)
+      try
+      {
+        String canonicalFileName = new File(fileName).getCanonicalPath();
+        if (canonicalFileName.startsWith(oldFile.getCanonicalPath()))
+        {
+          fileName = canonicalFileName.substring(oldFile.getCanonicalPath().length()+1);
+        }
+      }
+      catch (IOException exception)
+      {
+      }
+    }
+
+    return fileName;
   }
 
   /** file dialog for open file
@@ -1672,6 +1692,27 @@ class Dialogs
   public static String fileOpen(Shell parentShell, String title, String fileName, String[] fileExtensions)
   {
     return file(parentShell,SWT.OPEN,title,fileName,fileExtensions);
+  }
+
+  /** file dialog for open file
+   * @param parentShell parent shell
+   * @param title title text
+   * @param fileName fileName or null
+   * @return file name or null
+   */
+  public static String fileOpen(Shell parentShell, String title, String fileName)
+  {
+    return fileOpen(parentShell,title,fileName,null);
+  }
+
+  /** file dialog for open file
+   * @param parentShell parent shell
+   * @param title title text
+   * @return file name or null
+   */
+  public static String fileOpen(Shell parentShell, String title)
+  {
+    return fileOpen(parentShell,title,null);
   }
 
   /** file dialog for save file
