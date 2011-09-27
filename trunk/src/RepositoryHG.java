@@ -235,6 +235,7 @@ class RepositoryHG extends Repository
     String          repositoryRevision = "";
     for (String directory : fileDirectorySet)
     {
+      exec = null;
       try
       {
         // get status
@@ -302,8 +303,20 @@ class RepositoryHG extends Repository
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
 
+      exec = null;
+      try
+      {
         // get revision (identity)
         command.clear();
         command.append(Settings.hgCommand,"identify","-t");
@@ -318,8 +331,20 @@ class RepositoryHG extends Repository
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
 
+      exec = null;
+      try
+      {
         // get branch
         command.clear();
         command.append(Settings.hgCommand,"branch");
@@ -334,11 +359,15 @@ class RepositoryHG extends Repository
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
         // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
   }
@@ -363,12 +392,13 @@ class RepositoryHG extends Repository
     ArrayList<String> revisionList = new ArrayList<String>();
 
     // get revision info list
-    Command command = new Command();
-    Exec    exec;
-    String  line;
-    Matcher matcher;
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+      String  line;
+      Matcher matcher;
+
       // get log
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","log","--template","{rev} {node|short}\\n");
@@ -389,11 +419,15 @@ class RepositoryHG extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert to array and sort
@@ -433,10 +467,11 @@ class RepositoryHG extends Repository
     RevisionData revisionData = null;
 
     // get revision data
-    Command command = new Command();
-    Exec    exec;
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+
       // get single log entry
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","log","-l","1","--template",LOG_TEMPLATE);
@@ -452,11 +487,15 @@ class RepositoryHG extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return revisionData;
@@ -472,10 +511,11 @@ class RepositoryHG extends Repository
     LinkedList<RevisionDataHG> revisionDataList = new LinkedList<RevisionDataHG>();
 
     // get revision info list
-    Command command = new Command();
-    Exec    exec;
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+
       // get log
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","log","--template",LOG_TEMPLATE);
@@ -528,11 +568,15 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 //for (RevisionDataHG revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -550,10 +594,11 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     throws RepositoryException
   {
     ArrayList<String> lineList = new ArrayList<String>();
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
 
       // get file
@@ -571,11 +616,15 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return lineList.toArray(new String[lineList.size()]);
@@ -590,10 +639,11 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
@@ -612,11 +662,15 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert byte array stream into array
@@ -634,10 +688,10 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
 
+    Exec exec = null;
     try
     {
       Command         command            = new Command();
-      Exec            exec;
       String          line;
       Matcher         matcher;
       String          name               = null;
@@ -681,11 +735,15 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return fileDataSet;
@@ -704,16 +762,17 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
-    try
-    {
-      Command command = new Command();
-      Exec    exec;
-      Matcher matcher;
-      String  line;
 
-      String[] newFileLines = null;
-      if (newRevision != null)
+    String[] newFileLines = null;
+    if (newRevision != null)
+    {
+      Exec exec = null;
+      try
       {
+        Command command = new Command();
+        Matcher matcher;
+        String  line;
+
         // check out new revision
         command.clear();
         command.append(Settings.hgCommand,"-y","cat","-r",newRevision);
@@ -729,36 +788,53 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
 
         // convert to lines array
         newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
       }
-      else
+      catch (IOException exception)
       {
-        // use local revision
-        try
-        {
-          // open file
-          BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
-
-          // read content
-          ArrayList<String> newFileLineList = new ArrayList<String>();
-          while ((line = bufferedReader.readLine()) != null)
-          {
-            newFileLineList.add(line);
-          }
-
-          // close file
-          bufferedReader.close();
-
-          newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
-        }
-        catch (IOException exception)
-        {
-          throw new RepositoryException(exception);
-        }
+        throw new RepositoryException(exception);
       }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+    }
+    else
+    {
+      // use local revision
+      try
+      {
+        // open file
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+
+        // read content
+        ArrayList<String> newFileLineList = new ArrayList<String>();
+        String line;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+          newFileLineList.add(line);
+        }
+
+        // close file
+        bufferedReader.close();
+
+        newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(exception);
+      }
+    }
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      Matcher matcher;
+      String  line;
 
       // diff file
       command.clear();
@@ -928,11 +1004,15 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 //Dprintf.dprintf("diffData=%s",diffData);
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 /*
 int lineNb=1;
@@ -987,10 +1067,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     // get patch for existing files
     if ((fileDataSet == null) || (existingFileDataMap.size() > 0))
     {
+      Exec exec = null;
       try
       {
         Command command = new Command();
-        Exec    exec;
         String  line;
 
         // get sub-directory relative to hg root path
@@ -1126,11 +1206,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
         throw new RepositoryException(exception);
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
 
@@ -1194,10 +1278,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
@@ -1217,11 +1302,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert byte array stream into array
@@ -1237,12 +1326,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
-    // get revision info list
-    Command command = new Command();
-    Exec    exec;
+    Exec exec = null;
     try
     {
       // get log
+      Command command = new Command();
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","log","--template",LOG_TEMPLATE);
       command.append("--");
@@ -1267,11 +1355,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 //for (RevisionDataHG revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -1291,10 +1383,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     ArrayList<AnnotationData> annotationDataList = new ArrayList<AnnotationData>();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       Matcher matcher;
       String  line;
 
@@ -1332,11 +1424,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
@@ -1348,6 +1444,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void update(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1371,11 +1468,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.hgCommand,"qpop","-a");
         command.append("--");
-        exitCode = new Exec(tree,command).waitFor();
+        exec = new Exec(tree,command);
+        exitCode = exec.waitFor();
         if (exitCode != 0)
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+        exec.done(); exec = null;
       }
 
       // update files (Note: hg does not allow to update single files, thus update all files)
@@ -1398,7 +1497,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           command.clear();
           command.append(Settings.hgCommand,"revert","--no-backup","-a");
           command.append("--");
-          exitCode = new Exec(rootPath,command).waitFor();
+          exec = new Exec(rootPath,command);
+          exitCode = exec.waitFor();
           if (exitCode != 0)
           {
             if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
@@ -1407,13 +1507,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             }
             throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
           }
+          exec.done(); exec = null;
 
           // fetch+fpush
           command.clear();
           command.append(Settings.hgCommand,"fetch");
           command.append("--");
           if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
-          exitCode = new Exec(rootPath,command).waitFor();
+          exec = new Exec(rootPath,command);
+          exitCode = exec.waitFor();
           if (exitCode != 0)
           {
             if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
@@ -1422,11 +1524,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             }
             throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
           }
+          exec.done(); exec = null;
+
           command.clear();
           command.append(Settings.hgCommand,"fpush");
           command.append("--");
           if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
-          exitCode = new Exec(rootPath,command).waitFor();
+          exec = new Exec(rootPath,command);
+          exitCode = exec.waitFor();
           if (exitCode != 0)
           {
             if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
@@ -1435,6 +1540,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             }
             throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
           }
+          exec.done(); exec = null;
 
           if (Settings.hgSafeUpdate)
           {
@@ -1462,22 +1568,26 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.hgCommand,"fupdate");
         command.append("--");
-        exitCode = new Exec(rootPath,command).waitFor();
+        exec = new Exec(rootPath,command);
+        exitCode = exec.waitFor();
         if (exitCode != 0)
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+        exec.done(); exec = null;
       }
       else
       {
         command.clear();
         command.append(Settings.hgCommand,"update");
         command.append("--");
-        exitCode = new Exec(rootPath,command).waitFor();
+        exec = new Exec(rootPath,command);
+        exitCode = exec.waitFor();
         if (exitCode != 0)
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+        exec.done(); exec = null;
       }
 
       // apply patches for all trees in forest/single repository
@@ -1486,16 +1596,22 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.hgCommand,"qpush","-a");
         command.append("--");
-        exitCode = new Exec(tree,command).waitFor();
+        exec = new Exec(tree,command);
+        exitCode = exec.waitFor();
         if (exitCode != 0)
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+        exec.done(); exec = null;
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1506,6 +1622,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1531,11 +1648,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
+      exec.done(); exec = null;
 
       // immediate push changes when configured
       if (Settings.hgImmediatePush)
@@ -1547,6 +1666,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       throw new RepositoryException(exception);
     }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** add files
@@ -1557,6 +1680,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1567,11 +1691,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(Settings.hgCommand,"add");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
+      exec.done(); exec = null;
 
       // immediate commit when message is given
       if (commitMessage != null)
@@ -1583,6 +1709,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       throw new RepositoryException(exception);
     }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** remove files
@@ -1592,6 +1722,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       // delete local files
@@ -1609,11 +1740,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(Settings.hgCommand,"remove");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
+      exec.done(); exec = null;
 
       // immediate commit when message is given
       if (commitMessage != null)
@@ -1625,6 +1758,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       throw new RepositoryException(exception);
     }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** revert files
@@ -1634,6 +1771,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void revert(HashSet<FileData> fileDataSet, String revision)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1654,15 +1792,21 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append("-a");
         command.append("--");
       }
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1674,6 +1818,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1685,11 +1830,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
+      exec.done(); exec = null;
 
       // immediate commit when message is given
       if (commitMessage != null)
@@ -1700,6 +1847,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1712,18 +1863,19 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
-    Command            command           = new Command();
-    Exec               exec;
-    String             line;
-    Matcher            matcher;
-    String             revision          = null;
-    String             changeSet         = null;
-    Date               date              = null;
-    String             author            = null;
-    ArrayList<String>  fileList          = new ArrayList<String>();
-    LinkedList<String> commitMessageList = new LinkedList<String>();
+    Exec exec = null;
     try
     {
+      Command            command           = new Command();
+      String             line;
+      Matcher            matcher;
+      String             revision          = null;
+      String             changeSet         = null;
+      Date               date              = null;
+      String             author            = null;
+      ArrayList<String>  fileList          = new ArrayList<String>();
+      LinkedList<String> commitMessageList = new LinkedList<String>();
+
       // get log
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","incoming","--template","{rev} {node|short} {date|isodate} {author|person}\\n{files}\\n-----\\n{desc}\\n-----\\n");
@@ -1782,11 +1934,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return logDataList.toArray(new LogData[logDataList.size()]);
@@ -1801,18 +1957,19 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
-    Command            command           = new Command();
-    Exec               exec;
-    String             line;
-    Matcher            matcher;
-    String             revision          = null;
-    String             changeSet         = null;
-    Date               date              = null;
-    String             author            = null;
-    ArrayList<String>  fileList          = new ArrayList<String>();
-    LinkedList<String> commitMessageList = new LinkedList<String>();
+    Exec exec = null;
     try
     {
+      Command            command           = new Command();
+      String             line;
+      Matcher            matcher;
+      String             revision          = null;
+      String             changeSet         = null;
+      Date               date              = null;
+      String             author            = null;
+      ArrayList<String>  fileList          = new ArrayList<String>();
+      LinkedList<String> commitMessageList = new LinkedList<String>();
+
       // get log
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","outgoing","--template","{rev} {node|short} {date|isodate} {author|person}\\n{files}\\n-----\\n{desc}\\n-----\\n");
@@ -1871,11 +2028,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return logDataList.toArray(new LogData[logDataList.size()]);
@@ -1886,6 +2047,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void pullChanges()
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1894,15 +2056,22 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.hgCommand,Settings.hgUseForestExtension?"fpull":"pull");
       command.append("--");
-      exitCode = new Exec(rootPath,command).waitFor();
+      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1913,11 +2082,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     final Pattern PATTERN_ABORT = Pattern.compile("^\\s*abort:.*",Pattern.CASE_INSENSITIVE);
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
       int     exitCode;
-      Exec    exec;
       String  line;
       Matcher matcher;
 
@@ -1940,10 +2109,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1952,6 +2126,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void applyPatches()
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1975,16 +2150,22 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.hgCommand,"qpush","-a");
         command.append("--");
-        exitCode = new Exec(tree,command).waitFor();
+        exec = new Exec(tree,command);
+        exitCode = exec.waitFor();
         if (exitCode != 0)
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+        exec.done(); exec = null;
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1993,6 +2174,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void unapplyPatches()
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -2016,16 +2198,22 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.hgCommand,"qpop","-a");
         command.append("--");
-        exitCode = new Exec(tree,command).waitFor();
+        exec = new Exec(tree,command);
+        exitCode = exec.waitFor();
         if (exitCode != 0)
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+        exec.done(); exec = null;
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -2046,10 +2234,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     final Pattern PATTERN_REFERENCE = Pattern.compile("^review\\s+.*:\\s+.*/r/(\\d+.)/",Pattern.CASE_INSENSITIVE);
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
       Matcher matcher;
       int     exitCode;
@@ -2072,18 +2260,33 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
 
+      // execute
       exec = new Exec(rootPath,command);
-      exitCode = exec.waitFor();
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("stdout %s",line);
+        if ((matcher = PATTERN_REFERENCE.matcher(line)).matches())
+        {
+          reference = matcher.group(1);
+        }
+      }
+      while ((line = exec.getStderr()) != null)
+      {
+//Dprintf.dprintf("stderr %s",line);
+      }
+      exitCode = exec.done(); exec = null;
       if (exitCode != 0)
       {
-        System.out.println("Command: "+command.toString());
-        exec.printStderr();
-        throw new RepositoryException("post review fail (exit code: %d)",exec.getExtendedErrorMessage(),exitCode);
+        throw new RepositoryException("Cannot post patch to review server (exitcode: "+exitCode+")");
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(exception);
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return reference;
@@ -2130,7 +2333,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     hgRootPath = exec.getStdout();
 
     // done
-    exec.done();
+    exec.done(); exec = null;
 
     return hgRootPath;
   }
@@ -2175,7 +2378,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
 
     // done
-    exec.done();
+    exec.done(); exec = null;
 
     return treeList.toArray(new String[treeList.size()]);
   }
@@ -2226,7 +2429,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
