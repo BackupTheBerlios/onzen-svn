@@ -71,8 +71,11 @@ class BusyDialog
   // ---------------------------- methods ---------------------------------
 
   /** create busy dialog
-   * @param
-   * @return
+   * @param parentShell parent shell
+   * @param title window title
+   * @param image image to show
+   * @param imageSize size of image
+   * @param message message to show
    */
   BusyDialog(Shell parentShell, String title, Image image, Point imageSize, String message)
   {
@@ -107,8 +110,6 @@ class BusyDialog
   }
 
   /** animate dialog
-   * @param
-   * @return
    */
   public void animate()
   {
@@ -158,8 +159,6 @@ class BusyDialog
   }
 
   /** close busy dialog
-   * @param
-   * @return
    */
   public void close()
   {
