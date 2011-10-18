@@ -174,7 +174,7 @@ class CommandSetFileMode
       label = Widgets.newLabel(composite,"Message:");
       Widgets.layout(label,4,0,TableLayoutData.W);
 
-      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
       widgetMessage.setEnabled(Settings.immediateCommit);
       Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
       Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
