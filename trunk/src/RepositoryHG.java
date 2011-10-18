@@ -533,7 +533,7 @@ class RepositoryHG extends Repository
         while ((revisionData = parseLogData(exec,revisionDataMap,fileParentMap)) != null)
         {
           // add revision info entry
-          revisionDataList.add(revisionData);
+          revisionDataList.addFirst(revisionData);
         }
 
         // set parents

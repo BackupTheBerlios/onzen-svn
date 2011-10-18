@@ -559,7 +559,7 @@ class RepositoryCVS extends Repository
     }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
-    // create revision data tree
+    // create revision data tree from list
     return createRevisionDataTree(revisionDataList,branchNamesMap);
   }
 
@@ -1997,7 +1997,7 @@ Dprintf.dprintf("unknown %s",line);
       // add revision
       if      (revisionData.revisionNumbers.length-2 > branchRevisionNumbers.length)
       {
-        // create branch sub-tree
+        // found something like <...>.x.y -> create branch sub-tree
         RevisionDataCVS[] subRevisionTree = createRevisionDataTree(revisionDataList,
                                                                    branchNamesMap,
                                                                    branchesMap,
@@ -2008,8 +2008,8 @@ Dprintf.dprintf("unknown %s",line);
         RevisionDataCVS branchRevisionData = branchesMap.get(branchId);
         if (branchRevisionData == null)
         {
-          // still not known branch -> add to revision tree and create branch
-          revisionDataTreeList.add(revisionData);
+          // still not a known branch -> add to revision tree and create branch
+          revisionDataTreeList.addFirst(revisionData);
 
           // store branches of this revision
           branchesMap.put(branchId,revisionData);
@@ -2041,7 +2041,7 @@ Dprintf.dprintf("unknown %s",line);
               )
       {
         // add revision to tree
-        revisionDataTreeList.add(revisionData);
+        revisionDataTreeList.addFirst(revisionData);
 
         // store branches of this revision
         if (revisionData.branchRevisions != null)

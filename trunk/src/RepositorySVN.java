@@ -384,7 +384,7 @@ Dprintf.dprintf("exception=%s",exception);
         while ((revisionData = parseLogData(exec)) != null)
         {
           // add revision info entry
-          revisionDataList.add(revisionData);
+          revisionDataList.addFirst(revisionData);
         }
       }
 

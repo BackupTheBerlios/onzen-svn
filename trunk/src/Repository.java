@@ -2032,7 +2032,7 @@ abstract class Repository implements Serializable
     return getRevisionData(fileData,getLastRevision());
   }
 
-  /** get revision data tree
+  /** get revision data tree (grow down, root = initial entry, leaves = newest entries)
    * @param fileData file data
    * @return revision data tree
    */
