@@ -189,7 +189,7 @@ class CommandRename
       label = Widgets.newLabel(composite,"Message:");
       Widgets.layout(label,3,0,TableLayoutData.W);
 
-      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.WRAP|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
       widgetMessage.setEnabled(Settings.immediateCommit);
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
       Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
