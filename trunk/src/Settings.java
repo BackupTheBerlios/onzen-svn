@@ -739,6 +739,8 @@ public class Settings
 
   @SettingComment(text={"","Accelerator keys"})
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyCheckoutRepository          = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyOpenRepository              = SWT.CTRL+'O';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyEditRepositoryList          = SWT.NONE;
