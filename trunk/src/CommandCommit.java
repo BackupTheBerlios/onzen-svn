@@ -232,7 +232,7 @@ class CommandCommit
       label = Widgets.newLabel(composite,"Message:");
       Widgets.layout(label,3,0,TableLayoutData.W);
 
-      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
       widgetMessage.setToolTipText("Commit message.\nCtrl-Up/Down/Home/End to select message from history.\nCtrl-Return to commit changed files.");
     }
