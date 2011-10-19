@@ -953,6 +953,10 @@ Dprintf.dprintf("unknown %s",line);
             deletedLinesList.add(line.substring(2));
           }
 
+          // skip possible "\ No newline at end of file"
+          line = exec.getStdout();
+          if (!line.startsWith("\\ No newline at end of file")) exec.ungetStdout(line);
+
           // skip separator "---"
           line = exec.getStdout();
           if (!line.startsWith("---")) throw new RepositoryException("Invalid diff output: expected separator, got '"+line+"'");
