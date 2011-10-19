@@ -296,7 +296,7 @@ class CommandRevisions
       label = Widgets.newLabel(composite,"do:");
       Widgets.layout(label,0,4,TableLayoutData.W);
 
-      widgetDiff = Widgets.newButton(composite,"Diff");
+      widgetDiff = Widgets.newButton(composite,"Diff",Settings.keyDiff);
       widgetDiff.setEnabled(false);
       Widgets.layout(widgetDiff,0,5,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetDiff,data)
@@ -451,7 +451,7 @@ throw new RepositoryException("NYI");
         }
       });
 
-      widgetRevert = Widgets.newButton(composite,"Revert");
+      widgetRevert = Widgets.newButton(composite,"Revert",Settings.keyRevert);
       widgetRevert.setEnabled(false);
       Widgets.layout(widgetRevert,0,12,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetRevert,data)
@@ -663,6 +663,17 @@ throw new RepositoryException("NYI");
         }
       }
     });
+    widgetRevisions.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyDiff  )) Widgets.invoke(widgetDiff);
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert)) Widgets.invoke(widgetRevert);
+      }
+    });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -723,7 +734,6 @@ throw new RepositoryException("NYI");
         }
       }
     });
-
     // show dialog
     Dialogs.show(dialog,Settings.geometryRevisions);
 
@@ -1172,6 +1182,11 @@ Dprintf.dprintf("subPoint=%s",subPoint);
       widgetVerticalScrollBar.setMaximum(data.size.y);
       widgetHorizontalScrollBar.setThumb(Math.min(clientArea.width,data.size.x));
       widgetVerticalScrollBar.setThumb(Math.min(clientArea.height,data.size.y));
+
+      widgetHorizontalScrollBar.setIncrement(Settings.geometryRevisionBox.x+PADDING);
+      widgetHorizontalScrollBar.setPageIncrement(clientArea.width);
+      widgetVerticalScrollBar.setIncrement(Settings.geometryRevisionBox.y+PADDING);
+      widgetVerticalScrollBar.setPageIncrement(clientArea.height);
 
       // redraw
       redraw(true);
