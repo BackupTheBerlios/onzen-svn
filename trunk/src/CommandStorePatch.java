@@ -203,7 +203,7 @@ class CommandStorePatch
         label = Widgets.newLabel(subComposite,"Message:");
         Widgets.layout(label,1,0,TableLayoutData.NW);
 
-        widgetMessage = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+        widgetMessage = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
         widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
         Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
       }
