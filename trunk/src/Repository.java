@@ -1670,12 +1670,13 @@ abstract class Repository implements Serializable
 
   /** create new repository instance
    * @param rootPath root path
+   * @param type repository type; see Repository.Types
    * @return repository or null if no repository found
    */
-  public static Repository newInstance(String rootPath)
+  public static Repository newInstance(String rootPath, Types type)
     throws RepositoryException
   {
-    switch (Repository.getType(rootPath))
+    switch (type)
     {
       case CVS: return new RepositoryCVS(rootPath);
       case SVN: return new RepositorySVN(rootPath);
@@ -1683,6 +1684,16 @@ abstract class Repository implements Serializable
       case GIT: return new RepositoryGit(rootPath);
       default:  throw new RepositoryException("no repository (CVS/SVN/HG/Git) found");
     }
+  }
+
+  /** create new repository instance
+   * @param rootPath root path
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(String rootPath)
+    throws RepositoryException
+  {
+    return newInstance(rootPath,Repository.getType(rootPath));
   }
 
   /** create repository
@@ -1912,7 +1923,7 @@ abstract class Repository implements Serializable
   }
 
   /** get list of files (exclude hidden files)
-   * @return subDirectory sub-directory
+   * @param subDirectory sub-directory
    * @return hash with file data
    */
   public HashSet<FileData> listFiles(String subDirectory)
@@ -1943,6 +1954,13 @@ abstract class Repository implements Serializable
 
     return fileDataSet;
   }
+
+  /** checkout repository from server
+   * @param repositoryPath repository server
+   * @param rootPath root path
+   */
+  abstract public void checkout(String repositoryPath, String rootPath)
+    throws RepositoryException;
 
   /** update file states
    * @param fileDataSet file data set to update

@@ -138,6 +138,48 @@ class RepositoryCVS extends Repository
     return true;
   }
 
+  /** checkout repository from server
+   * @param repositoryPath repository server
+   * @param rootPath root path
+   */
+  public void checkout(String repositoryPath, String rootPath)
+    throws RepositoryException
+  {
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+    Matcher matcher;
+    int     exitCode;
+    try
+    {
+      // checkout
+      command.clear();
+      command.append(Settings.cvsCommand,"co");
+      command.append("--");
+      command.append(repositoryPath);
+      command.append(rootPath);
+      exec = new Exec(command);
+
+      // parse status data
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+      }
+//while ((line = exec.getStderr()) != null) Dprintf.dprintf("err %s",line);
+
+      // done
+      exitCode = exec.done();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
   /** update file states
    * @param fileDataSet file data set to update
    * @param fileDirectorySet directory set to check for new/missing files

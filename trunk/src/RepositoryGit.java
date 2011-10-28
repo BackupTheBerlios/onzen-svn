@@ -50,6 +50,15 @@ class RepositoryGit extends Repository
     this(null);
   }
 
+  /** checkout repository from server
+   * @param repositoryPath repository server
+   * @param rootPath root path
+   */
+  public void checkout(String repositoryPath, String rootPath)
+    throws RepositoryException
+  {
+  }
+
   /** update file states
    * @param fileDataSet file data set to update
    * @param fileDirectorySet directory set to check for new/missing files
