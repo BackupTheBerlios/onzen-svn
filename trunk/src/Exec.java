@@ -31,15 +31,23 @@ import java.util.Stack;
  */
 class Command
 {
+  /** hidden string class
+   */
   class Hidden
   {
-    String string;
+    private String string;
 
+    /** create hidden string
+     * @param string string
+     */
     Hidden(String string)
     {
       this.string = string;
     }
 
+    /** convert to string
+     * @return string
+     */
     public String toString()
     {
       return string;
@@ -49,8 +57,8 @@ class Command
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  private ArrayList<String> commandLine;
-  private ArrayList<String> printableCommandLine;
+  private ArrayList<String> commandLine;           // command line arguments
+  private ArrayList<String> printableCommandLine;  // command line arguments for printing
 
   // ------------------------ native functions ----------------------------
 
@@ -183,7 +191,7 @@ class Exec
       System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+StringUtils.join(commandArray));
     }
 
-    // get workiing directory
+    // get working directory
     File workingDirectory;
     if      ((path != null) && (subDirectory != null)) workingDirectory = new File(path,subDirectory);
     else if (path != null)                             workingDirectory = new File(path);
