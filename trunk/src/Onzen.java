@@ -1221,6 +1221,18 @@ Dprintf.dprintf("");
         }
       });
 
+      menuItem = Widgets.addMenuItem(menu,"Check-out repository...",Settings.keyCheckoutRepository);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          checkoutRepository();
+        }
+      });
+
       menuItem = Widgets.addMenuItem(menu,"Open repository...",Settings.keyOpenRepository);
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -3015,6 +3027,225 @@ exception.printStackTrace();
     catch (IOException exception)
     {
       Dialogs.error(shell,"Cannot store repository list (error: %s).",exception.getMessage());
+    }
+  }
+
+  /** checkout and open repository
+   * @param 
+   * @return repository or null
+   */
+  private Repository checkoutRepository()
+  {
+    class Data
+    {
+      Repository.Types type;
+      String           repositoryPath;
+      String           rootPath;
+
+      Data()
+      {
+        this.type           = Repository.Types.CVS;
+        this.repositoryPath = null;
+        this.rootPath       = null;
+      }
+    }
+
+    Composite composite,subComposite;
+    Button    button;
+    Label     label;
+
+    final Data  data   = new Data();
+    final Shell dialog = Dialogs.openModal(shell,"Checkout repository",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetRepository;
+    final Text   widgetRootPath;
+    final Button widgetCheckout;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Type:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,null));
+      Widgets.layout(subComposite,0,1,TableLayoutData.W);
+      {
+        button = Widgets.newRadio(subComposite,"CVS");
+        button.setSelection(true);
+        Widgets.layout(button,0,0,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection()) data.type = Repository.Types.CVS;
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"SVN");
+        button.setSelection(false);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection()) data.type = Repository.Types.SVN;
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"HG");
+        button.setSelection(false);
+        Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection()) data.type = Repository.Types.HG;
+          }
+        });
+      }
+
+      label = Widgets.newLabel(composite,"Repository:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      widgetRepository = Widgets.newText(composite);
+      Widgets.layout(widgetRepository,1,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Destination:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,2,1,TableLayoutData.WE);
+      {
+        widgetRootPath = Widgets.newText(subComposite);
+        Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
+        widgetRootPath.setToolTipText("Destination check-out directory root path.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select destination directory root path",
+                                            widgetRootPath.getText()
+                                           );
+            if (path != null)
+            {
+              widgetRootPath.setText(path);
+            }
+          }
+        });
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetCheckout = Widgets.newButton(composite,"Check-out");
+      widgetCheckout.setEnabled(false);
+      Widgets.layout(widgetCheckout,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetCheckout.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.repositoryPath = widgetRepository.getText();
+          data.rootPath       = widgetRootPath.getText();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetRepository.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                  && !widgetRootPath.getText().trim().isEmpty()
+                                 );
+      }
+    });
+    widgetRootPath.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                  && !widgetRootPath.getText().trim().isEmpty()
+                                 );
+      }
+    });
+    Widgets.setNextFocus(widgetRepository,widgetRootPath);
+    Widgets.setNextFocus(widgetRootPath,widgetCheckout);
+
+    // run dialog
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      Repository repository = null;
+      try
+      {
+        // checkout 
+        repository = Repository.newInstance(data.rootPath,data.type);
+Dprintf.dprintf("repository=%s",repository);
+        repository.checkout(data.repositoryPath,data.rootPath);
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(shell,"Cannot checkout repository '%s' (error: %s).",data.repositoryPath,exception.getMessage());
+        return null;
+      }
+
+      // add repository tab
+//      RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
+//      repositoryTabMap.put(repository,repositoryTab);
+
+      return repository;
+    }
+    else
+    {
+      return null;
     }
   }
 
