@@ -1588,9 +1588,12 @@ Dprintf.dprintf("");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       widgetPath = Widgets.newText(composite);
-      if (data.path != null) widgetPath.setText(data.path);
-      widgetPath.setSelection(data.path.length(),data.path.length());
-      Widgets.layout(widgetPath,1,1,TableLayoutData.WE);
+      if (data.path != null)
+      {
+        widgetPath.setText(data.path);
+        widgetPath.setSelection(data.path.length(),data.path.length());
+      }
+      Widgets.layout(widgetPath,0,1,TableLayoutData.WE);
     }
 
     // buttons
@@ -1668,8 +1671,8 @@ Dprintf.dprintf("");
         return;
       }
 
-      // update file list
-Dprintf.dprintf("");
+      // start update file data
+      if (fileData != null) asyncUpdateFileStates(fileData);
     }
   }
 
@@ -1797,7 +1800,7 @@ Dprintf.dprintf("");
       Widgets.setFocus(widgetNewFileName);
       if ((Boolean)Dialogs.run(dialog,false))
       {
-        // create directory
+        // rename file
         File oldFile = new File(fileData.getFileName(repository));
         File newFile = new File(repository.rootPath,data.newFileName);
         if (!oldFile.renameTo(newFile))
@@ -1805,7 +1808,12 @@ Dprintf.dprintf("");
           Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n%s",fileData.getFileName(),data.newFileName);
           return;
         }
+
+        // update tree
+        TreeItem subTreeItem = fileNameMap.get(fileData.getFileName());
+        fileNameMap.remove(fileData.getFileName());
         fileData.setFileName(data.newFileName);
+        fileNameMap.put(fileData.getFileName(),subTreeItem);
 
         // start update file data
         asyncUpdateFileStates(fileData);
@@ -1922,10 +1930,13 @@ Dprintf.dprintf("");
                   continue;
               }
             }
+
+            // delete directory tree
             deleted = deleteDirectory(file);
           }
           else
           {
+            // delete file
             deleted = file.delete();
           }
 
@@ -2346,6 +2357,7 @@ Dprintf.dprintf("");
   {
     if (!treeItem.isDisposed())
     {
+      treeItem.setText(0,fileData.getBaseName());
       treeItem.setText(1,getFileDataStateString(fileData));
       treeItem.setText(2,fileData.workingRevision);
       treeItem.setText(3,fileData.branch);
@@ -2428,6 +2440,7 @@ Dprintf.dprintf("");
     {
       if ((new File(fileData.getFileName(repository.rootPath)).exists()))
       {
+        // file exists -> show state
         final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
         if (treeItem != null)
         {
@@ -2442,6 +2455,7 @@ Dprintf.dprintf("");
       }
       else
       {
+        // file deleted -> remove
         fileDataSet.remove(fileData);
 //Dprintf.dprintf("removed %s",fileData);
 
@@ -2513,32 +2527,7 @@ Dprintf.dprintf("");
    */
   protected void updateFileStates(final FileData fileData)
   {
-    // update tree items: status update in progress
-    final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
-    if (treeItem != null)
-    {
-      display.syncExec(new Runnable()
-      {
-        public void run()
-        {
-          if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-        }
-      });
-    }
-
-    // update states: set status color
-    HashSet<FileData> newFileDataSet = new HashSet<FileData>();
-    repository.updateStates(fileData.toSet());
-
-    // update tree items
-//Dprintf.dprintf("fileData=%s",fileData);
-    display.syncExec(new Runnable()
-    {
-      public void run()
-      {
-        if (!treeItem.isDisposed()) updateTreeItem(treeItem,fileData);
-      }
-    });
+    updateFileStates(fileData.toSet());
   }
 
   /** asyncronous update file state
