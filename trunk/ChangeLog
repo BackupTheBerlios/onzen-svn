@@ -1,3 +1,12 @@
+2011-xx-xx 0.03
+  * add sort buttons to tests list
+  * added previous/next revision buttons to view
+  * fix enable view button in diff
+  * made patches dialog non-modal
+  * fixed broken broadcasting of commit messages;
+    use now a multi-cast socket
+  * added search in revision tree view
+
 2011-09-06 0.02
   * support sending mails with JavaMail
   * store patches with summary and message, fix patch number
