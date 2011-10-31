@@ -148,6 +148,8 @@ SOURCES        = src/Onzen.java \
                  src/Dprintf.java \
                  \
                  src/DataModel.java \
+                 \
+                 src/Config.java \
 
 OTHER_SOURCES  = onzen.in \
                  onzen.bat.in \
