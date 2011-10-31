@@ -116,16 +116,16 @@ class CommandRevisions
    */
   class Data
   {
-    RevisionData[] revisionDataTree;
-    RevisionData[] revisionData;
-    Rectangle      view;
-    Point          size;
-    DrawInfo[]     drawInfos;
-    boolean        containerResizeFlag;
-    Point          containerResizeStart;
-    Point          containerResizeDelta;
-    Rectangle      containerResizeRectangle;
-    RevisionData   selectedRevisionData0,selectedRevisionData1;
+    RevisionData[]      revisionDataTree;
+    RevisionData[]      revisionData;
+    Rectangle           view;
+    Point               size;
+    ArrayList<DrawInfo> drawInfoList;
+    boolean             containerResizeFlag;
+    Point               containerResizeStart;
+    Point               containerResizeDelta;
+    Rectangle           containerResizeRectangle;
+    RevisionData        selectedRevisionData0,selectedRevisionData1;
 
     Data()
     {
@@ -133,7 +133,7 @@ class CommandRevisions
       this.revisionData             = null;
       this.view                     = new Rectangle(0,0,0,0);
       this.size                     = new Point(0,0);
-      this.drawInfos                = null;
+      this.drawInfoList             = new ArrayList<DrawInfo>(128);
       this.containerResizeFlag      = false;
       this.containerResizeStart     = new Point(0,0);
       this.containerResizeDelta     = new Point(0,0);
@@ -144,12 +144,12 @@ class CommandRevisions
   };
 
   // --------------------------- constants --------------------------------
-  private final int MARGIN               = 10;
-  private final int PADDING              = 20;
-  private final int CONTAINER_MARGIN     =  4;
-  private final int CONTAINER_MIN_WIDTH  = 20;
-  private final int CONTAINER_MIN_HEIGHT = 20;
-  private final int HANDLE_SIZE          =  8;
+  private final int MARGIN               = 10;   // margin left/top for containers in canvas
+  private final int PADDING              = 20;   // padding between containers
+  private final int CONTAINER_MARGIN     =  4;   // margin left/top for text in container
+  private final int CONTAINER_MIN_WIDTH  = 20;   // min. width of container
+  private final int CONTAINER_MIN_HEIGHT = 20;   // min. height of container
+  private final int HANDLE_SIZE          =  8;   // size of resize-handle rectangle
 
   private final Color COLOR_CONTAINER            = Onzen.COLOR_GRAY;
   private final Color COLOR_HANDLE               = Onzen.COLOR_RED;
@@ -584,53 +584,47 @@ throw new RepositoryException("NYI");
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
-        if (data.drawInfos != null)
+        for (DrawInfo drawInfo : data.drawInfoList)
         {
-          for (DrawInfo drawInfo : data.drawInfos)
+          if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
           {
-            if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
-            {
-              CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData);
-              rommandRevisionInfo.run();
-              break;
-            }
+            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData);
+            rommandRevisionInfo.run();
+            break;
           }
         }
       }
       public void mouseDown(MouseEvent mouseEvent)
       {
-        if (data.drawInfos != null)
+        if (!data.containerResizeFlag)
         {
-          if (!data.containerResizeFlag)
+          for (DrawInfo drawInfo : data.drawInfoList)
           {
-            for (DrawInfo drawInfo : data.drawInfos)
+            if      (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
             {
-              if      (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
-              {
-                // selected revision
-                data.selectedRevisionData0 = data.selectedRevisionData1;
-                data.selectedRevisionData1 = drawInfo.revisionData;
+              // selected revision
+              data.selectedRevisionData0 = data.selectedRevisionData1;
+              data.selectedRevisionData1 = drawInfo.revisionData;
 
-                // notify modification
-                Widgets.modified(data);
+              // notify modification
+              Widgets.modified(data);
 
-                redraw();
-                break;
-              }
-              else if (drawInfo.handle.contains(mouseEvent.x,mouseEvent.y))
-              {
-                // start resize container
-                data.containerResizeStart.x          = mouseEvent.x;
-                data.containerResizeStart.y          = mouseEvent.y;
-                data.containerResizeDelta.x          = 0;
-                data.containerResizeDelta.y          = 0;
-                data.containerResizeRectangle.x      = drawInfo.container.x;
-                data.containerResizeRectangle.y      = drawInfo.container.y;
-                data.containerResizeRectangle.width  = drawInfo.container.width;
-                data.containerResizeRectangle.height = drawInfo.container.height;
-                data.containerResizeFlag             = true;
-                break;
-              }
+              redraw();
+              break;
+            }
+            else if (drawInfo.handle.contains(mouseEvent.x,mouseEvent.y))
+            {
+              // start resize container
+              data.containerResizeStart.x          = mouseEvent.x;
+              data.containerResizeStart.y          = mouseEvent.y;
+              data.containerResizeDelta.x          = 0;
+              data.containerResizeDelta.y          = 0;
+              data.containerResizeRectangle.x      = drawInfo.container.x;
+              data.containerResizeRectangle.y      = drawInfo.container.y;
+              data.containerResizeRectangle.width  = drawInfo.container.width;
+              data.containerResizeRectangle.height = drawInfo.container.height;
+              data.containerResizeFlag             = true;
+              break;
             }
           }
         }
@@ -748,7 +742,7 @@ throw new RepositoryException("NYI");
    */
   CommandRevisions(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
-    this(shell,repositoryTab,fileData,null);
+    this(shell,repositoryTab,fileData,fileData.workingRevision);
   }
 
   /** set scroll value
@@ -868,19 +862,14 @@ throw new RepositoryException("NYI");
     {
       if (revisionData.revision.equals(revision))
       {
-        point.x += MARGIN;
-        point.y += MARGIN;
         return point;
       }
       else
       {
-        if (!firstFlag)
-        {
-          point.y += PADDING;
-        }
+        point.y += PADDING;
 
         point.y += ENTRY_HEIGHT;
-  //Dprintf.dprintf("size=%s",size);
+//Dprintf.dprintf("size=%s",size);
 
         if (revisionData.branches != null)
         {
@@ -888,10 +877,9 @@ throw new RepositoryException("NYI");
           for (BranchData branchData : revisionData.branches)
           {
             Point subPoint = getRevisionX0Y0(branchData.revisionDataTree,revision);
-Dprintf.dprintf("subPoint=%s",subPoint);
             if (subPoint != null)
             {
-              point.x += subPoint.x;
+              point.x += ENTRY_WIDTH+PADDING+subPoint.x;
               point.y += subPoint.y;
 
               return point;
@@ -900,15 +888,15 @@ Dprintf.dprintf("subPoint=%s",subPoint);
             {
               Point subSize = getSize(branchData.revisionDataTree);
 
-              maxSubSize.x = Math.max(maxSubSize.x,subSize.x);
+              maxSubSize.x = Math.max(maxSubSize.x,PADDING+subSize.x);
               maxSubSize.y = Math.max(maxSubSize.y,subSize.y);
             }
           }
   //Dprintf.dprintf("maxSubSize=%s",maxSubSize);
 
           // next column, get max. dy
-//          point.x = Math.max(point.x,ENTRY_WIDTH+PADDING+maxSubSize.x);
-//          point.y = point.y+maxSubSize.y;
+//          point.x += Math.max(point.x,ENTRY_WIDTH+PADDING+maxSubSize.x);
+          point.y += maxSubSize.y;
         }
 
         firstFlag = false;
@@ -1090,7 +1078,7 @@ Dprintf.dprintf("subPoint=%s",subPoint);
       final int ENTRY_WIDTH  = Math.max(Settings.geometryRevisionBox.x,CONTAINER_MIN_WIDTH );
       final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y,CONTAINER_MIN_HEIGHT);
 
-      ArrayList<DrawInfo> drawInfoList = new ArrayList<DrawInfo>();
+      data.drawInfoList.clear();
 
       Rectangle clientArea = widgetRevisions.getClientArea();
       GC        gc         = new GC(widgetRevisions);
@@ -1113,13 +1101,10 @@ Dprintf.dprintf("subPoint=%s",subPoint);
              data.view.y+MARGIN,
              0,
              0,
-             drawInfoList
+             data.drawInfoList
             );
 
       gc.dispose();
-
-      // get container, handles coordinates
-      data.drawInfos = drawInfoList.toArray(new DrawInfo[drawInfoList.size()]);
     }
   }
 
@@ -1258,7 +1243,7 @@ Dprintf.dprintf("subPoint=%s",subPoint);
         }
 //printRevisionDataTree(data.revisionDataTree);
 
-        // convert tree into array for find function
+        // convert tree into an array for find function
         ArrayList<RevisionData> revisionDataArray = new ArrayList<RevisionData>();
         revisionDataTreeToArray(revisionDataArray,data.revisionDataTree);
         data.revisionData = revisionDataArray.toArray(new RevisionData[revisionDataArray.size()]);
