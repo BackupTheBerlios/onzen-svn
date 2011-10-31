@@ -31,6 +31,8 @@ public class TableLayoutData
   public final static int NE      = TableLayout.NE;
   public final static int SW      = TableLayout.SW;
   public final static int SE      = TableLayout.SE;
+  public final static int NSW     = TableLayout.NSW;
+  public final static int NSE     = TableLayout.NSE;
   public final static int NSWE    = TableLayout.NSWE;
 
   public final static int DEFAULT = TableLayout.DEFAULT;

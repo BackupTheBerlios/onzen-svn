@@ -38,6 +38,8 @@ public class TableLayout extends Layout
   public final static int NE      = N|E;
   public final static int SW      = S|W;
   public final static int SE      = S|E;
+  public final static int NSW     = N|S|W;
+  public final static int NSE     = N|S|E;
   public final static int NSWE    = N|S|W|E;
 
   public final static int DEFAULT = 0;
