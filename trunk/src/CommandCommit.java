@@ -606,7 +606,7 @@ class CommandCommit
       {
         public void run()
         {
-          repositoryTab.updateTreeItems(fileDataSet);
+          if (!repositoryTab.widgetTab.isDisposed()) repositoryTab.updateTreeItems(fileDataSet);
         }
       });
 
