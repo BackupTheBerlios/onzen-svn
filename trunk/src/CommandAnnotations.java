@@ -175,7 +175,7 @@ class CommandAnnotations
 
         widgetRevisionPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_LEFT);
         widgetRevisionPrev.setEnabled(false);
-        Widgets.layout(widgetRevisionPrev,0,2,TableLayoutData.W);
+        Widgets.layout(widgetRevisionPrev,0,2,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
         {
           public void modified(Control control)
@@ -187,7 +187,7 @@ class CommandAnnotations
 
         widgetRevisionNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_RIGHT);
         widgetRevisionNext.setEnabled(false);
-        Widgets.layout(widgetRevisionNext,0,3,TableLayoutData.W);
+        Widgets.layout(widgetRevisionNext,0,3,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetRevisionNext,data)
         {
           public void modified(Control control)
@@ -229,7 +229,7 @@ class CommandAnnotations
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
-        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
         {
           public void modified(Control control)
@@ -240,7 +240,7 @@ class CommandAnnotations
 
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
-        Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+        Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
         {
           public void modified(Control control)

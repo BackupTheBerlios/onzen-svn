@@ -312,7 +312,7 @@ class CommandDiff
 
         widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindLeftPrev.setEnabled(false);
-        Widgets.layout(widgetFindLeftPrev,0,2,TableLayoutData.W);
+        Widgets.layout(widgetFindLeftPrev,0,2,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindLeftPrev,data)
         {
           public void modified(Control control)
@@ -323,7 +323,7 @@ class CommandDiff
 
         widgetFindLeftNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindLeftNext.setEnabled(false);
-        Widgets.layout(widgetFindLeftNext,0,3,TableLayoutData.W);
+        Widgets.layout(widgetFindLeftNext,0,3,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindLeftNext,data)
         {
           public void modified(Control control)
@@ -345,7 +345,7 @@ class CommandDiff
 
         widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindRightPrev.setEnabled(false);
-        Widgets.layout(widgetFindRightPrev,0,2,TableLayoutData.W);
+        Widgets.layout(widgetFindRightPrev,0,2,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindRightPrev,data)
         {
           public void modified(Control control)
@@ -356,7 +356,7 @@ class CommandDiff
 
         widgetFindRightNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindRightNext.setEnabled(false);
-        Widgets.layout(widgetFindRightNext,0,3,TableLayoutData.W);
+        Widgets.layout(widgetFindRightNext,0,3,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindRightNext,data)
         {
           public void modified(Control control)
@@ -526,7 +526,7 @@ class CommandDiff
 
       widgetRevisionPrev = Widgets.newButton(composite,Onzen.IMAGE_ARROW_LEFT);
       widgetRevisionPrev.setEnabled(false);
-      Widgets.layout(widgetRevisionPrev,0,6,TableLayoutData.W);
+      Widgets.layout(widgetRevisionPrev,0,6,TableLayoutData.NSW);
       Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
       {
         public void modified(Control control)
@@ -538,7 +538,7 @@ class CommandDiff
 
       widgetRevisionNext = Widgets.newButton(composite,Onzen.IMAGE_ARROW_RIGHT);
       widgetRevisionNext.setEnabled(false);
-      Widgets.layout(widgetRevisionNext,0,7,TableLayoutData.W);
+      Widgets.layout(widgetRevisionNext,0,7,TableLayoutData.NSW);
       Widgets.addModifyListener(new WidgetListener(widgetRevisionNext,data)
       {
         public void modified(Control control)
