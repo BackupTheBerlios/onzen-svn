@@ -507,7 +507,7 @@ exception.printStackTrace();
     {
       public void run()
       {
-        widgetStatus.setText(statusText.text);
+        if (!widgetStatus.isDisposed()) widgetStatus.setText(statusText.text);
       }
     });
   }
@@ -544,7 +544,7 @@ exception.printStackTrace();
     {
       public void run()
       {
-        widgetStatus.setText(string);
+        if (!widgetStatus.isDisposed()) widgetStatus.setText(string);
       }
     });
   }
@@ -2844,11 +2844,11 @@ exception.printStackTrace();
       widgetList.setToolTipText("Repository title.");
 
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,1.0));
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,1.0,1.0,0.0,0.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
         button = Widgets.newButton(subComposite,"Open");
-        Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        Widgets.layout(button,0,0,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2868,7 +2868,7 @@ exception.printStackTrace();
         button.setToolTipText("Open repository.");
 
         button = Widgets.newButton(subComposite,"Edit");
-        Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        Widgets.layout(button,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2887,7 +2887,7 @@ exception.printStackTrace();
         button.setToolTipText("Edit repository settings.");
 
         button = Widgets.newButton(subComposite,"Close");
-        Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        Widgets.layout(button,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2906,7 +2906,7 @@ exception.printStackTrace();
         button.setToolTipText("Close repository.");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
-        Widgets.layout(button,0,3,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        Widgets.layout(button,0,3,TableLayoutData.NSW,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2935,7 +2935,7 @@ exception.printStackTrace();
         button.setToolTipText("Open repository position up.");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
-        Widgets.layout(button,0,4,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+        Widgets.layout(button,0,4,TableLayoutData.NSW,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2970,7 +2970,7 @@ exception.printStackTrace();
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      button = Widgets.newButton(composite,"Close");
+      button = Widgets.newButton(composite,"Done");
       Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
@@ -3579,10 +3579,67 @@ exception.printStackTrace();
 
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(null,null));
-        Widgets.layout(subSubComposite,1,0,TableLayoutData.E,0,0,2);
+        Widgets.layout(subSubComposite,1,0,TableLayoutData.WE,0,0,2);
         {
+          button = Widgets.newButton(subSubComposite,"Add");
+          Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String patchTest = Dialogs.string(dialog,"Edit patch test","Test:","","Add","Cancel");
+              if (patchTest != null)
+              {
+                widgetPatchTests.add(patchTest);
+              }
+            }
+          });
+          button.setToolTipText("Add new test description.");
+
+          button = Widgets.newButton(subSubComposite,"Remove");
+          Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetPatchTests.getSelectionIndex();
+              if (index >= 0)
+              {
+                String test = widgetPatchTests.getItem(index);
+                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove patch test '%s'?",test)))
+                {
+                  widgetPatchTests.remove(index);
+                }
+              }
+            }
+          });
+          button.setToolTipText("Remove selected test description.");
+
+          button = Widgets.newButton(subSubComposite,"Sort...");
+          Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              if (Dialogs.confirm(dialog,"Really sort test descriptions?"))
+              {
+                Widgets.sortList(widgetPatchTests);
+              }
+            }
+          });
+          button.setToolTipText("Sort test descriptions.");
+
           button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
-          Widgets.layout(button,0,0,TableLayoutData.E);
+          Widgets.layout(button,0,3,TableLayoutData.NSW,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -3607,7 +3664,7 @@ exception.printStackTrace();
           button.setToolTipText("Move test description up.");
 
           button = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
-          Widgets.layout(button,0,1,TableLayoutData.E);
+          Widgets.layout(button,0,4,TableLayoutData.NSW,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -3630,63 +3687,6 @@ exception.printStackTrace();
             }
           });
           button.setToolTipText("Move test description down.");
-
-          button = Widgets.newButton(subSubComposite,"Add");
-          Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              String patchTest = Dialogs.string(dialog,"Edit patch test","Test:","","Add","Cancel");
-              if (patchTest != null)
-              {
-                widgetPatchTests.add(patchTest);
-              }
-            }
-          });
-          button.setToolTipText("Add new test description.");
-
-          button = Widgets.newButton(subSubComposite,"Remove");
-          Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              int index = widgetPatchTests.getSelectionIndex();
-              if (index >= 0)
-              {
-                String test = widgetPatchTests.getItem(index);
-                if (Dialogs.confirm(dialog,"Confirmation",String.format("Remove patch test '%s'?",test)))
-                {
-                  widgetPatchTests.remove(index);
-                }
-              }
-            }
-          });
-          button.setToolTipText("Remove selected test description.");
-
-          button = Widgets.newButton(subSubComposite,"Sort...");
-          Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              if (Dialogs.confirm(dialog,"Really sort test descriptions?"))
-              {
-                Widgets.sortList(widgetPatchTests);
-              }
-            }
-          });
-          button.setToolTipText("Sort test descriptions.");
         }
 
         {
