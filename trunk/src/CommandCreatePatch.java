@@ -832,17 +832,17 @@ Dprintf.dprintf("");
   private void show(String revision1, String revision2)
   {
     // clear
-    if (!dialog.isDisposed())
+    display.syncExec(new Runnable()
     {
-      display.syncExec(new Runnable()
+      public void run()
       {
-        public void run()
+        if (!dialog.isDisposed())
         {
           data.lines = null;
           Widgets.modified(data);
-         }
-      });
-    }
+        }
+      }
+    });
 
     // get and show patch
     Background.run(new BackgroundRunnable(fileDataSet,revision1,revision2)
@@ -856,11 +856,11 @@ Dprintf.dprintf("");
           data.linesNoWhitespaces = repositoryTab.repository.getPatchLines(fileDataSet,revision1,revision2,true);
 
           // show
-          if (!dialog.isDisposed())
+          display.syncExec(new Runnable()
           {
-            display.syncExec(new Runnable()
+            public void run()
             {
-              public void run()
+              if (!dialog.isDisposed())
               {
                 if (   (data.linesNoWhitespaces != null)
                     && widgetIgnoreWhitespaces.getSelection()
@@ -880,18 +880,18 @@ Dprintf.dprintf("");
                 // focus find
                 if (!widgetFind.isDisposed()) widgetFind.setFocus();
               }
-            });
-          }
+            }
+          });
 
           // get patch
           data.lines = repositoryTab.repository.getPatchLines(fileDataSet,revision1,revision2,false);
 
           // show
-          if (!dialog.isDisposed())
+          display.syncExec(new Runnable()
           {
-            display.syncExec(new Runnable()
+            public void run()
             {
-              public void run()
+              if (!dialog.isDisposed())
               {
                 if (   (data.lines != null)
                     && !widgetIgnoreWhitespaces.getSelection()
@@ -911,8 +911,8 @@ Dprintf.dprintf("");
                 // focus find
                 if (!widgetFind.isDisposed()) widgetFind.setFocus();
               }
-            });
-          }
+            }
+          });
         }
         catch (RepositoryException exception)
         {
