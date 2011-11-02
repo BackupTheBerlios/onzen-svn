@@ -214,7 +214,7 @@ class CommandCreatePatch
 
             widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
             widgetFindPrev.setEnabled(false);
-            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
             Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
             {
               public void modified(Control control)
@@ -225,7 +225,7 @@ class CommandCreatePatch
 
             widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
             widgetFindNext.setEnabled(false);
-            Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
             Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
             {
               public void modified(Control control)
