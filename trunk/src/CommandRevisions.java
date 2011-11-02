@@ -485,7 +485,7 @@ throw new RepositoryException("NYI");
                 {
                   public void run()
                   {
-                    repositoryTab.updateTreeItem(fileData);
+                    if (!repositoryTab.widgetTab.isDisposed()) repositoryTab.updateTreeItem(fileData);
                   }
                 });
               }
