@@ -238,7 +238,7 @@ class CommandRevisions
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
-        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+        Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
         {
           public void modified(Control control)
@@ -249,7 +249,7 @@ class CommandRevisions
 
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
-        Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+        Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
         Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
         {
           public void modified(Control control)
@@ -1255,6 +1255,9 @@ throw new RepositoryException("NYI");
           {
             public void run()
             {
+              final int ENTRY_WIDTH  = Settings.geometryRevisionBox.x;
+              final int ENTRY_HEIGHT = Settings.geometryRevisionBox.y;
+
               // set canvas size and redraw
               setSize();
 
@@ -1264,16 +1267,19 @@ throw new RepositoryException("NYI");
               {
                 // get x,y-offset of revision
                 Point point = getRevisionX0Y0(revision);
+                point.x += ENTRY_WIDTH /2;
+                point.y += ENTRY_HEIGHT/2;
+//Dprintf.dprintf("point=%s",point);
 
                 // scroll
                 Rectangle clientArea = widgetRevisions.getClientArea();
                 clientArea.x = widgetHorizontalScrollBar.getSelection();
                 clientArea.y = widgetVerticalScrollBar.getSelection();
-                if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -point.x;
-                if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -point.y;
+                if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -(point.x-ENTRY_WIDTH /2);
+                if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
                 widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
-                widgetHorizontalScrollBar.setSelection(point.x);
-                widgetVerticalScrollBar.setSelection(point.y);
+                widgetHorizontalScrollBar.setSelection(-data.view.x);
+                widgetVerticalScrollBar.setSelection(-data.view.y);
 
                 // redraw
                 redraw(true);
@@ -1414,8 +1420,8 @@ throw new RepositoryException("NYI");
           if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -point.x;
           if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -point.y;
           widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
-          widgetHorizontalScrollBar.setSelection(point.x);
-          widgetVerticalScrollBar.setSelection(point.y);
+          widgetHorizontalScrollBar.setSelection(-data.view.x);
+          widgetVerticalScrollBar.setSelection(-data.view.y);
 
           // redraw
           redraw(true);
