@@ -795,7 +795,7 @@ class BranchData
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  public final String         name;
+  public final String         name;                // branch name
   public final Date           date;
   public final String         author;
   public final String[]       commitMessage;
@@ -1054,7 +1054,7 @@ class RevisionData
     branches[branches.length-1] = branchData;
   }
 
-  /** match author/commit message with text
+  /** match author/commit message/branch name with text
    * @param text text
    * @return true if text match to (is contained in) author or commit message
    */
@@ -1063,6 +1063,11 @@ class RevisionData
     text = text.toLowerCase();
 
     if (author.toLowerCase().indexOf(text) >= 0) return true;
+
+    for (BranchData branch : branches)
+    {
+      if (branch.name.toLowerCase().indexOf(text) >= 0) return true;
+    }
 
     for (String string : commitMessage)
     {
