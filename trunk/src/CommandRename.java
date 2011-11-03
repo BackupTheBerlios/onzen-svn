@@ -460,7 +460,7 @@ class CommandRename
                                    fileData.state,
                                    fileData.mode,
                                    fileData.size,
-                                   fileData.datetime
+                                   fileData.date
                                   )
                      );
       repositoryTab.updateFileStates(fileData.toSet());

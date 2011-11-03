@@ -230,7 +230,7 @@ class CommandChanges
         TableColumn tableColumn = (TableColumn)selectionEvent.widget;
 
         if      (tableColumn == widgetChanges.getColumn(0)) data.logDataComparator.setSortMode(LogDataComparator.SortModes.REVISION      );
-        else if (tableColumn == widgetChanges.getColumn(1)) data.logDataComparator.setSortMode(LogDataComparator.SortModes.DATETIME      );
+        else if (tableColumn == widgetChanges.getColumn(1)) data.logDataComparator.setSortMode(LogDataComparator.SortModes.DATE          );
         else if (tableColumn == widgetChanges.getColumn(2)) data.logDataComparator.setSortMode(LogDataComparator.SortModes.AUTHOR        );
         else if (tableColumn == widgetChanges.getColumn(3)) data.logDataComparator.setSortMode(LogDataComparator.SortModes.COMMIT_MESSAGE);
         Widgets.sortTableColumn(widgetChanges,tableColumn,data.logDataComparator);
@@ -362,7 +362,7 @@ class CommandChanges
           label.setBackground(Onzen.COLOR_WHITE);
           Widgets.layout(label,1,0,TableLayoutData.W);
 
-          label = Widgets.newLabel(widgetChangesToolTip,Onzen.DATETIME_FORMAT.format(logData.datetime));
+          label = Widgets.newLabel(widgetChangesToolTip,Onzen.DATETIME_FORMAT.format(logData.date));
           label.setBackground(Onzen.COLOR_WHITE);
           Widgets.layout(label,1,1,TableLayoutData.WE);
 
@@ -471,7 +471,7 @@ class CommandChanges
                                            data.logDataComparator,
                                            logData,
                                            logData.revision,
-                                           Onzen.DATETIME_FORMAT.format(logData.datetime),
+                                           Onzen.DATETIME_FORMAT.format(logData.date),
                                            logData.author,
                                            logData.commitMessage[0]
                                           );
