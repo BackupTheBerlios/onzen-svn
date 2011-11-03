@@ -99,6 +99,7 @@ class CommandRevisionInfo
   };
 
   // --------------------------- constants --------------------------------
+  private final int USER_EVENT_SELECT = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
 
@@ -113,6 +114,7 @@ class CommandRevisionInfo
 
   // widgets
   private final Text          widgetRevision;
+  private final Text          widgetDate;
   private final Text          widgetAuthor;
   private final Text          widgetCommitMessage;
   private final Text          widgetLog;
@@ -163,13 +165,48 @@ class CommandRevisionInfo
       widgetRevision = Widgets.newStringView(composite,SWT.LEFT);
       widgetRevision.setBackground(composite.getBackground());
       Widgets.layout(widgetRevision,1,1,TableLayoutData.WE);
+      widgetRevision.addMouseListener(new MouseListener()
+      {
+        public void mouseDoubleClick(MouseEvent mouseEvent)
+        {
+          Text widget = (Text)mouseEvent.widget;
+
+          Event event = new Event();
+          event.widget = widget;
+          widget.notifyListeners(USER_EVENT_SELECT,event);
+        }
+        public void mouseDown(MouseEvent mouseEvent)
+        {
+        }
+        public void mouseUp(MouseEvent mouseEvent)
+        {
+        }
+      });
+      widgetRevision.addListener(USER_EVENT_SELECT,new Listener()
+      {
+        public void handleEvent(Event event)
+        {
+          Text   widget    = (Text)event.widget;
+          String text      = widget.getText();
+          Point  selection = widget.getSelection();
+
+          while ((selection.x > 0) && Character.isLetterOrDigit(text.charAt(selection.x-1)))
+          {
+            selection.x--;
+          }
+          while ((selection.y < text.length()) && Character.isLetterOrDigit(text.charAt(selection.y)))
+          {
+            selection.y++;
+          }
+          widget.setSelection(selection);
+        }
+      });
 
       label = Widgets.newLabel(composite,"Date:");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
-      text = Widgets.newStringView(composite,SWT.LEFT);
-      text.setText(Onzen.DATETIME_FORMAT.format(fileData.datetime));
-      Widgets.layout(text,2,1,TableLayoutData.WE);
+      widgetDate = Widgets.newStringView(composite,SWT.LEFT);
+      Widgets.layout(widgetDate,2,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Size:");
       Widgets.layout(label,3,0,TableLayoutData.W);
@@ -410,6 +447,7 @@ class CommandRevisionInfo
             }
 
             if (!widgetRevision.isDisposed()) widgetRevision.setText(data.revisionData.getRevisionText());
+            if (!widgetDate.isDisposed()) widgetDate.setText(Onzen.DATETIME_FORMAT.format(data.revisionData.date));
             if (!widgetAuthor.isDisposed()) widgetAuthor.setText(data.revisionData.author);
             if (!widgetCommitMessage.isDisposed()) widgetCommitMessage.setText(buffer.toString());
 
