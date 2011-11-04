@@ -994,7 +994,7 @@ throw new RepositoryException("NYI");
 
         imageGC.setForeground(Onzen.COLOR_BLACK);
         imageGC.drawString("Revision:",CONTAINER_MARGIN+0,CONTAINER_MARGIN+0*FONT_HEIGHT,true); imageGC.drawString(revisionData.getRevisionText(),                 CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+0*FONT_HEIGHT,true);
-        imageGC.drawString("Date:",    CONTAINER_MARGIN+0,CONTAINER_MARGIN+1*FONT_HEIGHT,true); imageGC.drawString(revisionData.date.toString(),                   CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+1*FONT_HEIGHT,true);
+        imageGC.drawString("Date:",    CONTAINER_MARGIN+0,CONTAINER_MARGIN+1*FONT_HEIGHT,true); imageGC.drawString(Onzen.DATETIME_FORMAT.format(revisionData.date),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+1*FONT_HEIGHT,true);
         imageGC.drawString("Autor:",   CONTAINER_MARGIN+0,CONTAINER_MARGIN+2*FONT_HEIGHT,true); imageGC.drawString(revisionData.author,                            CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+2*FONT_HEIGHT,true);
         imageGC.drawString("Message:", CONTAINER_MARGIN+0,CONTAINER_MARGIN+3*FONT_HEIGHT,true); imageGC.drawText(StringUtils.join(revisionData.commitMessage,"\n"),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+3*FONT_HEIGHT,true);
       }
