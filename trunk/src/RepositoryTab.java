@@ -110,10 +110,10 @@ class RepositoryTab
   class FileDataComparator implements Comparator<FileData>
   {
     // Note: enum in inner classes are not possible in Java, thus use the old way...
-    private final static int SORTMODE_NAME     = 0;
-    private final static int SORTMODE_TYPE     = 1;
-    private final static int SORTMODE_SIZE     = 2;
-    private final static int SORTMODE_DATETIME = 3;
+    private final static int SORTMODE_NAME = 0;
+    private final static int SORTMODE_TYPE = 1;
+    private final static int SORTMODE_SIZE = 2;
+    private final static int SORTMODE_DATE = 3;
 
     private int sortMode;
 
@@ -126,7 +126,7 @@ class RepositoryTab
       if      (tree.getColumn(0) == sortColumn) sortMode = SORTMODE_NAME;
       else if (tree.getColumn(1) == sortColumn) sortMode = SORTMODE_TYPE;
       else if (tree.getColumn(2) == sortColumn) sortMode = SORTMODE_SIZE;
-      else if (tree.getColumn(3) == sortColumn) sortMode = SORTMODE_DATETIME;
+      else if (tree.getColumn(3) == sortColumn) sortMode = SORTMODE_DATE;
       else                                      sortMode = SORTMODE_NAME;
     }
 
@@ -156,10 +156,10 @@ class RepositoryTab
           if      (fileData1.size < fileData2.size) return -1;
           else if (fileData1.size > fileData2.size) return  1;
           else                                      return  0;
-        case SORTMODE_DATETIME:
-          if      (fileData1.datetime.before(fileData2.datetime)) return -1;
-          else if (fileData1.datetime.after(fileData2.datetime))  return  1;
-          else                                                    return  0;
+        case SORTMODE_DATE:
+          if      (fileData1.date.before(fileData2.date)) return -1;
+          else if (fileData1.date.after(fileData2.date))  return  1;
+          else                                            return  0;
         default:
           return 0;
       }

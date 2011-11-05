@@ -123,16 +123,16 @@ class CommandChanges
    */
   class Data
   {
-    LogData[]      changes;
-    Rectangle      view;
-    Point          size;
-    DrawInfo[]     drawInfos;
-    boolean        containerResizeFlag;
-    Point          containerResizeStart;
-    Point          containerResizeDelta;
-    Rectangle      containerResizeRectangle;
-    RevisionData   selectedRevisionData0,selectedRevisionData1;
-    RevisionData   selectedRevisionData;
+    LogData[]         changes;
+    Rectangle         view;
+    Point             size;
+    DrawInfo[]        drawInfos;
+    boolean           containerResizeFlag;
+    Point             containerResizeStart;
+    Point             containerResizeDelta;
+    Rectangle         containerResizeRectangle;
+    RevisionData      selectedRevisionData0,selectedRevisionData1;
+    RevisionData      selectedRevisionData;
     LogDataComparator logDataComparator;
 
     Data()

@@ -233,7 +233,7 @@ class FileData
   public       String name;
   public final Types  type;
   public       long   size;
-  public       Date   datetime;
+  public       Date   date;
   public       States state;
   public       Modes  mode;
   public       String workingRevision;
@@ -250,17 +250,17 @@ class FileData
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
    * @param size file size [bytes]
-   * @param datetime file date/time
+   * @param date file date/time
    * @param workingRevision working revsion
    * @param repositoryRevision repository revision
    * @param branch branch
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, Date datetime, String workingRevision, String repositoryRevision, String branch)
+  public FileData(String name, Types type, States state, Modes mode, long size, Date date, String workingRevision, String repositoryRevision, String branch)
   {
     this.name               = name;
     this.type               = type;
     this.size               = size;
-    this.datetime           = datetime;
+    this.date               = date;
     this.state              = state;
     this.mode               = mode;
     this.workingRevision    = workingRevision;
@@ -274,13 +274,13 @@ class FileData
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
    * @param size file size [bytes]
-   * @param datetime file date/time
+   * @param date file date/time
    * @param workingRevision working revsion
    * @param repositoryRevision repository revision
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, Date datetime, String workingRevision, String repositoryRevision)
+  public FileData(String name, Types type, States state, Modes mode, long size, Date date, String workingRevision, String repositoryRevision)
   {
-    this(name,type,state,mode,size,datetime,workingRevision,repositoryRevision,"");
+    this(name,type,state,mode,size,date,workingRevision,repositoryRevision,"");
   }
 
   /** create file data
@@ -289,22 +289,22 @@ class FileData
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
    * @param size file size [bytes]
-   * @param datetime file date/time
+   * @param date file date/time
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, Date datetime)
+  public FileData(String name, Types type, States state, Modes mode, long size, Date date)
   {
-    this(name,type,state,mode,size,datetime,"","","");
+    this(name,type,state,mode,size,date,"","","");
   }
 
   /** create file data
    * @param name file name
    * @param type file type (see FileData.Types)
    * @param size file size [bytes]
-   * @param datetime file date/time
+   * @param date file date/time
    */
-  public FileData(String name, Types type, long size, Date datetime)
+  public FileData(String name, Types type, long size, Date date)
   {
-    this(name,type,States.UNKNOWN,Modes.UNKNOWN,size,datetime);
+    this(name,type,States.UNKNOWN,Modes.UNKNOWN,size,date);
   }
 
   /** create file data
@@ -499,7 +499,7 @@ class FileDataComparator implements Comparator<FileData>
     NAME,
     TYPE,
     SIZE,
-    DATETIME,
+    DATE,
     STATE,
     MODE,
     WORKING_REVISION,
@@ -563,10 +563,10 @@ class FileDataComparator implements Comparator<FileData>
         if      (fileData0.size < fileData1.size) return -1;
         else if (fileData0.size > fileData1.size) return  1;
         else                                      return  0;
-      case DATETIME:
-        if      (fileData0.datetime.before(fileData1.datetime)) return -1;
-        else if (fileData0.datetime.after(fileData1.datetime))  return  1;
-        else                                                    return  0;
+      case DATE:
+        if      (fileData0.date.before(fileData1.date)) return -1;
+        else if (fileData0.date.after(fileData1.date))  return  1;
+        else                                            return  0;
       case STATE:
         return fileData0.state.compareTo(fileData1.state);
       case MODE:
@@ -1094,7 +1094,7 @@ class LogData
 
   // --------------------------- variables --------------------------------
   public final String   revision;
-  public final Date     datetime;
+  public final Date     date;
   public final String   author;
   public final String[] commitMessage;
 
@@ -1105,14 +1105,14 @@ class LogData
   /** create log data
    * @param revision revision
    * @param author author name
-   * @param datetime date/time
+   * @param date date/time
    * @param commitMessage commit message
    */
-  public LogData(String revision, Date datetime, String author, String[] commitMessage)
+  public LogData(String revision, Date date, String author, String[] commitMessage)
   {
     this.revision      = revision;
     this.author        = author;
-    this.datetime      = datetime;
+    this.date          = date;
     this.commitMessage = commitMessage;
   }
 
@@ -1121,7 +1121,7 @@ class LogData
    */
   public String toString()
   {
-    return "LogData {"+revision+", author: "+author+", date/time: "+datetime+", commit message: "+commitMessage+"}";
+    return "LogData {"+revision+", author: "+author+", date/time: "+date+", commit message: "+commitMessage+"}";
   }
 }
 
@@ -1133,7 +1133,7 @@ class LogDataComparator implements Comparator<LogData>
   enum SortModes
   {
     REVISION,
-    DATETIME,
+    DATE,
     AUTHOR,
     COMMIT_MESSAGE
   };
@@ -1188,10 +1188,10 @@ class LogDataComparator implements Comparator<LogData>
     {
       case REVISION:
         return logData0.revision.compareTo(logData1.revision);
-      case DATETIME:
-        if      (logData0.datetime.before(logData1.datetime)) return -1;
-        else if (logData0.datetime.after(logData1.datetime))  return  1;
-        else                                                  return  0;
+      case DATE:
+        if      (logData0.date.before(logData1.date)) return -1;
+        else if (logData0.date.after(logData1.date))  return  1;
+        else                                          return  0;
       case AUTHOR:
         return logData0.author.compareTo(logData1.author);
       case COMMIT_MESSAGE:
