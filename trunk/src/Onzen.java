@@ -1767,6 +1767,23 @@ Dprintf.dprintf("");
           }
         }
       });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"Convert spaces...",Settings.keyDeleteLocal);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.convertSpaces();
+          }
+        }
+      });
     }
 
     menuRepositories = Widgets.addMenu(menuBar,"Repositories");

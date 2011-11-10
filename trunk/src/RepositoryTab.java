@@ -10,14 +10,16 @@
 
 /****************************** Imports ********************************/
 // base
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 
 import java.text.SimpleDateFormat;
 
@@ -595,6 +597,20 @@ Dprintf.dprintf("");
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             deleteLocalFiles();
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Convert spaces...",Settings.keyDeleteLocal);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            convertSpaces();
           }
         });
       }
@@ -1830,7 +1846,6 @@ Dprintf.dprintf("");
     {
       final Shell dialog;
       Composite   composite,subComposite;
-      Label       label;
       Button      button;
 
       // delete dialog
@@ -1958,6 +1973,216 @@ Dprintf.dprintf("");
                 break;
               case 2:
                 return;
+            }
+          }
+        }
+
+        // start update file data
+        asyncUpdateFileStates(fileDataSet);
+      }
+    }
+  }
+
+  /** convert spaces
+   */
+  public void convertSpaces()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      /** dialog data
+       */
+      class Data
+      {
+        boolean convertTABs;
+        int     spacesPerTAB;
+        boolean removeTrailingWhiteSpaces;
+
+        Data()
+        {
+          this.convertTABs               = true;
+          this.spacesPerTAB              = 8;
+          this.removeTrailingWhiteSpaces = true;
+        }
+      };
+
+      final Data data = new Data();
+
+      Composite   composite,subComposite;
+      Control     control;
+      Label       label;
+      Button      button;
+
+      // convert dialog
+      final Shell dialog = Dialogs.openModal(shell,"Convert spaces",new double[]{1.0,0.0},1.0);
+
+      final List    widgetFiles;
+      final Spinner widgetSpacesPerTAB;
+      final Button  widgetConvertTABs;
+      final Button  widgetRemoveTrailingWhiteSpaces;
+      final Button  widgetConvert;
+      final Button  widgetCancel;
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
+      Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+      {
+        widgetFiles = Widgets.newList(composite);
+        widgetFiles.setBackground(Onzen.COLOR_GRAY);
+        Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
+        widgetFiles.setToolTipText("Local files/directories to delete.");
+
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+        {
+          widgetConvertTABs = Widgets.newCheckbox(subComposite,"Convert TABs to spaces");
+          widgetConvertTABs.setSelection(data.spacesPerTAB > 0);
+          Widgets.layout(widgetConvertTABs,0,0,TableLayoutData.W);
+
+          widgetSpacesPerTAB = Widgets.newSpinner(subComposite);
+          widgetSpacesPerTAB.setMinimum(1);
+          widgetSpacesPerTAB.setMaximum(255);
+          widgetSpacesPerTAB.setEnabled(data.spacesPerTAB > 0);
+          widgetSpacesPerTAB.setSelection(data.spacesPerTAB);
+          Widgets.layout(widgetSpacesPerTAB,0,1,TableLayoutData.WE);
+        }
+
+        widgetRemoveTrailingWhiteSpaces = Widgets.newCheckbox(composite,"Remove trailing spaces");
+        widgetRemoveTrailingWhiteSpaces.setSelection(data.removeTrailingWhiteSpaces);
+        Widgets.layout(widgetRemoveTrailingWhiteSpaces,2,0,TableLayoutData.W);
+      }
+
+      // buttons
+      composite = Widgets.newComposite(dialog);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+      {
+        widgetConvert = Widgets.newButton(composite,"Convert");
+        Widgets.layout(widgetConvert,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+        widgetConvert.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            data.convertTABs               = widgetConvertTABs.getSelection();
+            data.spacesPerTAB              = widgetSpacesPerTAB.getSelection();
+            data.removeTrailingWhiteSpaces = widgetRemoveTrailingWhiteSpaces.getSelection();
+
+            Settings.geometryConvertSpaces = dialog.getSize();
+
+            Dialogs.close(dialog,true);
+          }
+        });
+        widgetConvert.setToolTipText("Convert spaces in files.");
+
+        widgetCancel = Widgets.newButton(composite,"Cancel");
+        Widgets.layout(widgetCancel,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+        widgetCancel.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Dialogs.close(dialog,false);
+          }
+        });
+      }
+
+      // listeners
+
+      // show dialog
+      Dialogs.show(dialog,Settings.geometryConvertSpaces);
+
+      // add files
+      for (FileData fileData : fileDataSet)
+      {
+        widgetFiles.add(fileData.name);
+      }
+
+      // run
+      widgetCancel.setFocus();
+      if ((Boolean)Dialogs.run(dialog,false))
+      {
+        // get file names
+        LinkedList<String> fileNameList = new LinkedList<String>();
+        for (FileData fileData : fileDataSet)
+        {
+          fileNameList.add(fileData.getFileName(repository));
+        }
+
+        // delete files/directories
+        boolean convertAll = false;
+        while (fileNameList.size() > 0)
+        {
+          String fileName = fileNameList.removeFirst();
+          File   file     = new File(fileName);
+
+          // convert file/directory
+          boolean converted  = false;
+          boolean skipErrors = false;
+          if (file.isDirectory())
+          {
+            // confirm convert files in directory
+            if (!convertAll)
+            {
+              switch (Dialogs.select(shell,
+                                     "Error",
+                                     String.format("'%s' is a directory.\n\nConvert all files in directory?",fileName),
+                                     new String[]{"Yes","Yes, always","No"},
+                                     2
+                                    )
+                     )
+              {
+                case 0:
+                  break;
+                case 1:
+                  convertAll = true;
+                  break;
+                case 2:
+                  continue;
+              }
+            }
+
+            // add files in directory
+            for (String directoryFileName : file.list())
+            {
+              fileNameList.add(directoryFileName);
+            }
+          }
+          else
+          {
+            // convert spaces in file
+            try
+            {
+              convertSpaces(fileName,
+                            data.convertTABs?data.spacesPerTAB:0,
+                            data.removeTrailingWhiteSpaces
+                           );
+            }
+            catch (IOException exception)
+            {
+              if (!skipErrors)
+              {
+                switch (Dialogs.select(shell,
+                                       "Error",
+                                       String.format("Cannot convert file\n\n'%s'\n\n(error: %s).\n\nContinue?",file.getPath(),exception.getMessage()),
+                                       new String[]{"Yes","Yes, always","No"},
+                                       2
+                                      )
+                       )
+                {
+                  case 0:
+                    break;
+                  case 1:
+                    skipErrors = true;
+                    break;
+                  case 2:
+                    return;
+                }
+              }
             }
           }
         }
@@ -2607,6 +2832,99 @@ Dprintf.dprintf("");
     }
 
     return directory.delete();
+  }
+
+  /** convert spaces in file
+   * @param fileName file name
+   * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
+   * @param removeTrailingWhiteSpaces TRUE iff trailing white spaces should be removed
+   */
+  private void convertSpaces(String fileName, int spacesPerTAB, boolean removeTrailingWhiteSpaces)
+    throws IOException
+  {
+    File           tmpFile = null;
+    BufferedReader input   = null;
+    PrintWriter    output  = null;
+    try
+    {
+      // open
+      File file = new File(fileName);
+      tmpFile = File.createTempFile("convert-",".tmp",file.getParentFile());
+      input  = new BufferedReader(new FileReader(file));
+      output = new PrintWriter(new FileWriter(tmpFile));
+
+      // convert
+      int           emptyLineCount = 0;
+      String        line;
+      StringBuilder buffer = new StringBuilder();
+      while ((line = input.readLine()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        int n = line.length();
+
+        // remove trailing spaces
+        if (removeTrailingWhiteSpaces)
+        {
+          while ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
+          {
+            n--;
+          }
+        }
+
+        // convert TABs
+        buffer.setLength(0);
+        for (int z = 0; z < n; z++)
+        {
+          char ch = line.charAt(z);
+          if ((spacesPerTAB > 0) && (ch == '\t'))
+          {
+            for (int i = 0; i < spacesPerTAB; i++)
+            {
+              buffer.append(' ');
+            }
+          }
+          else
+          {
+            buffer.append(ch);
+          }
+        }
+
+        // check if empty line
+        if (removeTrailingWhiteSpaces && line.isEmpty())
+        {
+          emptyLineCount++;
+        }
+        else
+        {
+          // output previous empty lines
+          while (emptyLineCount > 0)
+          {
+            output.println();
+            emptyLineCount--;
+          }
+
+          // output line
+          output.println(buffer.toString());
+        }
+      }
+
+      // close
+      output.close(); output = null;
+      input.close(); input = null;
+
+      // rename
+      if (!tmpFile.renameTo(file))
+      {
+        throw new IOException("rename temporary file fail");
+      }
+      tmpFile = null;
+    }
+    finally
+    {
+      if (output != null) output.close();
+      if (input != null) try { input.close(); } catch (IOException exception) { /* ignored */ }
+      if (tmpFile != null) tmpFile.delete();
+    }
   }
 }
 
