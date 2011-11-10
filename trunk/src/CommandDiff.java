@@ -104,7 +104,7 @@ class CommandDiff
       this.diffData      = null;
       this.revisionNames = null;
       this.lineTypes     = null;
-      this.lineIndex     = 0;
+      this.lineIndex     = -1;
     }
   };
 
