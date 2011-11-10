@@ -1647,12 +1647,19 @@ class CommandDiff
     return lineTypeList.toArray(new DiffData.Types[lineTypeList.size()]);
   }
 
+  /** compare strings, ignore white spaces changes
+   * @param string1, string2 strings to compare
+   * @return TRUE iff string1 == string2 with ignore white spaces changes
+   */
   private boolean equalsIgnoreWhitespaces(String string1, String string2)
   {
     int i1 = 0;
     int i2 = 0;
     int n1 = string1.length();
     int n2 = string2.length();
+
+    while ((n1 > 0) && Character.isWhitespace(string1.charAt(n1-1))) n1--;
+    while ((n2 > 0) && Character.isWhitespace(string2.charAt(n2-1))) n2--;
 
     boolean equal = true;
     while (   (i1 < n1)
@@ -1900,7 +1907,7 @@ class CommandDiff
         widgetLineDiff.setStyleRange(new StyleRange(lineIndex1+i,1,null,backgroundDiff));
       }
 
-      // set "not equal" color for suffix of line1
+      // set "not equal" color for suffix of line2
       for (int i = z; i < line2.length(); i++)
       {
         widgetLineDiff.setStyleRange(new StyleRange(lineIndex2+i,1,null,backgroundDiff));
