@@ -592,6 +592,7 @@ class CommandPatches
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           widgetPatch = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetPatch.setFont(Onzen.FONT_CHANGES);
           widgetPatch.setBackground(Onzen.COLOR_GRAY);
           Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
           widgetPatch.setToolTipText("Changes to commit.");
@@ -609,10 +610,10 @@ class CommandPatches
             Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
 
             widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
-            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
 
             widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
-            Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
 
             button = Widgets.newButton(subSubComposite,"Refresh...");
             button.setEnabled(false);
@@ -1720,13 +1721,61 @@ class CommandPatches
   /** send patch for review
    * @param patch patch to send for review
    */
-  private void sendForReview(Patch patch)
+  private void sendForReview(final Patch patch)
   {
     // review patch
-    CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
-                                                                   repositoryTab,
-                                                                   patch
-                                                                  );
+    final CommandPatchReview commandPatchReview = new CommandPatchReview(dialog,
+                                                                         repositoryTab,
+                                                                         patch
+                                                                       );
+    commandPatchReview.run(new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        try
+        {
+          // save patch in database
+          patch.state   = Patch.States.REVIEW;
+          patch.summary = commandPatchReview.summary;
+          patch.message = commandPatchReview.message;
+          patch.comment = commandPatchReview.comment;
+          patch.testSet = commandPatchReview.testSet;
+          patch.save();
+
+          if (!dialog.isDisposed() && (patch == data.patch))
+          {
+            // set summary
+            widgetSummary.setText(patch.summary);
+            data.oldSummary = patch.summary;
+
+            // set message
+            String message = StringUtils.join(patch.message,widgetMessage.DELIMITER);
+            widgetMessage.setText(message);
+            data.oldMessage = message;
+
+            // set comment
+            String comment = StringUtils.join(patch.comment,widgetComment.DELIMITER);
+            widgetComment.setText(comment);
+            data.oldComment = comment;
+
+            // set tests
+            widgetTests.removeAll();
+            for (String test : patch.testSet)
+            {
+              TableItem testTableItem = Widgets.addTableEntry(widgetTests,test,test);
+              testTableItem.setChecked(true);
+            }
+            data.oldTestSet = (LinkedHashSet)patch.getTestSet();
+          }
+        }
+        catch (SQLException exception)
+        {
+          Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
+          return;
+        }
+      }
+    });
+/*
     if (commandPatchReview.execute())
     {
       try
@@ -1738,6 +1787,9 @@ class CommandPatches
         patch.comment = commandPatchReview.comment;
         patch.testSet = commandPatchReview.testSet;
         patch.save();
+
+        // update view
+        //???
       }
       catch (SQLException exception)
       {
@@ -1745,6 +1797,7 @@ class CommandPatches
         return;
       }
     }
+*/
   }
 
   /** commit change in patch to repository
