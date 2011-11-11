@@ -77,6 +77,9 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
@@ -249,6 +252,7 @@ class CommandPatchReview
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           widgetPatch = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetPatch.setFont(Onzen.FONT_CHANGES);
           widgetPatch.setBackground(COLOR_TEXT);
           Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
 
@@ -263,10 +267,10 @@ class CommandPatchReview
             Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
 
             widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
-            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.W);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
 
             widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
-            Widgets.layout(widgetFindNext,0,3,TableLayoutData.W);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
           }
         }
 
@@ -302,7 +306,7 @@ class CommandPatchReview
             label = Widgets.newLabel(subSubComposite,"Message:");
             Widgets.layout(label,1,0,TableLayoutData.NW);
 
-            widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+            widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
             widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
             Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
             widgetMessage.setToolTipText("Commit message.");
@@ -310,7 +314,7 @@ class CommandPatchReview
             label = Widgets.newLabel(subSubComposite,"Comment:");
             Widgets.layout(label,2,0,TableLayoutData.NW);
 
-            widgetComment = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+            widgetComment = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
             widgetComment.setText(StringUtils.join(comment,widgetComment.DELIMITER));
             Widgets.layout(widgetComment,2,1,TableLayoutData.NSWE);
             widgetComment.setToolTipText("Additional comment (will not be part of commit message).");
@@ -869,8 +873,13 @@ class CommandPatchReview
 
         if (index >= 0)
         {
-          widgetMessage.setText(StringUtils.join(data.history[index].message,widgetMessage.DELIMITER));
-          updateText();
+          if (   widgetMessage.getText().trim().isEmpty()
+              || Dialogs.confirm(dialog,"Really replace existing message?")
+             )
+          {
+            widgetMessage.setText(StringUtils.join(data.history[index].message,widgetMessage.DELIMITER));
+            updateText();
+          }
         }
       }
     });
@@ -995,6 +1004,37 @@ class CommandPatchReview
         comment                                   = data.comment;
         testSet                                   = data.testSet;
       }
+    }
+  }
+
+  /** run dialog
+   */
+  public void run(final Listener closeListener)
+  {
+    if (!dialog.isDisposed())
+    {
+      Widgets.setFocus(widgetSummary);
+      Dialogs.run(dialog,new Listener()
+      {
+        public void handleEvent(Event event)
+        {
+Dprintf.dprintf("");
+          repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
+          repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+          summary                                   = widgetSummary.getText().trim();
+          message                                   = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
+          comment                                   = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          testSet                                   = data.testSet;
+          testSet.clear();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
+          }
+Dprintf.dprintf("summary=%s",summary);
+          if (closeListener != null) closeListener.handleEvent(event);
+Dprintf.dprintf("");
+        }
+      });
     }
   }
 
