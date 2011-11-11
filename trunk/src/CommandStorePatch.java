@@ -186,6 +186,7 @@ class CommandStorePatch
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       widgetPatch = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+      widgetPatch.setFont(Onzen.FONT_CHANGES);
       widgetPatch.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetPatch,1,0,TableLayoutData.NSWE);
 

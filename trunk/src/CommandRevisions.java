@@ -324,6 +324,7 @@ class CommandRevisions
       });
 
       widgetPatch = Widgets.newButton(composite,"Patch");
+      widgetPatch.setFont(Onzen.FONT_CHANGES);
       widgetPatch.setEnabled(false);
       Widgets.layout(widgetPatch,0,6,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetPatch,data)

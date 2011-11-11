@@ -295,6 +295,7 @@ public class Onzen
   // fonts
   public static Font             FONT_DIFF;
   public static Font             FONT_DIFF_LINE;
+  public static Font             FONT_CHANGES;
 
   // cursors
   public static Cursor           CURSOR_WAIT;
@@ -916,6 +917,7 @@ exception.printStackTrace();
     IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
 
     // fonts
+    FONT_CHANGES      = Widgets.newFont(display,Settings.fontChanges);
     FONT_DIFF         = Widgets.newFont(display,Settings.fontDiff);
     FONT_DIFF_LINE    = Widgets.newFont(display,Settings.fontDiffLine);
 

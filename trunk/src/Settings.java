@@ -721,9 +721,11 @@ public class Settings
 
   @SettingComment(text={"","Fonts: <name>,<height>,normal|bold|italic|bold italic"})
   @SettingValue(type=SettingValueAdapterFontData.class)
-  public static FontData                fontDiff                        = null;
+  public static FontData                fontChanges                     = new FontData("Courier",10,SWT.NORMAL);;
   @SettingValue(type=SettingValueAdapterFontData.class)
-  public static FontData                fontDiffLine                    = null;
+  public static FontData                fontDiff                        = new FontData("Courier",10,SWT.NORMAL);;
+  @SettingValue(type=SettingValueAdapterFontData.class)
+  public static FontData                fontDiffLine                    = new FontData("Courier",10,SWT.NORMAL);;
 
   @SettingComment(text={"","Shown diff types"})
   @SettingValue(type=DiffData.Types.class)

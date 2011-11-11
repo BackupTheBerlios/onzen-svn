@@ -190,6 +190,7 @@ class CommandCreatePatch
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           widgetPatch = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
+          widgetPatch.setFont(Onzen.FONT_CHANGES);
           widgetPatch.setBackground(COLOR_INACTIVE);
           Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
           Widgets.addModifyListener(new WidgetListener(widgetPatch,data)
