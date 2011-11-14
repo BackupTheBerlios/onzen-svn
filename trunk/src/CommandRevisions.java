@@ -402,7 +402,7 @@ throw new RepositoryException("NYI");
         }
       });
 
-      widgetSave = Widgets.newButton(composite,"Save");
+      widgetSave = Widgets.newButton(composite,"Save...");
       widgetSave.setEnabled(false);
       Widgets.layout(widgetSave,0,11,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetSave,data)
@@ -452,7 +452,7 @@ throw new RepositoryException("NYI");
         }
       });
 
-      widgetRevert = Widgets.newButton(composite,"Revert",Settings.keyRevert);
+      widgetRevert = Widgets.newButton(composite,"Revert...",Settings.keyRevert);
       widgetRevert.setEnabled(false);
       Widgets.layout(widgetRevert,0,12,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetRevert,data)
