@@ -935,7 +935,8 @@ public class Settings
 
   @SettingComment(text={"","different flags"})
   @SettingValue
-  public static boolean                  checkWhitespacesBeforeCommit   = true;
+  public static boolean                  checkTABs                      = true;
+  public static boolean                  checkTrailingWhitespaces       = true;
 
   @SettingComment(text={"","Hidden files in file tree: <pattern>"})
   @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)

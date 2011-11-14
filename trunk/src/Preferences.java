@@ -165,7 +165,8 @@ class Preferences
   private final Text          widgetDateTimeFormat;
   private final Spinner       widgetMaxBackgroundTasks;
   private final Spinner       widgetMaxMessageHistory;
-  private final Button        widgetCheckWhitespacesBeforeCommit;
+  private final Button        widgetCheckTABs;
+  private final Button        widgetCheckTrailingWhitespaces;
   private final Text          widgetMessageBroadcastAddress;
   private final Spinner       widgetMessageBroadcastPort;
   private final List          widgetHiddenFilePatterns;
@@ -966,11 +967,21 @@ class Preferences
         }
 
         label = Widgets.newLabel(composite,"Flags:");
-        Widgets.layout(label,7,0,TableLayoutData.W);
-        widgetCheckWhitespacesBeforeCommit = Widgets.newCheckbox(composite,"auto white-spaces check");
-        widgetCheckWhitespacesBeforeCommit.setSelection(Settings.checkWhitespacesBeforeCommit);
-        Widgets.layout(widgetCheckWhitespacesBeforeCommit,7,1,TableLayoutData.W);
-        widgetCheckWhitespacesBeforeCommit.setToolTipText("Check if files contain TABs/trailing white-spaces before a commit is done.");
+        Widgets.layout(label,7,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,1.0));
+        Widgets.layout(subComposite,7,1,TableLayoutData.WE);
+        {
+          widgetCheckTABs = Widgets.newCheckbox(subComposite,"auto TABs check");
+          widgetCheckTABs.setSelection(Settings.checkTABs);
+          Widgets.layout(widgetCheckTABs,0,0,TableLayoutData.W);
+          widgetCheckTABs.setToolTipText("Check if file contain TABs before file is added or a commit is done.");
+
+          widgetCheckTrailingWhitespaces = Widgets.newCheckbox(subComposite,"auto white-spaces check");
+          widgetCheckTrailingWhitespaces.setSelection(Settings.checkTrailingWhitespaces);
+          Widgets.layout(widgetCheckTrailingWhitespaces,1,0,TableLayoutData.W);
+          widgetCheckTrailingWhitespaces.setToolTipText("Check if a file contain trailing white-spaces before file is added or a commit is done.");
+        }
 
         label = Widgets.newLabel(composite,"Hidden files:");
         Widgets.layout(label,8,0,TableLayoutData.NW);
@@ -1164,7 +1175,8 @@ class Preferences
           Settings.maxBackgroundTasks                     = Integer.parseInt(widgetMaxBackgroundTasks.getText());
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
-          Settings.checkWhitespacesBeforeCommit           = widgetCheckWhitespacesBeforeCommit.getSelection();
+          Settings.checkTABs                              = widgetCheckTABs.getSelection();
+          Settings.checkTrailingWhitespaces               = widgetCheckTrailingWhitespaces.getSelection();
 
           Settings.messageBroadcastAddress                = widgetMessageBroadcastAddress.getText().trim();
           Settings.messageBroadcastPort                   = Integer.parseInt(widgetMessageBroadcastPort.getText());

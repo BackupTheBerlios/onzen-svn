@@ -2834,6 +2834,75 @@ Dprintf.dprintf("");
     return directory.delete();
   }
 
+  /** check if file contain TABs/trailing white-spaces
+   * @param fileName file name
+   * @param checkTABs TRUE to check for TABs
+   * @param checkTrailingWhitespace TRUE to check for trailing white-spaces
+   * @return TRUE iff file contain TABs or trailing white-spaces
+   */
+  protected boolean containSpaces(String fileName, boolean checkTABs, boolean checkTrailingWhitespace)
+  {
+    boolean        trailingWhitespaces = false;
+    boolean        trailingEmptyLines  = false;
+
+    BufferedReader input = null;
+    try
+    {
+      // open
+      input = new BufferedReader(new FileReader(fileName));
+
+      // check
+      String        line;
+      StringBuilder buffer = new StringBuilder();
+      while ((line = input.readLine()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        int n = line.length();
+
+        if (checkTrailingWhitespace)
+        {
+          // check if trailing spaces in line
+          if  ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
+          {
+            trailingWhitespaces = true;
+          }
+        }
+
+        if (checkTABs)
+        {
+          // check for TABs
+          for (int z = 0; z < n; z++)
+          {
+            char ch = line.charAt(z);
+            if (ch == '\t')
+            {
+              trailingWhitespaces = true;
+            }
+          }
+        }
+
+        if (checkTrailingWhitespace)
+        {
+          // check for empty lines at end of file
+          trailingEmptyLines = line.isEmpty();
+        }
+      }
+
+      // close
+      input.close(); input = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      if (input != null) try { input.close(); } catch (IOException exception) { /* ignored */ }
+    }
+
+    return trailingWhitespaces || trailingEmptyLines;
+  }
+
   /** convert spaces in file
    * @param fileName file name
    * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
@@ -2854,7 +2923,7 @@ Dprintf.dprintf("");
       output = new PrintWriter(new FileWriter(tmpFile));
 
       // convert
-      int           emptyLineCount = 0;
+      int           trailingEmptyLineCount = 0;
       String        line;
       StringBuilder buffer = new StringBuilder();
       while ((line = input.readLine()) != null)
@@ -2892,15 +2961,15 @@ Dprintf.dprintf("");
         // check if empty line
         if (removeTrailingWhiteSpaces && line.isEmpty())
         {
-          emptyLineCount++;
+          trailingEmptyLineCount++;
         }
         else
         {
           // output previous empty lines
-          while (emptyLineCount > 0)
+          while (trailingEmptyLineCount > 0)
           {
             output.println();
-            emptyLineCount--;
+            trailingEmptyLineCount--;
           }
 
           // output line
