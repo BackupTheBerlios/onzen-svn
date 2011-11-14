@@ -2047,7 +2047,7 @@ Dprintf.dprintf("");
           Widgets.layout(widgetSpacesPerTAB,0,1,TableLayoutData.WE);
         }
 
-        widgetRemoveTrailingWhiteSpaces = Widgets.newCheckbox(composite,"Remove trailing spaces");
+        widgetRemoveTrailingWhiteSpaces = Widgets.newCheckbox(composite,"Remove trailing white-spaces");
         widgetRemoveTrailingWhiteSpaces.setSelection(data.removeTrailingWhiteSpaces);
         Widgets.layout(widgetRemoveTrailingWhiteSpaces,2,0,TableLayoutData.W);
       }
@@ -2861,7 +2861,7 @@ Dprintf.dprintf("");
 
         if (checkTrailingWhitespace)
         {
-          // check if trailing spaces in line
+          // check if trailing white-spaces in line
           if  ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
           {
             trailingWhitespaces = true;
@@ -2931,7 +2931,7 @@ Dprintf.dprintf("");
 //Dprintf.dprintf("line=%s",line);
         int n = line.length();
 
-        // remove trailing spaces
+        // remove trailing white-spaces
         if (removeTrailingWhiteSpaces)
         {
           while ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
