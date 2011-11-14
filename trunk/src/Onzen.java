@@ -1894,7 +1894,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Preferences");
+      menuItem = Widgets.addMenuItem(menu,"Preferences...");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1903,26 +1903,6 @@ Dprintf.dprintf("");
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           editPreferences();
-        }
-      });
-      menuItem = Widgets.addMenuItem(menu,"Preferences save...");
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          // save settings
-          boolean saveSettings = true;
-          if (Settings.isFileModified())
-          {
-            saveSettings = Dialogs.confirm(shell,"Confirmation","Settings were modified externally.","Overwrite","Cancel",false);
-          }
-          if (saveSettings)
-          {
-            Settings.save();
-          }
         }
       });
     }

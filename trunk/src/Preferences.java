@@ -165,6 +165,7 @@ class Preferences
   private final Text          widgetDateTimeFormat;
   private final Spinner       widgetMaxBackgroundTasks;
   private final Spinner       widgetMaxMessageHistory;
+  private final Button        widgetCheckWhitespacesBeforeCommit;
   private final Text          widgetMessageBroadcastAddress;
   private final Spinner       widgetMessageBroadcastPort;
   private final List          widgetHiddenFilePatterns;
@@ -874,7 +875,7 @@ class Preferences
       }
 
       composite = Widgets.addTab(tabFolder,"Misc");
-      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0},2));
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,5,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
@@ -914,21 +915,21 @@ class Preferences
         widgetDateFormat = Widgets.newText(composite);
         widgetDateFormat.setText(Settings.dateFormat);
         Widgets.layout(widgetDateFormat,1,1,TableLayoutData.WE);
-        widgetDateFormat.setToolTipText("Date format.\nPattens:\n  y - year digit\n  M - month digit\n  d - day digit");
+        widgetDateFormat.setToolTipText("Date format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit");
 
         label = Widgets.newLabel(composite,"Time format:");
         Widgets.layout(label,2,0,TableLayoutData.W);
         widgetTimeFormat = Widgets.newText(composite);
         widgetTimeFormat.setText(Settings.timeFormat);
         Widgets.layout(widgetTimeFormat,2,1,TableLayoutData.WE);
-        widgetTimeFormat.setToolTipText("Time format.\nPattens:\n  H - hour digit\n  m - minute digit\n  s - second digit");
+        widgetTimeFormat.setToolTipText("Time format.\nPatterns:\n  H - hour digit\n  m - minute digit\n  s - second digit");
 
         label = Widgets.newLabel(composite,"Date/Time format:");
         Widgets.layout(label,3,0,TableLayoutData.W);
         widgetDateTimeFormat = Widgets.newText(composite);
         widgetDateTimeFormat.setText(Settings.dateTimeFormat);
         Widgets.layout(widgetDateTimeFormat,3,1,TableLayoutData.WE);
-        widgetDateTimeFormat.setToolTipText("Date/time format.\nPattens:\n  y - year digit\n  M - month digit\n  d - day digit\n  H - hour digit\n  m - minute digit\n  s - second digit");
+        widgetDateTimeFormat.setToolTipText("Date/time format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit\n  H - hour digit\n  m - minute digit\n  s - second digit");
 
         label = Widgets.newLabel(composite,"Max. background tasks:");
         Widgets.layout(label,4,0,TableLayoutData.W);
@@ -964,11 +965,18 @@ class Preferences
           widgetMessageBroadcastPort.setToolTipText("Commit message broadcast port number.");
         }
 
+        label = Widgets.newLabel(composite,"Flags:");
+        Widgets.layout(label,7,0,TableLayoutData.W);
+        widgetCheckWhitespacesBeforeCommit = Widgets.newCheckbox(composite,"auto white-spaces check");
+        widgetCheckWhitespacesBeforeCommit.setSelection(Settings.checkWhitespacesBeforeCommit);
+        Widgets.layout(widgetCheckWhitespacesBeforeCommit,7,1,TableLayoutData.W);
+        widgetCheckWhitespacesBeforeCommit.setToolTipText("Check if files contain TABs/trailing white-spaces before a commit is done.");
+
         label = Widgets.newLabel(composite,"Hidden files:");
-        Widgets.layout(label,7,0,TableLayoutData.NW);
+        Widgets.layout(label,8,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,7,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,8,1,TableLayoutData.NSWE);
         {
           widgetHiddenFilePatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenFilePatterns,0,0,TableLayoutData.NSWE);
@@ -1037,10 +1045,10 @@ class Preferences
         }
 
         label = Widgets.newLabel(composite,"Hidden directories:");
-        Widgets.layout(label,8,0,TableLayoutData.NW);
+        Widgets.layout(label,9,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,8,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,9,1,TableLayoutData.NSWE);
         {
           widgetHiddenDirectoryPatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenDirectoryPatterns,0,0,TableLayoutData.NSWE);
@@ -1156,6 +1164,11 @@ class Preferences
           Settings.maxBackgroundTasks                     = Integer.parseInt(widgetMaxBackgroundTasks.getText());
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
+          Settings.checkWhitespacesBeforeCommit           = widgetCheckWhitespacesBeforeCommit.getSelection();
+
+          Settings.messageBroadcastAddress                = widgetMessageBroadcastAddress.getText().trim();
+          Settings.messageBroadcastPort                   = Integer.parseInt(widgetMessageBroadcastPort.getText());
+
           Settings.editors                                = getEditors();
 
           Settings.commandMail                            = widgetCommandMail.getText();
@@ -1236,7 +1249,16 @@ class Preferences
     {
       if ((Boolean)Dialogs.run(dialog,false))
       {
-        if (Dialogs.confirm(shell,"Confirmation","Some settings may become active only after restarting Onzen.","Restart now","Cancel"))
+        boolean saveSettings = true;
+        if (Settings.isFileModified())
+        {
+          saveSettings = Dialogs.confirm(shell,"Confirmation","Settings were modified externally.\nOverride settings?","Override","Cancel",false);
+        }
+        if (saveSettings)
+        {
+          Settings.save();
+        }
+        if (Dialogs.confirm(shell,"Confirmation","Some settings may become active only after restarting Onzen.\nRestart now?","Now","Later"))
         {
           Widgets.notify(shell,SWT.Close,64);
         }

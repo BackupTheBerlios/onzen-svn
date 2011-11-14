@@ -578,40 +578,6 @@ public class Settings
 
   // program settings
   public static HostSystems              hostSystem                     = HostSystems.LINUX;
-  @SettingValue
-  public static String                   tmpDirectory                   = "/tmp";
-
-  @SettingValue
-  public static String                   dateFormat                     = "yyyy-MM-dd";
-  @SettingValue
-  public static String                   timeFormat                     = "HH:mm:ss";
-  @SettingValue
-  public static String                   dateTimeFormat                 = "yyyy-MM-dd HH:mm:ss";
-
-  @SettingValue
-  public static int                      maxBackgroundTasks             = 8;
-
-  @SettingValue
-  public static int                      maxMessageHistory              = 50;
-
-  @SettingComment(text={"","UDP message broadcasting"})
-  @SettingValue
-  public static String                   messageBroadcastAddress        = "230.0.95.83";
-  @SettingValue
-  public static int                      messageBroadcastPort           = 9583;
-
-  @SettingComment(text={"","Hidden files in file tree: <pattern>"})
-  @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenFilePatterns             = new FilePattern[]{new FilePattern(".*")};
-  @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
-  @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenDirectoryPatterns        = new FilePattern[]
-                                                                          {
-                                                                            new FilePattern("CVS"),
-                                                                            new FilePattern(".svn"),
-                                                                            new FilePattern(".hg"),
-                                                                            new FilePattern(".git")
-                                                                          };
 
   @SettingComment(text={"","Geometry: <width>x<height>"})
   @SettingValue(type=SettingValueAdapterSize.class)
@@ -939,6 +905,50 @@ public class Settings
   @SettingComment(text={"","Git specific settings"})
   @SettingValue
   public static String           gitCommand                             = "git";
+
+  // miscelanous
+  @SettingComment(text={"","temporary directory"})
+  @SettingValue
+  public static String                   tmpDirectory                   = "/tmp";
+
+  @SettingComment(text={"","date/time formats"})
+  @SettingValue
+  public static String                   dateFormat                     = "yyyy-MM-dd";
+  @SettingValue
+  public static String                   timeFormat                     = "HH:mm:ss";
+  @SettingValue
+  public static String                   dateTimeFormat                 = "yyyy-MM-dd HH:mm:ss";
+
+  @SettingComment(text={"","max. number of concurrent background tasks"})
+  @SettingValue
+  public static int                      maxBackgroundTasks             = 8;
+
+  @SettingComment(text={"","max. lenght of commit message history"})
+  @SettingValue
+  public static int                      maxMessageHistory              = 50;
+
+  @SettingComment(text={"","UDP commit message broadcasting"})
+  @SettingValue
+  public static String                   messageBroadcastAddress        = "230.0.95.83";
+  @SettingValue
+  public static int                      messageBroadcastPort           = 9583;
+
+  @SettingComment(text={"","different flags"})
+  @SettingValue
+  public static boolean                  checkWhitespacesBeforeCommit   = true;
+
+  @SettingComment(text={"","Hidden files in file tree: <pattern>"})
+  @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
+  public static FilePattern[]            hiddenFilePatterns             = new FilePattern[]{new FilePattern(".*")};
+  @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
+  @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
+  public static FilePattern[]            hiddenDirectoryPatterns        = new FilePattern[]
+                                                                          {
+                                                                            new FilePattern("CVS"),
+                                                                            new FilePattern(".svn"),
+                                                                            new FilePattern(".hg"),
+                                                                            new FilePattern(".git")
+                                                                          };
 
   // debug
   public static boolean          debugFlag                              = false;
