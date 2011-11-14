@@ -1633,11 +1633,11 @@ class Dialogs
    */
   private static String file(Shell parentShell, int type, String title, String oldFileName, String[] fileExtensions)
   {
-    File oldFile = new File(oldFileName);
+    File oldFile = (oldFileName != null)?new File(oldFileName):null;
 
     FileDialog dialog = new FileDialog(parentShell,type);
     dialog.setText(title);
-    if (oldFileName != null)
+    if (oldFile != null)
     {
       dialog.setFilterPath(oldFile.getParent());
       dialog.setFileName(oldFile.getName());
@@ -1668,9 +1668,12 @@ class Dialogs
       try
       {
         String canonicalFileName = new File(fileName).getCanonicalPath();
-        if (canonicalFileName.startsWith(oldFile.getCanonicalPath()))
+        if (oldFile != null)
         {
-          fileName = canonicalFileName.substring(oldFile.getCanonicalPath().length()+1);
+          if (canonicalFileName.startsWith(oldFile.getCanonicalPath()))
+          {
+            fileName = canonicalFileName.substring(oldFile.getCanonicalPath().length()+1);
+          }
         }
       }
       catch (IOException exception)
