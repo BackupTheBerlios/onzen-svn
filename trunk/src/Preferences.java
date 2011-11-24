@@ -169,6 +169,7 @@ class Preferences
   private final Button        widgetCheckTrailingWhitespaces;
   private final Text          widgetMessageBroadcastAddress;
   private final Spinner       widgetMessageBroadcastPort;
+  private final List          widgetSkipWhitespaceCheckFilePatterns;
   private final List          widgetHiddenFilePatterns;
   private final List          widgetHiddenDirectoryPatterns;
 
@@ -662,12 +663,12 @@ class Preferences
             Widgets.layout(widgetSVNDiffCommandOptions,0,1,TableLayoutData.WE);
             widgetSVNDiffCommandOptions.setToolTipText("Options for external diff command. Leave it empty for using internal diff of SVN.");
 
-            label = Widgets.newLabel(subSubComposite,"No white-spaces:");
+            label = Widgets.newLabel(subSubComposite,"No whitespaces:");
             Widgets.layout(label,0,2,TableLayoutData.W);
             widgetSVNDiffCommandOptionsIgnoreWhitespaces = Widgets.newText(subSubComposite);
             widgetSVNDiffCommandOptionsIgnoreWhitespaces.setText(Settings.svnDiffCommandOptionsIgnoreWhitespaces);
             Widgets.layout(widgetSVNDiffCommandOptionsIgnoreWhitespaces,0,3,TableLayoutData.WE);
-            widgetSVNDiffCommandOptionsIgnoreWhitespaces.setToolTipText("Options for external diff command with ignoring white-space changes.");
+            widgetSVNDiffCommandOptionsIgnoreWhitespaces.setToolTipText("Options for external diff command with ignoring whitespace changes.");
           }
         }
 
@@ -760,12 +761,12 @@ class Preferences
             Widgets.layout(widgetHGDiffCommandOptions,0,1,TableLayoutData.WE);
             widgetHGDiffCommandOptions.setToolTipText("Options for external diff command.");
 
-            label = Widgets.newLabel(subSubComposite,"No white-spaces:");
+            label = Widgets.newLabel(subSubComposite,"No whitespaces:");
             Widgets.layout(label,0,2,TableLayoutData.W);
             widgetHGDiffCommandOptionsIgnoreWhitespaces = Widgets.newText(subSubComposite);
             widgetHGDiffCommandOptionsIgnoreWhitespaces.setText(Settings.hgDiffCommandOptionsIgnoreWhitespaces);
             Widgets.layout(widgetHGDiffCommandOptionsIgnoreWhitespaces,0,3,TableLayoutData.WE);
-            widgetHGDiffCommandOptionsIgnoreWhitespaces.setToolTipText("Options for external diff command with ignoring white-space changes.");
+            widgetHGDiffCommandOptionsIgnoreWhitespaces.setToolTipText("Options for external diff command with ignoring whitespace changes.");
           }
 
           label = Widgets.newLabel(subComposite,"Miscellaneous:");
@@ -876,7 +877,7 @@ class Preferences
       }
 
       composite = Widgets.addTab(tabFolder,"Misc");
-      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0},2));
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,5,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
@@ -966,7 +967,7 @@ class Preferences
           widgetMessageBroadcastPort.setToolTipText("Commit message broadcast port number.");
         }
 
-        label = Widgets.newLabel(composite,"Flags:");
+        label = Widgets.newLabel(composite,"Miscellaneous:");
         Widgets.layout(label,7,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(null,1.0));
@@ -977,17 +978,89 @@ class Preferences
           Widgets.layout(widgetCheckTABs,0,0,TableLayoutData.W);
           widgetCheckTABs.setToolTipText("Check if file contain TABs before file is added or a commit is done.");
 
-          widgetCheckTrailingWhitespaces = Widgets.newCheckbox(subComposite,"auto white-spaces check");
+          widgetCheckTrailingWhitespaces = Widgets.newCheckbox(subComposite,"auto whitespaces check");
           widgetCheckTrailingWhitespaces.setSelection(Settings.checkTrailingWhitespaces);
           Widgets.layout(widgetCheckTrailingWhitespaces,1,0,TableLayoutData.W);
-          widgetCheckTrailingWhitespaces.setToolTipText("Check if a file contain trailing white-spaces before file is added or a commit is done.");
+          widgetCheckTrailingWhitespaces.setToolTipText("Check if a file contain trailing whitespaces before file is added or a commit is done.");
         }
 
-        label = Widgets.newLabel(composite,"Hidden files:");
+        label = Widgets.newLabel(composite,"Skip whitespace-check files:");
         Widgets.layout(label,8,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
         Widgets.layout(subComposite,8,1,TableLayoutData.NSWE);
+        {
+          widgetSkipWhitespaceCheckFilePatterns = Widgets.newList(subComposite);
+          Widgets.layout(widgetSkipWhitespaceCheckFilePatterns,0,0,TableLayoutData.NSWE);
+          widgetSkipWhitespaceCheckFilePatterns.setToolTipText("Patterns for files where whitespace-check should be skipped.");
+          widgetSkipWhitespaceCheckFilePatterns.addMouseListener(new MouseListener()
+          {
+            public void mouseDoubleClick(MouseEvent mouseEvent)
+            {
+              Table widget = (Table)mouseEvent.widget;
+
+              int index = widget.getSelectionIndex();
+              if (index >= 0)
+              {
+  Dprintf.dprintf("");
+              }
+            }
+            public void mouseDown(MouseEvent mouseEvent)
+            {
+            }
+            public void mouseUp(MouseEvent mouseEvent)
+            {
+            }
+          });
+          for (Settings.FilePattern filePattern : Settings.skipWhitespaceCheckFilePatterns)
+          {
+            widgetSkipWhitespaceCheckFilePatterns.add(filePattern.string);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
+          {
+            button = Widgets.newButton(subSubComposite,"Add");
+            Widgets.layout(button,0,0,TableLayoutData.E);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
+                if (string != null)
+                {
+                  widgetSkipWhitespaceCheckFilePatterns.add(string);
+                }
+              }
+            });
+            button = Widgets.newButton(subSubComposite,"Remove");
+            Widgets.layout(button,0,1,TableLayoutData.E);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetSkipWhitespaceCheckFilePatterns.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetSkipWhitespaceCheckFilePatterns.remove(index);
+                }
+              }
+            });
+          }
+        }
+
+        label = Widgets.newLabel(composite,"Hidden files:");
+        Widgets.layout(label,9,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subComposite,9,1,TableLayoutData.NSWE);
         {
           widgetHiddenFilePatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenFilePatterns,0,0,TableLayoutData.NSWE);
@@ -1056,10 +1129,10 @@ class Preferences
         }
 
         label = Widgets.newLabel(composite,"Hidden directories:");
-        Widgets.layout(label,9,0,TableLayoutData.NW);
+        Widgets.layout(label,10,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,9,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,10,1,TableLayoutData.NSWE);
         {
           widgetHiddenDirectoryPatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenDirectoryPatterns,0,0,TableLayoutData.NSWE);
@@ -1199,6 +1272,7 @@ class Preferences
           Settings.commandPostReviewServer                = widgetCommandPostReviewServer.getText().trim();
           Settings.commandUpdateReviewServer              = widgetCommandUpdateReviewServer.getText().trim();
 
+          Settings.skipWhitespaceCheckFilePatterns        = getSkipWhitespaceCheckFilePatterns();
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
 
@@ -1600,6 +1674,20 @@ class Preferences
       // cannot happen
       Onzen.printInternalError(exception);
     }
+  }
+
+  /** get skip whitepace-check file pattern array from widget
+   * @return skip whitespae-check file pattern array
+   */
+  private Settings.FilePattern[] getSkipWhitespaceCheckFilePatterns()
+  {
+    Settings.FilePattern[] filePatterns = new Settings.FilePattern[widgetSkipWhitespaceCheckFilePatterns.getItemCount()];
+    for (int z = 0; z < widgetSkipWhitespaceCheckFilePatterns.getItemCount(); z++)
+    {
+      filePatterns[z] = new Settings.FilePattern(widgetSkipWhitespaceCheckFilePatterns.getItem(z));
+    }
+
+    return filePatterns;
   }
 
   /** get hidden file pattern array from widget
