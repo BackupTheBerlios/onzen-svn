@@ -2014,7 +2014,7 @@ Dprintf.dprintf("");
       Button      button;
 
       // convert dialog
-      final Shell dialog = Dialogs.openModal(shell,"Convert spaces",new double[]{1.0,0.0},1.0);
+      final Shell dialog = Dialogs.openModal(shell,"Convert whitespaces",new double[]{1.0,0.0},1.0);
 
       final List    widgetFiles;
       final Spinner widgetSpacesPerTAB;
@@ -2029,13 +2029,13 @@ Dprintf.dprintf("");
         widgetFiles = Widgets.newList(composite);
         widgetFiles.setBackground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
-        widgetFiles.setToolTipText("Local files/directories to delete.");
+        widgetFiles.setToolTipText("Files to convert TABs/whitespaces.");
 
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+        Widgets.layout(subComposite,1,0,TableLayoutData.W);
         {
-          widgetConvertTABs = Widgets.newCheckbox(subComposite,"Convert TABs to spaces");
+          widgetConvertTABs = Widgets.newCheckbox(subComposite,"Convert TABs to spaces:");
           widgetConvertTABs.setSelection(data.spacesPerTAB > 0);
           Widgets.layout(widgetConvertTABs,0,0,TableLayoutData.W);
 
@@ -2044,10 +2044,10 @@ Dprintf.dprintf("");
           widgetSpacesPerTAB.setMaximum(255);
           widgetSpacesPerTAB.setEnabled(data.spacesPerTAB > 0);
           widgetSpacesPerTAB.setSelection(data.spacesPerTAB);
-          Widgets.layout(widgetSpacesPerTAB,0,1,TableLayoutData.WE);
+          Widgets.layout(widgetSpacesPerTAB,0,1,TableLayoutData.W,0,0,0,0,80,SWT.DEFAULT);
         }
 
-        widgetRemoveTrailingWhiteSpaces = Widgets.newCheckbox(composite,"Remove trailing white-spaces");
+        widgetRemoveTrailingWhiteSpaces = Widgets.newCheckbox(composite,"Remove trailing whitespaces");
         widgetRemoveTrailingWhiteSpaces.setSelection(data.removeTrailingWhiteSpaces);
         Widgets.layout(widgetRemoveTrailingWhiteSpaces,2,0,TableLayoutData.W);
       }
@@ -2075,7 +2075,7 @@ Dprintf.dprintf("");
             Dialogs.close(dialog,true);
           }
         });
-        widgetConvert.setToolTipText("Convert spaces in files.");
+        widgetConvert.setToolTipText("Convert whitespaces in files.");
 
         widgetCancel = Widgets.newButton(composite,"Cancel");
         Widgets.layout(widgetCancel,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
@@ -2113,19 +2113,19 @@ Dprintf.dprintf("");
           fileNameList.add(fileData.getFileName(repository));
         }
 
-        // delete files/directories
+        // convert TABs/whitespaces in files
         boolean convertAll = false;
         while (fileNameList.size() > 0)
         {
           String fileName = fileNameList.removeFirst();
           File   file     = new File(fileName);
 
-          // convert file/directory
+          // convert  TABs/whitespaces in file
           boolean converted  = false;
           boolean skipErrors = false;
           if (file.isDirectory())
           {
-            // confirm convert files in directory
+            // confirm convert all files in directory
             if (!convertAll)
             {
               switch (Dialogs.select(shell,
@@ -2146,7 +2146,7 @@ Dprintf.dprintf("");
               }
             }
 
-            // add files in directory
+            // add files in directory for conversion
             for (String directoryFileName : file.list())
             {
               fileNameList.add(directoryFileName);
@@ -2154,7 +2154,7 @@ Dprintf.dprintf("");
           }
           else
           {
-            // convert spaces in file
+            // convert whitespaces in file
             try
             {
               convertSpaces(fileName,
@@ -2190,6 +2190,163 @@ Dprintf.dprintf("");
         // start update file data
         asyncUpdateFileStates(fileDataSet);
       }
+    }
+  }
+
+  /** convert spaces in file
+   * @param fileName file name
+   * @return true iff OK, false for abort
+   */
+  public boolean convertSpaces(String fileName, String message)
+  {
+    /** dialog data
+     */
+    class Data
+    {
+      boolean convertTABs;
+      int     spacesPerTAB;
+      boolean removeTrailingWhiteSpaces;
+
+      Data()
+      {
+        this.convertTABs               = true;
+        this.spacesPerTAB              = 8;
+        this.removeTrailingWhiteSpaces = true;
+      }
+    };
+
+    final Data data = new Data();
+
+    Composite   composite,subComposite;
+    Control     control;
+    Label       label;
+    Button      button;
+
+    // convert dialog
+    final Shell dialog = Dialogs.openModal(shell,"Convert whitespaces",new double[]{1.0,0.0},1.0);
+
+    final Spinner widgetSpacesPerTAB;
+    final Button  widgetConvertTABs;
+    final Button  widgetRemoveTrailingWhiteSpaces;
+    final Button  widgetContinue;
+    final Button  widgetConvert;
+    final Button  widgetAbort;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,message);
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(1.0,0.0));
+      Widgets.layout(subComposite,1,0,TableLayoutData.W);
+      {
+        widgetConvertTABs = Widgets.newCheckbox(subComposite,"Convert TABs to spaces:");
+        widgetConvertTABs.setSelection(data.spacesPerTAB > 0);
+        Widgets.layout(widgetConvertTABs,0,0,TableLayoutData.W);
+
+        widgetSpacesPerTAB = Widgets.newSpinner(subComposite);
+        widgetSpacesPerTAB.setMinimum(1);
+        widgetSpacesPerTAB.setMaximum(255);
+        widgetSpacesPerTAB.setEnabled(data.spacesPerTAB > 0);
+        widgetSpacesPerTAB.setSelection(data.spacesPerTAB);
+        Widgets.layout(widgetSpacesPerTAB,0,1,TableLayoutData.W,0,0,0,0,80,SWT.DEFAULT);
+      }
+
+      widgetRemoveTrailingWhiteSpaces = Widgets.newCheckbox(composite,"Remove trailing whitespaces");
+      widgetRemoveTrailingWhiteSpaces.setSelection(data.removeTrailingWhiteSpaces);
+      Widgets.layout(widgetRemoveTrailingWhiteSpaces,2,0,TableLayoutData.W);
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetConvert = Widgets.newButton(composite,"Convert whitespaces");
+      Widgets.layout(widgetConvert,0,0,TableLayoutData.W);
+      widgetConvert.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.convertTABs               = widgetConvertTABs.getSelection();
+          data.spacesPerTAB              = widgetSpacesPerTAB.getSelection();
+          data.removeTrailingWhiteSpaces = widgetRemoveTrailingWhiteSpaces.getSelection();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+      widgetConvert.setToolTipText("Convert whitespaces in file.");
+
+      widgetContinue = Widgets.newButton(composite,"Keep whitespaces");
+      Widgets.layout(widgetContinue,0,1,TableLayoutData.W);
+      widgetContinue.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.convertTABs               = false;
+          data.removeTrailingWhiteSpaces = false;
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+
+      widgetAbort = Widgets.newButton(composite,"Abort");
+      Widgets.layout(widgetAbort,0,2,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      widgetAbort.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+
+    // show dialog
+    Dialogs.show(dialog);
+
+    // run
+    widgetAbort.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      // convert whitespaces in file
+      try
+      {
+        convertSpaces(fileName,
+                      data.convertTABs?data.spacesPerTAB:0,
+                      data.removeTrailingWhiteSpaces
+                     );
+      }
+      catch (IOException exception)
+      {
+        if (!Dialogs.confirm(shell,
+                             "Error",
+                             String.format("Cannot convert file\n\n'%s'\n\n(error: %s).\n\nContinue?",fileName,exception.getMessage())
+                            )
+           )
+        {
+          return false;
+        }
+      }
+
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 
@@ -2834,11 +2991,11 @@ Dprintf.dprintf("");
     return directory.delete();
   }
 
-  /** check if file contain TABs/trailing white-spaces
+  /** check if file contain TABs/trailing whitespaces
    * @param fileName file name
    * @param checkTABs TRUE to check for TABs
-   * @param checkTrailingWhitespace TRUE to check for trailing white-spaces
-   * @return TRUE iff file contain TABs or trailing white-spaces
+   * @param checkTrailingWhitespace TRUE to check for trailing whitespaces
+   * @return TRUE iff file contain TABs or trailing whitespaces
    */
   protected boolean containSpaces(String fileName, boolean checkTABs, boolean checkTrailingWhitespace)
   {
@@ -2861,7 +3018,7 @@ Dprintf.dprintf("");
 
         if (checkTrailingWhitespace)
         {
-          // check if trailing white-spaces in line
+          // check if trailing whitespaces in line
           if  ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
           {
             trailingWhitespaces = true;
@@ -2931,7 +3088,7 @@ Dprintf.dprintf("");
 //Dprintf.dprintf("line=%s",line);
         int n = line.length();
 
-        // remove trailing white-spaces
+        // remove trailing whitespaces
         if (removeTrailingWhiteSpaces)
         {
           while ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
