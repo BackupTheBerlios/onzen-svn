@@ -443,43 +443,30 @@ class CommandAdd
     CommitMessage commitMessage = null;
     try
     {
-      if (data.immediateCommitFlag)
+      // check for TABs/trailing whitespaces in files and convert/remove
+      for (FileData fileData : fileDataSet)
       {
-        // check for TABs/trailing white-spaces in files
-        for (FileData fileData : fileDataSet)
+        if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileData.getFileName()))
         {
           final String fileName = fileData.getFileName(repositoryTab.repository.rootPath);
-          if (Settings.checkTABs)
+
+          // check for TABs/trailing whitespaces in file
+          final boolean containTABs                = Settings.checkTABs                && repositoryTab.containSpaces(fileName,true,false);
+          final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containSpaces(fileName,false,true);
+
+          // convert TABs, remove trailing whitespaces
+          if (containTABs || containTrailingWhitespaces)
           {
-            // check for TABs
-            if (repositoryTab.containSpaces(fileName,true,false))
+
+            final boolean[] result = new boolean[1];
+            display.syncExec(new Runnable()
             {
-              final boolean[] result = new boolean[1];
-              display.syncExec(new Runnable()
+              public void run()
               {
-                public void run()
-                {
-                  result[0] = Dialogs.confirm(shell,"Confirmation","File '"+fileName+"' contain TABs.","Continue","Abort");
-                }
-              });
-              if (!result[0]) return;
-            }
-          }
-          if (Settings.checkTrailingWhitespaces)
-          {
-            // check for trailing white-spaces in files
-            if (repositoryTab.containSpaces(fileName,false,true))
-            {
-              final boolean[] result = new boolean[1];
-              display.syncExec(new Runnable()
-              {
-                public void run()
-                {
-                  result[0] = Dialogs.confirm(shell,"Confirmation","File '"+fileName+"' contain trailing white-spaces.","Continue","Abort");
-                }
-              });
-              if (!result[0]) return;
-            }
+                result[0] = repositoryTab.convertSpaces(fileName,"File '"+fileName+"' contain TABs or trailing whitespaces.");
+              }
+            });
+            if (!result[0]) return;
           }
         }
       }
