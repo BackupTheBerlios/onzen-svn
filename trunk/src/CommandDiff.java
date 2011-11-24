@@ -510,7 +510,7 @@ class CommandDiff
           Widgets.notify(dialog,USER_EVENT_REFRESH_COLORS);
         }
       });
-      widgetChangedWhitespaces.setToolTipText("Show lines with white-space changes.");
+      widgetChangedWhitespaces.setToolTipText("Show lines with whitespace changes.");
 
       widgetRevision = Widgets.newSelect(composite);
       widgetRevision.setEnabled(false);
