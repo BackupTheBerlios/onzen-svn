@@ -95,7 +95,7 @@ abstract class SettingValueAdapter<String,Value>
  */
 public class Settings
 {
-  /** hidden pattern
+  /** file pattern
    */
   static class FilePattern implements Cloneable
   {
@@ -933,10 +933,14 @@ public class Settings
   @SettingValue
   public static int                      messageBroadcastPort           = 9583;
 
-  @SettingComment(text={"","different flags"})
+  @SettingComment(text={"","miscellaneous flags"})
   @SettingValue
   public static boolean                  checkTABs                      = true;
   public static boolean                  checkTrailingWhitespaces       = true;
+
+  @SettingComment(text={"","Files without whitespace checks: <pattern>"})
+  @SettingValue(name="skipWhitespaceCheckFilePattern", type=SettingValueAdapterFilePattern.class)
+  public static FilePattern[]            skipWhitespaceCheckFilePatterns = new FilePattern[]{new FilePattern("Makefile"),new FilePattern("Makefile.in")};
 
   @SettingComment(text={"","Hidden files in file tree: <pattern>"})
   @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
