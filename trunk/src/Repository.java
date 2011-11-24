@@ -1927,6 +1927,25 @@ abstract class Repository implements Serializable
     return isHiddenFile(fileName,getFileType(fileName));
   }
 
+  /** check if file should be skipped for whitespace-ckeck
+   * @param fileName file name
+   * @return true iff file should be skipped
+   */
+  public boolean isSkipWhitespaceCheckFile(String fileName)
+  {
+    boolean skipFlag = false;
+    for (Settings.FilePattern filePattern : Settings.skipWhitespaceCheckFilePatterns)
+    {
+      if (filePattern.pattern.matcher(fileName).matches())
+      {
+        skipFlag = true;
+        break;
+      }
+    }
+
+    return skipFlag;
+  }
+
   /** get list of files (exclude hidden files)
    * @param subDirectory sub-directory
    * @return hash with file data
