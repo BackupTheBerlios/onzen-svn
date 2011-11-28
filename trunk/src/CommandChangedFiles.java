@@ -3,7 +3,7 @@
 * $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
 * $Revision: 1.6 $
 * $Author: torsten $
-* Contents: command show changed files
+* Contents: command to show changed files
 * Systems: all
 *
 \***********************************************************************/
@@ -185,7 +185,7 @@ class CommandChangedFiles
     COLOR_REMOVED  = new Color(display,Settings.colorStatusRemoved.background );
 
     // changed files dialog
-    dialog = Dialogs.openModal(shell,"Changed files",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Changed files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0},1.0,4));
@@ -929,7 +929,7 @@ Dprintf.dprintf("");
           Settings.geometryChangedFilesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
           Settings.changedFilesShowStates     = data.showStates;
 
-          Dialogs.close(dialog,false);
+          Dialogs.close(dialog);
         }
       });
     }
@@ -1064,23 +1064,12 @@ Dprintf.dprintf("");
 
   /** run dialog
    */
-  public boolean run()
+  public void run()
   {
     if (!dialog.isDisposed())
     {
       widgetFilter.setFocus();
-      if ((Boolean)Dialogs.run(dialog,false))
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    else
-    {
-      return false;
+      Dialogs.run(dialog);
     }
   }
 
