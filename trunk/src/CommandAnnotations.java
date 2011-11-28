@@ -528,8 +528,11 @@ class CommandAnnotations
    */
   public void run()
   {
-    widgetFind.setFocus();
-    Dialogs.run(dialog);
+    if (!dialog.isDisposed())
+    {
+      widgetFind.setFocus();
+      Dialogs.run(dialog);
+    }
   }
 
   /** convert data to string
@@ -727,7 +730,7 @@ class CommandAnnotations
             {
               // set new revision
               widgetRevision.setText(revision);
- 
+
               // set new text
               setText(data.annotationData,
                       widgetAnnotations
