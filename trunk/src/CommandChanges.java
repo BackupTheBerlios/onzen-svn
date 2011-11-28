@@ -3,7 +3,7 @@
 * $Source: /tmp/cvs/onzen/src/CommandRevisions.java,v $
 * $Revision: 1.5 $
 * $Author: torsten $
-* Contents: command show file changes list
+* Contents: command to show incoming/outgoing file changes
 * Systems: all
 *
 \***********************************************************************/
@@ -88,7 +88,7 @@ import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
 
-/** view changes list
+/** view incoming/outgoing file changes
  */
 class CommandChanges
 {
@@ -187,11 +187,10 @@ class CommandChanges
 
   // ---------------------------- methods ---------------------------------
 
-  /** create revision view
+  /** create changes list view
    * @param shell shell
    * @param repositoryTab repository tab
-   * @param fileData file data
-   * @param revision revision to show or null
+   * @param changesType
    */
   CommandChanges(final Shell shell, final RepositoryTab repositoryTab, ChangesTypes changesType)
   {
@@ -418,6 +417,7 @@ class CommandChanges
   //-----------------------------------------------------------------------
 
   /** show changes: set canvas size and draw changes list
+   * @param changesType
    */
   private void show(ChangesTypes changesType)
   {
@@ -430,14 +430,14 @@ class CommandChanges
         {
           case INCOMING: repositoryTab.setStatusText("Get incoming changes..."); break;
           case OUTGOING: repositoryTab.setStatusText("Get outgoing changes..."); break;
-        }       
+        }
         try
         {
           switch (changesType)
           {
             case INCOMING: data.changes = repositoryTab.repository.getIncomingChanges(); break;
             case OUTGOING: data.changes = repositoryTab.repository.getOutgoingChanges(); break;
-          }       
+          }
         }
         catch (RepositoryException exception)
         {
