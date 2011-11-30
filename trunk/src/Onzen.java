@@ -550,6 +550,19 @@ exception.printStackTrace();
     });
   }
 
+  /** show error message in dialog
+   */
+  public void showError(final String message)
+  {
+    display.syncExec(new Runnable()
+    {
+      public void run()
+      {
+        Dialogs.error(shell,message);
+      }
+    });
+  }
+
   /** get and decode password with master password
    * @param name name in database
    * @param inputFlag true to input missing password
@@ -2248,7 +2261,7 @@ exception.printStackTrace();
       }
       catch (Exception exception)
       {
-//Dprintf.dprintf("exception=%s",exception); exception.printStackTrace();         
+//Dprintf.dprintf("exception=%s",exception); exception.printStackTrace();
         return null;
       }
     }
@@ -3030,7 +3043,7 @@ exception.printStackTrace();
   }
 
   /** checkout and open repository
-   * @param 
+   * @param
    * @return repository or null
    */
   private Repository checkoutRepository()
@@ -3225,7 +3238,7 @@ exception.printStackTrace();
       Repository repository = null;
       try
       {
-        // checkout 
+        // checkout
         repository = Repository.newInstance(data.rootPath,data.type);
 Dprintf.dprintf("repository=%s",repository);
         repository.checkout(data.repositoryPath,data.rootPath);
