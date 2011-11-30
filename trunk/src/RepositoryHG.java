@@ -771,7 +771,6 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
-
     String[] newFileLines = null;
     if (newRevision != null)
     {
@@ -859,7 +858,6 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
            --- ...
            +++ ...
       */
-
       exec.getStdout();
       exec.getStdout();
       exec.getStdout();
@@ -876,7 +874,6 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       String[]          lines;
       while ((line = exec.getStdout()) != null)
       {
-//Dprintf.dprintf("line=%s",line);
         if      ((matcher = PATTERN_DIFF.matcher(line)).matches())
         {
           int[] oldIndex = parseDiffIndex(matcher.group(1));
@@ -884,10 +881,21 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 //Dprintf.dprintf("oldIndex=%d,%d",oldIndex[0],oldIndex[1]);
 //Dprintf.dprintf("newIndex=%d,%d",newIndex[0],newIndex[1]);
 
-          while (   ((line = exec.getStdout()) != null)
+          // read until @@ is found
+          while (   ((line = exec.peekStdout()) != null)
                  && !line.startsWith("@@")
                 )
           {
+            // skip unknown lines
+            while (   ((line = exec.getStdout()) != null)
+                   && !line.isEmpty()
+                   && !line.startsWith(" ")
+                   && !line.startsWith("-")
+                   && !line.startsWith("+")
+                  )
+            {
+//Dprintf.dprintf("skip=#%s#",line);
+            }
             exec.ungetStdout(line);
 
             // get keep lines
