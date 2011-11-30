@@ -225,7 +225,7 @@ class Exec
   public Exec(String path, String subDirectory, Command command, boolean binaryFlag)
     throws IOException
   {
-    this(path,subDirectory,command.getCommandArray(),binaryFlag);  
+    this(path,subDirectory,command.getCommandArray(),binaryFlag);
   }
 
   /** execute external command
@@ -323,6 +323,19 @@ class Exec
     if (line != null) stdoutStack.push(line);
   }
 
+  /** peek  (do not get) next line from stdout
+   * @return line or null
+   */
+  public String peekStdout()
+  {
+    String line = getStdout();
+    ungetStdout(line);
+    return line;
+  }
+
+  /** check if EOF of stdout
+   * @return true iff EOF
+   */
   public boolean eofStdout()
   {
     String line = getStdout();
@@ -364,6 +377,19 @@ class Exec
     if (line != null) stderrStack.push(line);
   }
 
+  /** peek (do not get) next line from stderr
+   * @return line or null
+   */
+  public String peekStderr()
+  {
+    String line = getStderr();
+    ungetStderr(line);
+    return line;
+  }
+
+  /** check if EOF of stdout
+   * @return true iff EOF
+   */
   public boolean eofStderr()
   {
     String line = getStderr();
