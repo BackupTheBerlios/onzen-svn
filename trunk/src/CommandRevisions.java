@@ -541,9 +541,6 @@ throw new RepositoryException("NYI");
 
         // save origin
         data.view.x = -n;
-
-        // redraw
-        redraw();
       }
     });
     widgetVerticalScrollBar.addSelectionListener(new SelectionListener()
@@ -562,9 +559,6 @@ throw new RepositoryException("NYI");
 
         // save origin
         data.view.y = -n;
-
-        // redraw
-        redraw();
       }
     });
     widgetRevisions.addListener(SWT.Resize,new Listener()
@@ -639,10 +633,13 @@ throw new RepositoryException("NYI");
           data.containerResizeDelta.y = mouseEvent.y-data.containerResizeStart.y;
           data.containerResizeFlag    = false;
 
-          // set size and redraw
+          // set canvas size
           Settings.geometryRevisionBox.x = Math.max(Settings.geometryRevisionBox.x+data.containerResizeDelta.x,CONTAINER_MIN_WIDTH );
           Settings.geometryRevisionBox.y = Math.max(Settings.geometryRevisionBox.y+data.containerResizeDelta.y,CONTAINER_MIN_HEIGHT);
           setSize();
+
+          // redraw
+          redraw(true);
         }
       }
     });
@@ -658,17 +655,6 @@ throw new RepositoryException("NYI");
         }
       }
     });
-    widgetRevisions.addKeyListener(new KeyListener()
-    {
-      public void keyPressed(KeyEvent keyEvent)
-      {
-      }
-      public void keyReleased(KeyEvent keyEvent)
-      {
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyDiff  )) Widgets.invoke(widgetDiff);
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert)) Widgets.invoke(widgetRevert);
-      }
-    });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -679,7 +665,8 @@ throw new RepositoryException("NYI");
           // select revision and show
           data.selectedRevisionData0 = null;
           data.selectedRevisionData1 = revisionData;
-          show(revisionData);
+          scrollTo(revisionData);
+          redraw(true);
 
           // notify modification
           Widgets.modified(data);
@@ -702,7 +689,8 @@ throw new RepositoryException("NYI");
           // select revision and show
           data.selectedRevisionData0 = null;
           data.selectedRevisionData1 = revisionData;
-          show(revisionData);
+          scrollTo(revisionData);
+          redraw(true);
 
           // notify modification
           Widgets.modified(data);
@@ -722,13 +710,82 @@ throw new RepositoryException("NYI");
           // select revision and show
           data.selectedRevisionData0 = null;
           data.selectedRevisionData1 = revisionData;
-          show(revisionData);
+          scrollTo(revisionData);
+          redraw(true);
 
           // notify modification
           Widgets.modified(data);
         }
       }
     });
+
+    KeyListener keyListener = new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.PAGE_UP))
+        {
+          // goto one page up
+          int pageIncrement = widgetVerticalScrollBar.getPageIncrement();
+          int n = widgetVerticalScrollBar.getSelection();
+          n = (n-pageIncrement > 0) ? n-pageIncrement : 0;
+          widgetVerticalScrollBar.setSelection(n);
+
+          // save origin
+          data.view.y = -n;
+
+          // redraw
+          redraw(true);
+        }
+        else if (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.PAGE_DOWN))
+        {
+          // goto one page down
+          int pageIncrement = widgetVerticalScrollBar.getPageIncrement();
+          int maximum = widgetVerticalScrollBar.getMaximum();
+          int n = widgetVerticalScrollBar.getSelection();
+          n = (n+pageIncrement < maximum-pageIncrement) ? n+pageIncrement : maximum-pageIncrement;
+          widgetVerticalScrollBar.setSelection(n);
+
+          // save origin
+          data.view.y = -n;
+
+          // redraw
+          redraw(true);
+        }
+        else if (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.HOME))
+        {
+          // goto top
+          widgetVerticalScrollBar.setSelection(0);
+
+          // save origin
+          data.view.y = 0;
+
+          // redraw
+          redraw(true);
+        }
+        else if (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.END))
+        {
+          // goto bottom
+          int pageIncrement = widgetVerticalScrollBar.getPageIncrement();
+          int n = widgetVerticalScrollBar.getMaximum()-pageIncrement;
+          widgetVerticalScrollBar.setSelection(n);
+
+          // save origin
+          data.view.y = -n;
+
+          // redraw
+          redraw(true);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyDiff  )) Widgets.invoke(widgetDiff);
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert)) Widgets.invoke(widgetRevert);
+      }
+    };
+    widgetRevisions.addKeyListener(keyListener);
+    widgetFind.addKeyListener(keyListener);
+
     // show dialog
     Dialogs.show(dialog,Settings.geometryRevisions);
 
@@ -1151,7 +1208,7 @@ throw new RepositoryException("NYI");
     }
   }
 
-  /** set canvas size and redraw
+  /** set canvas size from revision tree size
    */
   private void setSize()
   {
@@ -1173,9 +1230,6 @@ throw new RepositoryException("NYI");
       widgetHorizontalScrollBar.setPageIncrement(clientArea.width);
       widgetVerticalScrollBar.setIncrement(Settings.geometryRevisionBox.y+PADDING);
       widgetVerticalScrollBar.setPageIncrement(clientArea.height);
-
-      // redraw
-      redraw(true);
     }
   }
 
@@ -1198,7 +1252,41 @@ throw new RepositoryException("NYI");
     }
   }
 
-  /** show revisions: set canvas size and draw revision tree
+  /** scroll to revision
+   * @param revisionData revision to show
+   */
+  private void scrollTo(final RevisionData revisionData)
+  {
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          final int ENTRY_WIDTH  = Settings.geometryRevisionBox.x;
+          final int ENTRY_HEIGHT = Settings.geometryRevisionBox.y;
+
+          // get x,y-offset of revision
+          Point point = getRevisionX0Y0(revisionData);
+          point.x += ENTRY_WIDTH /2;
+          point.y += ENTRY_HEIGHT/2;
+
+          // scroll
+          Rectangle clientArea = widgetRevisions.getClientArea();
+          clientArea.x = widgetHorizontalScrollBar.getSelection();
+          clientArea.y = widgetVerticalScrollBar.getSelection();
+          if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -(point.x-ENTRY_WIDTH /2);
+          if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
+          widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
+          widgetHorizontalScrollBar.setSelection(-data.view.x);
+          widgetVerticalScrollBar.setSelection(-data.view.y);
+        }
+      });
+    }
+  }
+
+  /** show revisions
+   * @param revision revision to show
    */
   private void show(String revision)
   {
@@ -1259,9 +1347,10 @@ throw new RepositoryException("NYI");
               final int ENTRY_WIDTH  = Settings.geometryRevisionBox.x;
               final int ENTRY_HEIGHT = Settings.geometryRevisionBox.y;
 
-              // set canvas size and redraw
+              // set canvas size
               setSize();
 
+/*
               // scroll to selected revision
               data.selectedRevisionData1 = getRevision(data.revisionDataTree,revision);
               if (data.selectedRevisionData1 != null)
@@ -1281,10 +1370,19 @@ throw new RepositoryException("NYI");
                 widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
                 widgetHorizontalScrollBar.setSelection(-data.view.x);
                 widgetVerticalScrollBar.setSelection(-data.view.y);
-
-                // redraw
-                redraw(true);
               }
+
+              // redraw
+              redraw(true);
+*/
+              // scroll to selected revision
+              if (data.selectedRevisionData1 != null)
+              {
+                scrollTo(data.selectedRevisionData1);
+              }
+
+              // redraw
+              redraw(true);
 
               // notify modification
               Widgets.modified(data);
@@ -1295,7 +1393,7 @@ throw new RepositoryException("NYI");
     });
   }
 
-  /** show revisions: set canvas size and draw revision tree
+  /** show last revision
    */
   private void show()
   {
@@ -1401,39 +1499,6 @@ throw new RepositoryException("NYI");
     }
 
     return revisionData;
-  }
-
-  private void show(final RevisionData revisionData)
-  {
-    if (!dialog.isDisposed())
-    {
-      display.syncExec(new Runnable()
-      {
-        public void run()
-        {
-          final int ENTRY_WIDTH  = Settings.geometryRevisionBox.x;
-          final int ENTRY_HEIGHT = Settings.geometryRevisionBox.y;
-
-          // get x,y-offset of revision
-          Point point = getRevisionX0Y0(revisionData);
-          point.x += ENTRY_WIDTH /2;
-          point.y += ENTRY_HEIGHT/2;
-
-          // scroll
-          Rectangle clientArea = widgetRevisions.getClientArea();
-          clientArea.x = widgetHorizontalScrollBar.getSelection();
-          clientArea.y = widgetVerticalScrollBar.getSelection();
-          if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -(point.x-ENTRY_WIDTH /2);
-          if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
-          widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
-          widgetHorizontalScrollBar.setSelection(-data.view.x);
-          widgetVerticalScrollBar.setSelection(-data.view.y);
-
-          // redraw
-          redraw(true);
-        }
-      });
-    }
   }
 
   /** print revision tree (for debugging)
