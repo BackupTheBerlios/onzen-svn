@@ -10,6 +10,10 @@
 
 /****************************** Imports ********************************/
 // base
+import java.io.File;
+import java.io.IOException;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 
 // graphics
@@ -275,6 +279,68 @@ class CommandView
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
+      button = Widgets.newButton(composite,"Save as...");
+      Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          // get file name
+          String fileName = Dialogs.fileSave(dialog,"Save file","",new String[]{"*"});
+          if (fileName == null)
+          {
+            return;
+          }
+
+          // check if file exists: overwrite or append
+          File file = new File(fileName);
+          if (file.exists())
+          {
+            switch (Dialogs.select(dialog,"Confirmation",String.format("File '%s' already exists.",fileName),new String[]{"Overwrite","Append","Cancel"},2))
+            {
+              case 0:
+                if (!file.delete())
+                {
+                  Dialogs.error(dialog,"Cannot delete file!");
+                  return;
+                }
+              case 1:
+                break;
+              case 2:
+                return;
+            }
+          }
+
+          PrintWriter output = null;
+          try
+          {
+            // open file
+            output = new PrintWriter(new FileWriter(file,true));
+
+            // write/append file
+            for (String line : data.lines)
+            {
+              output.println(line);
+            }
+
+            // close file
+            output.close();
+          }
+          catch (IOException exception)
+          {
+            Dialogs.error(dialog,"Cannot write file '"+file.getName()+"' (error: "+exception.getMessage());
+            return;
+          }
+          finally
+          {
+            if (output != null) output.close();
+          }
+        }
+      });
+
       widgetButtonClose = Widgets.newButton(composite,"Close");
       Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonClose.addSelectionListener(new SelectionListener()
@@ -284,8 +350,6 @@ class CommandView
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           Settings.geometryView = dialog.getSize();
 
           Dialogs.close(dialog,false);
