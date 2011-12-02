@@ -290,7 +290,7 @@ class CommandCreatePatch
     composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      button = Widgets.newButton(composite,"Save as file");
+      button = Widgets.newButton(composite,"Save as file...");
       button.setEnabled(false);
       Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(button,data)
