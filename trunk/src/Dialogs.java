@@ -134,15 +134,16 @@ class BusyDialog
             display.update();
           }
 
-          data.animationIndex = (data.animationIndex+1) % 24;
+          data.animationIndex = 1+(data.animationIndex % 23);
         }
       });
     }
   }
 
   /** auto animate dialog
+   * @param timeInterval animate time interval [ms]
    */
-  public void autoAnimate()
+  public void autoAnimate(final int timeInterval)
   {
     Thread thread = new Thread()
     {
@@ -151,14 +152,154 @@ class BusyDialog
         while (!data.animationQuit)
         {
           animate();
-          try { Thread.sleep(500); } catch (InterruptedException exception) { /* ignore */ }
+          try { Thread.sleep(timeInterval); } catch (InterruptedException exception) { /* ignore */ }
         }
       }
     };
     thread.start();
   }
 
+  /** auto animate dialog
+   */
+  public void autoAnimate()
+  {
+    autoAnimate(500);
+  }
+
   /** close busy dialog
+   */
+  public void close()
+  {
+    data.animationQuit = true;
+    Dialogs.close(dialog);
+  }
+}
+
+/** simply progress dialog
+ */
+class ProgressDialog
+{
+  /** dialog data
+   */
+  class Data
+  {
+    int     animationIndex;
+    boolean animationQuit;
+
+    Data()
+    {
+      this.animationIndex = 0;
+      this.animationQuit  = false;
+    }
+  };
+
+  // --------------------------- constants --------------------------------
+
+  // --------------------------- variables --------------------------------
+  private final Data        data = new Data();
+  private final Display     display;
+  private final Shell       dialog;
+  private final ProgressBar widgetProgressBar;
+
+  // ------------------------ native functions ----------------------------
+
+  // ---------------------------- methods ---------------------------------
+
+  /** create progress dialog
+   * @param parentShell parent shell
+   * @param title window title
+   * @param message message to show
+   */
+  ProgressDialog(Shell parentShell, String title, String message)
+  {
+    Composite composite;
+    Label     label;
+    Button    button;
+
+    display = parentShell.getDisplay();
+
+    dialog = Dialogs.openModal(parentShell,title,250,70);
+    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+    // message
+    composite = new Composite(dialog,SWT.NONE);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+    {
+      label = new Label(composite,SWT.LEFT|SWT.WRAP);
+      label.setText(message);
+      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NS|TableLayoutData.W,0,0,4));
+
+      widgetProgressBar = new ProgressBar(composite);
+      widgetProgressBar.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NS|TableLayoutData.W,0,0,4));
+    }
+
+    Dialogs.show(dialog);
+    animate();
+  }
+
+  /** animate dialog
+   */
+  public void animate()
+  {
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          int x = (data.animationIndex%8)*48;
+          int y = (data.animationIndex/8)*48;
+Dprintf.dprintf("");
+
+/*
+          if (!widgetImage.isDisposed())
+          {
+            GC gc = new GC(widgetImage);
+            widgetImage.drawBackground(gc,0,0,imageSize.x,imageSize.y);
+            gc.drawImage(image,
+                         x,y,imageSize.x,imageSize.y,
+                         0,0,imageSize.x,imageSize.y
+                        );
+            gc.dispose();
+            display.update();
+          }
+*/
+
+          data.animationIndex = (data.animationIndex+1) % 24;
+        }
+      });
+    }
+  }
+
+  /** auto animate dialog
+   * @param timeInterval animate time interval [ms]
+   */
+  public void autoAnimate(final int timeInterval)
+  {
+    Thread thread = new Thread()
+    {
+      public void run()
+      {
+        while (!data.animationQuit)
+        {
+Dprintf.dprintf("");
+          animate();
+          try { Thread.sleep(timeInterval); } catch (InterruptedException exception) { /* ignore */ }
+        }
+      }
+    };
+    thread.start();
+  }
+
+  /** auto animate dialog
+   */
+  public void autoAnimate()
+  {
+    autoAnimate(500);
+  }
+
+  /** close progress dialog
    */
   public void close()
   {
@@ -1932,6 +2073,31 @@ class Dialogs
   public static void closeBusy(BusyDialog busyDialog)
   {
     busyDialog.close();
+  }
+
+/// NYI not complete
+  /** progress dialog
+   * @param parentShell parent shell
+   * @param title text
+   * @param message info message
+   */
+  public static ProgressDialog openProgress(Shell parentShell, String title, String message)
+  {
+    return new ProgressDialog(parentShell,title,message);
+  }
+
+  /** progress dialog
+   * @param parentShell parent shell
+   * @param message info message
+   */
+  public static ProgressDialog openProgress(Shell parentShell, String message)
+  {
+    return openProgress(parentShell,"Progress",message);
+  }
+
+  public static void closeProgress(ProgressDialog progressDialog)
+  {
+    progressDialog.close();
   }
 }
 
