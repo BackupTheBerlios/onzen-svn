@@ -53,7 +53,7 @@ class ProgressBar extends Canvas
    */
   ProgressBar(Composite composite, int style)
   {
-    super(composite,SWT.NONE);
+    super(composite,style);
 
     this.colorBlack           = getDisplay().getSystemColor(SWT.COLOR_BLACK);
     this.colorWhite           = getDisplay().getSystemColor(SWT.COLOR_WHITE);
@@ -78,6 +78,14 @@ class ProgressBar extends Canvas
     });
 
     setSelection(0.0);
+  }
+
+  /** create progress bar
+   * @param composite parent composite widget
+   */
+  ProgressBar(Composite composite)
+  {
+    this(composite,SWT.NONE);
   }
 
   /** compute size of pane
