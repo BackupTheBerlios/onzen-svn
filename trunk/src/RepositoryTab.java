@@ -777,7 +777,7 @@ Dprintf.dprintf("");
     setStatusText("Update all...");
     try
     {
-      repository.update();
+      repository.updateAll();
     }
     catch (RepositoryException exception)
     {

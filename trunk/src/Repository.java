@@ -2467,7 +2467,7 @@ abstract class Repository implements Serializable
 
   /** update all files from respository
    */
-  public void update()
+  public void updateAll()
     throws RepositoryException
   {
     update(new HashSet<FileData>());

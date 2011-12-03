@@ -1190,6 +1190,32 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
   }
 
+  /** update all files from respository
+   */
+  public void updateAll()
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // update files
+      command.clear();
+      command.append(Settings.svnCommand,"update","--non-interactive");
+      command.append("--");
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
+  }
+
   /** commit files
    * @param fileDataSet file data set
    * @param commitMessage commit message
