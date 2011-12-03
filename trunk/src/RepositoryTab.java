@@ -748,11 +748,11 @@ Dprintf.dprintf("");
    */
   public void update()
   {
-
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+
+    setStatusText("Update files...");
     try
     {
-      onzen.setStatusText("Update files...");
       repository.update(fileDataSet);
     }
     catch (RepositoryException exception)
@@ -762,8 +762,9 @@ Dprintf.dprintf("");
     }
     finally
     {
-      onzen.clearStatusText();
+      clearStatusText();
     }
+
     asyncUpdateFileStates(fileDataSet);
   }
 
@@ -772,9 +773,10 @@ Dprintf.dprintf("");
   public void updateAll()
   {
     HashSet<FileData> fileDataSet = getAllFileDataSet();
+
+    setStatusText("Update all...");
     try
     {
-      onzen.setStatusText("Update all...");
       repository.update();
     }
     catch (RepositoryException exception)
@@ -784,8 +786,9 @@ Dprintf.dprintf("");
     }
     finally
     {
-      onzen.clearStatusText();
+      clearStatusText();
     }
+
     asyncUpdateFileStates(fileDataSet);
   }
 
@@ -2992,14 +2995,14 @@ Dprintf.dprintf("");
     {
       public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
       {
+        setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
         try
         {
-          onzen.setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
           updateFileStates(fileDataSet);
         }
         finally
         {
-          onzen.clearStatusText();
+          clearStatusText();
         }
       }
     });
@@ -3023,14 +3026,14 @@ Dprintf.dprintf("");
       public void run(Repository repository, final FileData fileData)
       {
 //Dprintf.dprintf("fileData=%s",fileData);
+        setStatusText("Update states of '%s'...",fileData.getFileName(repository.rootPath));
         try
         {
-          onzen.setStatusText("Update states of '%s'...",fileData.getFileName(repository.rootPath));
           updateFileStates(fileData);
         }
         finally
         {
-          onzen.clearStatusText();
+          clearStatusText();
         }
       }
     });
