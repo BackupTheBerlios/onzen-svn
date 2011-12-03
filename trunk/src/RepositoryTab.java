@@ -772,24 +772,48 @@ Dprintf.dprintf("");
    */
   public void updateAll()
   {
-    HashSet<FileData> fileDataSet = getAllFileDataSet();
+    final HashSet<FileData> fileDataSet = getAllFileDataSet();
 
-    setStatusText("Update all...");
-    try
-    {
-      repository.updateAll();
-    }
-    catch (RepositoryException exception)
-    {
-      Dialogs.error(shell,"Update all fail (error: %s)",exception.getMessage());
-      return;
-    }
-    finally
-    {
-      clearStatusText();
-    }
+    final BusyDialog busyDialog = Dialogs.openBusy(shell,"Update all directories and files...");
+    busyDialog.autoAnimate(50);
 
-    asyncUpdateFileStates(fileDataSet);
+    Background.run(new BackgroundRunnable(repository,fileDataSet,busyDialog)
+    {
+      public void run(Repository repository, HashSet<FileData> fileDataSet, final BusyDialog busyDialog)
+      {
+        setStatusText("Update all directories and files...");
+        try
+        {
+          repository.updateAll();
+        }
+        catch (RepositoryException exception)
+        {
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(shell,"Update all fail (error: %s)",exceptionMessage);
+            }
+          });
+          return;
+        }
+        finally
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              busyDialog.close();
+            }
+          });
+          clearStatusText();
+        }
+
+        updateFileStates(fileDataSet);
+      }
+    });
+
   }
 
   /** commit selected entries
@@ -2863,121 +2887,148 @@ Dprintf.dprintf("");
     }
   }
 
-  /** asyncronous update file states
+  /** update file states
+   * @param fileDataSet file data set to update states
+   * @param title title to show in status line or null
+   */
+  protected void updateFileStates(HashSet<FileData> fileDataSet, String title)
+  {
+    setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
+    try
+    {
+      // update tree items: status update in progress
+      for (final FileData fileData : fileDataSet)
+      {
+  //Dprintf.dprintf("fileData=%s",fileData);
+        final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+        if (treeItem != null)
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
+            }
+          });
+        }
+      }
+
+      // update states
+      HashSet<FileData> newFileDataSet = new HashSet<FileData>();
+      repository.updateStates(fileDataSet,newFileDataSet);
+
+      // update tree items: set status color, remove not existing entries
+      FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);
+      for (final FileData fileData : fileDataArray)
+      {
+        if ((new File(fileData.getFileName(repository.rootPath)).exists()))
+        {
+          // file exists -> show state
+  //Dprintf.dprintf("fileData=%s",fileData);
+          final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+          if (treeItem != null)
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (!treeItem.isDisposed()) updateTreeItem(treeItem,fileData);
+              }
+            });
+          }
+        }
+        else
+        {
+          // file disappeared -> remove tree entry
+          fileDataSet.remove(fileData);
+  //Dprintf.dprintf("removed %s",fileData);
+
+          final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
+          if (treeItem != null)
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                if (!treeItem.isDisposed()) treeItem.dispose();
+              }
+            });
+          }
+        }
+      }
+
+      // add new tree items
+      for (final FileData newFileData : newFileDataSet)
+      {
+        TreeItem treeItem = fileNameMap.get(newFileData.getFileName());
+        if ((treeItem == null) || treeItem.isDisposed())
+        {
+  //Dprintf.dprintf("newFileData=%s",newFileData);
+          // add new tree item
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              synchronized(widgetFileTree)
+              {
+                if (!widgetFileTree.isDisposed())
+                {
+                  // find parent tree item to insert new tree item
+                  TreeItem treeItem = null;
+                  for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
+                  {
+                    FileData fileData = (FileData)rootTreeItem.getData();
+      //Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
+                    if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
+                    {
+                      treeItem = rootTreeItem;
+                      break;
+                    }
+                  }
+
+                  if ((treeItem != null) && !treeItem.isDisposed())
+                  {
+                    // create tree item
+                    TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
+                    newTreeItem.setText(0,newFileData.getBaseName());
+                    newTreeItem.setImage(getFileDataImage(newFileData));
+                    updateTreeItem(newTreeItem,newFileData);
+
+                    // store tree item reference
+                    fileNameMap.put(newFileData.getFileName(),newTreeItem);
+                  }
+    //else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+    finally
+    {
+      clearStatusText();
+    }
+  }
+
+  /** update file states
    * @param fileDataSet file data set to update states
    */
   protected void updateFileStates(HashSet<FileData> fileDataSet)
   {
-    // update tree items: status update in progress
-    for (final FileData fileData : fileDataSet)
-    {
-//Dprintf.dprintf("fileData=%s",fileData);
-      final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
-      if (treeItem != null)
-      {
-        display.syncExec(new Runnable()
-        {
-          public void run()
-          {
-            if (!treeItem.isDisposed()) treeItem.setForeground(COLOR_UPDATE_STATUS);
-          }
-        });
-      }
-    }
-
-    // update states
-    HashSet<FileData> newFileDataSet = new HashSet<FileData>();
-    repository.updateStates(fileDataSet,newFileDataSet);
-
-    // update tree items: set status color, remove not existing entries
-    FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);
-    for (final FileData fileData : fileDataArray)
-    {
-      if ((new File(fileData.getFileName(repository.rootPath)).exists()))
-      {
-        // file exists -> show state
-        final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
-        if (treeItem != null)
-        {
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              if (!treeItem.isDisposed()) updateTreeItem(treeItem,fileData);
-            }
-          });
-        }
-      }
-      else
-      {
-        // file deleted -> remove
-        fileDataSet.remove(fileData);
-//Dprintf.dprintf("removed %s",fileData);
-
-        final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
-        if (treeItem != null)
-        {
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              if (!treeItem.isDisposed()) treeItem.dispose();
-            }
-          });
-        }
-      }
-    }
-
-    // add new tree items
-    for (final FileData newFileData : newFileDataSet)
-    {
-      TreeItem treeItem = fileNameMap.get(newFileData.getFileName());
-      if ((treeItem == null) || treeItem.isDisposed())
-      {
-//Dprintf.dprintf("newFileData=%s",newFileData);
-        // add new tree item
-        display.syncExec(new Runnable()
-        {
-          public void run()
-          {
-            synchronized(widgetFileTree)
-            {
-              if (!widgetFileTree.isDisposed())
-              {
-                // find parent tree item to insert new tree item
-                TreeItem treeItem = null;
-                for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
-                {
-                  FileData fileData = (FileData)rootTreeItem.getData();
-    //Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
-                  if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
-                  {
-                    treeItem = rootTreeItem;
-                    break;
-                  }
-                }
-
-                if ((treeItem != null) && !treeItem.isDisposed())
-                {
-                  // create tree item
-                  TreeItem newTreeItem = Widgets.addTreeItem(treeItem,findFilesTreeIndex(treeItem,newFileData),newFileData,false);
-                  newTreeItem.setText(0,newFileData.getBaseName());
-                  newTreeItem.setImage(getFileDataImage(newFileData));
-                  updateTreeItem(newTreeItem,newFileData);
-
-                  // store tree item reference
-                  fileNameMap.put(newFileData.getFileName(),newTreeItem);
-                }
-  //else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
-              }
-            }
-          }
-        });
-      }
-    }
+    updateFileStates(fileDataSet,null);
   }
 
-  /** asyncronous update file state
+  /** update file state
+   * @param fileData file data
+   * @param title title to show in status line or null
+   */
+  protected void updateFileStates(final FileData fileData, String title)
+  {
+    updateFileStates(fileData.toSet(),title);
+  }
+
+  /** update file state
    * @param fileData file data
    */
   protected void updateFileStates(final FileData fileData)
@@ -2995,15 +3046,7 @@ Dprintf.dprintf("");
     {
       public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
       {
-        setStatusText("Update status of '%s'...",(title != null) ? title : repository.title);
-        try
-        {
-          updateFileStates(fileDataSet);
-        }
-        finally
-        {
-          clearStatusText();
-        }
+        updateFileStates(fileDataSet,(title != null) ? title : repository.title);
       }
     });
   }
@@ -3026,15 +3069,7 @@ Dprintf.dprintf("");
       public void run(Repository repository, final FileData fileData)
       {
 //Dprintf.dprintf("fileData=%s",fileData);
-        setStatusText("Update states of '%s'...",fileData.getFileName(repository.rootPath));
-        try
-        {
-          updateFileStates(fileData);
-        }
-        finally
-        {
-          clearStatusText();
-        }
+        updateFileStates(fileData,fileData.getFileName(repository.rootPath));
       }
     });
   }
