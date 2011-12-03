@@ -1802,7 +1802,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Convert spaces...",Settings.keyDeleteLocal);
+      menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyDeleteLocal);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
