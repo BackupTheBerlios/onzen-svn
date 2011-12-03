@@ -732,7 +732,7 @@ Dprintf.dprintf("");
     asyncUpdateFileStates(fileDataSet);
   }
 
-  /** update selected entries
+  /** update all or selected entries
    */
   public void update()
   {
@@ -2790,7 +2790,7 @@ Dprintf.dprintf("");
     }
   }
 
-  /** asyncronous update file state
+  /** asyncronous update file states or all files (if file set is empty)
    * @param fileDataSet file data set to update states
    */
   protected void updateFileStates(HashSet<FileData> fileDataSet)
@@ -2912,12 +2912,35 @@ Dprintf.dprintf("");
     updateFileStates(fileData.toSet());
   }
 
-  /** asyncronous update file state
+  /** asyncronous update file states or all files (if file set is empty)
    * @param fileDataSet file data set to update states
    * @param title title to show in status line or null
    */
   protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet, String title)
   {
+    if (fileDataSet.isEmpty())
+    {
+      LinkedList<TreeItem> treeItems = new LinkedList<TreeItem>();
+      for (TreeItem treeItem : widgetFileTree.getItems())
+      {
+        treeItems.add(treeItem);
+      }
+      while (!treeItems.isEmpty())
+      {
+        TreeItem treeItem = treeItems.removeFirst();
+        if (treeItem != null)
+        {
+          FileData fileData = (FileData)treeItem.getData();
+          if (fileData != null) fileDataSet.add(fileData);
+
+          for (TreeItem subTreeItem : treeItem.getItems())
+          {
+            treeItems.add(subTreeItem);
+          }
+        }
+      }
+    }
+
     Background.run(new BackgroundRunnable(repository,fileDataSet,title)
     {
       public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
@@ -2935,7 +2958,7 @@ Dprintf.dprintf("");
     });
   }
 
-  /** asyncronous update file state
+  /** asyncronous update file states or all files (if file set is empty)
    * @param fileDataSet file data set to update states
    */
   protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet)
