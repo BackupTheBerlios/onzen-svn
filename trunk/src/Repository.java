@@ -2465,6 +2465,14 @@ abstract class Repository implements Serializable
   abstract public void update(HashSet<FileData> fileDataSet)
     throws RepositoryException;
 
+  /** update all files from respository
+   */
+  public void update()
+    throws RepositoryException
+  {
+    update(new HashSet<FileData>());
+  }
+
   /** commit files
    * @param fileDataSet file data set
    * @param commitMessage commit message

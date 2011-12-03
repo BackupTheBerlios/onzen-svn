@@ -509,6 +509,7 @@ exception.printStackTrace();
       public void run()
       {
         if (!widgetStatus.isDisposed()) widgetStatus.setText(statusText.text);
+        display.update();
       }
     });
   }
@@ -546,6 +547,7 @@ exception.printStackTrace();
       public void run()
       {
         if (!widgetStatus.isDisposed()) widgetStatus.setText(string);
+        display.update();
       }
     });
   }
@@ -1389,6 +1391,21 @@ Dprintf.dprintf("");
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Widgets.invoke(widgetButtonUpdate);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Update all",Settings.keyUpdateAll);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.updateAll();
+          }
         }
       });
 

@@ -346,6 +346,18 @@ class RepositoryTab
           }
         });
 
+        menuItem = Widgets.addMenuItem(menu,"Update all",Settings.keyUpdateAll);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            updateAll();
+          }
+        });
+
         menuItem = Widgets.addMenuItem(menu,"Commit...",Settings.keyCommit);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -732,21 +744,49 @@ Dprintf.dprintf("");
     asyncUpdateFileStates(fileDataSet);
   }
 
-  /** update all or selected entries
+  /** update all open or selected entries
    */
   public void update()
   {
+  
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     try
     {
+      onzen.setStatusText("Update files...");
       repository.update(fileDataSet);
-      asyncUpdateFileStates(fileDataSet);
     }
     catch (RepositoryException exception)
     {
       Dialogs.error(shell,"Update fail (error: %s)",exception.getMessage());
       return;
     }
+    finally
+    {
+      onzen.clearStatusText();
+    }
+    asyncUpdateFileStates(fileDataSet);
+  }
+
+  /** update all or selected entries
+   */
+  public void updateAll()
+  {
+    HashSet<FileData> fileDataSet = getAllFileDataSet();
+    try
+    {
+      onzen.setStatusText("Update all...");
+      repository.update();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,"Update all fail (error: %s)",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      onzen.clearStatusText();
+    }
+    asyncUpdateFileStates(fileDataSet);
   }
 
   /** commit selected entries
@@ -2729,6 +2769,36 @@ Dprintf.dprintf("");
     return fileDataSet;
   }
 
+  /** get selected all data set
+   * @return all file data hash set
+   */
+  private HashSet<FileData> getAllFileDataSet()
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+
+    LinkedList<TreeItem> treeItems = new LinkedList<TreeItem>();
+    for (TreeItem treeItem : widgetFileTree.getItems())
+    {
+      treeItems.add(treeItem);
+    }
+    while (!treeItems.isEmpty())
+    {
+      TreeItem treeItem = treeItems.removeFirst();
+      if (treeItem != null)
+      {
+        FileData fileData = (FileData)treeItem.getData();
+        if (fileData != null) fileDataSet.add(fileData);
+
+        for (TreeItem subTreeItem : treeItem.getItems())
+        {
+          treeItems.add(subTreeItem);
+        }
+      }
+    }
+
+    return fileDataSet;
+  }
+
   //-----------------------------------------------------------------------
 
   /** update file tree item
@@ -2790,7 +2860,7 @@ Dprintf.dprintf("");
     }
   }
 
-  /** asyncronous update file states or all files (if file set is empty)
+  /** asyncronous update file states
    * @param fileDataSet file data set to update states
    */
   protected void updateFileStates(HashSet<FileData> fileDataSet)
@@ -2912,35 +2982,12 @@ Dprintf.dprintf("");
     updateFileStates(fileData.toSet());
   }
 
-  /** asyncronous update file states or all files (if file set is empty)
+  /** asyncronous update file states
    * @param fileDataSet file data set to update states
    * @param title title to show in status line or null
    */
   protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet, String title)
   {
-    if (fileDataSet.isEmpty())
-    {
-      LinkedList<TreeItem> treeItems = new LinkedList<TreeItem>();
-      for (TreeItem treeItem : widgetFileTree.getItems())
-      {
-        treeItems.add(treeItem);
-      }
-      while (!treeItems.isEmpty())
-      {
-        TreeItem treeItem = treeItems.removeFirst();
-        if (treeItem != null)
-        {
-          FileData fileData = (FileData)treeItem.getData();
-          if (fileData != null) fileDataSet.add(fileData);
-
-          for (TreeItem subTreeItem : treeItem.getItems())
-          {
-            treeItems.add(subTreeItem);
-          }
-        }
-      }
-    }
-
     Background.run(new BackgroundRunnable(repository,fileDataSet,title)
     {
       public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
@@ -2958,7 +3005,7 @@ Dprintf.dprintf("");
     });
   }
 
-  /** asyncronous update file states or all files (if file set is empty)
+  /** asyncronous update file states
    * @param fileDataSet file data set to update states
    */
   protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet)

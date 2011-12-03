@@ -723,6 +723,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyUpdate                      = SWT.CTRL+'U';
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyUpdateAll                   = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCommit                      = SWT.CTRL+'X';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCreatePatch                 = SWT.CTRL+'P';
