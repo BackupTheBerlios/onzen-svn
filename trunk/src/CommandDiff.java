@@ -1125,7 +1125,7 @@ class CommandDiff
         {
           topIndex--;
         }
-        while (   (topIndex >= 0) 
+        while (   (topIndex >= 0)
                && (   (data.lineTypes[topIndex] == DiffData.Types.NONE)
                    || !data.showTypes.contains(data.lineTypes[topIndex])
                   )
@@ -1847,7 +1847,7 @@ class CommandDiff
   {
     final String LINE_DELIMITER = widgetLineDiff.getLineDelimiter();
 
-    StringBuilder buffer = new StringBuilder();   
+    StringBuilder buffer = new StringBuilder();
     buffer.append(widgetTextLeft.getLine(lineIndex)); buffer.append(LINE_DELIMITER);
     buffer.append(widgetTextRight.getLine(lineIndex)); buffer.append(LINE_DELIMITER);
     widgetLineDiff.setText(buffer.toString());

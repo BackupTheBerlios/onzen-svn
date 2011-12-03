@@ -509,7 +509,7 @@ class CommandPatches
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             for (TableItem tableItem : widgetPatches.getSelection())
-            {            
+            {
               apply((Patch)tableItem.getData());
             }
           }
@@ -699,7 +699,7 @@ class CommandPatches
                 if (newFileName != null)
                 {
                   data.patch.addFileName(newFileName);
-                  
+
                   widgetFileNames.removeAll();
                   for (String fileName : data.patch.getFileNames())
                   {
@@ -982,14 +982,14 @@ class CommandPatches
               for (String fileName : widgetFileNames.getItems())
               {
                 fileNameSet.add(fileName);
-              }              
+              }
 
               // get tests
               LinkedHashSet<String> testSet = new LinkedHashSet<String>();
               for (TableItem tableItem : widgetTests.getItems())
               {
                 if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
-              }              
+              }
 
               // save patch
               data.patch.summary     = summary;

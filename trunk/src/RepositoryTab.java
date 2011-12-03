@@ -748,7 +748,7 @@ Dprintf.dprintf("");
    */
   public void update()
   {
-  
+
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
     try
     {
