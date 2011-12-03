@@ -6,6 +6,13 @@
   * fixed broken broadcasting of commit messages;
     use now a multi-cast socket
   * added search in revision tree view
+  * added function "update all"
+  * added function to remove trailing whitespaces
+    and convert TABs
+  * add warning when files with TABs/trailing
+    whitespaces should be commit/added, add list of
+    files with exceptions for warning
+  * made more dialogs non-modal
 
 2011-09-06 0.02
   * support sending mails with JavaMail
