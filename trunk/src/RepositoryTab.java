@@ -614,7 +614,7 @@ Dprintf.dprintf("");
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Convert spaces...",Settings.keyDeleteLocal);
+        menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyDeleteLocal);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2050,7 +2050,7 @@ Dprintf.dprintf("");
     }
   }
 
-  /** convert spaces
+  /** convert whitespaces
    */
   public void convertSpaces()
   {
@@ -2260,7 +2260,7 @@ Dprintf.dprintf("");
     }
   }
 
-  /** convert spaces in file
+  /** convert whitespaces in file
    * @param fileName file name
    * @return true iff OK, false for abort
    */
@@ -3168,7 +3168,7 @@ Dprintf.dprintf("");
     return trailingWhitespaces || trailingEmptyLines;
   }
 
-  /** convert spaces in file
+  /** convert whitespaces in file
    * @param fileName file name
    * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
    * @param removeTrailingWhiteSpaces TRUE iff trailing white spaces should be removed
