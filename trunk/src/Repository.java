@@ -1322,8 +1322,7 @@ class StoredFiles
   private static final int    FILES_DATABASE_VERSION = 1;
 
   // --------------------------- variables --------------------------------
-  private String rootPath;
-  private File   file;
+  private File file;   // temporary zip storage file
 
   // ------------------------ native functions ----------------------------
 
@@ -1336,8 +1335,7 @@ class StoredFiles
   public StoredFiles(String rootPath, HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
-    this.rootPath = rootPath;
-    this.file     = null;
+    this.file = null;
 
     ZipOutputStream output = null;
     try
@@ -1355,21 +1353,24 @@ class StoredFiles
         byte[] buffer = new byte[64*1024];
         for (FileData fileData : fileDataSet)
         {
-
-          // add ZIP entry to output stream.
-          output.putNextEntry(new ZipEntry(fileData.getFileName(rootPath)));
-
-          // store file data
-          FileInputStream input = new FileInputStream(fileData.getFileName(rootPath));
-          int n;
-          while ((n = input.read(buffer)) > 0)
+          File file = new File(fileData.getFileName(rootPath));
+          if (file.exists())
           {
-            output.write(buffer,0,n);
-          }
-          input.close();
+            // add ZIP entry to output stream.
+            output.putNextEntry(new ZipEntry(fileData.getFileName(rootPath)));
 
-          // close ZIP entry
-          output.closeEntry();
+            // store file data
+            FileInputStream input = new FileInputStream(file);
+            int n;
+            while ((n = input.read(buffer)) > 0)
+            {
+              output.write(buffer,0,n);
+            }
+            input.close();
+
+            // close ZIP entry
+            output.closeEntry();
+          }
         }
 
         // close ZIP storage
