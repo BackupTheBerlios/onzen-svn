@@ -886,6 +886,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
                  && !line.startsWith("@@")
                 )
           {
+//Dprintf.dprintf("line=#%s#",line);
             // skip unknown lines
             while (   ((line = exec.getStdout()) != null)
                    && !line.isEmpty()
@@ -997,7 +998,6 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 //Dprintf.dprintf("c %d %d",addedLinesCount,deletedLinesCount);
             }
           }
-          exec.ungetStdout(line);
         }
         else
         {
