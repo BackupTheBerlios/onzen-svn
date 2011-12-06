@@ -1149,13 +1149,16 @@ Dprintf.dprintf("");
    */
   public boolean apply(int maxContextOffset)
   {
-  String[] l = getLines();
+    final Pattern PATTERN_FILENAME_OLD = Pattern.compile("^[^/\\\\]*[/\\\\](.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_FILENAME_NEW = Pattern.compile("^[^/\\\\]*[/\\\\](.*)",Pattern.CASE_INSENSITIVE);
 /*
+String[] l = getLines();
 Dprintf.dprintf("#%d",l.length);
 for (String ll : l) Dprintf.dprintf("ll=%s",ll);
 Dprintf.dprintf("===============");
 /**/
 
+    Matcher     oldFileNameMatcher,newFileNameMatcher;
     PatchChunk  patchChunk = null;
     PrintWriter output     = null;
     try
@@ -1168,15 +1171,31 @@ Dprintf.dprintf("===============");
       {
 //Dprintf.dprintf("patchChunk=%s",patchChunk);
         // get old, new file
-        File oldFile      = new File(rootPath,patchChunk.oldFileName);
-        File newFile      = new File(rootPath,patchChunk.newFileName);
-        File rejectedFile = new File(rootPath,patchChunk.newFileName+".rej");
-        File originalFile = new File(rootPath,patchChunk.newFileName+".orig");
-        if (!oldFile.exists() && patchChunk.oldFileName.startsWith("a/") && patchChunk.newFileName.startsWith("b/"))
+        oldFileNameMatcher = PATTERN_FILENAME_OLD.matcher(patchChunk.oldFileName);
+        newFileNameMatcher = PATTERN_FILENAME_NEW.matcher(patchChunk.newFileName);
+        File oldFile = new File(rootPath,patchChunk.oldFileName);
+        File newFile;
+        if (   !oldFile.exists()
+            && oldFileNameMatcher.matches()
+            && newFileNameMatcher.matches()
+           )
         {
-          oldFile = new File(rootPath,patchChunk.oldFileName.substring(2));
-          newFile = new File(rootPath,patchChunk.newFileName.substring(2));
+          oldFile = new File(rootPath,oldFileNameMatcher.group(1));
+          newFile = new File(rootPath,newFileNameMatcher.group(1));
         }
+        else
+        {
+          oldFile = new File(rootPath,patchChunk.oldFileName);
+          newFile = new File(rootPath,patchChunk.newFileName);
+        }
+
+        // get rejected/original file
+        File rejectedFile = new File(rootPath,newFile.getName()+".rej");
+        File originalFile = new File(rootPath,newFile.getName()+".orig");
+//Dprintf.dprintf("oldFile=%s",oldFile);
+//Dprintf.dprintf("newFile=%s",newFile);
+//Dprintf.dprintf("rejectedFile=%s",rejectedFile);
+//Dprintf.dprintf("originalFile=%s",originalFile);
 
         // load old file lines (if not /dev/null => file is new)
         oldLineList.clear();
@@ -1357,13 +1376,16 @@ Dprintf.dprintf("exception=%s",exception);
    */
   public boolean unapply(int maxContextOffset)
   {
-  String[] l = getLines();
+    final Pattern PATTERN_FILENAME_OLD = Pattern.compile("^[^/\\\\]*[/\\\\](.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_FILENAME_NEW = Pattern.compile("^[^/\\\\]*[/\\\\](.*)",Pattern.CASE_INSENSITIVE);
 /*
+String[] l = getLines();
 Dprintf.dprintf("#%d",l.length);
 for (String ll : l) Dprintf.dprintf("ll=%s",ll);
 Dprintf.dprintf("===============");
 /**/
 
+    Matcher     oldFileNameMatcher,newFileNameMatcher;
     PatchChunk  patchChunk = null;
     PrintWriter output     = null;
     try
@@ -1376,13 +1398,25 @@ Dprintf.dprintf("===============");
       {
 //Dprintf.dprintf("patchChunk=%s",patchChunk);
         // get old, new file
+        oldFileNameMatcher = PATTERN_FILENAME_OLD.matcher(patchChunk.oldFileName);
+        newFileNameMatcher = PATTERN_FILENAME_NEW.matcher(patchChunk.newFileName);
         File oldFile = new File(rootPath,patchChunk.oldFileName);
-        File newFile = new File(rootPath,patchChunk.newFileName);
-        if (!oldFile.exists() && patchChunk.oldFileName.startsWith("a/") && patchChunk.newFileName.startsWith("b/"))
+        File newFile;
+        if (   !oldFile.exists()
+            && oldFileNameMatcher.matches()
+            && newFileNameMatcher.matches()
+           )
         {
-          oldFile = new File(rootPath,patchChunk.oldFileName.substring(2));
-          newFile = new File(rootPath,patchChunk.newFileName.substring(2));
+          oldFile = new File(rootPath,oldFileNameMatcher.group(1));
+          newFile = new File(rootPath,newFileNameMatcher.group(1));
         }
+        else
+        {
+          oldFile = new File(rootPath,patchChunk.oldFileName);
+          newFile = new File(rootPath,patchChunk.newFileName);
+        }
+//Dprintf.dprintf("oldFile=%s",oldFile);
+//Dprintf.dprintf("newFile=%s",newFile);
 
         // load old file lines (if not /dev/null => file is new)
         oldLineList.clear();
