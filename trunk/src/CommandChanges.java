@@ -180,7 +180,8 @@ class CommandChanges
 
   // widgets
   private final Table         widgetChanges;
-  private Shell               widgetChangesToolTip = null;
+  private Shell               widgetChangesToolTip              = null;
+  private Point               widgetChangesToolTipMousePosition = new Point(0,0);
   private final Button        widgetClose;
 
   // ------------------------ native functions ----------------------------
@@ -340,14 +341,19 @@ class CommandChanges
 
             public void mouseExit(MouseEvent mouseEvent)
             {
-              widgetChangesToolTip.dispose();
-              widgetChangesToolTip = null;
+              if (!isInsideChangesTooltip(mouseEvent.x,mouseEvent.y))
+              {
+                widgetChangesToolTip.dispose();
+                widgetChangesToolTip = null;
+              }
             }
 
             public void mouseHover(MouseEvent mouseEvent)
             {
             }
           });
+          widgetChangesToolTipMousePosition.x = mouseEvent.x;
+          widgetChangesToolTipMousePosition.y = mouseEvent.y;
 
           label = Widgets.newLabel(widgetChangesToolTip,"Revision:");
           label.setBackground(Onzen.COLOR_WHITE);
@@ -415,6 +421,20 @@ class CommandChanges
   }
 
   //-----------------------------------------------------------------------
+
+  /** check if mouse position is inside changes tooltip
+   * @param x,y mouse position
+   * @return true iff inside changes tooltip
+   */
+  private boolean isInsideChangesTooltip(int x, int y)
+  {
+    Rectangle bounds = widgetChangesToolTip.getClientArea();
+    Point p = display.map(widgetChanges,widgetChangesToolTip,widgetChangesToolTipMousePosition);
+    double d2 =  Math.pow(x-p.x,2)
+                +Math.pow(y-p.y,2);
+//Dprintf.dprintf("x=%d y=%d p=%s d2=%f bounds=%s",x,y,p,d2,bounds);
+    return (d2 < 100) || bounds.contains(x,y);
+  }
 
   /** show changes: set canvas size and draw changes list
    * @param changesType
