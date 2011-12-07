@@ -160,41 +160,46 @@ class CommandPatchReview
   private final int USER_EVENT_ADD_NEW_TEST = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
-  public String                summary;
-  public String[]              message;
-  public String[]              comment;
-  public LinkedHashSet<String> testSet;
+  public String                        summary;
+  public String[]                      message;
+  public String[]                      comment;
+  public LinkedHashSet<String>         testSet;
 
   // global variable references
-  private final RepositoryTab repositoryTab;
-  private final Patch         patch;
-  private final Date          date;
-  private final Display       display;
+  private final RepositoryTab          repositoryTab;
+  private final Patch                  patch;
+  private final Date                   date;
+  private final Display                display;
 
   // dialog
-  private final Data          data = new Data();
-  private final Shell         dialog;
+  private final Data                   data = new Data();
+  private final Shell                  dialog;
 
   // widgets
-  private final StyledText    widgetPatch;
-  private final List          widgetFileNames;
-  private final Text          widgetFind;
-  private final Button        widgetFindPrev;
-  private final Button        widgetFindNext;
-  private final Combo         widgetSummary;
-  private final Text          widgetMessage;
-  private final Text          widgetComment;
-  private final Table         widgetTests;
-  private final Text          widgetNewTest;
-  private final Button        widgetAddNewTest;
-  private final Text          widgetPatchMailTo;
-  private final Text          widgetPatchMailCC;
-  private final Text          widgetPatchMailSubject;
-  private final Text          widgetPatchMailText;
-  private final Text          widgetReviewServerSummary;
-  private final Text          widgetReviewServerDescription;
-  private final Button        widgetSend;
-  private final Button        widgetCancel;
+  private final StyledText             widgetPatch;
+  private final List                   widgetFileNames;
+  private final Text                   widgetFind;
+  private final Button                 widgetFindPrev;
+  private final Button                 widgetFindNext;
+  private final Combo                  widgetSummary;
+  private final Text                   widgetMessage;
+  private final Text                   widgetComment;
+  private final Table                  widgetTests;
+  private final Text                   widgetNewTest;
+  private final Button                 widgetAddNewTest;
+  private final Text                   widgetPatchMailTo;
+  private final Text                   widgetPatchMailCC;
+  private final Text                   widgetPatchMailSubject;
+  private final Text                   widgetPatchMailText;
+  private final Text                   widgetReviewServerSummary;
+  private final Text                   widgetReviewServerDescription;
+  private final Button                 widgetSend;
+  private final Button                 widgetCancel;
+
+  private static String                lastSummary = "";
+  private static String[]              lastMessage = new String[0];
+  private static String[]              lastComment = new String[0];
+  private static LinkedHashSet<String> lastTestSet = new LinkedHashSet<String>();
 
   // ------------------------ native functions ----------------------------
 
@@ -216,16 +221,19 @@ class CommandPatchReview
     Listener  listener;
 
     // initialize variables
-    this.summary       = patch.summary;
-    this.message       = patch.message;
-    this.comment       = patch.comment;
-    this.testSet       = (LinkedHashSet<String>)patch.testSet.clone();
+    this.summary       = (!patch.summary.isEmpty()) ? patch.summary : lastSummary;
+    this.message       = (patch.message.length > 0) ? patch.message : lastMessage;
+    this.comment       = (patch.comment.length > 0) ? patch.comment : lastComment;
+    this.testSet       = (!((LinkedHashSet<String>)patch.testSet).isEmpty()
+                          ? (LinkedHashSet<String>)patch.testSet
+                          : lastTestSet
+                         );
     this.repositoryTab = repositoryTab;
     this.patch         = patch;
     this.date          = new Date();
 
     // get patch history
-    data.history          = Patch.getPatches(repositoryTab.repository.rootPath,true,EnumSet.allOf(Patch.States.class),50);
+    data.history          = Patch.getPatches(repositoryTab.repository.rootPath,true,EnumSet.allOf(Patch.States.class),20);
     data.patchMailFlag    = repositoryTab.repository.patchMailFlag;
     data.reviewServerFlag = repositoryTab.repository.reviewServerFlag;
 
@@ -299,7 +307,7 @@ class CommandPatchReview
             Widgets.layout(label,0,0,TableLayoutData.W);
 
             widgetSummary = Widgets.newCombo(subSubComposite);
-            widgetSummary.setText(summary);
+            widgetSummary.setText(this.summary);
             Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
             widgetSummary.setToolTipText("Short summary line for patch.");
 
@@ -307,7 +315,7 @@ class CommandPatchReview
             Widgets.layout(label,1,0,TableLayoutData.NW);
 
             widgetMessage = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
-            widgetMessage.setText(StringUtils.join(message,widgetMessage.DELIMITER));
+            widgetMessage.setText(StringUtils.join(this.message,widgetMessage.DELIMITER));
             Widgets.layout(widgetMessage,1,1,TableLayoutData.NSWE);
             widgetMessage.setToolTipText("Commit message.");
 
@@ -315,7 +323,7 @@ class CommandPatchReview
             Widgets.layout(label,2,0,TableLayoutData.NW);
 
             widgetComment = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
-            widgetComment.setText(StringUtils.join(comment,widgetComment.DELIMITER));
+            widgetComment.setText(StringUtils.join(this.comment,widgetComment.DELIMITER));
             Widgets.layout(widgetComment,2,1,TableLayoutData.NSWE);
             widgetComment.setToolTipText("Additional comment (will not be part of commit message).");
           }
@@ -334,7 +342,7 @@ class CommandPatchReview
               for (String patchTest : repositoryTab.repository.patchTests)
               {
                 TableItem tableItem = Widgets.addTableEntry(widgetTests,patchTest,patchTest);
-                if (testSet.contains(patchTest)) tableItem.setChecked(true);
+                if (this.testSet.contains(patchTest)) tableItem.setChecked(true);
               }
             }
 
@@ -732,6 +740,16 @@ class CommandPatchReview
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          // store data
+          data.summary = widgetSummary.getText().trim();
+          data.message = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
+          data.comment = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          data.testSet.clear();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
+          }
+
           Settings.geometryPatchReview = dialog.getSize();
 
           Dialogs.close(dialog,true);
@@ -786,7 +804,15 @@ class CommandPatchReview
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
+          // store data
+          data.summary = widgetSummary.getText().trim();
+          data.message = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
+          data.comment = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          data.testSet.clear();
+          for (TableItem tableItem : widgetTests.getItems())
+          {
+            if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
+          }
 
           Dialogs.close(dialog,false);
         }
@@ -967,23 +993,24 @@ class CommandPatchReview
     // show dialog
     Dialogs.show(dialog,Settings.geometryPatchReview);
 
-    // add files
-    if (!widgetFileNames.isDisposed())
+    if (!dialog.isDisposed())
     {
+      // add files, history, set patch lines, text
       for (String fileName : patch.getFileNames())
       {
         widgetFileNames.add(fileName);
       }
+
+      for (Patch history : data.history)
+      {
+        widgetSummary.add(history.summary);
+      }
+      widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.getLineDelimiter()));
+      widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
+      widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
     }
 
     // update
-    for (Patch history : data.history)
-    {
-      widgetSummary.add(history.summary);
-    }
-    widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.getLineDelimiter()));
-    widgetPatchMailTo.setText(repositoryTab.repository.patchMailTo);
-    widgetPatchMailCC.setText(repositoryTab.repository.patchMailCC);
     updateSubject();
     updateText();
   }
@@ -997,12 +1024,19 @@ class CommandPatchReview
       Widgets.setFocus(widgetSummary);
       if ((Boolean)Dialogs.run(dialog,false))
       {
+        // get data values
         repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
         summary                                   = data.summary;
         message                                   = data.message;
         comment                                   = data.comment;
         testSet                                   = data.testSet;
+
+        // clear last values
+        lastSummary = "";
+        lastMessage = new String[0];
+        lastComment = new String[0];
+        lastTestSet.clear();
       }
     }
   }
@@ -1047,6 +1081,7 @@ Dprintf.dprintf("");
       Widgets.setFocus(widgetSummary);
       if ((Boolean)Dialogs.run(dialog,false))
       {
+        // get data values
         repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
         summary                                   = data.summary;
@@ -1054,10 +1089,22 @@ Dprintf.dprintf("");
         comment                                   = data.comment;
         testSet                                   = data.testSet;
 
+        // clear last values
+        lastSummary = "";
+        lastMessage = new String[0];
+        lastComment = new String[0];
+        lastTestSet.clear();
+
         return true;
       }
       else
       {
+        // store last values
+        lastSummary = data.summary;
+        lastMessage = data.message;
+        lastComment = data.comment;
+        lastTestSet = data.testSet;
+
         return false;
       }
     }
