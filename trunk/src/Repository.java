@@ -413,6 +413,39 @@ class FileData
     return (parent != null) ? parent : "";
   }
 
+  /** get file permissions string
+   * @param rootPath root path
+   * @return file permissions string
+   */
+  public String getPermissions(String rootPath)
+  {
+    StringBuilder buffer = new StringBuilder();
+
+    File file = new File(rootPath,name);
+    if (file.canRead()) buffer.append("read");
+    if (file.canWrite())
+    {
+      if (buffer.length() > 0) buffer.append('/');
+      buffer.append("write");
+    }
+    if (file.canExecute())
+    {
+      if (buffer.length() > 0) buffer.append('/');
+      buffer.append("execute");
+    }
+
+    return buffer.toString();
+  }
+
+  /** get file permissions string
+   * @param repository repository
+   * @return file permissions string
+   */
+  public String getPermissions(Repository repository)
+  {
+    return getPermissions(repository.rootPath);
+  }
+
   /** get file mime type (use file name extensions)
    * @param rootPath root path
    * @return mime type or null if no mime type found

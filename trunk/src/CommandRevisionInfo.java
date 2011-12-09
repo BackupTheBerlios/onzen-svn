@@ -149,7 +149,7 @@ class CommandRevisionInfo
     dialog = Dialogs.open(shell,"File revision: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0}));
+    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0}));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Name:");
@@ -212,35 +212,42 @@ class CommandRevisionInfo
       Widgets.layout(label,3,0,TableLayoutData.W);
 
       label = Widgets.newLabel(composite);
-      label.setText(Units.formatByteSize(fileData.size));
+      label.setText(Units.formatByteSize(fileData.size)+" ("+fileData.size+"bytes)");
       Widgets.layout(label,3,1,TableLayoutData.WE);
 
-      label = Widgets.newLabel(composite,"Mode:");
+      label = Widgets.newLabel(composite,"Permissions:");
       Widgets.layout(label,4,0,TableLayoutData.W);
 
       label = Widgets.newLabel(composite);
-      label.setText(fileData.mode.toString());
+      label.setText(fileData.getPermissions(repositoryTab.repository));
       Widgets.layout(label,4,1,TableLayoutData.WE);
 
-      label = Widgets.newLabel(composite,"Author:");
+      label = Widgets.newLabel(composite,"Mode:");
       Widgets.layout(label,5,0,TableLayoutData.W);
 
+      label = Widgets.newLabel(composite);
+      label.setText(fileData.mode.toString());
+      Widgets.layout(label,5,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Author:");
+      Widgets.layout(label,6,0,TableLayoutData.W);
+
       widgetAuthor = Widgets.newStringView(composite,SWT.LEFT);
-      Widgets.layout(widgetAuthor,5,1,TableLayoutData.WE);
+      Widgets.layout(widgetAuthor,6,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Commit message:");
-      Widgets.layout(label,6,0,TableLayoutData.NW);
+      Widgets.layout(label,7,0,TableLayoutData.NW);
 
       widgetCommitMessage = Widgets.newText(composite,SWT.MULTI|SWT.READ_ONLY|SWT.BORDER|SWT.H_SCROLL|SWT.V_SCROLL);
       widgetCommitMessage.setBackground(Onzen.COLOR_BACKGROUND);
-      Widgets.layout(widgetCommitMessage,6,1,TableLayoutData.NSWE);
+      Widgets.layout(widgetCommitMessage,7,1,TableLayoutData.NSWE);
 
       label = Widgets.newLabel(composite,"Log:");
-      Widgets.layout(label,7,0,TableLayoutData.NW);
+      Widgets.layout(label,8,0,TableLayoutData.NW);
 
       widgetLog = Widgets.newText(composite,SWT.MULTI|SWT.READ_ONLY|SWT.BORDER|SWT.H_SCROLL|SWT.V_SCROLL);
       widgetLog.setBackground(Onzen.COLOR_BACKGROUND);
-      Widgets.layout(widgetLog,7,1,TableLayoutData.NSWE);
+      Widgets.layout(widgetLog,8,1,TableLayoutData.NSWE);
     }
 
     // buttons
