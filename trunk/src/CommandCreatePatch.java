@@ -624,6 +624,30 @@ Dprintf.dprintf("");
     {
       for (FileData fileData : fileDataSet)
       {
+        if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileData.getFileName()))
+        {
+          final String fileName = fileData.getFileName(repositoryTab.repository.rootPath);
+
+          // check for TABs/trailing whitespaces in file
+          final boolean containTABs                = Settings.checkTABs                && repositoryTab.containSpaces(fileName,true,false);
+          final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containSpaces(fileName,false,true);
+
+          // convert TABs, remove trailing whitespaces
+          if (containTABs || containTrailingWhitespaces)
+          {
+
+            final boolean[] result = new boolean[1];
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                result[0] = repositoryTab.convertWhitespaces(fileName,"File '"+fileName+"' contain TABs or trailing whitespaces.");
+              }
+            });
+            if (!result[0]) return;
+          }
+        }
+
         widgetFileNames.add(fileData.getFileName());
       }
     }
