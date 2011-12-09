@@ -1916,7 +1916,7 @@ Dprintf.dprintf("");
       Button      button;
 
       // delete dialog
-      dialog = Dialogs.openModal(shell,"Delete files/directories",new double[]{1.0,0.0},1.0);
+      dialog = Dialogs.openModal(shell,"Delete local files/directories",new double[]{1.0,0.0},1.0);
 
       final List   widgetFiles;
       final Button widgetDelete;
@@ -1981,14 +1981,14 @@ Dprintf.dprintf("");
       widgetCancel.setFocus();
       if ((Boolean)Dialogs.run(dialog,false))
       {
-        // delete files/directories
+        // delete local files/directories
         boolean deleteAll  = false;
         boolean skipErrors = false;
         for (FileData fileData : fileDataSet)
         {
           File file = new File(fileData.getFileName(repository));
 
-          // delete file/directory
+          // delete local file/directory
           boolean deleted = false;
           if (file.isDirectory())
           {
@@ -2018,7 +2018,7 @@ Dprintf.dprintf("");
           }
           else
           {
-            // delete file
+            // delete local file
             deleted = file.delete();
           }
 
@@ -2027,7 +2027,7 @@ Dprintf.dprintf("");
           {
             switch (Dialogs.select(shell,
                                    "Error",
-                                   String.format("Cannot delete file/directory '%s'.\n\nContinue?",file.getPath()),
+                                   String.format("Cannot delete local file/directory '%s'.\n\nContinue?",file.getPath()),
                                    new String[]{"Yes","Yes, always","No"},
                                    2
                                   )
