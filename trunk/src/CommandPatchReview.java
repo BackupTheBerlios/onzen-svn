@@ -246,7 +246,11 @@ class CommandPatchReview
     COLOR_FIND_TEXT = new Color(display,Settings.colorFindText.foreground);
 
     // add files dialog
-    dialog = Dialogs.openModal(shell,"Send patch review",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,
+                               patch.reference.isEmpty() ? "Send patch review" : "Update patch review (reference: " + patch.reference + ")",
+                               new double[]{1.0,0.0},
+                               1.0
+                              );
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(1.0,1.0,4));
@@ -673,7 +677,7 @@ class CommandPatchReview
     composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetSend = Widgets.newButton(composite,"Send");
+      widgetSend = Widgets.newButton(composite,patch.reference.isEmpty() ? "Send" : "Update");
       Widgets.layout(widgetSend,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetSend.addSelectionListener(new SelectionListener()
       {
