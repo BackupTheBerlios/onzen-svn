@@ -611,7 +611,7 @@ class CommandCommit
             {
               public void run()
               {
-                result[0] = repositoryTab.convertSpaces(fileName,"File '"+fileName+"' contain TABs or trailing whitespaces.");
+                result[0] = repositoryTab.convertWhitespaces(fileName,"File '"+fileName+"' contain TABs or trailing whitespaces.");
               }
             });
             if (!result[0]) return;

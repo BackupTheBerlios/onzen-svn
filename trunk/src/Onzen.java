@@ -1812,7 +1812,7 @@ Dprintf.dprintf("");
         {
           if (selectedRepositoryTab != null)
           {
-            selectedRepositoryTab.convertSpaces();
+            selectedRepositoryTab.convertWhitespaces();
           }
         }
       });
