@@ -583,7 +583,7 @@ throw new RepositoryException("NYI");
         {
           if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
           {
-            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData);
+            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData.revision);
             rommandRevisionInfo.run();
             break;
           }

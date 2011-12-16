@@ -391,19 +391,6 @@ class CommandRevisionInfo
     });
   }
 
-  /** show revision command
-   * @param shell shell
-   * @param repositoryTab repository tab
-   * @param fileData file to show revision information
-   * @param revisionData revision to show
-   */
-  CommandRevisionInfo(Shell shell, RepositoryTab repositoryTab, FileData fileData, RevisionData revisionData)
-  {
-    this(shell,repositoryTab,fileData,(String)null);
-    data.revisionData = revisionData;
-    show();
-  }
-
   /** show revision command of last revision
    * @param shell shell
    * @param repositoryTab repository tab
