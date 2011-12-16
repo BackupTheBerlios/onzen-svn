@@ -428,12 +428,19 @@ class CommandChanges
    */
   private boolean isInsideChangesTooltip(int x, int y)
   {
-    Rectangle bounds = widgetChangesToolTip.getClientArea();
-    Point p = display.map(widgetChanges,widgetChangesToolTip,widgetChangesToolTipMousePosition);
-    double d2 =  Math.pow(x-p.x,2)
-                +Math.pow(y-p.y,2);
+    if (!widgetChanges.isDisposed())
+    {
+      Rectangle bounds = widgetChangesToolTip.getClientArea();
+      Point p = display.map(widgetChanges,widgetChangesToolTip,widgetChangesToolTipMousePosition);
+      double d2 =  Math.pow(x-p.x,2)
+                  +Math.pow(y-p.y,2);
 //Dprintf.dprintf("x=%d y=%d p=%s d2=%f bounds=%s",x,y,p,d2,bounds);
-    return (d2 < 100) || bounds.contains(x,y);
+      return (d2 < 100) || bounds.contains(x,y);
+    }
+    else
+    {
+      return true;
+    }
   }
 
   /** show changes: set canvas size and draw changes list
