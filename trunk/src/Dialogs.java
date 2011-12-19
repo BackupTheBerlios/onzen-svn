@@ -942,6 +942,15 @@ class Dialogs
     info(parentShell,title,IMAGE,message);
   }
 
+  /** info dialog
+   * @param parentShell parent shell
+   * @param message info message
+   */
+  public static void info(Shell parentShell, String message)
+  {
+    info(parentShell,"Information",message);
+  }
+
   /** error dialog
    * @param parentShell parent shell
    * @param message error message
