@@ -1,6 +1,5 @@
 ToDo
 
-- improve speed of revision tree drawing: calculate bounding boxes
 - page up/down in revision tree view
 - view/edit tag names
 - checkout module
@@ -19,3 +18,6 @@ ToDo
 - change mime macro %file% to ${file}?
 - write manual
 - CVS: show sticky tag/date somewhere
+- function to replace tabs, remove trailing spaces
+- view log funciton
+- selection character set when double-clicking
