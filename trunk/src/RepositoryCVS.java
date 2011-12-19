@@ -78,8 +78,7 @@ class RepositoryCVS extends Repository
                     AbstractList<String>  commitMessageList
                    )
     {
-// NYI: parent list
-      super(revision,new ArrayList<RevisionData>(),tag,date,author,commitMessageList);
+      super(revision,tag,date,author,commitMessageList);
 
       this.revisionNumbers = new int[revisionNumberList.size()];
       for (int z = 0; z < revisionNumberList.size(); z++)

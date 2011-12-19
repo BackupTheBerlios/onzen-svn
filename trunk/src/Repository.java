@@ -883,12 +883,12 @@ class RevisionData
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  public String         revision;
-  public RevisionData[] parents;
-  public String[]       tags;
-  public Date           date;
-  public String         author;
-  public String[]       commitMessage;
+  public String         revision;           // revision string
+  public RevisionData[] parents;            // parents of revision
+  public String[]       tags;               // tag names of revison
+  public Date           date;               // commit/push date
+  public String         author;             // author name
+  public String[]       commitMessage;      // comment message text
   public BranchData[]   branches;
 
   // ------------------------ native functions ----------------------------
@@ -1001,6 +1001,26 @@ class RevisionData
   /** create revision data
    * @param revision revision
    * @param parents list with parents of this revision
+   * @param tagList tag names of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessageList commit message
+   */
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
+  {
+    this(revision,
+         parentList,
+         tagList,
+         date,
+         author,
+         commitMessageList,
+         new BranchData[]{}
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param parents list with parents of this revision
    * @param tag tag name or null
    * @param date date
    * @param author author name
@@ -1020,20 +1040,78 @@ class RevisionData
 
   /** create revision data
    * @param revision revision
-   * @param parents list with parents of this revision
+   * @param tags tag names of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessage commit message
+   * @param branches branches
+   */
+  public RevisionData(String revision, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
+  {
+    this(revision,
+         (RevisionData[])null,
+         tags,
+         date,
+         author,
+         commitMessage,
+         branches
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param tagList tag names of this revision or null
+   * @param date date
+   * @param author author name
+   * @param commitMessageList commit message
+   * @param branches branches
+   */
+  public RevisionData(String revision, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, BranchData[] branches)
+  {
+    this(revision,
+         (RevisionData[])null,
+         (tagList != null)?tagList.toArray(new String[tagList.size()]):(String[])null,
+         date,
+         author,
+         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         branches
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
    * @param tagList tag names of this revision or null
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
    */
-  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
+  public RevisionData(String revision, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
   {
     this(revision,
-         parentList,
-         tagList,
+         (RevisionData[])null,
+         (tagList != null)?tagList.toArray(new String[tagList.size()]):(String[])null,
          date,
          author,
-         commitMessageList,
+         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         (BranchData[])null
+        );
+  }
+
+  /** create revision data
+   * @param revision revision
+   * @param tag tag name or null
+   * @param date date
+   * @param author author name
+   * @param commitMessageList commit message
+   */
+  public RevisionData(String revision, String tag, Date date, String author, AbstractList<String> commitMessageList)
+  {
+    this(revision,
+         (RevisionData[])null,
+         (tag != null)?new String[]{tag}:(String[])null,
+         date,
+         author,
+         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
          new BranchData[]{}
         );
   }
@@ -2712,21 +2790,21 @@ Dprintf.dprintf("fileName=%s",fileName);
           Macro macro = new Macro(StringUtils.split(Settings.commandPostReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
           macro.expand("server",     reviewServerHost);
           macro.expand("login",      reviewServerLogin);
-          macro.expand("password",   (password != null) ? password : "");
+          macro.expand("password",   macro.hidden((password != null) ? password : ""));
           macro.expand("summary",    commitMessage.getSummary());
           macro.expand("groups",     reviewServerGroups);
           macro.expand("persons",    reviewServerPersons);
           macro.expand("description",commitMessage.getMessage());
           macro.expand("tests",      testSet,",");
           macro.expand("file",       patchFile.getAbsolutePath());
-          String[] commandArray = macro.getValueArray();
-  //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+          Command command = new Command(macro);
+//Dprintf.dprintf("command=%s",command);
 
           Exec exec = null;
           try
           {
             // execute
-            exec = new Exec(commandArray);
+            exec = new Exec(command);
             String line;
             while ((line = exec.getStdout()) != null)
             {
@@ -2778,7 +2856,7 @@ Dprintf.dprintf("stderr %s",line);
           Macro macro = new Macro(StringUtils.split(Settings.commandUpdateReviewServer,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS,false));
           macro.expand("server",     reviewServerHost);
           macro.expand("login",      reviewServerLogin);
-          macro.expand("password",   (password != null) ? password : "");
+          macro.expand("password",   macro.hidden((password != null) ? password : ""));
           macro.expand("reference",  reference);
           macro.expand("summary",    commitMessage.getSummary());
           macro.expand("groups",     reviewServerGroups);
@@ -2786,14 +2864,14 @@ Dprintf.dprintf("stderr %s",line);
           macro.expand("description",commitMessage.getMessage());
           macro.expand("tests",      testSet,",");
           macro.expand("file",       patchFile.getAbsolutePath());
-          String[] commandArray = macro.getValueArray();
-  //for (String s : commandArray) Dprintf.dprintf("command=%s",s);
+          Command command = new Command(macro);
+//Dprintf.dprintf("command=%s",command);
 
           Exec exec = null;
           try
           {
             // execute
-            exec = new Exec(commandArray);
+            exec = new Exec(command);
             String line;
             while ((line = exec.getStdout()) != null)
             {

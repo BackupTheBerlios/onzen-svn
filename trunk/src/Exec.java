@@ -72,6 +72,25 @@ class Command
     printableCommandLine = new ArrayList<String>();
   }
 
+  /** create external command
+   */
+  Command(Macro macro)
+  {
+    this();
+
+    for (Object value : macro.getValueArray())
+    {
+      if (value instanceof Macro.Hidden)
+      {
+        append(hidden(value.toString()));
+      }
+      else
+      {
+        append(value);
+      }
+    }
+  }
+
   /** clear command array
    */
   public void clear()
@@ -90,7 +109,7 @@ class Command
       commandLine.add(object.toString());
       if (object instanceof Hidden)
       {
-        printableCommandLine.add("********");
+        printableCommandLine.add("'********'");
       }
       else
       {
@@ -181,14 +200,15 @@ class Exec
    * @param path working directory or null
    * @param subDirectory working subdirectory or null
    * @param commandArray command line array
+   * @param printableCommandLine printable command line
    * @param binaryFlag true to read stdout in binary mode
    */
-  public Exec(String path, String subDirectory, String[] commandArray, boolean binaryFlag)
+  public Exec(String path, String subDirectory, String[] commandArray, String printableCommandLine, boolean binaryFlag)
     throws IOException
   {
     if (Settings.debugFlag)
     {
-      System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+StringUtils.join(commandArray));
+      System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+printableCommandLine);
     }
 
     // get working directory
@@ -225,7 +245,7 @@ class Exec
   public Exec(String path, String subDirectory, Command command, boolean binaryFlag)
     throws IOException
   {
-    this(path,subDirectory,command.getCommandArray(),binaryFlag);
+    this(path,subDirectory,command.getCommandArray(),command.toString(),binaryFlag);
   }
 
   /** execute external command
@@ -267,15 +287,6 @@ class Exec
     throws IOException
   {
     this(null,command);
-  }
-
-  /** execute external command
-   * @param commandArray command line array
-   */
-  public Exec(String[] commandArray)
-    throws IOException
-  {
-    this(null,null,commandArray,false);
   }
 
   /** done execute command

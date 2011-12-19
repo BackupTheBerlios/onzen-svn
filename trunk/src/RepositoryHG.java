@@ -56,7 +56,6 @@ class RepositoryHG extends Repository
     /** create HG revision data
      * @param revision revision
      * @param changeSet change-set id
-     * @param parents list with parents of this revision
      * @param tagList list with tags
      * @param date date
      * @param author author name
@@ -64,7 +63,7 @@ class RepositoryHG extends Repository
      */
     public RevisionDataHG(String revision, String changeSet, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
     {
-      super(revision,(ArrayList<RevisionData>)null,tagList,date,author,commitMessageList);
+      super(revision,tagList,date,author,commitMessageList);
       this.changeSet = changeSet;
     }
 
@@ -135,7 +134,7 @@ class RepositoryHG extends Repository
     -----
     ...
   */
-  private final String LOG_TEMPLATE       = "{rev} {node|short} {date|isodate} {author}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
+  private final String LOG_TEMPLATE = "{rev} {node|short} {date|isodate} {author}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
 
   // --------------------------- variables --------------------------------
   @XmlElement(name = "masterRepository")

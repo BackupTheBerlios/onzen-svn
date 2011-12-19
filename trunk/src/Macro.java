@@ -20,10 +20,33 @@ import java.util.regex.Pattern;
 
 public class Macro
 {
+  /** hidden string class
+   */
+  class Hidden
+  {
+    private String string;
+
+    /** create hidden string
+     * @param string string
+     */
+    Hidden(String string)
+    {
+      this.string = string;
+    }
+
+    /** convert to string
+     * @return string
+     */
+    public String toString()
+    {
+      return string;
+    }
+  };
+
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  private String[]                 strings;
+  private String[]                 parameters;
   private HashMap<String,Object[]> variableSet;
 
   // ------------------------ native functions ----------------------------
@@ -31,11 +54,11 @@ public class Macro
   // ---------------------------- methods ---------------------------------
 
   /** create macro
-   * @param string string to expand
+   * @param parameters parameters to expand
    */
-  Macro(String[] strings)
+  Macro(String[] parameters)
   {
-    this.strings = strings;
+    this.parameters = parameters;
     variableSet  = new HashMap<String,Object[]>();
   }
 
@@ -66,6 +89,15 @@ public class Macro
     expand(name,value,null);
   }
 
+  /** create hidden macro value
+   * @param string macro value
+   * @return hidden macro value
+   */
+  public Hidden hidden(String string)
+  {
+    return new Hidden(string);
+  }
+
   /** expand macro value
    * @return expanded macro values array
    */
@@ -73,12 +105,12 @@ public class Macro
   {
     final Pattern PATTERN_VARIABLE = Pattern.compile("(.*?)\\$\\{\\s*(\\w+)\\s*(.*?)\\}(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
 
-    String[] values = new String[strings.length];
+    String[] values = new String[parameters.length];
 
-    for (int z = 0; z < strings.length; z++)
+    for (int z = 0; z < parameters.length; z++)
     {
       StringBuilder value    = new StringBuilder();
-      String        template = strings[z];
+      String        template = parameters[z];
       while (!template.isEmpty())
       {
 //Dprintf.dprintf("value=%s",value);
@@ -154,6 +186,26 @@ public class Macro
                 }
               }
               value.append(buffer);
+            }
+            else if (object instanceof Hidden)
+            {
+              // expand object
+              String s = (object != null) ? object.toString() : "";
+              if (!format.isEmpty())
+              {
+                try
+                {
+                  value.append(String.format(format,s));
+                }
+                catch (Exception exception)
+                {
+                  value.append(s);
+                }
+              }
+              else
+              {
+                value.append(s);
+              }
             }
             else
             {
