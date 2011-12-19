@@ -878,22 +878,29 @@ throw new RepositoryException("NYI");
    */
   private RevisionData getRevision(RevisionData[] revisionDataTree, String revision)
   {
-    for (RevisionData revisionData : revisionDataTree)
+    if (revision.equals(repositoryTab.repository.getLastRevision()))
     {
-      if (revisionData.revision.equals(revision))
+      return (revisionDataTree.length > 0) ? revisionDataTree[revisionDataTree.length-1] : null;
+    }
+    else
+    {
+      for (RevisionData revisionData : revisionDataTree)
       {
-        return revisionData;
-      }
-      else
-      {
-        if (revisionData.branches != null)
+        if (revisionData.revision.equals(revision))
         {
-          for (BranchData branchData : revisionData.branches)
+          return revisionData;
+        }
+        else
+        {
+          if (revisionData.branches != null)
           {
-            RevisionData subRevisionData = getRevision(branchData.revisionDataTree,revision);
-            if (subRevisionData != null)
+            for (BranchData branchData : revisionData.branches)
             {
-              return subRevisionData;
+              RevisionData subRevisionData = getRevision(branchData.revisionDataTree,revision);
+              if (subRevisionData != null)
+              {
+                return subRevisionData;
+              }
             }
           }
         }
@@ -1350,32 +1357,8 @@ throw new RepositoryException("NYI");
               // set canvas size
               setSize();
 
-/*
               // scroll to selected revision
               data.selectedRevisionData1 = getRevision(data.revisionDataTree,revision);
-              if (data.selectedRevisionData1 != null)
-              {
-                // get x,y-offset of revision
-                Point point = getRevisionX0Y0(revision);
-                point.x += ENTRY_WIDTH /2;
-                point.y += ENTRY_HEIGHT/2;
-//Dprintf.dprintf("point=%s",point);
-
-                // scroll
-                Rectangle clientArea = widgetRevisions.getClientArea();
-                clientArea.x = widgetHorizontalScrollBar.getSelection();
-                clientArea.y = widgetVerticalScrollBar.getSelection();
-                if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -(point.x-ENTRY_WIDTH /2);
-                if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
-                widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
-                widgetHorizontalScrollBar.setSelection(-data.view.x);
-                widgetVerticalScrollBar.setSelection(-data.view.y);
-              }
-
-              // redraw
-              redraw(true);
-*/
-              // scroll to selected revision
               if (data.selectedRevisionData1 != null)
               {
                 scrollTo(data.selectedRevisionData1);
