@@ -262,8 +262,6 @@ class CommandChanges
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           Settings.geometryChanges       = dialog.getSize();
           Settings.geometryChangesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetChanges));
 
@@ -492,16 +490,24 @@ class CommandChanges
             {
               public void run()
               {
-                for (LogData logData : data.changes)
+                if (data.changes.length > 0)
                 {
-                  Widgets.insertTableEntry(widgetChanges,
-                                           data.logDataComparator,
-                                           logData,
-                                           logData.revision,
-                                           Onzen.DATETIME_FORMAT.format(logData.date),
-                                           logData.author,
-                                           logData.commitMessage[0]
-                                          );
+                  for (LogData logData : data.changes)
+                  {
+                    Widgets.insertTableEntry(widgetChanges,
+                                             data.logDataComparator,
+                                             logData,
+                                             logData.revision,
+                                             Onzen.DATETIME_FORMAT.format(logData.date),
+                                             logData.author,
+                                             logData.commitMessage[0]
+                                            );
+                  }
+                }
+                else
+                {
+                  Dialogs.info(dialog,"No changes found.");
+                  Widgets.invoke(widgetClose);
                 }
               }
             });
