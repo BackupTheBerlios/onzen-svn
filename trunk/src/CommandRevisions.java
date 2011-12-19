@@ -522,6 +522,7 @@ throw new RepositoryException("NYI");
     {
       public void paintControl(PaintEvent paintEvent)
       {
+Dprintf.dprintf("");
         redraw();
       }
     });
@@ -1065,6 +1066,7 @@ throw new RepositoryException("NYI");
       }
       gc.drawImage(image,x,y);
       dy += ENTRY_HEIGHT;
+//Dprintf.dprintf("revisionData.getRevisionText()=%s %d %d",revisionData.getRevisionText(),x,y);
 
       // draw handle
       gc.setBackground(COLOR_HANDLE);
@@ -1084,42 +1086,45 @@ throw new RepositoryException("NYI");
 
       // draw branches
       dx = 0;
-      for (BranchData branchData : revisionData.branches)
+      if (revisionData.branches != null)
       {
-//Dprintf.dprintf("branchData=%s",branchData);
-        // get size of sub-tree
-        Point subSize = getSize(branchData.revisionDataTree);
+        for (BranchData branchData : revisionData.branches)
+        {
+  //Dprintf.dprintf("branchData=%s",branchData);
+          // get size of sub-tree
+          Point subSize = getSize(branchData.revisionDataTree);
 
-        // draw connection L-line
-        gc.setLineWidth(1);
-        gc.setForeground(COLOR_LINES);
-        gc.drawLine(x+ENTRY_WIDTH,                      y+ENTRY_HEIGHT/2,
-                    x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2
-                   );
-        gc.drawLine(x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2,
-                    x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+PADDING+ENTRY_HEIGHT
-                   );
+          // draw connection L-line
+          gc.setLineWidth(1);
+          gc.setForeground(COLOR_LINES);
+          gc.drawLine(x+ENTRY_WIDTH,                      y+ENTRY_HEIGHT/2,
+                      x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2
+                     );
+          gc.drawLine(x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2,
+                      x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+PADDING+ENTRY_HEIGHT
+                     );
 
-        // draw branch name
-        gc.setForeground(Onzen.COLOR_BLACK);
-        gc.drawString(branchData.name,x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2+4,y+PADDING+ENTRY_HEIGHT/2,true);
-//Dprintf.dprintf("%d %d %s",x+width,y+height/2,width,height,branchData.name);
+          // draw branch name
+          gc.setForeground(Onzen.COLOR_BLACK);
+          gc.drawString(branchData.name,x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2+4,y+PADDING+ENTRY_HEIGHT/2,true);
+  //Dprintf.dprintf("%d %d %s",x+width,y+height/2,width,height,branchData.name);
 
-        redraw(view,
-               gc,
-               image,
-               imageGC,
-               branchData.revisionDataTree,
-               x+dx+PADDING+ENTRY_WIDTH,
-               y+   PADDING+ENTRY_HEIGHT,
-               containerDeltaWidth,
-               containerDeltaHeight,
-               drawInfoList
-              );
+          redraw(view,
+                 gc,
+                 image,
+                 imageGC,
+                 branchData.revisionDataTree,
+                 x+dx+PADDING+ENTRY_WIDTH,
+                 y+   PADDING+ENTRY_HEIGHT,
+                 containerDeltaWidth,
+                 containerDeltaHeight,
+                 drawInfoList
+                );
 
-        // next column, get max. dy
-        dx += PADDING+subSize.x;
-        dy = Math.max(dy,PADDING+ENTRY_HEIGHT+subSize.y);
+          // next column, get max. dy
+          dx += PADDING+subSize.x;
+          dy = Math.max(dy,PADDING+ENTRY_HEIGHT+subSize.y);
+        }
       }
 
       // next row
@@ -1157,6 +1162,8 @@ throw new RepositoryException("NYI");
         gc.fillRectangle(0,0,clientArea.width,clientArea.height);
       }
 
+Dprintf.dprintf("clearFlag=%s",clearFlag);
+new Throwable().printStackTrace();
       redraw(data.view,
              gc,
              image,
@@ -1199,6 +1206,7 @@ throw new RepositoryException("NYI");
       gc.fillRectangle(0,0,data.view.width,data.view.height);
 
       // redraw
+Dprintf.dprintf("");
       redraw(data.view,
              gc,
              image,
@@ -1264,6 +1272,7 @@ throw new RepositoryException("NYI");
    */
   private void scrollTo(final RevisionData revisionData)
   {
+Dprintf.dprintf("------------------ scrollTo");
     if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
@@ -1337,7 +1346,7 @@ throw new RepositoryException("NYI");
         {
           repositoryTab.clearStatusText();
         }
-//printRevisionDataTree(data.revisionDataTree);
+printRevisionDataTree(data.revisionDataTree);
 
         // convert tree into an array for find function
         ArrayList<RevisionData> revisionDataArray = new ArrayList<RevisionData>();
@@ -1494,15 +1503,21 @@ throw new RepositoryException("NYI");
     {
       System.out.print(StringUtils.repeat(' ',indent));
       System.out.println(revisionData.revision+": "+revisionData.date);
-      for (RevisionData parentRevisionData : revisionData.parents)
+      if (revisionData.parents != null)
       {
-        System.out.print(StringUtils.repeat(' ',indent+1)+"parent ");
-        System.out.println(parentRevisionData.revision);
+        for (RevisionData parentRevisionData : revisionData.parents)
+        {
+          System.out.print(StringUtils.repeat(' ',indent+2)+"parent ");
+          System.out.println(parentRevisionData.revision);
+        }
       }
 
-      for (BranchData branchData : revisionData.branches)
+      if (revisionData.branches != null)
       {
-        printRevisionDataTree(branchData.revisionDataTree,indent+2);
+        for (BranchData branchData : revisionData.branches)
+        {
+          printRevisionDataTree(branchData.revisionDataTree,indent+4);
+        }
       }
     }
   }
