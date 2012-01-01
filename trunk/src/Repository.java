@@ -33,6 +33,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -511,6 +512,48 @@ class FileData
     }
 
     return fileDataSet;
+  }
+
+  /** convert to set
+   * @param fileName file name
+   * @return file data set
+   */
+  static public HashSet<FileData> toSet(String fileName)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(new FileData(fileName));
+
+    return fileDataSet;
+  }
+
+  /** convert to file name list
+   * @param file data set
+   * @return file name list
+   */
+  static public LinkedList<String> toFileNameList(HashSet<FileData> fileDataSet, Repository repository)
+  {
+    LinkedList<String> fileNameList = new LinkedList<String>();
+    for (FileData fileData : fileDataSet)
+    {
+      fileNameList.add(fileData.getFileName(repository));
+    }
+
+    return fileNameList;
+  }
+
+  /** convert to file name array
+   * @param file data set
+   * @return file name array
+   */
+  static public String[] toArray(HashSet<FileData> fileDataSet, Repository repository)
+  {
+    ArrayList<String> fileNameList = new ArrayList<String>();
+    for (FileData fileData : fileDataSet)
+    {
+      fileNameList.add(fileData.getFileName(repository));
+    }
+
+    return fileNameList.toArray(new String[fileNameList.size()]);
   }
 
   /** convert data to string

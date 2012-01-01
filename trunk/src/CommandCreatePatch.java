@@ -622,12 +622,14 @@ Dprintf.dprintf("");
     // add files
     if (!widgetFileNames.isDisposed())
     {
-      for (FileData fileData : fileDataSet)
-      {
-        if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileData.getFileName()))
-        {
-          final String fileName = fileData.getFileName(repositoryTab.repository.rootPath);
+      // get file names
+      final String[] fileNames = FileData.toArray(fileDataSet,repositoryTab.repository);
 
+      // check for TABs/trailing whitespaces in files and convert/remove
+      for (final String fileName : fileNames)
+      {
+        if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileName))
+        {
           // check for TABs/trailing whitespaces in file
           final boolean containTABs                = Settings.checkTABs                && repositoryTab.containTABs(fileName);
           final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containTrailingWhitespaces(fileName);
@@ -641,14 +643,17 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                result[0] = repositoryTab.convertWhitespaces(fileName,"File '"+fileName+"' contain TABs or trailing whitespaces.");
+                result[0] = repositoryTab.convertWhitespaces(fileName,
+                                                             fileNames,
+                                                             "File '"+fileName+"' contain TABs or trailing whitespaces."
+                                                            );
               }
             });
             if (!result[0]) return;
           }
         }
 
-        widgetFileNames.add(fileData.getFileName());
+        widgetFileNames.add(fileName);
       }
     }
 
