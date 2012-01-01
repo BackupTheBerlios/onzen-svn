@@ -3105,7 +3105,7 @@ Dprintf.dprintf("");
    * @param checkTrailingWhitespace TRUE to check for trailing whitespaces
    * @return TRUE iff file contain TABs or trailing whitespaces
    */
-  protected boolean containSpaces(String fileName, boolean checkTABs, boolean checkTrailingWhitespace)
+  private boolean containWhitespaces(String fileName, boolean checkTABs, boolean checkTrailingWhitespace)
   {
     boolean        trailingWhitespaces = false;
     boolean        trailingEmptyLines  = false;
@@ -3166,6 +3166,24 @@ Dprintf.dprintf("");
     }
 
     return trailingWhitespaces || trailingEmptyLines;
+  }
+
+  /** check if file contain TABs
+   * @param fileName file name
+   * @return TRUE iff file contain TABs
+   */
+  protected boolean containTABs(String fileName)
+  {
+    return containWhitespaces(fileName,true,false);
+  }
+
+  /** check if file contain trailing whitespaces
+   * @param fileName file name
+   * @return TRUE iff file contain trailing whitespaces
+   */
+  protected boolean containTrailingWhitespaces(String fileName)
+  {
+    return containWhitespaces(fileName,false,true);
   }
 
   /** convert whitespaces in file

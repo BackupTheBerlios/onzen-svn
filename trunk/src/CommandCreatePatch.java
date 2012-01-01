@@ -629,8 +629,8 @@ Dprintf.dprintf("");
           final String fileName = fileData.getFileName(repositoryTab.repository.rootPath);
 
           // check for TABs/trailing whitespaces in file
-          final boolean containTABs                = Settings.checkTABs                && repositoryTab.containSpaces(fileName,true,false);
-          final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containSpaces(fileName,false,true);
+          final boolean containTABs                = Settings.checkTABs                && repositoryTab.containTABs(fileName);
+          final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containTrailingWhitespaces(fileName);
 
           // convert TABs, remove trailing whitespaces
           if (containTABs || containTrailingWhitespaces)
