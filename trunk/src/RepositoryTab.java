@@ -2050,7 +2050,7 @@ Dprintf.dprintf("");
     }
   }
 
-  /** convert whitespaces
+  /** convert whitespaces in selected files
    */
   public void convertWhitespaces()
   {
@@ -2262,9 +2262,10 @@ Dprintf.dprintf("");
 
   /** convert whitespaces in file
    * @param fileName file name
+   * @param fileNames all file names
    * @return true iff OK, false for abort
    */
-  public boolean convertWhitespaces(String fileName, String message)
+  public boolean convertWhitespaces(String fileName, String[] fileNames, String message)
   {
     /** dialog data
      */
@@ -2273,21 +2274,23 @@ Dprintf.dprintf("");
       boolean convertTABs;
       int     spacesPerTAB;
       boolean removeTrailingWhitespaces;
+      boolean convertAll;
 
       Data()
       {
         this.convertTABs               = true;
         this.spacesPerTAB              = 8;
         this.removeTrailingWhitespaces = true;
+        this.convertAll                = false;
       }
     };
 
     final Data data = new Data();
 
-    Composite   composite,subComposite;
-    Control     control;
-    Label       label;
-    Button      button;
+    Composite composite,subComposite;
+    Control   control;
+    Label     label;
+    Button    button;
 
     // convert dialog
     final Shell dialog = Dialogs.openModal(shell,"Convert whitespaces",new double[]{1.0,0.0},1.0);
@@ -2297,6 +2300,7 @@ Dprintf.dprintf("");
     final Button  widgetRemoveTrailingWhitespaces;
     final Button  widgetContinue;
     final Button  widgetConvert;
+    final Button  widgetConvertAll;
     final Button  widgetAbort;
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
@@ -2328,7 +2332,7 @@ Dprintf.dprintf("");
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,1.0));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,1.0,0.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetConvert = Widgets.newButton(composite,"Convert whitespaces");
@@ -2343,6 +2347,7 @@ Dprintf.dprintf("");
           data.convertTABs               = widgetConvertTABs.getSelection();
           data.spacesPerTAB              = widgetSpacesPerTAB.getSelection();
           data.removeTrailingWhitespaces = widgetRemoveTrailingWhitespaces.getSelection();
+          data.convertAll                = false;
 
           Dialogs.close(dialog,true);
         }
@@ -2360,14 +2365,33 @@ Dprintf.dprintf("");
         {
           data.convertTABs               = false;
           data.removeTrailingWhitespaces = false;
+          data.convertAll                = false;
 
           Dialogs.close(dialog,true);
         }
       });
 
+      widgetConvertAll = Widgets.newButton(composite,"Convert whitespaces in all files");
+      Widgets.layout(widgetConvertAll,0,2,TableLayoutData.NONE);
+      widgetConvertAll.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.convertTABs               = widgetConvertTABs.getSelection();
+          data.spacesPerTAB              = widgetSpacesPerTAB.getSelection();
+          data.removeTrailingWhitespaces = widgetRemoveTrailingWhitespaces.getSelection();
+          data.convertAll                = true;
+
+          Dialogs.close(dialog,true);
+        }
+      });
+      widgetConvertAll.setToolTipText("Convert whitespaces in all files.");
 
       widgetAbort = Widgets.newButton(composite,"Abort");
-      Widgets.layout(widgetAbort,0,2,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetAbort,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
       widgetAbort.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2389,23 +2413,43 @@ Dprintf.dprintf("");
     widgetAbort.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      // convert whitespaces in file
-      try
+      // convert whitespaces in files
+      if (data.convertAll)
       {
-        convertWhitespaces(fileName,
-                           data.convertTABs?data.spacesPerTAB:0,
-                           data.removeTrailingWhitespaces
-                          );
-      }
-      catch (IOException exception)
-      {
-        if (!Dialogs.confirm(shell,
-                             "Error",
-                             String.format("Cannot convert file\n\n'%s'\n\n(error: %s).\n\nContinue?",fileName,exception.getMessage())
-                            )
-           )
+        try
         {
+          convertWhitespaces(fileNames,
+                             data.convertTABs?data.spacesPerTAB:0,
+                             data.removeTrailingWhitespaces
+                            );
+        }
+        catch (IOException exception)
+        {
+          Dialogs.error(shell,
+                        String.format("Cannot convert whitespaces in files\n(error: %s).",exception.getMessage())
+                       );
           return false;
+        }
+      }
+      else
+      {
+        try
+        {
+          convertWhitespaces(fileName,
+                             data.convertTABs?data.spacesPerTAB:0,
+                             data.removeTrailingWhitespaces
+                            );
+        }
+        catch (IOException exception)
+        {
+          if (!Dialogs.confirm(shell,
+                               "Error",
+                               String.format("Cannot convert whitespaces in file\n\n'%s'\n\n(error: %s).\n\nContinue?",fileName,exception.getMessage())
+                              )
+             )
+          {
+            return false;
+          }
         }
       }
 
@@ -3186,6 +3230,111 @@ Dprintf.dprintf("");
     return containWhitespaces(fileName,false,true);
   }
 
+  /** convert whitespaces in files
+   * @param fileNames file name array
+   * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
+   * @param removeTrailingWhitespaces TRUE iff trailing white spaces should be removed
+   */
+  private void convertWhitespaces(String[] fileNames, int spacesPerTAB, boolean removeTrailingWhitespaces)
+    throws IOException
+  {
+    if (   removeTrailingWhitespaces
+        || (spacesPerTAB > 0)
+       )
+    {
+      for (String fileName : fileNames)
+      {
+        File           tmpFile = null;
+        BufferedReader input   = null;
+        PrintWriter    output  = null;
+        try
+        {
+          // open
+          File file = new File(fileName);
+          tmpFile = File.createTempFile("convert-",".tmp",file.getParentFile());
+          input  = new BufferedReader(new FileReader(file));
+          output = new PrintWriter(new FileWriter(tmpFile));
+
+          // convert
+          int           trailingEmptyLineCount = 0;
+          String        line;
+          StringBuilder buffer = new StringBuilder();
+          while ((line = input.readLine()) != null)
+          {
+    //Dprintf.dprintf("line=%s",line);
+            int n = line.length();
+
+            // remove trailing whitespaces
+            if (removeTrailingWhitespaces)
+            {
+              while ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
+              {
+                n--;
+              }
+            }
+
+            // convert TABs
+            buffer.setLength(0);
+            for (int z = 0; z < n; z++)
+            {
+              char ch = line.charAt(z);
+              if ((spacesPerTAB > 0) && (ch == '\t'))
+              {
+                for (int i = 0; i < spacesPerTAB; i++)
+                {
+                  buffer.append(' ');
+                }
+              }
+              else
+              {
+                buffer.append(ch);
+              }
+            }
+
+            // check if empty line
+            if (removeTrailingWhitespaces && line.isEmpty())
+            {
+              trailingEmptyLineCount++;
+            }
+            else
+            {
+              // output previous empty lines
+              while (trailingEmptyLineCount > 0)
+              {
+                output.println();
+                trailingEmptyLineCount--;
+              }
+
+              // output line
+              output.println(buffer.toString());
+            }
+          }
+
+          // close
+          output.close(); output = null;
+          input.close(); input = null;
+
+          // rename (keep executable flag, last modified)
+          boolean isExecutable = file.canExecute();
+          long lastModified = file.lastModified();
+          if (!tmpFile.renameTo(file))
+          {
+            throw new IOException("rename temporary file fail");
+          }
+          tmpFile = null;
+          file.setExecutable(isExecutable);
+          file.setLastModified(lastModified);
+        }
+        finally
+        {
+          if (output != null) output.close();
+          if (input != null) try { input.close(); } catch (IOException exception) { /* ignored */ }
+          if (tmpFile != null) tmpFile.delete();
+        }
+      }
+    }
+  }
+
   /** convert whitespaces in file
    * @param fileName file name
    * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
@@ -3194,98 +3343,7 @@ Dprintf.dprintf("");
   private void convertWhitespaces(String fileName, int spacesPerTAB, boolean removeTrailingWhitespaces)
     throws IOException
   {
-    if (   removeTrailingWhitespaces
-        || (spacesPerTAB > 0)
-       )
-    {
-      File           tmpFile = null;
-      BufferedReader input   = null;
-      PrintWriter    output  = null;
-      try
-      {
-        // open
-        File file = new File(fileName);
-        tmpFile = File.createTempFile("convert-",".tmp",file.getParentFile());
-        input  = new BufferedReader(new FileReader(file));
-        output = new PrintWriter(new FileWriter(tmpFile));
-
-        // convert
-        int           trailingEmptyLineCount = 0;
-        String        line;
-        StringBuilder buffer = new StringBuilder();
-        while ((line = input.readLine()) != null)
-        {
-  //Dprintf.dprintf("line=%s",line);
-          int n = line.length();
-
-          // remove trailing whitespaces
-          if (removeTrailingWhitespaces)
-          {
-            while ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
-            {
-              n--;
-            }
-          }
-
-          // convert TABs
-          buffer.setLength(0);
-          for (int z = 0; z < n; z++)
-          {
-            char ch = line.charAt(z);
-            if ((spacesPerTAB > 0) && (ch == '\t'))
-            {
-              for (int i = 0; i < spacesPerTAB; i++)
-              {
-                buffer.append(' ');
-              }
-            }
-            else
-            {
-              buffer.append(ch);
-            }
-          }
-
-          // check if empty line
-          if (removeTrailingWhitespaces && line.isEmpty())
-          {
-            trailingEmptyLineCount++;
-          }
-          else
-          {
-            // output previous empty lines
-            while (trailingEmptyLineCount > 0)
-            {
-              output.println();
-              trailingEmptyLineCount--;
-            }
-
-            // output line
-            output.println(buffer.toString());
-          }
-        }
-
-        // close
-        output.close(); output = null;
-        input.close(); input = null;
-
-        // rename (keep executable flag, last modified)
-        boolean isExecutable = file.canExecute();
-        long lastModified = file.lastModified();
-        if (!tmpFile.renameTo(file))
-        {
-          throw new IOException("rename temporary file fail");
-        }
-        tmpFile = null;
-        file.setExecutable(isExecutable);
-        file.setLastModified(lastModified);
-      }
-      finally
-      {
-        if (output != null) output.close();
-        if (input != null) try { input.close(); } catch (IOException exception) { /* ignored */ }
-        if (tmpFile != null) tmpFile.delete();
-      }
-    }
+    convertWhitespaces(new String[]{fileName},spacesPerTAB,removeTrailingWhitespaces);
   }
 }
 
