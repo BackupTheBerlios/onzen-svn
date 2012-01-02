@@ -2451,6 +2451,21 @@ exception.printStackTrace();
     // add tab, set default selected tab
     repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
     repositoryTabMap.put(repository,repositoryTab);
+    MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
+    menuItem.setData(repositoryTab);
+    menuItem.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        MenuItem widget = (MenuItem)selectionEvent.widget;
+
+       selectRepositoryTab((RepositoryTab)widget.getData());
+      }
+    });
+
     if (repositoryTabMap.size() == 1)
     {
       // select repository tab
@@ -2490,6 +2505,15 @@ exception.printStackTrace();
     // close tab, remove from repository list
     repositoryTab.close();
     repositoryTabMap.remove(repositoryTab.repository);
+    MenuItem[] menuItems = menuRepositories.getItems();
+    for (MenuItem menuItem : menuRepositories.getItems())
+    {
+      if (menuItem.getData() == repositoryTab)
+      {
+        menuItem.dispose();
+        break;
+      }
+    }
 
     // save list
     try
