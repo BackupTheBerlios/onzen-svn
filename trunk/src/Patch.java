@@ -1233,7 +1233,9 @@ Dprintf.dprintf("exception=%s",exception);
 //for (PatchLines patchLines : patchChunk.patchLineList) Dprintf.dprintf("  %s: %d",patchLines.type,patchLines.lines.length);
 
           // add not changed lines
-          while (oldLineNb < patchChunk.lineNb)
+          while (   (oldLineNb < patchChunk.lineNb)
+                 && (oldLineNb < oldLineList.size())
+                )
           {
             newLineList.add(oldLineList.get(oldLineNb-1));
             oldLineNb++;
