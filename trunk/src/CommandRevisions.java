@@ -522,7 +522,6 @@ throw new RepositoryException("NYI");
     {
       public void paintControl(PaintEvent paintEvent)
       {
-Dprintf.dprintf("");
         redraw();
       }
     });
@@ -539,6 +538,7 @@ Dprintf.dprintf("");
         int n = widget.getSelection();
         int dx = -n-data.view.x;
         widgetRevisions.scroll(dx,0,0,0,data.size.x,data.size.y,false);
+        widgetRevisions.redraw();
 
         // save origin
         data.view.x = -n;
@@ -557,6 +557,7 @@ Dprintf.dprintf("");
         int n = widget.getSelection();
         int dy = -n-data.view.y;
         widgetRevisions.scroll(0,dy,0,0,data.size.x,data.size.y,false);
+        widgetRevisions.redraw();
 
         // save origin
         data.view.y = -n;
@@ -573,7 +574,7 @@ Dprintf.dprintf("");
 
         widgetHorizontalScrollBar.setThumb(Math.min(data.view.width,data.size.x));
         widgetVerticalScrollBar.setThumb(Math.min(data.view.height,data.size.y));
-        redraw ();
+        widgetRevisions.redraw();
       }
     });
     widgetRevisions.addMouseListener(new MouseListener()
@@ -605,7 +606,7 @@ Dprintf.dprintf("");
               // notify modification
               Widgets.modified(data);
 
-              redraw();
+              widgetRevisions.redraw();
               break;
             }
             else if (drawInfo.handle.contains(mouseEvent.x,mouseEvent.y))
@@ -640,7 +641,7 @@ Dprintf.dprintf("");
           setSize();
 
           // redraw
-          redraw(true);
+          widgetRevisions.redraw();
         }
       }
     });
@@ -667,7 +668,6 @@ Dprintf.dprintf("");
           data.selectedRevisionData0 = null;
           data.selectedRevisionData1 = revisionData;
           scrollTo(revisionData);
-          redraw(true);
 
           // notify modification
           Widgets.modified(data);
@@ -691,7 +691,6 @@ Dprintf.dprintf("");
           data.selectedRevisionData0 = null;
           data.selectedRevisionData1 = revisionData;
           scrollTo(revisionData);
-          redraw(true);
 
           // notify modification
           Widgets.modified(data);
@@ -712,7 +711,6 @@ Dprintf.dprintf("");
           data.selectedRevisionData0 = null;
           data.selectedRevisionData1 = revisionData;
           scrollTo(revisionData);
-          redraw(true);
 
           // notify modification
           Widgets.modified(data);
@@ -736,7 +734,7 @@ Dprintf.dprintf("");
           data.view.y = -n;
 
           // redraw
-          redraw(true);
+          widgetRevisions.redraw();
         }
         else if (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.PAGE_DOWN))
         {
@@ -751,7 +749,7 @@ Dprintf.dprintf("");
           data.view.y = -n;
 
           // redraw
-          redraw(true);
+          widgetRevisions.redraw();
         }
         else if (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.HOME))
         {
@@ -762,7 +760,7 @@ Dprintf.dprintf("");
           data.view.y = 0;
 
           // redraw
-          redraw(true);
+          widgetRevisions.redraw();
         }
         else if (((keyEvent.stateMask & SWT.MODIFIER_MASK) == SWT.NONE) && (keyEvent.keyCode == SWT.END))
         {
@@ -775,7 +773,7 @@ Dprintf.dprintf("");
           data.view.y = -n;
 
           // redraw
-          redraw(true);
+          widgetRevisions.redraw();
         }
       }
       public void keyReleased(KeyEvent keyEvent)
@@ -811,7 +809,7 @@ Dprintf.dprintf("");
   {
     widgetRevisions.getHorizontalBar().setSelection(scrollX);
     widgetRevisions.getVerticalBar().setSelection(scrollY);
-    redraw();
+    widgetRevisions.redraw();
   }
 
   /** run dialog
@@ -958,7 +956,7 @@ Dprintf.dprintf("");
               maxSubSize.y = Math.max(maxSubSize.y,subSize.y);
             }
           }
-  //Dprintf.dprintf("maxSubSize=%s",maxSubSize);
+//Dprintf.dprintf("maxSubSize=%s",maxSubSize);
 
           // next column, get max. dy
 //          point.x += Math.max(point.x,ENTRY_WIDTH+PADDING+maxSubSize.x);
@@ -1000,6 +998,7 @@ Dprintf.dprintf("");
    * @param containerDeltaWidth,containerDeltaHeight container delta for resize containers or 0,0
    * @param drawInfoList draw info list
    */
+static int xxx = 0;
   private void redraw(Rectangle           view,
                       GC                  gc,
                       Image               image,
@@ -1016,6 +1015,9 @@ Dprintf.dprintf("");
     final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y+containerDeltaHeight,CONTAINER_MIN_HEIGHT);
     final int FONT_HEIGHT  = Widgets.getTextHeight(widgetRevisions);
 
+    final int Y_MIN = -ENTRY_HEIGHT;
+    final int Y_MAX = -view.y+view.height;
+
     boolean firstFlag    = true;
     int     widthColumn0 = Widgets.getTextWidth(widgetRevisions,new String[]{"Revision:","Date:","Autor:"});
     int     prevY        = y;
@@ -1028,51 +1030,64 @@ Dprintf.dprintf("");
       // draw connection line
       if (!firstFlag)
       {
-        gc.setLineWidth(1);
-        gc.setForeground(COLOR_LINES);
-        gc.drawLine(x+ENTRY_WIDTH/2,prevY+ENTRY_HEIGHT,
-                    x+ENTRY_WIDTH/2,y
-                   );
+        if (   (prevY+ENTRY_HEIGHT >= Y_MIN)
+            && (y >= Y_MIN)
+           )
+        {
+          gc.setLineWidth(1);
+          gc.setForeground(COLOR_LINES);
+          gc.drawLine(x+ENTRY_WIDTH/2,prevY+ENTRY_HEIGHT,
+                      x+ENTRY_WIDTH/2,y
+                     );
+        }
       }
       dy += PADDING;
 
       // draw box
+      if (y >= Y_MIN)
       {
-        imageGC.setBackground(COLOR_CONTAINER);
-        imageGC.fillRectangle(0,0,ENTRY_WIDTH,ENTRY_HEIGHT);
+        {
+          imageGC.setBackground(COLOR_CONTAINER);
+          imageGC.fillRectangle(0,0,ENTRY_WIDTH,ENTRY_HEIGHT);
 
-        if      (revisionData == data.selectedRevisionData0)
-        {
-          imageGC.setLineWidth(3);
-          imageGC.setForeground(COLOR_CONTAINER_SELECTED0);
-        }
-        else if (revisionData == data.selectedRevisionData1)
-        {
-          imageGC.setLineWidth(3);
-          imageGC.setForeground(COLOR_CONTAINER_SELECTED1);
-        }
-        else
-        {
-          imageGC.setLineWidth(1);
+          if      (revisionData == data.selectedRevisionData0)
+          {
+            imageGC.setLineWidth(3);
+            imageGC.setForeground(COLOR_CONTAINER_SELECTED0);
+          }
+          else if (revisionData == data.selectedRevisionData1)
+          {
+            imageGC.setLineWidth(3);
+            imageGC.setForeground(COLOR_CONTAINER_SELECTED1);
+          }
+          else
+          {
+            imageGC.setLineWidth(1);
+            imageGC.setForeground(Onzen.COLOR_BLACK);
+          }
+          imageGC.drawRectangle(0,0,ENTRY_WIDTH-1,ENTRY_HEIGHT-1);
+
           imageGC.setForeground(Onzen.COLOR_BLACK);
+          imageGC.drawString("Revision:",CONTAINER_MARGIN+0,CONTAINER_MARGIN+0*FONT_HEIGHT,true); imageGC.drawString(revisionData.getRevisionText(),                 CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+0*FONT_HEIGHT,true);
+          imageGC.drawString("Date:",    CONTAINER_MARGIN+0,CONTAINER_MARGIN+1*FONT_HEIGHT,true); imageGC.drawString(Onzen.DATETIME_FORMAT.format(revisionData.date),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+1*FONT_HEIGHT,true);
+          imageGC.drawString("Autor:",   CONTAINER_MARGIN+0,CONTAINER_MARGIN+2*FONT_HEIGHT,true); imageGC.drawString(revisionData.author,                            CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+2*FONT_HEIGHT,true);
+          imageGC.drawString("Message:", CONTAINER_MARGIN+0,CONTAINER_MARGIN+3*FONT_HEIGHT,true); imageGC.drawText(StringUtils.join(revisionData.commitMessage,"\n"),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+3*FONT_HEIGHT,true);
         }
-        imageGC.drawRectangle(0,0,ENTRY_WIDTH-1,ENTRY_HEIGHT-1);
-
-        imageGC.setForeground(Onzen.COLOR_BLACK);
-        imageGC.drawString("Revision:",CONTAINER_MARGIN+0,CONTAINER_MARGIN+0*FONT_HEIGHT,true); imageGC.drawString(revisionData.getRevisionText(),                 CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+0*FONT_HEIGHT,true);
-        imageGC.drawString("Date:",    CONTAINER_MARGIN+0,CONTAINER_MARGIN+1*FONT_HEIGHT,true); imageGC.drawString(Onzen.DATETIME_FORMAT.format(revisionData.date),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+1*FONT_HEIGHT,true);
-        imageGC.drawString("Autor:",   CONTAINER_MARGIN+0,CONTAINER_MARGIN+2*FONT_HEIGHT,true); imageGC.drawString(revisionData.author,                            CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+2*FONT_HEIGHT,true);
-        imageGC.drawString("Message:", CONTAINER_MARGIN+0,CONTAINER_MARGIN+3*FONT_HEIGHT,true); imageGC.drawText(StringUtils.join(revisionData.commitMessage,"\n"),CONTAINER_MARGIN+widthColumn0+4,CONTAINER_MARGIN+3*FONT_HEIGHT,true);
+        gc.drawImage(image,x,y);
       }
-      gc.drawImage(image,x,y);
       dy += ENTRY_HEIGHT;
 //Dprintf.dprintf("revisionData.getRevisionText()=%s %d %d",revisionData.getRevisionText(),x,y);
 
       // draw handle
-      gc.setBackground(COLOR_HANDLE);
-      gc.fillRectangle(x+ENTRY_WIDTH-1,y+ENTRY_HEIGHT-1,HANDLE_SIZE,HANDLE_SIZE);
-      gc.setForeground(Onzen.COLOR_BLACK);
-      gc.drawRectangle(x+ENTRY_WIDTH-1,y+ENTRY_HEIGHT-1,HANDLE_SIZE,HANDLE_SIZE);
+      if (y >= Y_MIN)
+      {
+        gc.setBackground(COLOR_HANDLE);
+        gc.fillRectangle(x+ENTRY_WIDTH-1,y+ENTRY_HEIGHT-1,HANDLE_SIZE,HANDLE_SIZE);
+        gc.setForeground(Onzen.COLOR_BLACK);
+        gc.drawRectangle(x+ENTRY_WIDTH-1,y+ENTRY_HEIGHT-1,HANDLE_SIZE,HANDLE_SIZE);
+//xxx=(xxx+1)%100;
+//gc.drawString(String.format("y=%d time=%d",y,System.currentTimeMillis()),x+ENTRY_WIDTH+30+xxx,y+ENTRY_HEIGHT+12);
+      }
 
       if (drawInfoList != null)
       {
@@ -1090,24 +1105,30 @@ Dprintf.dprintf("");
       {
         for (BranchData branchData : revisionData.branches)
         {
-  //Dprintf.dprintf("branchData=%s",branchData);
+//Dprintf.dprintf("branchData=%s",branchData);
           // get size of sub-tree
           Point subSize = getSize(branchData.revisionDataTree);
 
           // draw connection L-line
-          gc.setLineWidth(1);
-          gc.setForeground(COLOR_LINES);
-          gc.drawLine(x+ENTRY_WIDTH,                      y+ENTRY_HEIGHT/2,
-                      x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2
-                     );
-          gc.drawLine(x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2,
-                      x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+PADDING+ENTRY_HEIGHT
-                     );
+          if (y+ENTRY_HEIGHT/2 >= Y_MIN)
+          {
+            gc.setLineWidth(1);
+            gc.setForeground(COLOR_LINES);
+            gc.drawLine(x+ENTRY_WIDTH,                      y+ENTRY_HEIGHT/2,
+                        x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2
+                       );
+            gc.drawLine(x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+ENTRY_HEIGHT/2,
+                        x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2,y+PADDING+ENTRY_HEIGHT
+                       );
+          }
 
           // draw branch name
-          gc.setForeground(Onzen.COLOR_BLACK);
-          gc.drawString(branchData.name,x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2+4,y+PADDING+ENTRY_HEIGHT/2,true);
-  //Dprintf.dprintf("%d %d %s",x+width,y+height/2,width,height,branchData.name);
+          if (y+PADDING+ENTRY_HEIGHT/2 >= Y_MIN)
+          {
+            gc.setForeground(Onzen.COLOR_BLACK);
+            gc.drawString(branchData.name,x+ENTRY_WIDTH+PADDING+ENTRY_WIDTH/2+4,y+PADDING+ENTRY_HEIGHT/2,true);
+//Dprintf.dprintf("%d %d %s",x+width,y+height/2,width,height,branchData.name);
+          }
 
           redraw(view,
                  gc,
@@ -1134,14 +1155,14 @@ Dprintf.dprintf("");
 
 //Dprintf.dprintf("%d %d",y,view.y+view.height);
       // stop when rest is invisible
-      if (y > -view.y+view.height) break;
+      if (y > Y_MAX) break;
     }
   }
 
   /** redraw revision tree and update draw info
    * @param clearFlag true to clear background
    */
-  private void redraw(boolean clearFlag)
+  private void redraw()
   {
     if (data.revisionDataTree != null)
     {
@@ -1155,15 +1176,11 @@ Dprintf.dprintf("");
       Image     image      = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
       GC        imageGC    = new GC(image);
 
-      if (clearFlag)
-      {
-        // clear
-        gc.setBackground(Onzen.COLOR_WHITE);
-        gc.fillRectangle(0,0,clientArea.width,clientArea.height);
-      }
+      // clear
+      gc.setBackground(Onzen.COLOR_WHITE);
+      gc.fillRectangle(0,0,clientArea.width,clientArea.height);
 
-Dprintf.dprintf("clearFlag=%s",clearFlag);
-new Throwable().printStackTrace();
+      // draw
       redraw(data.view,
              gc,
              image,
@@ -1178,13 +1195,6 @@ new Throwable().printStackTrace();
 
       gc.dispose();
     }
-  }
-
-  /** redraw revision tree and update draw info
-   */
-  private void redraw()
-  {
-    redraw(false);
   }
 
   /** redraw revision tree with container delta width/height (no update of draw infos)
@@ -1206,7 +1216,6 @@ new Throwable().printStackTrace();
       gc.fillRectangle(0,0,data.view.width,data.view.height);
 
       // redraw
-Dprintf.dprintf("");
       redraw(data.view,
              gc,
              image,
@@ -1272,7 +1281,6 @@ Dprintf.dprintf("");
    */
   private void scrollTo(final RevisionData revisionData)
   {
-Dprintf.dprintf("------------------ scrollTo");
     if (!dialog.isDisposed())
     {
       display.syncExec(new Runnable()
@@ -1294,6 +1302,7 @@ Dprintf.dprintf("------------------ scrollTo");
           if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -(point.x-ENTRY_WIDTH /2);
           if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
           widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
+          widgetRevisions.redraw();
           widgetHorizontalScrollBar.setSelection(-data.view.x);
           widgetVerticalScrollBar.setSelection(-data.view.y);
         }
@@ -1346,7 +1355,7 @@ Dprintf.dprintf("------------------ scrollTo");
         {
           repositoryTab.clearStatusText();
         }
-printRevisionDataTree(data.revisionDataTree);
+//Dprintf.dprintf(""); printRevisionDataTree(data.revisionDataTree);
 
         // convert tree into an array for find function
         ArrayList<RevisionData> revisionDataArray = new ArrayList<RevisionData>();
@@ -1366,15 +1375,16 @@ printRevisionDataTree(data.revisionDataTree);
               // set canvas size
               setSize();
 
-              // scroll to selected revision
+              // redraw/scroll to selected revision
               data.selectedRevisionData1 = getRevision(data.revisionDataTree,revision);
               if (data.selectedRevisionData1 != null)
               {
                 scrollTo(data.selectedRevisionData1);
               }
-
-              // redraw
-              redraw(true);
+              else
+              {
+                widgetRevisions.redraw();
+              }
 
               // notify modification
               Widgets.modified(data);
@@ -1514,6 +1524,7 @@ printRevisionDataTree(data.revisionDataTree);
 
       if (revisionData.branches != null)
       {
+        System.out.print(StringUtils.repeat(' ',indent+2)+"branch:");
         for (BranchData branchData : revisionData.branches)
         {
           printRevisionDataTree(branchData.revisionDataTree,indent+4);
