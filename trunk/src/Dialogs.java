@@ -308,6 +308,26 @@ Dprintf.dprintf("");
   }
 }
 
+/** dialog runnable
+ */
+abstract class DialogRunnable
+{
+  /** executed when dialog is closed
+   * @param result result
+   */
+  public void run(Object result)
+  {
+  }
+
+  /** executed when dialog is closed sucessful
+   */
+  abstract public void done();
+
+  /** executed when dialog is aborted
+   */
+  abstract public void cancel();
+}
+
 /** dialog
  */
 class Dialogs
@@ -777,7 +797,7 @@ class Dialogs
    * @param dialog dialog shell
    * @param escapeKeyReturnValue value to return on ESC key
    */
-  public static Object run(final Shell dialog, final Object escapeKeyReturnValue, Listener closeListener)
+  public static Object run(final Shell dialog, final Object escapeKeyReturnValue, final DialogRunnable dialogRunnable)
   {
     final Object[] result = new Object[1];
 
@@ -794,8 +814,7 @@ class Dialogs
 
           if (traverseEvent.detail == SWT.TRAVERSE_ESCAPE)
           {
-            // store ESC resultDprintf.dprintf("");
-
+            // store ESC result
             widget.setData(escapeKeyReturnValue);
 
             /* stop processing key, send close event. Note: this is required
@@ -810,8 +829,7 @@ class Dialogs
         }
       });
 
-      // close handler to get result
-      if (closeListener != null) dialog.addListener(SWT.Close,closeListener);
+      // add close handler to get result
       dialog.addListener(SWT.Close,new Listener()
       {
         public void handleEvent(Event event)
@@ -821,6 +839,12 @@ class Dialogs
 
           // set escape result if no result set
           if (result[0] == null) result[0] = escapeKeyReturnValue;
+
+          // execute dialog runnable
+          if (dialogRunnable != null)
+          {
+            dialogRunnable.run(result[0]);
+          }
 
           // close the dialog
           dialog.dispose();
@@ -861,10 +885,11 @@ class Dialogs
 
   /** run dialog
    * @param dialog dialog shell
+   * @param closeRunnable
    */
-  public static Object run(Shell dialog, Listener closeListener)
+  public static Object run(Shell dialog, DialogRunnable dialogRunnable)
   {
-    return run(dialog,null,closeListener);
+    return run(dialog,null,dialogRunnable);
   }
 
   /** run dialog
