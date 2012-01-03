@@ -1776,33 +1776,8 @@ class CommandPatches
       }
       public void cancel()
       {
-Dprintf.dprintf("");
-}
+      }
     });
-
-/*
-    if (commandPatchReview.execute())
-    {
-      try
-      {
-        // save patch in database
-        patch.state   = Patch.States.REVIEW;
-        patch.summary = commandPatchReview.summary;
-        patch.message = commandPatchReview.message;
-        patch.comment = commandPatchReview.comment;
-        patch.testSet = commandPatchReview.testSet;
-        patch.save();
-
-        // update view
-        //???
-      }
-      catch (SQLException exception)
-      {
-        Dialogs.error(dialog,"Cannot store patch into database (error: %s)",exception.getMessage());
-        return;
-      }
-    }
-*/
   }
 
   /** commit change in patch to repository
