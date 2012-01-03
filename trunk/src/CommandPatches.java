@@ -1728,9 +1728,9 @@ class CommandPatches
                                                                          repositoryTab,
                                                                          patch
                                                                        );
-    commandPatchReview.run(new Listener()
+    commandPatchReview.run(new DialogRunnable()
     {
-      public void handleEvent(Event event)
+      public void done()
       {
         try
         {
@@ -1774,7 +1774,12 @@ class CommandPatches
           return;
         }
       }
+      public void cancel()
+      {
+Dprintf.dprintf("");
+}
     });
+
 /*
     if (commandPatchReview.execute())
     {

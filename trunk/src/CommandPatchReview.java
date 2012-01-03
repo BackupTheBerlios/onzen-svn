@@ -953,6 +953,23 @@ class CommandPatchReview
       }
     });
 
+    dialog.addListener(SWT.Close,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        // store data
+        repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
+        repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+        data.summary                              = widgetSummary.getText().trim();
+        data.message                              = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
+        data.comment                              = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+        data.testSet.clear();
+        for (TableItem tableItem : widgetTests.getItems())
+        {
+          if (tableItem.getChecked()) data.testSet.add((String)tableItem.getData());
+        }
+      }
+    });
     dialog.addListener(USER_EVENT_ADD_NEW_TEST,new Listener()
     {
       public void handleEvent(Event event)
@@ -1019,44 +1036,18 @@ class CommandPatchReview
     updateText();
   }
 
-  /** run dialog
+  /** run dialog asynchronous
    */
-  public void run()
+  public void run(final DialogRunnable dialogRunnable)
   {
     if (!dialog.isDisposed())
     {
       Widgets.setFocus(widgetSummary);
-      if ((Boolean)Dialogs.run(dialog,false))
+      Dialogs.run(dialog,false,new DialogRunnable()
       {
-        // get data values
-        repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
-        repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
-        summary                                   = data.summary;
-        message                                   = data.message;
-        comment                                   = data.comment;
-        testSet                                   = data.testSet;
-
-        // clear last values
-        lastSummary = "";
-        lastMessage = new String[0];
-        lastComment = new String[0];
-        lastTestSet.clear();
-      }
-    }
-  }
-
-  /** run dialog
-   */
-  public void run(final Listener closeListener)
-  {
-    if (!dialog.isDisposed())
-    {
-      Widgets.setFocus(widgetSummary);
-      Dialogs.run(dialog,new Listener()
-      {
-        public void handleEvent(Event event)
+        public void run(Object result)
         {
-Dprintf.dprintf("");
+          // get data values
           repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
           repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
           summary                                   = widgetSummary.getText().trim();
@@ -1068,9 +1059,25 @@ Dprintf.dprintf("");
           {
             if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
           }
-Dprintf.dprintf("summary=%s",summary);
-          if (closeListener != null) closeListener.handleEvent(event);
-Dprintf.dprintf("");
+
+          if ((Boolean)result)
+          {
+            done();
+          }
+          else
+          {
+            cancel();
+          }
+        }
+
+        public void done()
+        {
+          dialogRunnable.done();
+        }
+
+        public void cancel()
+        {
+          dialogRunnable.cancel();
         }
       });
     }
