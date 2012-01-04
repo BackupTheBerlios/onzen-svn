@@ -148,7 +148,6 @@ class CommandAnnotations
     Composite composite,subComposite;
     Label     label;
     Menu      menu;
-    MenuItem  menuItem;
     Button    button;
 
     // initialize variables
