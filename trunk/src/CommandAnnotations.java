@@ -392,6 +392,8 @@ class CommandAnnotations
         int index = widget.getSelectionIndex();
         if (index >= 0)
         {
+          selectRevision(widget.getItem(index).getText(0));
+
           switch (Dialogs.select(dialog,
                                  "Confirmation",
                                  "Action:",
@@ -431,6 +433,13 @@ class CommandAnnotations
       }
       public void mouseDown(MouseEvent mouseEvent)
       {
+        Table widget = (Table)mouseEvent.widget;
+
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
+        {
+          selectRevision(widget.getItem(index).getText(0));
+        }
       }
       public void mouseUp(MouseEvent mouseEvent)
       {
@@ -534,25 +543,21 @@ class CommandAnnotations
               public void run()
               {
                 // add revisions to selection menu
-                int selectedIndex = -1;
                 for (int z = 0; z < data.revisionNames.length; z++)
                 {
                   widgetRevision.add(data.revisionNames[z]);
-                  if (data.revisionNames[z].equals(revision))
-                  {
-                    selectedIndex = z;
-                  }
                 }
-                if (selectedIndex == -1) selectedIndex = data.revisionNames.length-1;
-                widgetRevision.select(selectedIndex);
 
                 // get selected/previous/next revision
-                data.selectedRevision = data.revisionNames[selectedIndex];
-                data.prevRevision     = getNextRevision(data.revisionNames[selectedIndex]);
-                data.nextRevision     = getPrevRevision(data.revisionNames[selectedIndex]);
-
-                // update popup menu
-                updatePopupMenu();
+                int selectedIndex = getRevisionIndex(revision);
+                if (selectedIndex >= 0)
+                {
+                  selectRevision(selectedIndex);
+                }
+                else
+                {
+                  widgetRevision.setText(revision);
+                }
 
                 // notify modification
                 Widgets.modified(data);
@@ -643,10 +648,10 @@ class CommandAnnotations
     menuItemGotoRevision.setText("Goto revision "+((data.selectedRevision != null)?data.selectedRevision:""));
     menuItemGotoRevision.setEnabled(data.selectedRevision != null);
 
-    menuItemPrevRevision.setText("Goto revision "+((data.prevRevision != null)?data.prevRevision:""));
+    menuItemPrevRevision.setText("Goto previous revision "+((data.prevRevision != null)?data.prevRevision:""));
     menuItemPrevRevision.setEnabled(data.prevRevision != null);
 
-    menuItemNextRevision.setText("Goto revision "+((data.nextRevision != null)?data.nextRevision:""));
+    menuItemNextRevision.setText("Goto next revision "+((data.nextRevision != null)?data.nextRevision:""));
     menuItemNextRevision.setEnabled(data.nextRevision != null);
 
     menuItemShowRevision.setText("Show revision "+((data.selectedRevision != null)?data.selectedRevision:""));
@@ -753,6 +758,28 @@ class CommandAnnotations
     return index;
   }
 
+  /** get revision index
+   * @param revision revision
+   * @return index or -1
+   */
+  private int getRevisionIndex(String revision)
+  {
+    int index = -1;
+    if (data.revisionNames != null)
+    {
+      for (int z = 0; z < data.revisionNames.length; z++)
+      {
+        if (data.revisionNames[z].equals(revision))
+        {
+          index = z;
+        }
+      }
+      if (index == -1) index = data.revisionNames.length-1;
+    }
+
+    return index;
+  }
+
   /** get previous revision
    * @param revision revision
    * @return previous revision
@@ -795,6 +822,51 @@ class CommandAnnotations
     return nextRevision;
   }
 
+  /** select revision
+   * @param index index
+   */
+  private void selectRevision(final int index)
+  {
+    data.selectedRevision = data.revisionNames[index];
+    data.prevRevision     = getPrevRevision(data.revisionNames[index]);
+    data.nextRevision     = getNextRevision(data.revisionNames[index]);
+
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          widgetRevision.select(index);
+
+          menuItemGotoRevision.setText("Goto revision "+((data.selectedRevision != null)?data.selectedRevision:""));
+          menuItemGotoRevision.setEnabled(data.selectedRevision != null);
+
+          menuItemPrevRevision.setText("Goto previous revision "+((data.prevRevision != null)?data.prevRevision:""));
+          menuItemPrevRevision.setEnabled(data.prevRevision != null);
+
+          menuItemNextRevision.setText("Goto next revision "+((data.nextRevision != null)?data.nextRevision:""));
+          menuItemNextRevision.setEnabled(data.nextRevision != null);
+
+          menuItemShowRevision.setText("Show revision "+((data.selectedRevision != null)?data.selectedRevision:""));
+          menuItemShowRevision.setEnabled(data.selectedRevision != null);
+        }
+      });
+    };
+  }
+
+  /** select revision
+   * @param revision revision to select
+   */
+  private void selectRevision(String revision)
+  {
+    int index = getRevisionIndex(revision);
+    if (index >= 0)
+    {
+      selectRevision(index);
+    }
+  }
+
   /** show annotations
    * @param revision revision to show
    */
@@ -822,10 +894,7 @@ class CommandAnnotations
         repositoryTab.setStatusText("Get annotations for '%s'...",fileData.getFileName());
         try
         {
-          data.annotationData   = repositoryTab.repository.getAnnotations(fileData,revision);
-          data.selectedRevision = revision;
-          data.prevRevision     = getNextRevision(revision);
-          data.nextRevision     = getPrevRevision(revision);
+          data.annotationData = repositoryTab.repository.getAnnotations(fileData,revision);
         }
         catch (RepositoryException exception)
         {
@@ -851,16 +920,21 @@ class CommandAnnotations
           {
             public void run()
             {
-              // set selected revision
-              widgetRevision.setText(revision);
+              // get selected/previous/next revision
+              int selectedIndex = getRevisionIndex(revision);
+              if (selectedIndex >= 0)
+              {
+                selectRevision(selectedIndex);
+              }
+              else
+              {
+                widgetRevision.setText(revision);
+              }
 
               // set new text
               setText(widgetAnnotations,
                       data.annotationData
                      );
-
-              // update popup menu
-              updatePopupMenu();
 
               // notify modification
               Widgets.modified(data);
