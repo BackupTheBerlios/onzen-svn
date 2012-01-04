@@ -329,28 +329,22 @@ class CommandAnnotations
         int index = widget.getSelectionIndex();
         if (index >= 0)
         {
-          // get select revision
+          // get select/previsous/next revision
           String selectedRevision = widget.getItem(index).getText(0);
-
-          // find previous revision
-          String prevRevision = null;
-          for (int z = 1; z < data.revisionNames.length; z++)
-          {
-            if (data.revisionNames[z].equals(selectedRevision))
-            {
-              prevRevision = data.revisionNames[z-1];
-            }
-          }
+          String prevRevision = getPrevRevision(selectedRevision);
+          String nextRevision = getNextRevision(selectedRevision);
 
           switch (Dialogs.select(dialog,
                                  "Confirmation",
                                  "Action:",
                                  new String[]{"goto revision "+selectedRevision,
                                               "goto previous revision "+prevRevision,
+                                              "goto next revision "+nextRevision,
                                               "show revision "+selectedRevision
                                              },
                                  new boolean[]{!selectedRevision.equals(widgetRevision.getText()),
                                                prevRevision != null,
+                                               nextRevision != null,
                                                true
                                               },
                                  "OK",
@@ -366,6 +360,9 @@ class CommandAnnotations
               show(prevRevision);
               break;
             case 2:
+              show(nextRevision);
+              break;
+            case 3:
               CommandRevisions commandRevisions = new CommandRevisions(shell,repositoryTab,fileData,selectedRevision);
               commandRevisions.run();
               break;
@@ -673,6 +670,42 @@ class CommandAnnotations
     }
 
     return index;
+  }
+
+  /** get previous revision
+   * @param revision revision
+   * @return previous revision
+   */
+  private String getPrevRevision(String revision)
+  {
+    String prevRevision = null;
+    for (int z = 1; z < data.revisionNames.length; z++)
+    {
+      if (data.revisionNames[z].equals(revision))
+      {
+        prevRevision = data.revisionNames[z-1];
+      }
+    }
+
+    return prevRevision;
+  }
+
+  /** get next revision
+   * @param revision revision
+   * @return next revision
+   */
+  private String getNextRevision(String revision)
+  {
+    String nextRevision = null;
+    for (int z = 0; z < data.revisionNames.length-1; z++)
+    {
+      if (data.revisionNames[z].equals(revision))
+      {
+        nextRevision = data.revisionNames[z+1];
+      }
+    }
+
+    return nextRevision;
   }
 
   /** show annotations
