@@ -91,11 +91,17 @@ class CommandAnnotations
   {
     String[]         revisionNames;      // revision names
     AnnotationData[] annotationData;     // annotation data
+    String           selectedRevision;   // selected revision
+    String           prevRevision;       // previous revision or null
+    String           nextRevision;       // next revision or null
 
     Data()
     {
-      this.revisionNames  = null;
-      this.annotationData = null;
+      this.revisionNames    = null;
+      this.annotationData   = null;
+      this.selectedRevision = null;
+      this.prevRevision     = null;
+      this.nextRevision     = null;
     }
   };
 
@@ -119,6 +125,10 @@ class CommandAnnotations
   private final Button        widgetRevisionNext;
   private final Table         widgetAnnotations;
   private final TableColumn   widgetAnnotationLineColumn;
+  private final MenuItem      menuItemGotoRevision;
+  private final MenuItem      menuItemPrevRevision;
+  private final MenuItem      menuItemNextRevision;
+  private final MenuItem      menuItemShowRevision;
   private final Text          widgetFind;
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
@@ -137,6 +147,8 @@ class CommandAnnotations
   {
     Composite composite,subComposite;
     Label     label;
+    Menu      menu;
+    MenuItem  menuItem;
     Button    button;
 
     // initialize variables
@@ -215,6 +227,58 @@ class CommandAnnotations
       Widgets.addTableColumn(widgetAnnotations,3,"Line Nb.",SWT.RIGHT);
       widgetAnnotationLineColumn = Widgets.addTableColumn(widgetAnnotations,4,"Line",SWT.LEFT);
       Widgets.setTableColumnWidth(widgetAnnotations,Settings.geometryAnnotationsColumn.width);
+      menu = Widgets.newPopupMenu(dialog);
+      {
+        menuItemGotoRevision = Widgets.addMenuItem(menu,"Goto revision");
+        menuItemGotoRevision.setEnabled(false);
+        menuItemGotoRevision.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            show(data.selectedRevision);
+          }
+        });
+        menuItemPrevRevision = Widgets.addMenuItem(menu,"Goto previous revision");
+        menuItemPrevRevision.setEnabled(false);
+        menuItemPrevRevision.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            show(data.prevRevision);
+          }
+        });
+        menuItemNextRevision = Widgets.addMenuItem(menu,"Goto next revision");
+        menuItemNextRevision.setEnabled(false);
+        menuItemNextRevision.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            show(data.nextRevision);
+          }
+        });
+        menuItemShowRevision = Widgets.addMenuItem(menu,"Show revision");
+        menuItemShowRevision.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            CommandRevisions commandRevisions = new CommandRevisions(shell,repositoryTab,fileData,data.selectedRevision);
+            commandRevisions.run();
+          }
+        });
+      }
+      widgetAnnotations.setMenu(menu);
       widgetAnnotations.setToolTipText("File annotations. Double-click to view revision of line.");
 
       subComposite = Widgets.newComposite(composite);
@@ -329,22 +393,17 @@ class CommandAnnotations
         int index = widget.getSelectionIndex();
         if (index >= 0)
         {
-          // get select/previsous/next revision
-          String selectedRevision = widget.getItem(index).getText(0);
-          String prevRevision = getPrevRevision(selectedRevision);
-          String nextRevision = getNextRevision(selectedRevision);
-
           switch (Dialogs.select(dialog,
                                  "Confirmation",
                                  "Action:",
-                                 new String[]{"goto revision "+selectedRevision,
-                                              "goto previous revision "+prevRevision,
-                                              "goto next revision "+nextRevision,
-                                              "show revision "+selectedRevision
+                                 new String[]{"goto revision "+data.selectedRevision,
+                                              "goto previous revision "+data.prevRevision,
+                                              "goto next revision "+data.nextRevision,
+                                              "show revision "+data.selectedRevision
                                              },
-                                 new boolean[]{!selectedRevision.equals(widgetRevision.getText()),
-                                               prevRevision != null,
-                                               nextRevision != null,
+                                 new boolean[]{!data.selectedRevision.equals(widgetRevision.getText()),
+                                               data.prevRevision != null,
+                                               data.nextRevision != null,
                                                true
                                               },
                                  "OK",
@@ -354,16 +413,16 @@ class CommandAnnotations
                  )
           {
             case 0:
-              show(selectedRevision);
+              show(data.selectedRevision);
               break;
             case 1:
-              show(prevRevision);
+              show(data.prevRevision);
               break;
             case 2:
-              show(nextRevision);
+              show(data.nextRevision);
               break;
             case 3:
-              CommandRevisions commandRevisions = new CommandRevisions(shell,repositoryTab,fileData,selectedRevision);
+              CommandRevisions commandRevisions = new CommandRevisions(shell,repositoryTab,fileData,data.selectedRevision);
               commandRevisions.run();
               break;
             default:
@@ -475,20 +534,26 @@ class CommandAnnotations
             {
               public void run()
               {
-                if (!widgetRevision.isDisposed())
+                // add revisions to selection menu
+                int selectedIndex = -1;
+                for (int z = 0; z < data.revisionNames.length; z++)
                 {
-                  int selectedIndex = -1;
-                  for (int z = 0; z < data.revisionNames.length; z++)
+                  widgetRevision.add(data.revisionNames[z]);
+                  if (data.revisionNames[z].equals(revision))
                   {
-                    widgetRevision.add(data.revisionNames[z]);
-                    if (data.revisionNames[z].equals(revision))
-                    {
-                      selectedIndex = z;
-                    }
+                    selectedIndex = z;
                   }
-                  if (selectedIndex == -1) selectedIndex = data.revisionNames.length-1;
-                  widgetRevision.select(selectedIndex);
                 }
+                if (selectedIndex == -1) selectedIndex = data.revisionNames.length-1;
+                widgetRevision.select(selectedIndex);
+
+                // get selected/previous/next revision
+                data.selectedRevision = data.revisionNames[selectedIndex];
+                data.prevRevision     = getNextRevision(data.revisionNames[selectedIndex]);
+                data.nextRevision     = getPrevRevision(data.revisionNames[selectedIndex]);
+
+                // update popup menu
+                updatePopupMenu();
 
                 // notify modification
                 Widgets.modified(data);
@@ -543,11 +608,11 @@ class CommandAnnotations
   //-----------------------------------------------------------------------
 
   /** set annotation text
-   * @param annotations annotation data
    * @param widgetAnnotations annotation table widget
+   * @param annotations annotation data
    */
-  private void setText(AnnotationData[] annotations,
-                       Table            widgetAnnotations
+  private void setText(Table            widgetAnnotations,
+                       AnnotationData[] annotations
                       )
   {
     if (!widgetAnnotations.isDisposed())
@@ -570,6 +635,23 @@ class CommandAnnotations
       }
       widgetAnnotationLineColumn.setWidth(maxWidth);
     }
+  }
+
+  /** update popup menu
+   */
+  private void updatePopupMenu()
+  {
+    menuItemGotoRevision.setText("Goto revision "+((data.selectedRevision != null)?data.selectedRevision:""));
+    menuItemGotoRevision.setEnabled(data.selectedRevision != null);
+
+    menuItemPrevRevision.setText("Goto revision "+((data.prevRevision != null)?data.prevRevision:""));
+    menuItemPrevRevision.setEnabled(data.prevRevision != null);
+
+    menuItemNextRevision.setText("Goto revision "+((data.nextRevision != null)?data.nextRevision:""));
+    menuItemNextRevision.setEnabled(data.nextRevision != null);
+
+    menuItemShowRevision.setText("Show revision "+((data.selectedRevision != null)?data.selectedRevision:""));
+    menuItemShowRevision.setEnabled(data.selectedRevision != null);
   }
 
   /** search previous text in annotation
@@ -679,11 +761,14 @@ class CommandAnnotations
   private String getPrevRevision(String revision)
   {
     String prevRevision = null;
-    for (int z = 1; z < data.revisionNames.length; z++)
+    if (data.revisionNames != null)
     {
-      if (data.revisionNames[z].equals(revision))
+      for (int z = 1; z < data.revisionNames.length; z++)
       {
-        prevRevision = data.revisionNames[z-1];
+        if (data.revisionNames[z].equals(revision))
+        {
+          prevRevision = data.revisionNames[z-1];
+        }
       }
     }
 
@@ -697,11 +782,14 @@ class CommandAnnotations
   private String getNextRevision(String revision)
   {
     String nextRevision = null;
-    for (int z = 0; z < data.revisionNames.length-1; z++)
+    if (data.revisionNames != null)
     {
-      if (data.revisionNames[z].equals(revision))
+      for (int z = 0; z < data.revisionNames.length-1; z++)
       {
-        nextRevision = data.revisionNames[z+1];
+        if (data.revisionNames[z].equals(revision))
+        {
+          nextRevision = data.revisionNames[z+1];
+        }
       }
     }
 
@@ -735,7 +823,10 @@ class CommandAnnotations
         repositoryTab.setStatusText("Get annotations for '%s'...",fileData.getFileName());
         try
         {
-          data.annotationData = repositoryTab.repository.getAnnotations(fileData,revision);
+          data.annotationData   = repositoryTab.repository.getAnnotations(fileData,revision);
+          data.selectedRevision = revision;
+          data.prevRevision     = getNextRevision(revision);
+          data.nextRevision     = getPrevRevision(revision);
         }
         catch (RepositoryException exception)
         {
@@ -761,13 +852,16 @@ class CommandAnnotations
           {
             public void run()
             {
-              // set new revision
+              // set selected revision
               widgetRevision.setText(revision);
 
               // set new text
-              setText(data.annotationData,
-                      widgetAnnotations
+              setText(widgetAnnotations,
+                      data.annotationData
                      );
+
+              // update popup menu
+              updatePopupMenu();
 
               // notify modification
               Widgets.modified(data);
