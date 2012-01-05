@@ -781,9 +781,9 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFind                        = SWT.CTRL+'f';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindPrev                    = SWT.CTRL+SWT.ARROW_LEFT;
+  public static int                      keyFindPrev                    = SWT.CTRL+SWT.SHIFT+'g';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindNext                    = SWT.CTRL+SWT.ARROW_RIGHT;
+  public static int                      keyFindNext                    = SWT.CTRL+'g';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindNextDiff                = ' ';
 
