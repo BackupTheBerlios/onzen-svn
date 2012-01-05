@@ -1108,6 +1108,14 @@ class Widgets
 
     if (accelerator != 0)
     {
+      if (   ((accelerator & SWT.MOD1) == SWT.SHIFT)
+          || ((accelerator & SWT.MOD2) == SWT.SHIFT)
+          || ((accelerator & SWT.MOD3) == SWT.SHIFT)
+          || ((accelerator & SWT.MOD4) == SWT.SHIFT)
+         )
+      {
+        if (buffer.length() > 0) buffer.append('+'); buffer.append((shiftText   != null)?shiftText  :"Shift");
+      }
       if (   ((accelerator & SWT.MOD1) == SWT.CTRL)
           || ((accelerator & SWT.MOD2) == SWT.CTRL)
           || ((accelerator & SWT.MOD3) == SWT.CTRL)
@@ -1123,14 +1131,6 @@ class Widgets
          )
       {
         if (buffer.length() > 0) buffer.append('+'); buffer.append((altText     != null)?altText    :"Alt"  );
-      }
-      if (   ((accelerator & SWT.MOD1) == SWT.SHIFT)
-          || ((accelerator & SWT.MOD2) == SWT.SHIFT)
-          || ((accelerator & SWT.MOD3) == SWT.SHIFT)
-          || ((accelerator & SWT.MOD4) == SWT.SHIFT)
-         )
-      {
-        if (buffer.length() > 0) buffer.append('+'); buffer.append((shiftText   != null)?shiftText  :"Shift");
       }
 
       if ((separatorText != null) && (buffer.length() > 0)) buffer.append(separatorText);
