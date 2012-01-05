@@ -1108,9 +1108,30 @@ class Widgets
 
     if (accelerator != 0)
     {
-      if ((accelerator & SWT.MOD1) == SWT.CTRL ) { if (buffer.length() > 0) buffer.append('+'); buffer.append((controlText != null)?controlText:"Ctrl" ); }
-      if ((accelerator & SWT.MOD2) == SWT.ALT  ) { if (buffer.length() > 0) buffer.append('+'); buffer.append((altText     != null)?altText    :"Alt"  ); }
-      if ((accelerator & SWT.MOD3) == SWT.SHIFT) { if (buffer.length() > 0) buffer.append('+'); buffer.append((shiftText   != null)?shiftText  :"Shift"); }
+      if (   ((accelerator & SWT.MOD1) == SWT.CTRL)
+          || ((accelerator & SWT.MOD2) == SWT.CTRL)
+          || ((accelerator & SWT.MOD3) == SWT.CTRL)
+          || ((accelerator & SWT.MOD4) == SWT.CTRL)
+         )
+      {
+        if (buffer.length() > 0) buffer.append('+'); buffer.append((controlText != null)?controlText:"Ctrl" );
+      }
+      if (   ((accelerator & SWT.MOD1) == SWT.ALT)
+          || ((accelerator & SWT.MOD2) == SWT.ALT)
+          || ((accelerator & SWT.MOD3) == SWT.ALT)
+          || ((accelerator & SWT.MOD4) == SWT.ALT)
+         )
+      {
+        if (buffer.length() > 0) buffer.append('+'); buffer.append((altText     != null)?altText    :"Alt"  );
+      }
+      if (   ((accelerator & SWT.MOD1) == SWT.SHIFT)
+          || ((accelerator & SWT.MOD2) == SWT.SHIFT)
+          || ((accelerator & SWT.MOD3) == SWT.SHIFT)
+          || ((accelerator & SWT.MOD4) == SWT.SHIFT)
+         )
+      {
+        if (buffer.length() > 0) buffer.append('+'); buffer.append((shiftText   != null)?shiftText  :"Shift");
+      }
 
       if ((separatorText != null) && (buffer.length() > 0)) buffer.append(separatorText);
       if      ((accelerator & SWT.KEY_MASK) == SWT.F1         ) buffer.append("F1");
@@ -1154,13 +1175,22 @@ class Widgets
     return buffer.toString();
   }
 
+  /** get accelerator key code text
+   * @param keyCode accelerator key code
+   * @return accelerator key code text
+   */
+  public static String acceleratorToText(int accelerator)
+  {
+    return acceleratorToText(accelerator,"+","Ctrl","Alt","Shift");
+  }
+
   /** get accelerator key code text for menu item
    * @param keyCode accelerator key code
    * @return accelerator key code text
    */
   public static String menuAcceleratorToText(int accelerator)
   {
-    return acceleratorToText(accelerator,"+","Ctrl","Alt","Shift");
+    return acceleratorToText(accelerator);
   }
 
   /** get accelerator key code text for button
@@ -1512,10 +1542,23 @@ class Widgets
    * @param style label style
    * @return new label
    */
-  public static Label newLabel(Composite composite, String text, int style)
+  public static Label newLabel(Composite composite, String text, int style, int accelerator)
   {
     Label label;
 
+    if (accelerator != 0)
+    {
+      char key = (char)(accelerator & SWT.KEY_MASK);
+      int index = text.toLowerCase().indexOf(key);
+      if (index >= 0)
+      {
+        text = text.substring(0,index)+'&'+text.substring(index);
+      }
+      else
+      {
+        text = text+" ["+buttonAcceleratorToText(accelerator)+"]";
+      }
+    }
     label = new Label(composite,style);
     label.setText(text);
 
@@ -1526,6 +1569,17 @@ class Widgets
     }
 
     return label;
+  }
+
+  /** create new label
+   * @param composite composite widget
+   * @param text label text
+   * @param style label style
+   * @return new label
+   */
+  public static Label newLabel(Composite composite, String text, int style)
+  {
+    return newLabel(composite,text,style,0);
   }
 
   /** create new label
