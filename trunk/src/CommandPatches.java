@@ -603,7 +603,7 @@ class CommandPatches
           subSubComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
           Widgets.layout(subSubComposite,1,0,TableLayoutData.WE);
           {
-            label = Widgets.newLabel(subSubComposite,"Find:");
+            label = Widgets.newLabel(subSubComposite,"Find:",SWT.NONE,Settings.keyFind);
             Widgets.layout(label,0,0,TableLayoutData.W);
 
             widgetFind = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -611,9 +611,11 @@ class CommandPatches
 
             widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
             Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
+            widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
             widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
             Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
+            widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
 
             button = Widgets.newButton(subSubComposite,"Refresh...");
             button.setEnabled(false);
@@ -1238,7 +1240,6 @@ class CommandPatches
         setSelectedPatch(tableItem,(Patch)tableItem.getData());
       }
     });
-
     widgetPatch.addLineStyleListener(new LineStyleListener()
     {
       public void lineGetStyle(LineStyleEvent lineStyleEvent)
@@ -1264,13 +1265,38 @@ class CommandPatches
          }
       }
     });
+    widgetPatch.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (   Widgets.isAccelerator(keyEvent,Settings.keyFindPrev)
+                 || Widgets.isAccelerator(keyEvent,SWT.CTRL+SWT.ARROW_LEFT)
+                )
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (   Widgets.isAccelerator(keyEvent,Settings.keyFindNext)
+                 || Widgets.isAccelerator(keyEvent,SWT.CTRL+SWT.ARROW_RIGHT)
+                )
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
 
     widgetFind.addKeyListener(new KeyListener()
     {
-      public void keyPressed(KeyEvent leyEvent)
+      public void keyPressed(KeyEvent keyEvent)
       {
       }
-      public void keyReleased(KeyEvent leyEvent)
+      public void keyReleased(KeyEvent keyEvent)
       {
         find(widgetPatch,widgetFind);
       }
@@ -1282,6 +1308,27 @@ class CommandPatches
         findNext(widgetPatch,widgetFind);
       }
       public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetFind.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
       {
       }
     });
@@ -1629,7 +1676,13 @@ class CommandPatches
       // get cursor position, text before cursor
       int cursorIndex = widgetPatch.getCaretOffset();
 
-      int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
+      // search
+      int offset = -1;
+      if (cursorIndex > 0)
+      {
+        String text = widgetPatch.getText(0,cursorIndex-1);
+        offset = text.toLowerCase().lastIndexOf(findText);
+      }
       if (offset >= 0)
       {
         int index = offset;
@@ -1659,7 +1712,12 @@ class CommandPatches
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = (cursorIndex > 0) ? widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+      int offset = -1;
+      if (cursorIndex > 0)
+      {
+        String text = widgetPatch.getText();
+        offset = (cursorIndex+1 < text.length()) ? text.substring(cursorIndex+1).toLowerCase().indexOf(findText) : -1;
+      }
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;
