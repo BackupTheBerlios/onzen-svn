@@ -278,13 +278,13 @@ class CommandAnnotations
         });
       }
       widgetAnnotations.setMenu(menu);
-      widgetAnnotations.setToolTipText("File annotations. Double-click to view revision of line.");
+      widgetAnnotations.setToolTipText("File annotations. Double-click to view revisions.");
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Find:");
+        label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -300,6 +300,7 @@ class CommandAnnotations
             Widgets.setEnabled(control,(data.annotationData != null));
           }
         });
+        widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
@@ -311,6 +312,7 @@ class CommandAnnotations
             Widgets.setEnabled(control,(data.annotationData != null));
           }
         });
+        widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
       }
     }
 
@@ -445,20 +447,6 @@ class CommandAnnotations
       {
       }
     });
-    widgetAnnotations.addKeyListener(new KeyListener()
-    {
-      public void keyPressed(KeyEvent keyEvent)
-      {
-        if (((keyEvent.stateMask & SWT.CTRL) != 0) && (keyEvent.keyCode == 'c'))
-        {
-          TableItem[] tableItems = widgetAnnotations.getSelection();
-          Widgets.setClipboard(clipboard,tableItems,4);
-        }
-      }
-      public void keyReleased(KeyEvent keyEvent)
-      {
-      }
-    });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -501,6 +489,37 @@ class CommandAnnotations
         }
       }
     });
+
+    KeyListener keyListener = new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          TableItem[] tableItems = widgetAnnotations.getSelection();
+          Widgets.setClipboard(clipboard,tableItems,4);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    };
+    widgetAnnotations.addKeyListener(keyListener);
+    widgetFind.addKeyListener(keyListener);
+    widgetFindPrev.addKeyListener(keyListener);
+    widgetFindNext.addKeyListener(keyListener);
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryAnnotations);
