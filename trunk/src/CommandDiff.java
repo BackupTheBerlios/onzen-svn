@@ -304,7 +304,7 @@ class CommandDiff
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Find:");
+        label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -320,6 +320,7 @@ class CommandDiff
             Widgets.setEnabled(control,(data.diffData != null));
           }
         });
+        widgetFindLeftPrev.setToolTipText("Find previous occurrence in left text["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
         widgetFindLeftNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindLeftNext.setEnabled(false);
@@ -331,13 +332,14 @@ class CommandDiff
             Widgets.setEnabled(control,(data.diffData != null));
           }
         });
+        widgetFindLeftNext.setToolTipText("Find next occurrence in left text ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
       }
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,2,2,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Find:");
+        label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -353,6 +355,7 @@ class CommandDiff
             Widgets.setEnabled(control,(data.diffData != null));
           }
         });
+        widgetFindRightPrev.setToolTipText("Find previous occurrence in right text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
         widgetFindRightNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindRightNext.setEnabled(false);
@@ -364,6 +367,7 @@ class CommandDiff
             Widgets.setEnabled(control,(data.diffData != null));
           }
         });
+        widgetFindRightNext.setToolTipText("Find next occurrence in right text ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
       }
 
       widgetLineDiff = Widgets.newStyledText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL);
@@ -758,29 +762,29 @@ class CommandDiff
         }
       }
     });
-    widgetTextRight.addCaretListener(new CaretListener()
+    widgetTextLeft.addKeyListener(new KeyListener()
     {
-      public void caretMoved(CaretEvent caretEvent)
+      public void keyPressed(KeyEvent keyEvent)
       {
-        int lineIndex = widgetTextRight.getLineAtOffset(caretEvent.caretOffset);
-        if (lineIndex != data.lineIndex)
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
         {
-          setLine(widgetLineDiff,
-                  widgetTextLeft,
-                  widgetTextRight,
-                  lineIndex
-                 );
-          updateLineColors(widgetLineDiff,
-                           widgetAdded.getSelection(),
-                           widgetDeleted.getSelection(),
-                           widgetChanged.getSelection(),
-                           widgetChangedWhitespaces.getSelection(),
-                           COLOR_DIFF_NONE,
-                           COLOR_DIFF_CHANGED,
-                           COLOR_DIFF_CHANGED_WHITESPACES
-                          );
-          data.lineIndex = lineIndex;
+          widgetFindLeft.forceFocus();
         }
+        else if (   Widgets.isAccelerator(keyEvent,Settings.keyFindPrev)
+                 || Widgets.isAccelerator(keyEvent,SWT.CTRL+SWT.ARROW_LEFT)
+                )
+        {
+          Widgets.invoke(widgetPrev);
+        }
+        else if (   Widgets.isAccelerator(keyEvent,Settings.keyFindNext)
+                 || Widgets.isAccelerator(keyEvent,SWT.CTRL+SWT.ARROW_RIGHT)
+                )
+        {
+          Widgets.invoke(widgetNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
       }
     });
 
@@ -840,6 +844,56 @@ class CommandDiff
          {
            lineStyleEvent.styles = null;
          }
+      }
+    });
+    widgetTextRight.addCaretListener(new CaretListener()
+    {
+      public void caretMoved(CaretEvent caretEvent)
+      {
+        int lineIndex = widgetTextRight.getLineAtOffset(caretEvent.caretOffset);
+        if (lineIndex != data.lineIndex)
+        {
+          setLine(widgetLineDiff,
+                  widgetTextLeft,
+                  widgetTextRight,
+                  lineIndex
+                 );
+          updateLineColors(widgetLineDiff,
+                           widgetAdded.getSelection(),
+                           widgetDeleted.getSelection(),
+                           widgetChanged.getSelection(),
+                           widgetChangedWhitespaces.getSelection(),
+                           COLOR_DIFF_NONE,
+                           COLOR_DIFF_CHANGED,
+                           COLOR_DIFF_CHANGED_WHITESPACES
+                          );
+          data.lineIndex = lineIndex;
+        }
+      }
+    });
+    widgetTextRight.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFindRight.forceFocus();
+        }
+        else if (   Widgets.isAccelerator(keyEvent,Settings.keyFindPrev)
+                 || Widgets.isAccelerator(keyEvent,SWT.CTRL+SWT.ARROW_LEFT)
+                )
+        {
+          Widgets.invoke(widgetPrev);
+        }
+        else if (   Widgets.isAccelerator(keyEvent,Settings.keyFindNext)
+                 || Widgets.isAccelerator(keyEvent,SWT.CTRL+SWT.ARROW_RIGHT)
+                )
+        {
+          Widgets.invoke(widgetNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
       }
     });
 
@@ -1208,12 +1262,7 @@ class CommandDiff
       public void keyPressed(KeyEvent keyEvent)
       {
 //Dprintf.dprintf("keyEvent=%s",keyEvent);
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
-        {
-          if      (keyEvent.widget == widgetTextLeft ) widgetFindLeft.forceFocus();
-          else if (keyEvent.widget == widgetTextRight) widgetFindRight.forceFocus();
-        }
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
         {
           Widgets.invoke(widgetPrev);
         }
@@ -1440,7 +1489,7 @@ class CommandDiff
   {
     if (!dialog.isDisposed())
     {
-      widgetClose.setFocus();
+      widgetFindRight.setFocus();
       Dialogs.run(dialog,new Listener()
       {
         public void handleEvent(Event event)
