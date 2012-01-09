@@ -448,7 +448,7 @@ class CommandChanges
   {
     Background.run(new BackgroundRunnable(changesType)
     {
-      public void run(ChangesTypes changesType)
+      public void run(final ChangesTypes changesType)
       {
         // get revision tree
         switch (changesType)
@@ -506,7 +506,12 @@ class CommandChanges
                 }
                 else
                 {
-                  Dialogs.info(dialog,"No changes found.");
+                  switch (changesType)
+                  {
+                    case INCOMING: Dialogs.info(dialog,"No incoming changes found."); break;
+                    case OUTGOING: Dialogs.info(dialog,"No outgoing changes found."); break;
+                  }
+
                   Widgets.invoke(widgetClose);
                 }
               }
