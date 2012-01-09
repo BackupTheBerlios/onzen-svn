@@ -53,6 +53,7 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceEvent;
@@ -170,6 +171,7 @@ class CommandPatchReview
   private final Patch                  patch;
   private final Date                   date;
   private final Display                display;
+  private final Clipboard              clipboard;
 
   // dialog
   private final Data                   data = new Data();
@@ -238,7 +240,8 @@ class CommandPatchReview
     data.reviewServerFlag = repositoryTab.repository.reviewServerFlag;
 
     // get display
-    display = shell.getDisplay();
+    display   = shell.getDisplay();
+    clipboard = new Clipboard(display);
 
     // colors
     COLOR_INACTIVE  = new Color(display,Settings.colorInactive.background);
@@ -272,7 +275,7 @@ class CommandPatchReview
           subSubComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
           Widgets.layout(subSubComposite,1,0,TableLayoutData.WE);
           {
-            label = Widgets.newLabel(subSubComposite,"Find:");
+            label = Widgets.newLabel(subSubComposite,"Find:",SWT.NONE,Settings.keyFind);
             Widgets.layout(label,0,0,TableLayoutData.W);
 
             widgetFind = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -280,9 +283,11 @@ class CommandPatchReview
 
             widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
             Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
+            widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
             widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
             Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
+            widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
           }
         }
 
@@ -849,13 +854,26 @@ class CommandPatchReview
          }
       }
     });
+    widgetPatch.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          Widgets.setClipboard(clipboard,widgetPatch.getSelectionText());
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
 
     widgetFind.addKeyListener(new KeyListener()
     {
-      public void keyPressed(KeyEvent leyEvent)
+      public void keyPressed(KeyEvent keyEvent)
       {
       }
-      public void keyReleased(KeyEvent leyEvent)
+      public void keyReleased(KeyEvent keyEvent)
       {
         find(widgetPatch,widgetFind);
       }
@@ -920,6 +938,19 @@ class CommandPatchReview
         updateSubject();
       }
     });
+    widgetSummary.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          Widgets.setClipboard(clipboard,widgetSummary.getText());
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
     Widgets.setNextFocus(widgetSummary,widgetMessage);
     widgetMessage.addModifyListener(new ModifyListener()
     {
@@ -928,11 +959,37 @@ class CommandPatchReview
         updateText();
       }
     });
+    widgetMessage.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          Widgets.setClipboard(clipboard,widgetMessage.getSelectionText());
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
     widgetComment.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
         updateText();
+      }
+    });
+    widgetComment.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          Widgets.setClipboard(clipboard,widgetComment.getSelectionText());
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
       }
     });
     widgetTests.addSelectionListener(new SelectionListener()
@@ -952,6 +1009,34 @@ class CommandPatchReview
         widgetAddNewTest.setEnabled(!widgetNewTest.getText().trim().isEmpty());
       }
     });
+
+    KeyListener keyListener = new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    };
+    widgetPatch.addKeyListener(keyListener);
+    widgetMessage.addKeyListener(keyListener);
+    widgetComment.addKeyListener(keyListener);
+    widgetFind.addKeyListener(keyListener);
+    widgetFindPrev.addKeyListener(keyListener);
+    widgetFindNext.addKeyListener(keyListener);
 
     dialog.addListener(SWT.Close,new Listener()
     {
@@ -1179,7 +1264,13 @@ class CommandPatchReview
       // get cursor position, text before cursor
       int cursorIndex = widgetPatch.getCaretOffset();
 
-      int offset = (cursorIndex > 0) ? widgetPatch.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
+      // search
+      int offset = -1;
+      if (cursorIndex > 0)
+      {
+        String text = widgetPatch.getText(0,cursorIndex-1);
+        offset = text.toLowerCase().lastIndexOf(findText);
+      }
       if (offset >= 0)
       {
         int index = offset;
@@ -1209,7 +1300,12 @@ class CommandPatchReview
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = (cursorIndex >= 0) ? widgetPatch.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+      int offset = -1;
+      if (cursorIndex > 0)
+      {
+        String text = widgetPatch.getText();
+        offset = (cursorIndex+1 < text.length()) ? text.substring(cursorIndex+1).toLowerCase().indexOf(findText) : -1;
+      }
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;
