@@ -579,19 +579,6 @@ Dprintf.dprintf("");
          }
       }
     });
-    widgetPatch.addKeyListener(new KeyListener()
-    {
-      public void keyPressed(KeyEvent keyEvent)
-      {
-        if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
-        {
-          Widgets.setClipboard(clipboard,widgetPatch.getSelectionText());
-        }
-      }
-      public void keyReleased(KeyEvent keyEvent)
-      {
-      }
-    });
 
     widgetFind.addKeyListener(new KeyListener()
     {
