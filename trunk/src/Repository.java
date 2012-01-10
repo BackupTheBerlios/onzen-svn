@@ -949,6 +949,8 @@ class RevisionData
    */
   public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
   {
+    assert branches != null;
+
     this.revision      = revision;
     this.parents       = parents;
     this.tags          = tags;
@@ -1218,14 +1220,20 @@ class RevisionData
 
     if (author.toLowerCase().indexOf(text) >= 0) return true;
 
-    for (BranchData branch : branches)
+    if (branches != null)
     {
-      if (branch.name.toLowerCase().indexOf(text) >= 0) return true;
+      for (BranchData branch : branches)
+      {
+        if (branch.name.toLowerCase().indexOf(text) >= 0) return true;
+      }
     }
 
-    for (String string : commitMessage)
+    if (commitMessage != null)
     {
-      if (string.toLowerCase().indexOf(text) >= 0) return true;
+      for (String string : commitMessage)
+      {
+        if (string.toLowerCase().indexOf(text) >= 0) return true;
+      }
     }
 
     return false;
