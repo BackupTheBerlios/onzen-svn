@@ -2157,7 +2157,12 @@ class CommandDiff
       // get cursor position, text before cursor
       int cursorIndex = widgetText.getCaretOffset();
 
-      int offset = (cursorIndex > 0) ? widgetText.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
+      int offset = -1;
+      if (cursorIndex > 0)
+      {
+        String text = widgetText.getText(0,cursorIndex-1);
+        offset = text.toLowerCase().lastIndexOf(findText);
+      }
       if (offset >= 0)
       {
         index = offset;
@@ -2192,7 +2197,12 @@ class CommandDiff
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
-      int offset = (cursorIndex >= 0) ? widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+      int offset = -1;
+      if (cursorIndex >= 0)
+      {
+        String text = widgetText.getText();
+        offset = (cursorIndex+1 < text.length()) ? text.substring(cursorIndex+1).toLowerCase().indexOf(findText) : -1;
+      }
       if (offset >= 0)
       {
         index = cursorIndex+1+offset;

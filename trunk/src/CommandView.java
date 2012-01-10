@@ -25,6 +25,7 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.dnd.ByteArrayTransfer;
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceEvent;
@@ -117,6 +118,7 @@ class CommandView
   // global variable references
   private final RepositoryTab repositoryTab;
   private final Display       display;
+  private final Clipboard     clipboard;
   private final FileData      fileData;
 
   // dialog
@@ -157,7 +159,8 @@ class CommandView
     this.fileData      = fileData;
 
     // get display
-    display = shell.getDisplay();
+    display   = shell.getDisplay();
+    clipboard = new Clipboard(display);
 
     // add files dialog
     dialog = Dialogs.open(shell,"View: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
@@ -244,7 +247,7 @@ class CommandView
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,2,0,TableLayoutData.NSWE);
       {
-        label = Widgets.newLabel(subComposite,"Find:");
+        label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -260,6 +263,7 @@ class CommandView
             Widgets.setEnabled(control,(data.lines != null));
           }
         });
+        widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
@@ -271,6 +275,7 @@ class CommandView
             Widgets.setEnabled(control,(data.lines != null));
           }
         });
+        widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
       }
     }
 
@@ -465,6 +470,19 @@ class CommandView
          }
       }
     });
+    widgetText.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          Widgets.setClipboard(clipboard,widgetText.getSelectionText());
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
     widgetHorizontalScrollBar.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -506,6 +524,16 @@ class CommandView
       {
       }
     });
+    widgetFind.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+        updateViewFindText(widgetText,widgetFind);
+      }
+    });
     widgetFindPrev.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -526,6 +554,32 @@ class CommandView
         findNext(widgetText,widgetFind);
       }
     });
+
+    KeyListener keyListener = new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    };
+    widgetText.addKeyListener(keyListener);
+    widgetFind.addKeyListener(keyListener);
+    widgetFindPrev.addKeyListener(keyListener);
+    widgetFindNext.addKeyListener(keyListener);
 
     dialog.addListener(USER_EVENT_NEW_REVISION,new Listener()
     {
@@ -679,6 +733,7 @@ class CommandView
       // set text
       widgetLineNumbers.setText(lineNumbers.toString());
       widgetText.setText(text.toString());
+      widgetText.setCaretOffset(0);
 
       // set scrollbars
       widgetHorizontalScrollBar.setMinimum(0);
@@ -701,6 +756,38 @@ class CommandView
     }
   }
 
+  /** update view find text
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void updateViewFindText(StyledText widgetText, Text widgetFind)
+  {
+    if (!widgetText.isDisposed())
+    {
+      String findText = widgetFind.getText();
+      if (!findText.isEmpty())
+      {
+        // get cursor position
+        int cursorIndex = widgetText.getCaretOffset();
+
+        // search
+        int offset = widgetText.getText().toLowerCase().substring(cursorIndex).indexOf(findText);
+        if (offset >= 0)
+        {
+          widgetText.redraw();
+        }
+        else
+        {
+          Widgets.flash(widgetFind);
+        }
+      }
+      else
+      {
+        widgetText.redraw();
+      }
+    }
+  }
+
   /** search previous text
    * @param widgetText text widget
    * @param widgetFind search text widget
@@ -712,10 +799,16 @@ class CommandView
       String findText = widgetFind.getText().toLowerCase();
       if (!findText.isEmpty())
       {
-        // get cursor position, text before cursor
+        // get cursor position
         int cursorIndex = widgetText.getCaretOffset();
 
-        int offset = (cursorIndex > 0) ? widgetText.getText(0,cursorIndex-1).toLowerCase().lastIndexOf(findText) : -1;
+        // search
+        int offset = -1;
+        if (cursorIndex > 0)
+        {
+          String text = widgetText.getText(0,cursorIndex-1);
+          offset = text.toLowerCase().lastIndexOf(findText);
+        }
         if (offset >= 0)
         {
           int index = offset;
@@ -748,11 +841,16 @@ class CommandView
       String findText = widgetFind.getText().toLowerCase();
       if (!findText.isEmpty())
       {
-        // get cursor position, text before cursor
+        // get cursor position
         int cursorIndex = widgetText.getCaretOffset();
 
         // search
-        int offset = (cursorIndex >= 0) ? widgetText.getText().toLowerCase().substring(cursorIndex+1).indexOf(findText) : -1;
+        int offset = -1;
+        if (cursorIndex >= 0)
+        {
+          String text = widgetText.getText();
+          offset = (cursorIndex+1 < text.length()) ? text.substring(cursorIndex+1).toLowerCase().indexOf(findText) : -1;
+        }
         if (offset >= 0)
         {
           int index = cursorIndex+1+offset;

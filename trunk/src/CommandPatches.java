@@ -1298,7 +1298,7 @@ class CommandPatches
       }
       public void keyReleased(KeyEvent keyEvent)
       {
-        find(widgetPatch,widgetFind);
+        updateViewFindText(widgetPatch,widgetFind);
       }
     });
     widgetFind.addSelectionListener(new SelectionListener()
@@ -1632,25 +1632,25 @@ class CommandPatches
     Widgets.modified(data);
   }
 
-  /** search text
+  /** update view find text
    * @param widgetText text widget
    * @param widgetFind search text widget
    */
-  private void find(StyledText widgetText, Text widgetFind)
+  private void updateViewFindText(StyledText widgetText, Text widgetFind)
   {
     if (!widgetText.isDisposed())
     {
       String findText = widgetFind.getText();
       if (!findText.isEmpty())
       {
-        // get cursor position, text before cursor
-        int cursorIndex = widgetPatch.getCaretOffset();
+        // get cursor position
+        int cursorIndex = widgetText.getCaretOffset();
 
         // search
-        int offset = widgetPatch.getText().toLowerCase().substring(cursorIndex).indexOf(findText);
+        int offset = widgetText.getText().toLowerCase().substring(cursorIndex).indexOf(findText);
         if (offset >= 0)
         {
-          widgetPatch.redraw();
+          widgetText.redraw();
         }
         else
         {
@@ -1659,37 +1659,37 @@ class CommandPatches
       }
       else
       {
-        widgetPatch.redraw();
+        widgetText.redraw();
       }
     }
   }
 
   /** search previous text in patch
-   * @param widgetPatch text widget
+   * @param widgetText text widget
    * @param widgetFind search text widget
    */
-  private void findPrev(StyledText widgetPatch, Text widgetFind)
+  private void findPrev(StyledText widgetText, Text widgetFind)
   {
     String findText = widgetFind.getText().toLowerCase();
     if (!findText.isEmpty())
     {
-      // get cursor position, text before cursor
-      int cursorIndex = widgetPatch.getCaretOffset();
+      // get cursor position
+      int cursorIndex = widgetText.getCaretOffset();
 
       // search
       int offset = -1;
       if (cursorIndex > 0)
       {
-        String text = widgetPatch.getText(0,cursorIndex-1);
+        String text = widgetText.getText(0,cursorIndex-1);
         offset = text.toLowerCase().lastIndexOf(findText);
       }
       if (offset >= 0)
       {
         int index = offset;
 
-        widgetPatch.setCaretOffset(index);
-        widgetPatch.setSelection(index);
-        widgetPatch.redraw();
+        widgetText.setCaretOffset(index);
+        widgetText.setSelection(index);
+        widgetText.redraw();
       }
       else
       {
@@ -1702,29 +1702,29 @@ class CommandPatches
    * @param widgetText text widget
    * @param widgetFind search text widget
    */
-  private void findNext(StyledText widgetPatch, Text widgetFind)
+  private void findNext(StyledText widgetText, Text widgetFind)
   {
     String findText = widgetFind.getText().toLowerCase();
     if (!findText.isEmpty())
     {
-      // get cursor position, text before cursor
-      int cursorIndex = widgetPatch.getCaretOffset();
+      // get cursor position
+      int cursorIndex = widgetText.getCaretOffset();
 //Dprintf.dprintf("cursorIndex=%d: %s",cursorIndex,widgetText.getText().substring(cursorIndex+1).substring(0,100));
 
       // search
       int offset = -1;
-      if (cursorIndex > 0)
+      if (cursorIndex >= 0)
       {
-        String text = widgetPatch.getText();
+        String text = widgetText.getText();
         offset = (cursorIndex+1 < text.length()) ? text.substring(cursorIndex+1).toLowerCase().indexOf(findText) : -1;
       }
       if (offset >= 0)
       {
         int index = cursorIndex+1+offset;
 
-        widgetPatch.setCaretOffset(index);
-        widgetPatch.setSelection(index);
-        widgetPatch.redraw();
+        widgetText.setCaretOffset(index);
+        widgetText.setSelection(index);
+        widgetText.redraw();
       }
       else
       {

@@ -230,7 +230,7 @@ class CommandRevisions
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Find:");
+        label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
@@ -246,6 +246,7 @@ class CommandRevisions
             Widgets.setEnabled(control,(data.revisionDataTree != null) && (data.revisionData != null));
           }
         });
+        widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
 
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
@@ -257,6 +258,7 @@ class CommandRevisions
             Widgets.setEnabled(control,(data.revisionDataTree != null) && (data.revisionData != null));
           }
         });
+        widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
       }
     }
 
@@ -657,6 +659,27 @@ throw new RepositoryException("NYI");
         }
       }
     });
+    widgetRevisions.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
     widgetFind.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -775,11 +798,29 @@ throw new RepositoryException("NYI");
           // redraw
           widgetRevisions.redraw();
         }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff))
+        {
+          Widgets.invoke(widgetDiff);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert))
+        {
+          Widgets.invoke(widgetRevert);
+        }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyDiff  )) Widgets.invoke(widgetDiff);
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert)) Widgets.invoke(widgetRevert);
       }
     };
     widgetRevisions.addKeyListener(keyListener);
@@ -1428,6 +1469,7 @@ static int xxx = 0;
         // find previous matching revision
         do
         {
+//Dprintf.dprintf("data.revisionData[z]=%s",data.revisionData[z]);
           z--;
         }
         while (   (z >= 0)
@@ -1436,6 +1478,7 @@ static int xxx = 0;
 
         if (z >= 0)
         {
+//Dprintf.dprintf("data.revisionData[z]=%s",data.revisionData[z]);
           // select previsous revision
           revisionData = data.revisionData[z];
         }
