@@ -124,6 +124,7 @@ class CommandDiff
   private final int   USER_EVENT_SYNC           = 0xFFFF+1;
   private final int   USER_EVENT_REFRESH_COLORS = 0xFFFF+2;
   private final int   USER_EVENT_REFRESH_BAR    = 0xFFFF+3;
+  private final int   USER_EVENT_CURSOR_UPDATE  = 0xFFFF+4;
 
   // --------------------------- variables --------------------------------
 
@@ -400,14 +401,19 @@ class CommandDiff
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Button widget = (Button)selectionEvent.widget;
-          int    topIndex = widgetTextLeft.getTopIndex();
 
           if (widget.getSelection())
           {
+            int topIndex        = widgetTextLeft.getTopIndex();
+            int horizontalIndex = widgetTextLeft.getHorizontalIndex();
+
             // sync left to right
             widgetLineNumbersRight.setTopIndex(topIndex);
             widgetTextRight.setTopIndex(topIndex);
             widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
+
+            widgetTextRight.setHorizontalIndex(horizontalIndex);
+            widgetHorizontalScrollBarRight.setSelection(horizontalIndex);
           }
         }
       });
@@ -744,6 +750,7 @@ class CommandDiff
         int lineIndex = widgetTextLeft.getLineAtOffset(caretEvent.caretOffset);
         if (lineIndex != data.lineIndex)
         {
+Dprintf.dprintf("lineIndex=%d",lineIndex);
           setLine(widgetLineDiff,
                   widgetTextLeft,
                   widgetTextRight,
@@ -782,9 +789,36 @@ class CommandDiff
         {
           Widgets.invoke(widgetNext);
         }
+
+        /* work-around for scroll-problem: it seems horizontal scrolling in
+           text is not syncronized with horizontal scrollbar
+        */
+        Widgets.notify(widgetTextLeft,USER_EVENT_CURSOR_UPDATE);
       }
       public void keyReleased(KeyEvent keyEvent)
       {
+        /* work-around for scroll-problem: it seems horizontal scrolling in
+           text is not syncronized with horizontal scrollbar
+        */
+        Widgets.notify(widgetTextLeft,USER_EVENT_CURSOR_UPDATE);
+      }
+    });
+    widgetTextLeft.addListener(USER_EVENT_CURSOR_UPDATE,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        StyledText widget = (StyledText)event.widget;
+
+        int index = widget.getHorizontalIndex();
+
+        widgetHorizontalScrollBarLeft.setSelection(index);
+
+        // sync to right
+        if (widgetSync.getSelection())
+        {
+          widgetTextRight.setHorizontalIndex(index);
+          widgetHorizontalScrollBarRight.setSelection(index);
+        }
       }
     });
 
@@ -891,9 +925,36 @@ class CommandDiff
         {
           Widgets.invoke(widgetNext);
         }
+
+        /* work-around for scroll-problem: it seems horizontal scrolling in
+           text is not syncronized with horizontal scrollbar
+        */
+        Widgets.notify(widgetTextRight,USER_EVENT_CURSOR_UPDATE);
       }
       public void keyReleased(KeyEvent keyEvent)
       {
+        /* work-around for scroll-problem: it seems horizontal scrolling in
+           text is not syncronized with horizontal scrollbar
+        */
+        Widgets.notify(widgetTextRight,USER_EVENT_CURSOR_UPDATE);
+      }
+    });
+    widgetTextRight.addListener(USER_EVENT_CURSOR_UPDATE,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        StyledText widget = (StyledText)event.widget;
+
+        int index = widget.getHorizontalIndex();
+
+        widgetHorizontalScrollBarRight.setSelection(index);
+
+        // sync to left
+        if (widgetSync.getSelection())
+        {
+          widgetTextLeft.setHorizontalIndex(index);
+          widgetHorizontalScrollBarLeft.setSelection(index);
+        }
       }
     });
 
