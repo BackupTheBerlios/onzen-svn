@@ -3261,12 +3261,13 @@ Dprintf.dprintf("");
           StringBuilder buffer = new StringBuilder();
           while ((line = input.readLine()) != null)
           {
-    //Dprintf.dprintf("line=%s",line);
+//Dprintf.dprintf("line=#%s#",line);
+            // get length of line
             int n = line.length();
 
-            // remove trailing whitespaces
             if (removeTrailingWhitespaces)
             {
+              // get length of line without trailing whitespaces
               while ((n > 0) && Character.isWhitespace(line.charAt(n-1)))
               {
                 n--;
@@ -3292,13 +3293,13 @@ Dprintf.dprintf("");
             }
 
             // check if empty line
-            if (removeTrailingWhitespaces && line.isEmpty())
+            if (removeTrailingWhitespaces && (buffer.length() == 0))
             {
               trailingEmptyLineCount++;
             }
             else
             {
-              // output previous empty lines
+              // output previous collected empty lines
               while (trailingEmptyLineCount > 0)
               {
                 output.println();
