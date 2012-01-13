@@ -246,7 +246,6 @@ class CommandChanges
     tableColumn.addSelectionListener(selectionListener);
     Widgets.sortTableColumn(widgetChanges,0,data.logDataComparator);
     Widgets.setTableColumnWidth(widgetChanges,Settings.geometryChangesColumn.width);
-//    widgetChanges.setToolTipText("List of changes.");
 
     // buttons
     composite = Widgets.newComposite(dialog);
@@ -312,85 +311,19 @@ class CommandChanges
         Table     table     = (Table)mouseEvent.widget;
         TableItem tableItem = table.getItem(new Point(mouseEvent.x,mouseEvent.y));
 
-        if (widgetChangesToolTip != null)
-        {
-          widgetChangesToolTip.dispose();
-          widgetChangesToolTip = null;
-        }
+        closeChangesTooltip();
 
         if (tableItem != null)
         {
           LogData logData = (LogData)tableItem.getData();
-          Label   label;
-          Text    text;
 
-          final Color COLOR_FORGROUND  = display.getSystemColor(SWT.COLOR_INFO_FOREGROUND);
-          final Color COLOR_BACKGROUND = display.getSystemColor(SWT.COLOR_INFO_BACKGROUND);
-
-          widgetChangesToolTip = new Shell(shell,SWT.ON_TOP|SWT.NO_FOCUS|SWT.TOOL);
-          widgetChangesToolTip.setBackground(COLOR_BACKGROUND);
-          widgetChangesToolTip.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
-          Widgets.layout(widgetChangesToolTip,0,0,TableLayoutData.NSWE);
-          widgetChangesToolTip.addMouseTrackListener(new MouseTrackListener()
-          {
-            public void mouseEnter(MouseEvent mouseEvent)
-            {
-            }
-
-            public void mouseExit(MouseEvent mouseEvent)
-            {
-              if (!isInsideChangesTooltip(mouseEvent.x,mouseEvent.y))
-              {
-                widgetChangesToolTip.dispose();
-                widgetChangesToolTip = null;
-              }
-            }
-
-            public void mouseHover(MouseEvent mouseEvent)
-            {
-            }
-          });
-          widgetChangesToolTipMousePosition.x = mouseEvent.x;
-          widgetChangesToolTipMousePosition.y = mouseEvent.y;
-
-          label = Widgets.newLabel(widgetChangesToolTip,"Revision:");
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          label = Widgets.newLabel(widgetChangesToolTip,logData.revision);
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,0,1,TableLayoutData.WE);
-
-          label = Widgets.newLabel(widgetChangesToolTip,"Date:");
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,1,0,TableLayoutData.W);
-
-          label = Widgets.newLabel(widgetChangesToolTip,Onzen.DATETIME_FORMAT.format(logData.date));
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,1,1,TableLayoutData.WE);
-
-          label = Widgets.newLabel(widgetChangesToolTip,"Author:");
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,2,0,TableLayoutData.W);
-
-          label = Widgets.newLabel(widgetChangesToolTip,logData.author);
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,2,1,TableLayoutData.WE);
-
-          label = Widgets.newLabel(widgetChangesToolTip,"Commit message:");
-          label.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(label,3,0,TableLayoutData.NW);
-
-          text = Widgets.newText(widgetChangesToolTip,SWT.LEFT|SWT.V_SCROLL|SWT.H_SCROLL|SWT.MULTI|SWT.WRAP);
-          text.setText(StringUtils.join(logData.commitMessage,text.DELIMITER));
-          text.setBackground(Onzen.COLOR_WHITE);
-          Widgets.layout(text,3,1,TableLayoutData.WE,0,0,0,0,300,100);
-
-          Point size = widgetChangesToolTip.computeSize(SWT.DEFAULT,SWT.DEFAULT);
           Rectangle bounds = tableItem.getBounds(0);
           Point point = table.toDisplay(mouseEvent.x-16,bounds.y);
-          widgetChangesToolTip.setBounds(point.x,point.y,size.x,size.y);
-          widgetChangesToolTip.setVisible(true);
+
+          openChangesTooltip(shell,logData,point.x,point.y);
+
+          widgetChangesToolTipMousePosition.x = mouseEvent.x;
+          widgetChangesToolTipMousePosition.y = mouseEvent.y;
         }
       }
     });
@@ -407,7 +340,23 @@ class CommandChanges
   public void run()
   {
     widgetClose.setFocus();
-    Dialogs.run(dialog);
+    Dialogs.run(dialog,new DialogRunnable()
+    {
+      public void run(Object result)
+      {
+        closeChangesTooltip();
+      }
+
+      public void done()
+      {
+        closeChangesTooltip();
+      }
+
+      public void cancel()
+      {
+        closeChangesTooltip();
+      }
+    });
   }
 
   /** convert data to string
@@ -438,6 +387,86 @@ class CommandChanges
     else
     {
       return true;
+    }
+  }
+
+  private void openChangesTooltip(Shell shell, LogData logData, int x, int y)
+  {
+    final Color COLOR_FORGROUND  = display.getSystemColor(SWT.COLOR_INFO_FOREGROUND);
+    final Color COLOR_BACKGROUND = display.getSystemColor(SWT.COLOR_INFO_BACKGROUND);
+
+    Label label;
+    Text  text;
+
+    widgetChangesToolTip = new Shell(shell,SWT.ON_TOP|SWT.NO_FOCUS|SWT.TOOL);
+    widgetChangesToolTip.setBackground(COLOR_BACKGROUND);
+    widgetChangesToolTip.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
+    Widgets.layout(widgetChangesToolTip,0,0,TableLayoutData.NSWE);
+    widgetChangesToolTip.addMouseTrackListener(new MouseTrackListener()
+    {
+      public void mouseEnter(MouseEvent mouseEvent)
+      {
+      }
+
+      public void mouseExit(MouseEvent mouseEvent)
+      {
+        if (!isInsideChangesTooltip(mouseEvent.x,mouseEvent.y))
+        {
+          closeChangesTooltip();
+        }
+      }
+
+      public void mouseHover(MouseEvent mouseEvent)
+      {
+      }
+    });
+
+    label = Widgets.newLabel(widgetChangesToolTip,"Revision:");
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,0,0,TableLayoutData.W);
+
+    label = Widgets.newLabel(widgetChangesToolTip,logData.revision);
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,0,1,TableLayoutData.WE);
+
+    label = Widgets.newLabel(widgetChangesToolTip,"Date:");
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,1,0,TableLayoutData.W);
+
+    label = Widgets.newLabel(widgetChangesToolTip,Onzen.DATETIME_FORMAT.format(logData.date));
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,1,1,TableLayoutData.WE);
+
+    label = Widgets.newLabel(widgetChangesToolTip,"Author:");
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,2,0,TableLayoutData.W);
+
+    label = Widgets.newLabel(widgetChangesToolTip,logData.author);
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,2,1,TableLayoutData.WE);
+
+    label = Widgets.newLabel(widgetChangesToolTip,"Commit message:");
+    label.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(label,3,0,TableLayoutData.NW);
+
+    text = Widgets.newText(widgetChangesToolTip,SWT.LEFT|SWT.V_SCROLL|SWT.H_SCROLL|SWT.MULTI|SWT.WRAP);
+    text.setText(StringUtils.join(logData.commitMessage,text.DELIMITER));
+    text.setBackground(Onzen.COLOR_WHITE);
+    Widgets.layout(text,3,1,TableLayoutData.WE,0,0,0,0,300,100);
+
+    Point size = widgetChangesToolTip.computeSize(SWT.DEFAULT,SWT.DEFAULT);
+    widgetChangesToolTip.setBounds(x,y,size.x,size.y);
+    widgetChangesToolTip.setVisible(true);
+  }
+
+  /** close changes tooltip
+   */
+  private void closeChangesTooltip()
+  {
+    if (widgetChangesToolTip != null)
+    {
+      widgetChangesToolTip.dispose();
+      widgetChangesToolTip = null;
     }
   }
 
