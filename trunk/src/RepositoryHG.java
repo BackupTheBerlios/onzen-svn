@@ -482,7 +482,9 @@ class RepositoryHG extends Repository
 
       // get single log entry
       command.clear();
-      command.append(Settings.hgCommand,"-y","-v","log","-l","1","--template",LOG_TEMPLATE);
+      command.append(Settings.hgCommand,"-y","-v","log");
+      if (revision != null) command.append(Settings.hgCommand,"-r",revision);
+      command.append(Settings.hgCommand,"-l","1","--template",LOG_TEMPLATE);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
