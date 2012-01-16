@@ -949,8 +949,6 @@ class RevisionData
    */
   public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
   {
-    assert branches != null;
-
     this.revision      = revision;
     this.parents       = parents;
     this.tags          = tags;
