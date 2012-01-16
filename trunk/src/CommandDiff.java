@@ -750,7 +750,7 @@ class CommandDiff
         int lineIndex = widgetTextLeft.getLineAtOffset(caretEvent.caretOffset);
         if (lineIndex != data.lineIndex)
         {
-Dprintf.dprintf("lineIndex=%d",lineIndex);
+//Dprintf.dprintf("lineIndex=%d",lineIndex);
           setLine(widgetLineDiff,
                   widgetTextLeft,
                   widgetTextRight,
