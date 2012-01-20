@@ -633,7 +633,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryPatches                = new Point(800,600);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(50,100,300);
+  public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(50,100,100,300);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryCreatePatch            = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)

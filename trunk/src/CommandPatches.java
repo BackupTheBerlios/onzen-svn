@@ -323,9 +323,10 @@ class CommandPatches
       widgetPatches = Widgets.newTable(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
       widgetPatches.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetPatches,1,0,TableLayoutData.NSWE);
-      Widgets.addTableColumn(widgetPatches,0,"#",      SWT.RIGHT);
-      Widgets.addTableColumn(widgetPatches,1,"State",  SWT.LEFT );
-      Widgets.addTableColumn(widgetPatches,2,"Summary",SWT.LEFT );
+      Widgets.addTableColumn(widgetPatches,0,"#",         SWT.RIGHT);
+      Widgets.addTableColumn(widgetPatches,1,"State",     SWT.LEFT );
+      Widgets.addTableColumn(widgetPatches,2,"Repository",SWT.LEFT );
+      Widgets.addTableColumn(widgetPatches,3,"Summary",   SWT.LEFT );
       Widgets.setTableColumnWidth(widgetPatches,Settings.geometryPatchesColumn.width);
       menu = Widgets.newPopupMenu(dialog);
       {
@@ -697,7 +698,9 @@ class CommandPatches
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String newFileName = Dialogs.fileOpen(dialog,"Add file to patch",data.patch.rootPath);
+                Repository repository = repositoryTab.getRepository(data.patch.rootPath);
+
+                String newFileName = Dialogs.fileOpen(dialog,"Add file to patch",(repository != null)?repository.title:data.patch.rootPath);
                 if (newFileName != null)
                 {
                   data.patch.addFileName(newFileName);
@@ -1002,7 +1005,7 @@ class CommandPatches
               data.patch.save();
 
               // update
-              data.tableItem.setText(2,summary);
+              data.tableItem.setText(3,summary);
               data.oldSummary     = summary;
               data.oldMessage     = message;
               data.oldComment     = comment;
@@ -1425,10 +1428,13 @@ class CommandPatches
         {
           for (Patch patch : patches)
           {
+            Repository repository = repositoryTab.getRepository(patch.rootPath);
+
             Widgets.addTableEntry(widgetPatches,
                                   patch,
                                   patch.getNumberText(),
                                   patch.state.toString(),
+                                  (repository != null)?repository.title:patch.rootPath,
                                   patch.summary
                                  );
           }

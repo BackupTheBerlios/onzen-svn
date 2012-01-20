@@ -2489,13 +2489,28 @@ class Widgets
     return addTableColumn(table,columnNb,style,SWT.DEFAULT);
   }
 
-  /** hide table column
-   * @param tableColumn table column to hide
+  /** show table column
+   * @param tableColumn table column to show
+   * @param width table column width
+   * @param showFlag true to show colume, false for hide
    */
-  public static void hideTableColumn(TableColumn tableColumn)
+  public static void showTableColumn(TableColumn tableColumn, boolean showFlag)
   {
-    tableColumn.setWidth(0);
-    tableColumn.setResizable(false);
+    if (showFlag)
+    {
+      WidgetTableColumnData widgetTableColumnData = (WidgetTableColumnData)tableColumn.getData();
+
+      if (widgetTableColumnData != null)
+      {
+       tableColumn.setWidth(widgetTableColumnData.width);
+        tableColumn.setResizable(widgetTableColumnData.resizable);
+      }
+    }
+    else
+    {
+      tableColumn.setWidth(0);
+      tableColumn.setResizable(false);
+    }
   }
 
   /** show table column
@@ -2504,13 +2519,15 @@ class Widgets
    */
   public static void showTableColumn(TableColumn tableColumn)
   {
-    WidgetTableColumnData widgetTableColumnData = (WidgetTableColumnData)tableColumn.getData();
+    showTableColumn(tableColumn,true);
+  }
 
-    if (widgetTableColumnData != null)
-    {
-      tableColumn.setWidth(widgetTableColumnData.width);
-      tableColumn.setResizable(widgetTableColumnData.resizable);
-    }
+  /** hide table column
+   * @param tableColumn table column to hide
+   */
+  public static void hideTableColumn(TableColumn tableColumn)
+  {
+    showTableColumn(tableColumn,false);
   }
 
   /** get width of table columns

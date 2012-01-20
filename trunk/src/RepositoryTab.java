@@ -633,6 +633,24 @@ Dprintf.dprintf("");
     addRootDirectory();
   }
 
+  /** get repository
+   * @param rootPath repository root path
+   * @return repository or null if not found
+   */
+  public Repository getRepository(String rootPath)
+  {
+    return onzen.getRepository(rootPath);
+  }
+
+  /** get repository tab
+   * @param rootPath repository root path
+   * @return repository tab or null if not found
+   */
+  public RepositoryTab getRepositoryTab(String rootPath)
+  {
+    return onzen.getRepositoryTab(rootPath);
+  }
+
   /** get title
    */
   public String getTitle()

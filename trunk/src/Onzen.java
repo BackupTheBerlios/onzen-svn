@@ -846,6 +846,32 @@ exception.printStackTrace();
     masterPassword = newMasterPassword;
   }
 
+  /** get repository
+   * @param rootPath repository root path
+   * @return repository or null if not found
+   */
+  public Repository getRepository(String rootPath)
+  {
+    for (Repository repository : repositoryList)
+    {
+      if (repository.rootPath.equals(rootPath))
+      {
+        return repository;
+      }
+    }
+
+    return null;
+  }
+
+  /** get repository tab
+   * @param rootPath repository root path
+   * @return repository tab or null if not found
+   */
+  public RepositoryTab getRepositoryTab(String rootPath)
+  {
+    return repositoryTabMap.get(getRepository(rootPath));
+  }
+
   //-----------------------------------------------------------------------
 
   /** print program usage
