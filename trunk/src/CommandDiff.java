@@ -404,16 +404,28 @@ class CommandDiff
 
           if (widget.getSelection())
           {
-            int topIndex        = widgetTextLeft.getTopIndex();
-            int horizontalIndex = widgetTextLeft.getHorizontalIndex();
+            int topIndex = widgetTextLeft.getTopIndex();
 
             // sync left to right
             widgetLineNumbersRight.setTopIndex(topIndex);
             widgetTextRight.setTopIndex(topIndex);
             widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
 
-            widgetTextRight.setHorizontalIndex(horizontalIndex);
-            widgetHorizontalScrollBarRight.setSelection(horizontalIndex);
+            /* work-around for SWT limitation: getHorizontalIndex() cause
+               a divide-by-zero exception when horizontal increment is 0
+            */
+            try
+            {
+              int horizontalIndex = widgetTextLeft.getHorizontalIndex();
+
+              // sync left to right
+              widgetTextRight.setHorizontalIndex(horizontalIndex);
+              widgetHorizontalScrollBarRight.setSelection(horizontalIndex);
+            }
+            catch (ArithmeticException exception)
+            {
+              // ignored
+            }
           }
         }
       });
@@ -809,15 +821,25 @@ class CommandDiff
       {
         StyledText widget = (StyledText)event.widget;
 
-        int index = widget.getHorizontalIndex();
-
-        widgetHorizontalScrollBarLeft.setSelection(index);
-
-        // sync to right
-        if (widgetSync.getSelection())
+        /* work-around for SWT limitation: getHorizontalIndex() cause
+           a divide-by-zero exception when horizontal increment is 0
+        */
+        try
         {
-          widgetTextRight.setHorizontalIndex(index);
-          widgetHorizontalScrollBarRight.setSelection(index);
+          int index = widget.getHorizontalIndex();
+
+          widgetHorizontalScrollBarLeft.setSelection(index);
+
+          // sync to right
+          if (widgetSync.getSelection())
+          {
+            widgetTextRight.setHorizontalIndex(index);
+            widgetHorizontalScrollBarRight.setSelection(index);
+          }
+        }
+        catch (ArithmeticException exception)
+        {
+          // ignored
         }
       }
     });
@@ -945,15 +967,25 @@ class CommandDiff
       {
         StyledText widget = (StyledText)event.widget;
 
-        int index = widget.getHorizontalIndex();
-
-        widgetHorizontalScrollBarRight.setSelection(index);
-
-        // sync to left
-        if (widgetSync.getSelection())
+        /* work-around for SWT limitation: getHorizontalIndex() cause
+           a divide-by-zero exception when horizontal increment is 0
+        */
+        try
         {
-          widgetTextLeft.setHorizontalIndex(index);
-          widgetHorizontalScrollBarLeft.setSelection(index);
+          int index = widget.getHorizontalIndex();
+
+          widgetHorizontalScrollBarRight.setSelection(index);
+
+          // sync to left
+          if (widgetSync.getSelection())
+          {
+            widgetTextLeft.setHorizontalIndex(index);
+            widgetHorizontalScrollBarLeft.setSelection(index);
+          }
+        }
+        catch (ArithmeticException exception)
+        {
+          // ignored
         }
       }
     });
