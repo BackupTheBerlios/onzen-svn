@@ -2475,7 +2475,11 @@ exception.printStackTrace();
     repositoryList.add(repository);
 
     // add tab, set default selected tab
-    repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
+    repositoryTab = new RepositoryTab(this,
+                                      widgetTabFolder,
+                                      selectedRepositoryTab,
+                                      repository
+                                     );
     repositoryTabMap.put(repository,repositoryTab);
     MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
     menuItem.setData(repositoryTab);
@@ -2959,7 +2963,10 @@ exception.printStackTrace();
             if ((index >= 0) && (index < repositoryList.size()))
             {
               RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
-              editRepository(repositoryTab);
+              if (editRepository(repositoryTab))
+              {
+                widgetList.setItem(index,repositoryTab.repository.title);
+              }
             }
           }
         });
@@ -3354,8 +3361,10 @@ Dprintf.dprintf("repository=%s",repository);
   }
 
   /** edit repository
+   * @param repositoryTab repository tab to edit
+   * @return true iff edited, FALSE otherwise
    */
-  private void editRepository(final RepositoryTab repositoryTab)
+  private boolean editRepository(final RepositoryTab repositoryTab)
   {
     /** dialog data
      */
@@ -4362,6 +4371,12 @@ exception.printStackTrace();
       {
         Dialogs.error(shell,"Cannot store repository list (error: %s).",exception.getMessage());
       }
+
+      return true;
+    }
+    else
+    {
+      return false;
     }
   }
 

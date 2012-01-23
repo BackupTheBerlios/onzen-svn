@@ -256,9 +256,10 @@ class RepositoryTab
   /** create repository tab
    * @param onzen Onzen instance
    * @param parentTabFolder parent tab folder
+   * @param leftRepositoryTab repository tab to left or null
    * @param repository repository
    */
-  RepositoryTab(Onzen onzen, TabFolder parentTabFolder, Repository repository)
+  RepositoryTab(Onzen onzen, TabFolder parentTabFolder, RepositoryTab leftRepositoryTab, Repository repository)
   {
     Menu       menu;
     MenuItem   menuItem;
@@ -294,7 +295,11 @@ class RepositoryTab
     COLOR_UPDATE_STATUS = new Color(display,Settings.colorStatusUpdateStatus.foreground);
 
     // create tab
-    widgetTab = Widgets.addTab(parentTabFolder,repository.title,this);
+    widgetTab = Widgets.insertTab(parentTabFolder,
+                                  (leftRepositoryTab != null)?leftRepositoryTab.widgetTab:null,
+                                  repository.title,
+                                  this
+                                 );
 //Dprintf.dprintf("");
 //widgetTab.setBackground(Onzen.COLOR_YELLOW);
 //Dprintf.dprintf("");
@@ -631,6 +636,16 @@ Dprintf.dprintf("");
 
     // add root directory
     addRootDirectory();
+  }
+
+  /** create repository tab
+   * @param onzen Onzen instance
+   * @param parentTabFolder parent tab folder
+   * @param repository repository
+   */
+  RepositoryTab(Onzen onzen, TabFolder parentTabFolder, Repository repository)
+  {
+    this(onzen,parentTabFolder,null,repository);
   }
 
   /** get repository
