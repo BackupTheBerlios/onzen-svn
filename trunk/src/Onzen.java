@@ -1828,7 +1828,24 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyDeleteLocal);
+      menuItem = Widgets.addMenuItem(menu,"Find files...",Settings.keyFindFiles);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.findFiles();
+          }
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyConvertWhitespaces);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -3428,7 +3445,7 @@ Dprintf.dprintf("repository=%s",repository);
     Button      button;
     Spinner     spinner;
     Text        text;
-    Menu        menu,subMenu;
+    Menu        menu,menu1,menu2,subMenu;
     MenuItem    menuItem;
 
     // repository edit dialog
@@ -3654,7 +3671,6 @@ exception.printStackTrace();
         menu = Widgets.newPopupMenu(dialog);
 
         widgetPatchTests = Widgets.newList(subComposite);
-        widgetPatchTests.setMenu(menu);
         if (repositoryTab.repository.patchTests != null)
         {
           for (String patchTest : repositoryTab.repository.patchTests)
@@ -3663,6 +3679,7 @@ exception.printStackTrace();
           }
         }
         Widgets.layout(widgetPatchTests,0,0,TableLayoutData.NSWE,0,0,2);
+        widgetPatchTests.setMenu(menu);
         widgetPatchTests.setToolTipText("List of test descriptions which can be selected when sending a patch for review.");
 
         subSubComposite = Widgets.newComposite(subComposite);
@@ -3776,6 +3793,8 @@ exception.printStackTrace();
           });
           button.setToolTipText("Move test description down.");
         }
+        subComposite.setMenu(menu);
+        subComposite.setToolTipText("Test description settings.\nRight-click to open context menu.");
 
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
@@ -3808,8 +3827,6 @@ exception.printStackTrace();
             }
           }
         }
-        subComposite.setMenu(menu);
-        subComposite.setToolTipText("Test description settings.\nRight-click to open context menu.");
       }
 
       subComposite = Widgets.addTab(tabFolder,"Mail");
@@ -3884,6 +3901,8 @@ exception.printStackTrace();
           Widgets.layout(widgetMailFrom,3,1,TableLayoutData.WE,0,0,2);
           widgetMailFrom.setToolTipText("Mail from address.");
         }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Mail server settings.\nRight-click to open context menu.");
 
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
@@ -3933,17 +3952,16 @@ exception.printStackTrace();
             }
           }
         }
-        subSubComposite.setMenu(menu);
-        subSubComposite.setToolTipText("Mail server settings.\nRight-click to open context menu.");
 
-        menu = Widgets.newPopupMenu(dialog);
+        menu1 = Widgets.newPopupMenu(dialog);
+        menu2 = Widgets.newPopupMenu(dialog);
 
         subSubComposite = Widgets.newGroup(subComposite,"Patch mail");
         subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subSubComposite,"To:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
           widgetPatchMailTo = Widgets.newText(subSubComposite);
@@ -3952,7 +3970,7 @@ exception.printStackTrace();
           widgetPatchMailTo.setToolTipText("Default to-address for patch mails.");
 
           label = Widgets.newLabel(subSubComposite,"CC:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
           button.setToolTipText("Default CC-addresses for patch mails.");
 
@@ -3962,7 +3980,7 @@ exception.printStackTrace();
           widgetPatchMailCC.setToolTipText("Patch mail carbon-copy address. Separate multiple addresses by spaces.");
 
           label = Widgets.newLabel(subSubComposite,"Subject:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,2,0,TableLayoutData.W,0,0,2);
 
           widgetPatchMailSubject = Widgets.newText(subSubComposite);
@@ -3971,17 +3989,19 @@ exception.printStackTrace();
           widgetPatchMailSubject.setToolTipText("Patch mail subject template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
 
           label = Widgets.newLabel(subSubComposite,"Text:");
-          label.setMenu(menu);
-          Widgets.layout(label,3,0,TableLayoutData.NW,0,0,2);
+          label.setMenu(menu2);
+          Widgets.layout(label,3,0,TableLayoutData.NSW,0,0,2);
 
           widgetPatchMailText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
           if (repositoryTab.repository.patchMailText != null) widgetPatchMailText.setText(repositoryTab.repository.patchMailText);
           Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE,0,0,2);
           widgetPatchMailText.setToolTipText("Patch mail text template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n  ${comment} - comments\n");
         }
+        subSubComposite.setMenu(menu1);
+        subSubComposite.setToolTipText("Patch mail settings.\nRight-click to open context menu.");
 
         {
-          subMenu = Widgets.addMenu(menu,"Copy from...");
+          subMenu = Widgets.addMenu(menu1,"Copy from...");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -4001,14 +4021,35 @@ exception.printStackTrace();
                   if (repository.patchMailTo != null) widgetPatchMailTo.setText(repository.patchMailTo);
                   if (repository.patchMailCC != null) widgetPatchMailCC.setText(repository.patchMailCC);
                   if (repository.patchMailSubject != null) widgetPatchMailSubject.setText(repository.patchMailSubject);
+                }
+              });
+            }
+          }
+        }
+        {
+          subMenu = Widgets.addMenu(menu2,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
                   if (repository.patchMailText != null) widgetPatchMailText.setText(repository.patchMailText);
                 }
               });
             }
           }
         }
-        subSubComposite.setMenu(menu);
-        subSubComposite.setToolTipText("Patch mail settings.\nRight-click to open context menu.");
       }
 
       subComposite = Widgets.addTab(tabFolder,"Post review");
@@ -4054,6 +4095,8 @@ exception.printStackTrace();
             widgetReviewServerPassword.setToolTipText("Review server login password.");
           }
         }
+        subSubComposite.setMenu(menu);
+        subSubComposite.setToolTipText("Review server settings.\nRight-click to open context menu.");
 
         {
           subMenu = Widgets.addMenu(menu,"Copy from...");
@@ -4097,17 +4140,16 @@ exception.printStackTrace();
             }
           }
         }
-        subSubComposite.setMenu(menu);
-        subSubComposite.setToolTipText("Review server settings.\nRight-click to open context menu.");
 
-        menu = Widgets.newPopupMenu(dialog);
+        menu1 = Widgets.newPopupMenu(dialog);
+        menu2 = Widgets.newPopupMenu(dialog);
 
-        subSubComposite = Widgets.newGroup(subComposite,"Info");
+        subSubComposite = Widgets.newGroup(subComposite,"Review info");
         subSubComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0}));
         Widgets.layout(subSubComposite,1,0,TableLayoutData.NSWE);
         {
           label = Widgets.newLabel(subSubComposite,"Summary:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
 
           widgetReviewServerSummary = Widgets.newText(subSubComposite);
@@ -4116,7 +4158,7 @@ exception.printStackTrace();
           widgetReviewServerSummary.setToolTipText("Review summary template.\nMacros:\n  ${n} - patch number\n  ${summary} - summary text");
 
           label = Widgets.newLabel(subSubComposite,"Repository:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,1,0,TableLayoutData.W,0,0,2);
 
           widgetReviewServerRepository = Widgets.newText(subSubComposite);
@@ -4125,7 +4167,7 @@ exception.printStackTrace();
           widgetReviewServerRepository.setToolTipText("Repository id or name.");
 
           label = Widgets.newLabel(subSubComposite,"Groups:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,2,0,TableLayoutData.W,0,0,2);
 
           widgetReviewServerGroups = Widgets.newText(subSubComposite);
@@ -4134,7 +4176,7 @@ exception.printStackTrace();
           widgetReviewServerGroups.setToolTipText("Review groups names.");
 
           label = Widgets.newLabel(subSubComposite,"Persons:");
-          label.setMenu(menu);
+          label.setMenu(menu1);
           Widgets.layout(label,3,0,TableLayoutData.W,0,0,2);
 
           widgetReviewServerPersons = Widgets.newText(subSubComposite);
@@ -4143,17 +4185,18 @@ exception.printStackTrace();
           widgetReviewServerPersons.setToolTipText("Review person names.");
 
           label = Widgets.newLabel(subSubComposite,"Description:");
-          label.setMenu(menu);
-          Widgets.layout(label,4,0,TableLayoutData.NW,0,0,2);
+          label.setMenu(menu2);
+          Widgets.layout(label,4,0,TableLayoutData.NSW,0,0,2);
 
           widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
           if (repositoryTab.repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repositoryTab.repository.reviewServerDescription);
           Widgets.layout(widgetReviewServerDescription,4,1,TableLayoutData.NSWE,0,0,2);
           widgetReviewServerDescription.setToolTipText("Review description template.\nMacros:\n  ${date} - date\n  ${time} - time\n  ${datetime} - date/time\n  ${message} - message\n  ${tests} - tests\n  ${comment} - comments\n");
         }
+        subSubComposite.setMenu(menu1);
 
         {
-          subMenu = Widgets.addMenu(menu,"Copy from...");
+          subMenu = Widgets.addMenu(menu1,"Copy from...");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -4174,13 +4217,37 @@ exception.printStackTrace();
                   if (repository.reviewServerRepository != null) widgetReviewServerRepository.setText(repository.reviewServerRepository);
                   if (repository.reviewServerGroups != null) widgetReviewServerGroups.setText(repository.reviewServerGroups);
                   if (repository.reviewServerPersons != null) widgetReviewServerPersons.setText(repository.reviewServerPersons);
+                }
+              });
+            }
+          }
+        }
+
+        {
+          subMenu = Widgets.addMenu(menu2,"Copy from...");
+          for (Repository repository : repositoryList)
+          {
+            if (repository != repositoryTab.repository)
+            {
+              menuItem = Widgets.addMenuItem(subMenu,repository.title);
+              menuItem.setData(repository);
+              menuItem.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  MenuItem   widget     = (MenuItem)selectionEvent.widget;
+                  Repository repository = (Repository)widget.getData();
+
                   if (repository.reviewServerDescription != null) widgetReviewServerDescription.setText(repository.reviewServerDescription);
                 }
               });
             }
           }
         }
-        subSubComposite.setMenu(menu);
+
         subSubComposite.setToolTipText("Review message settings.\nRight-click to open context menu.");
       }
     }
