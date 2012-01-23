@@ -488,7 +488,7 @@ throw new RepositoryException("NYI");
                 {
                   public void run()
                   {
-                    if (!repositoryTab.widgetTab.isDisposed()) repositoryTab.updateTreeItem(fileData);
+                    if (!repositoryTab.widgetComposite.isDisposed()) repositoryTab.updateTreeItem(fileData);
                   }
                 });
               }
@@ -587,8 +587,8 @@ throw new RepositoryException("NYI");
         {
           if (drawInfo.container.contains(mouseEvent.x,mouseEvent.y))
           {
-            CommandRevisionInfo rommandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData.revision);
-            rommandRevisionInfo.run();
+            CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(dialog,repositoryTab,fileData,drawInfo.revisionData.revision);
+            commandRevisionInfo.run();
             break;
           }
         }

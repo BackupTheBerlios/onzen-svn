@@ -243,7 +243,7 @@ class RepositoryTab
 
   // widgets
   private final TabFolder     widgetTabFolder;
-  public  final Composite     widgetTab;
+  public  final Composite     widgetComposite;
   private final Tree          widgetFileTree;
 
   // map file name -> tree item
@@ -295,19 +295,19 @@ class RepositoryTab
     COLOR_UPDATE_STATUS = new Color(display,Settings.colorStatusUpdateStatus.foreground);
 
     // create tab
-    widgetTab = Widgets.insertTab(parentTabFolder,
-                                  (leftRepositoryTab != null)?leftRepositoryTab.widgetTab:null,
-                                  repository.title,
-                                  this
-                                 );
+    widgetComposite = Widgets.insertTab(parentTabFolder,
+                                        (leftRepositoryTab != null)?leftRepositoryTab.widgetComposite:null,
+                                        repository.title,
+                                        this
+                                       );
 //Dprintf.dprintf("");
-//widgetTab.setBackground(Onzen.COLOR_YELLOW);
+//widgetComposite.setBackground(Onzen.COLOR_YELLOW);
 //Dprintf.dprintf("");
-    widgetTab.setLayout(new TableLayout(1.0,1.0,2));
-    Widgets.layout(widgetTab,0,0,TableLayoutData.NSWE);
+    widgetComposite.setLayout(new TableLayout(1.0,1.0,2));
+    Widgets.layout(widgetComposite,0,0,TableLayoutData.NSWE);
     {
       // file tree
-      widgetFileTree = Widgets.newTree(widgetTab,SWT.MULTI);
+      widgetFileTree = Widgets.newTree(widgetComposite,SWT.MULTI);
       Widgets.layout(widgetFileTree,0,0,TableLayoutData.NSWE);
       SelectionListener fileTreeColumnSelectionListener = new SelectionListener()
       {
@@ -679,14 +679,14 @@ Dprintf.dprintf("");
   public void setTitle(String title)
   {
     repository.title = title;
-    Widgets.setTabTitle(widgetTabFolder,widgetTab,title);
+    Widgets.setTabTitle(widgetTabFolder,widgetComposite,title);
   }
 
   /** close repository tab
    */
   public void close()
   {
-    Widgets.removeTab(widgetTabFolder,widgetTab);
+    Widgets.removeTab(widgetTabFolder,widgetComposite);
   }
 
   /** move repository tab
@@ -694,14 +694,14 @@ Dprintf.dprintf("");
    */
   public void move(int index)
   {
-    Widgets.moveTab(widgetTabFolder,widgetTab,index);
+    Widgets.moveTab(widgetTabFolder,widgetComposite,index);
   }
 
   /** show repository tab
    */
   public void show()
   {
-    Widgets.showTab(widgetTabFolder,widgetTab);
+    Widgets.showTab(widgetTabFolder,widgetComposite);
   }
 
   /** open directory in file-tree

@@ -475,7 +475,7 @@ class CommandSetFileMode
       {
         public void run()
         {
-          if (!repositoryTab.widgetTab.isDisposed()) repositoryTab.updateTreeItems(data.fileDataSet);
+          if (!repositoryTab.widgetComposite.isDisposed()) repositoryTab.updateTreeItems(data.fileDataSet);
         }
       });
 

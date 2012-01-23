@@ -638,7 +638,7 @@ class CommandCommit
       {
         public void run()
         {
-          if (!repositoryTab.widgetTab.isDisposed()) repositoryTab.updateTreeItems(fileDataSet);
+          if (!repositoryTab.widgetComposite.isDisposed()) repositoryTab.updateTreeItems(fileDataSet);
         }
       });
 

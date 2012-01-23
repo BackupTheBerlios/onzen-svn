@@ -302,7 +302,7 @@ class CommandRevisionInfo
         public void run(FileData fileData, final String revision)
         {
           // get revision info
-          repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
+          repositoryTab.setStatusText("Get revision '%s' for '%s'...",revision,fileData.getFileName());
           try
           {
             data.revisionData = repositoryTab.repository.getRevisionData(fileData,revision);
