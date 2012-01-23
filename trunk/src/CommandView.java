@@ -135,7 +135,7 @@ class CommandView
   private final Text          widgetFind;
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
-  private final Button        widgetButtonClose;
+  private final Button        widgetClose;
 
   // ------------------------ native functions ----------------------------
 
@@ -346,9 +346,9 @@ class CommandView
         }
       });
 
-      widgetButtonClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetButtonClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonClose.addSelectionListener(new SelectionListener()
+      widgetClose = Widgets.newButton(composite,"Close");
+      Widgets.layout(widgetClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -680,7 +680,7 @@ class CommandView
       }
       else
       {
-        widgetButtonClose.setFocus();
+        widgetClose.setFocus();
       }
       Dialogs.run(dialog);
     }
