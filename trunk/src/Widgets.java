@@ -3794,18 +3794,33 @@ private static void printTree(Tree tree)
     return tabFolder;
   }
 
-  /** add tab widget
+  /** insert tab widget
    * @param tabFolder tab folder
+   * @param leftComposite left tab item composite or null
    * @param title title of tab
    * @param data data element
    * @return new composite widget
    */
-  public static Composite addTab(TabFolder tabFolder, String title, Object data)
+  public static Composite insertTab(TabFolder tabFolder, Composite leftComposite, String title, Object data)
   {
-    TabItem tabItem = new TabItem(tabFolder,SWT.NONE);
+    // get tab item index
+    int index = 0;
+    TabItem[] tabItems = tabFolder.getItems();
+    for (index = 0; index < tabItems.length; index++)
+    {
+      if (tabItems[index].getControl() == leftComposite)
+      {
+        index++;
+        break;
+      }
+    }
+
+    // create tab
+    TabItem tabItem = new TabItem(tabFolder,SWT.NONE,index);
     tabItem.setData(data);
     tabItem.setText(title);
 
+    // create composite
     Composite composite = new Composite(tabFolder,SWT.NONE);
     TableLayout tableLayout = new TableLayout();
     tableLayout.marginTop    = 2;
@@ -3817,6 +3832,17 @@ private static void printTree(Tree tree)
     tabItem.setControl(composite);
 
     return composite;
+  }
+
+  /** add tab widget
+   * @param tabFolder tab folder
+   * @param title title of tab
+   * @param data data element
+   * @return new composite widget
+   */
+  public static Composite addTab(TabFolder tabFolder, String title, Object data)
+  {
+    return insertTab(tabFolder,null,title,data);
   }
 
   /** add tab widget
