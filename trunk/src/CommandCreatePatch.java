@@ -144,7 +144,7 @@ class CommandCreatePatch
   private final Button            widgetFindNext;
   private final Button            widgetIgnoreWhitespaces;
   private final List              widgetFileNames;
-  private final Button            widgetButtonClose;
+  private final Button            widgetClose;
 
   // ------------------------ native functions ----------------------------
 
@@ -537,9 +537,9 @@ Dprintf.dprintf("");
       });
       button.setToolTipText("NYI");
 
-      widgetButtonClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetButtonClose,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonClose.addSelectionListener(new SelectionListener()
+      widgetClose = Widgets.newButton(composite,"Close");
+      Widgets.layout(widgetClose,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -725,7 +725,7 @@ Dprintf.dprintf("");
       }
       else
       {
-        widgetButtonClose.setFocus();
+        widgetClose.setFocus();
       }
       Dialogs.run(dialog);
     }
