@@ -41,7 +41,7 @@ import javax.xml.bind.JAXBException;
 /****************************** Classes ********************************/
 
 @XmlRootElement()
-@XmlType(propOrder={"repositories"})
+@XmlType(propOrder={"repositoryList"})
 @XmlAccessorType(XmlAccessType.NONE)
 public class RepositoryList implements Iterable<Repository>
 {
