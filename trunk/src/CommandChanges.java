@@ -342,17 +342,7 @@ class CommandChanges
     widgetClose.setFocus();
     Dialogs.run(dialog,new DialogRunnable()
     {
-      public void run(Object result)
-      {
-        closeChangesTooltip();
-      }
-
-      public void done()
-      {
-        closeChangesTooltip();
-      }
-
-      public void cancel()
+      public void done(Object result)
       {
         closeChangesTooltip();
       }
