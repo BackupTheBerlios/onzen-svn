@@ -2561,13 +2561,49 @@ class Widgets
 
   /** default table sort selection listener
    */
-  final public static SelectionListener DEFAULT_TABLE_SELECTION_LISTENER = new SelectionListener()
+  final public static SelectionListener DEFAULT_TABLE_SELECTION_LISTENER_STRING = new SelectionListener()
   {
     public void widgetSelected(SelectionEvent selectionEvent)
     {
       TableColumn tableColumn = (TableColumn)selectionEvent.widget;
       Table       table       = tableColumn.getParent();
       Widgets.sortTableColumn(table,tableColumn,String.CASE_INSENSITIVE_ORDER);
+    }
+    public void widgetDefaultSelected(SelectionEvent selectionEvent)
+    {
+    }
+  };
+  final public static SelectionListener DEFAULT_TABLE_SELECTION_LISTENER_INT = new SelectionListener()
+  {
+    public void widgetSelected(SelectionEvent selectionEvent)
+    {
+      TableColumn tableColumn = (TableColumn)selectionEvent.widget;
+      Table       table       = tableColumn.getParent();
+      Widgets.sortTableColumn(table,tableColumn,new Comparator<Integer>()
+      {
+        public int compare(Integer i1, Integer i2)
+        {
+          return i1.compareTo(i2);
+        }
+      });
+    }
+    public void widgetDefaultSelected(SelectionEvent selectionEvent)
+    {
+    }
+  };
+  final public static SelectionListener DEFAULT_TABLE_SELECTION_LISTENER_LONG = new SelectionListener()
+  {
+    public void widgetSelected(SelectionEvent selectionEvent)
+    {
+      TableColumn tableColumn = (TableColumn)selectionEvent.widget;
+      Table       table       = tableColumn.getParent();
+      Widgets.sortTableColumn(table,tableColumn,new Comparator<Long>()
+      {
+        public int compare(Long i1, Long i2)
+        {
+          return i1.compareTo(i2);
+        }
+      });
     }
     public void widgetDefaultSelected(SelectionEvent selectionEvent)
     {
