@@ -2489,8 +2489,16 @@ exception.printStackTrace();
   {
     RepositoryTab repositoryTab = null;
 
-    // add to list
-    repositoryList.add(repository);
+    if (selectedRepositoryTab != null)
+    {
+      // insert into list
+      repositoryList.insert(selectedRepositoryTab.repository,repository);
+    }
+    else
+    {
+      // add to list
+      repositoryList.add(repository);
+    }
 
     // add tab, set default selected tab
     repositoryTab = new RepositoryTab(this,
