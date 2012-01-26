@@ -34,24 +34,6 @@ import java.util.ListIterator;
 import java.util.WeakHashMap;
 
 // graphics
-import org.eclipse.swt.custom.CaretEvent;
-import org.eclipse.swt.custom.CaretListener;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.LineStyleEvent;
-import org.eclipse.swt.custom.LineStyleListener;
-import org.eclipse.swt.dnd.ByteArrayTransfer;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DragSource;
-import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.DragSourceListener;
-import org.eclipse.swt.dnd.DropTarget;
-import org.eclipse.swt.dnd.DropTargetAdapter;
-import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -62,8 +44,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
@@ -80,7 +60,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -97,9 +76,6 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.swt.widgets.Widget;
-
-import org.eclipse.swt.widgets.ScrollBar;
 
 /****************************** Classes ********************************/
 
@@ -211,7 +187,7 @@ class RepositoryTab
      */
     public String toString()
     {
-      return "FileComparator {"+sortMode+"}";
+      return "FileDataComparator {"+sortMode+"}";
     }
   }
 
@@ -1112,11 +1088,10 @@ Dprintf.dprintf("");
   /** open file (with external command)
    * @param fileData file to open
    */
-  public void openFile(FileData fileData)
+  public void openFile(String fileName, String mimeType)
   {
     // find editor command with file mime-type
     String command = null;
-    String mimeType = fileData.getMimeType(repository.rootPath);
     for (Settings.Editor editor : Settings.editors)
     {
       if (editor.pattern.matcher(mimeType).matches())
@@ -1344,8 +1319,8 @@ Dprintf.dprintf("");
     {
       // expand command
       command = (command.indexOf("%file%") >= 0)
-                  ?command.replace("%file%",fileData.getFileName(repository.rootPath))
-                  :command+" "+fileData.getFileName(repository.rootPath);
+                  ?command.replace("%file%",fileName)
+                  :command+" "+fileName;
 
       // run command
       try
@@ -1358,6 +1333,16 @@ Dprintf.dprintf("");
         return;
       }
     }
+  }
+
+  /** open file (with external command)
+   * @param fileData file to open
+   */
+  public void openFile(FileData fileData)
+  {
+    openFile(fileData.getFileName(repository.rootPath),
+             fileData.getMimeType(repository.rootPath)
+            );
   }
 
   /** open file (with external command)
@@ -2083,6 +2068,14 @@ Dprintf.dprintf("");
     }
   }
 
+  /** find files
+   */
+  public void findFiles()
+  {
+    CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this);
+    commandFindFiles.run();
+  }
+
   /** convert whitespaces in selected files
    */
   public void convertWhitespaces()
@@ -2108,10 +2101,10 @@ Dprintf.dprintf("");
 
       final Data data = new Data();
 
-      Composite   composite,subComposite;
-      Control     control;
-      Label       label;
-      Button      button;
+      Composite composite,subComposite;
+      Control   control;
+      Label     label;
+      Button    button;
 
       // convert dialog
       final Shell dialog = Dialogs.openModal(shell,"Convert whitespaces",new double[]{1.0,0.0},1.0);

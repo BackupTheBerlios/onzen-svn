@@ -31,7 +31,6 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.StringTokenizer;
 import java.util.LinkedHashSet;
-
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
@@ -621,6 +620,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryDeleteLocalFiles       = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryFindFiles              = new Point(600,400);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryFindFilesColumn        = new ColumnSizes(300,160,60);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryConvertWhitespaces     = new Point(400,300);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryChangedFiles           = new Point(850,500);
@@ -777,13 +780,17 @@ public class Settings
   public static int                      keyRenameLocal                 = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyDeleteLocal                 = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFindFiles                   = SWT.CTRL+'F';
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyConvertWhitespaces          = SWT.NONE;
 
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFind                        = SWT.CTRL+'f';
+  public static int                      keyFind                        = SWT.CTRL+'F';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindPrev                    = SWT.CTRL+SWT.SHIFT+'g';
+  public static int                      keyFindPrev                    = SWT.CTRL+SWT.SHIFT+'G';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindNext                    = SWT.CTRL+'g';
+  public static int                      keyFindNext                    = SWT.CTRL+'G';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindNextDiff                = ' ';
 

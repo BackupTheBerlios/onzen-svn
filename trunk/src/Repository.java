@@ -344,7 +344,7 @@ class FileData
     this(name,States.UNKNOWN);
   }
 
-  /** get file name
+  /** get absolute file name
    * @param rootPath root path
    * @return file name
    */
@@ -353,7 +353,7 @@ class FileData
     return rootPath+File.separator+name;
   }
 
-  /** get file name
+  /** get absolute file name
    * @param repository repository
    * @return file name
    */
@@ -362,7 +362,7 @@ class FileData
     return getFileName(repository.rootPath);
   }
 
-  /** get file name
+  /** get repository relative file name
    * @return file name
    */
   public String getFileName()
@@ -370,7 +370,7 @@ class FileData
     return name;
   }
 
-  /** set file name
+  /** set repository relative file name
    * @param name file name
    */
   public void setFileName(String name)
@@ -386,7 +386,7 @@ class FileData
     return new File(name).getName();
   }
 
-  /** get directory name
+  /** get absolute directory name
    * @param rootPath root path
    * @return directory name
    */
@@ -396,7 +396,7 @@ class FileData
     return (parent != null) ? parent : "";
   }
 
-  /** get directory name
+  /** get absolute directory name
    * @param repository repository
    * @return directory name
    */
@@ -405,7 +405,7 @@ class FileData
     return getDirectoryName(repository.rootPath);
   }
 
-  /** get directory name
+  /** get repository relative directory name
    * @return directory name
    */
   public String getDirectoryName()
@@ -447,22 +447,16 @@ class FileData
     return getPermissions(repository.rootPath);
   }
 
-  /** get file mime type (use file name extensions)
+  /** get file mime type
    * @param rootPath root path
    * @return mime type or null if no mime type found
    */
   public String getMimeType(String rootPath)
   {
-    MimetypesFileTypeMap mimetypesFileTypeMap = new MimetypesFileTypeMap();
-
-    // add additional mime types
-    mimetypesFileTypeMap.addMimeTypes("text/x-c c cpp ++");
-    mimetypesFileTypeMap.addMimeTypes("text/x-java java");
-
-    return mimetypesFileTypeMap.getContentType(getFileName(rootPath));
+    return Onzen.getMimeType(getFileName(rootPath));
   }
 
-  /** get file mime type (use file name extensions)
+  /** get file mime type
    * @param repository repository
    * @return mime type or null if no mime type found
    */
@@ -1985,6 +1979,31 @@ abstract class Repository implements Serializable
     }
   }
 
+  /** get file name relative to root path
+   * @param fileName
+   * @return file name relative to root path or unchanged file name
+   */
+  public String getFileName(String fileName)
+  {
+    if (fileName.startsWith(rootPath))
+    {
+      int index = rootPath.length();
+      if ((fileName.length() > index) && (fileName.charAt(index) == File.separatorChar)) index++;
+      fileName = fileName.substring(index);
+    }
+
+    return fileName;
+  }
+
+  /** get file name relative to root path
+   * @param file file
+   * @return file name relative to root path or unchanged file name
+   */
+  public String getFileName(File file)
+  {
+    return getFileName(file.getPath());
+  }
+
   /** get file type
    * @param file file
    * @return file type
@@ -2000,8 +2019,8 @@ abstract class Repository implements Serializable
 
       // check if link, directory, file
       if      (file.exists() && !new File(path,fileName).getCanonicalFile().equals(new File(path,fileName).getAbsoluteFile())) type = FileData.Types.LINK;
-      else if (file.isDirectory())                                                       type = FileData.Types.DIRECTORY;
-      else                                                                               type = FileData.Types.FILE;
+      else if (file.isDirectory())                                                                                             type = FileData.Types.DIRECTORY;
+      else                                                                                                                     type = FileData.Types.FILE;
     }
     catch (IOException exception)
     {
@@ -2012,12 +2031,12 @@ abstract class Repository implements Serializable
   }
 
   /** get file type
-   * @param name file name
+   * @param fileName file name
    * @return file type
    */
-  public FileData.Types getFileType(String name)
+  public FileData.Types getFileType(String fileName)
   {
-    return getFileType(new File(rootPath,name));
+    return getFileType(new File(rootPath,fileName));
   }
 
   /** check if file is hidden
@@ -2059,6 +2078,15 @@ abstract class Repository implements Serializable
   }
 
   /** check if file is hidden
+   * @param fileName file name
+   * @return true iff hidden
+   */
+  public boolean isHiddenFile(String fileName)
+  {
+    return isHiddenFile(fileName,getFileType(fileName));
+  }
+
+  /** check if file is hidden
    * @param file file
    * @param type file type; see FileData.Types
    * @return true iff hidden
@@ -2069,6 +2097,15 @@ abstract class Repository implements Serializable
   }
 
   /** check if file is hidden
+   * @param file file
+   * @return true iff hidden
+   */
+  public boolean isHiddenFile(File file)
+  {
+    return isHiddenFile(file.getName(),getFileType(file));
+  }
+
+  /** check if file is hidden
   * @param directory directory
    * @param baseName file base name
    * @return true iff hidden
@@ -2076,15 +2113,6 @@ abstract class Repository implements Serializable
   public boolean isHiddenFile(String directory, String baseName)
   {
     String fileName = !directory.isEmpty() ? directory+File.separator+baseName : baseName;
-    return isHiddenFile(fileName,getFileType(fileName));
-  }
-
-  /** check if file is hidden
-   * @param fileName file name
-   * @return true iff hidden
-   */
-  public boolean isHiddenFile(String fileName)
-  {
     return isHiddenFile(fileName,getFileType(fileName));
   }
 
