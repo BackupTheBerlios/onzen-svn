@@ -1583,9 +1583,9 @@ class CommandDiff
     if (!dialog.isDisposed())
     {
       widgetFindRight.setFocus();
-      Dialogs.run(dialog,new Listener()
+      Dialogs.run(dialog,new DialogRunnable()
       {
-        public void handleEvent(Event event)
+        public void done(Object result)
         {
           display.removeFilter(SWT.KeyDown,filterListener);
         }
