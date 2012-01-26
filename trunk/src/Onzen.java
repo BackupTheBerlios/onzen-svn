@@ -830,6 +830,14 @@ exception.printStackTrace();
     masterPassword = newMasterPassword;
   }
 
+  /** get repository list
+   * @return repository list
+   */
+  public RepositoryList getRepositoryList()
+  {
+    return repositoryList;
+  }
+
   /** get repository
    * @param rootPath repository root path
    * @return repository or null if not found

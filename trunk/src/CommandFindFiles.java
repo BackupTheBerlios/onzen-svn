@@ -123,12 +123,16 @@ class CommandFindFiles
   class Data
   {
     String  findText;
+    boolean showAllFlag;
+    boolean showHiddenFlag;
     boolean quitFlag;
 
     Data()
     {
-      this.findText = "";
-      this.quitFlag = false;
+      this.findText       = "";
+      this.showAllFlag    = false;
+      this.showHiddenFlag = false;
+      this.quitFlag       = false;
     }
   };
 
@@ -137,8 +141,10 @@ class CommandFindFiles
 
   // --------------------------- variables --------------------------------
 
-  // find history
-  private static String[]       findHistory = new String[0];
+  // stored settings
+  private static String[]       findHistory    = new String[0];
+  private static boolean        showAllFlag    = false;
+  private static boolean        showHiddenFlag = false;
 
   // global variable references
   private final RepositoryTab   repositoryTab;
@@ -151,6 +157,8 @@ class CommandFindFiles
   // widgets
   private final Table           widgetFiles;
   private final Combo           widgetFind;
+  private final Button          widgetShowAll;
+  private final Button          widgetShowHidden;
   private final Button          widgetClose;
 
   // ------------------------ native functions ----------------------------
@@ -203,11 +211,11 @@ class CommandFindFiles
           }
         }
       };
-      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",SWT.LEFT,true);
+      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",        SWT.LEFT, true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Date",SWT.LEFT);
+      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Date",        SWT.LEFT, false);
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,2,"Size [bytes]",SWT.RIGHT);
+      tableColumn = Widgets.addTableColumn(widgetFiles,2,"Size [bytes]",SWT.RIGHT,false);
       tableColumn.addSelectionListener(selectionListener);
       Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumn.width);
 
@@ -221,6 +229,57 @@ class CommandFindFiles
         widgetFind = Widgets.newCombo(subComposite);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         widgetFind.setToolTipText("Find file pattern. Use * and ? as wildcards.");
+        widgetFind.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+            // restart find files
+            restartFindFiles();
+
+            // add to history
+            widgetFind.add(widgetFind.getText().trim(),0);
+            while (widgetFind.getItemCount() > MAX_HISTORY_LENGTH)
+            {
+              widgetFind.remove(MAX_HISTORY_LENGTH,MAX_HISTORY_LENGTH);
+            }
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,1.0));
+      Widgets.layout(subComposite,2,0,TableLayoutData.W);
+      {
+        widgetShowAll = Widgets.newCheckbox(subComposite,"all repositories");
+        widgetShowAll.setSelection(showAllFlag);
+        Widgets.layout(widgetShowAll,0,0,TableLayoutData.W);
+        widgetShowAll.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            restartFindFiles();
+          }
+        });
+
+        widgetShowHidden = Widgets.newCheckbox(subComposite,"show hidden");
+        widgetShowHidden.setSelection(showHiddenFlag);
+        Widgets.layout(widgetShowHidden,0,1,TableLayoutData.W);
+        widgetShowHidden.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            restartFindFiles();
+          }
+        });
       }
     }
 
@@ -238,7 +297,9 @@ class CommandFindFiles
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          findHistory = widgetFind.getItems();
+          findHistory    = widgetFind.getItems();
+          showAllFlag    = widgetShowAll.getSelection();
+          showHiddenFlag = widgetShowHidden.getSelection();
 
           Settings.geometryView = dialog.getSize();
 
@@ -270,25 +331,6 @@ class CommandFindFiles
       }
     });
 
-    widgetFind.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        // find files
-        findFiles(widgetFind);
-
-        // add to history
-        widgetFind.add(widgetFind.getText().trim(),0);
-        while (widgetFind.getItemCount() > MAX_HISTORY_LENGTH)
-        {
-          widgetFind.remove(MAX_HISTORY_LENGTH,MAX_HISTORY_LENGTH);
-        }
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-
     KeyListener keyListener = new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
@@ -300,7 +342,7 @@ class CommandFindFiles
       }
       public void keyReleased(KeyEvent keyEvent)
       {
-        findFiles(widgetFind);
+        restartFindFiles();
       }
     };
     widgetFiles.addKeyListener(keyListener);
@@ -318,10 +360,21 @@ class CommandFindFiles
     // start find files
     Background.run(new BackgroundRunnable()
     {
+      String  findText       =  "";
+      Pattern findPattern    = null;
+      boolean showAllFlag    = false;
+      boolean showHiddenFlag = false;
+
+      boolean isDataModified()
+      {
+        return    data.quitFlag
+               || ((data.findText != null) && !data.findText.equals(findText))
+               || (data.showAllFlag != showAllFlag)
+               || (data.showHiddenFlag != showHiddenFlag);
+      }
+
       public void run()
       {
-        String  findText    = "";
-        Pattern findPattern = null;
         while (!data.quitFlag)
         {
           // find files
@@ -336,25 +389,36 @@ class CommandFindFiles
           {
 //Dprintf.dprintf("findPattern=%s",findPattern);
             LinkedList<File> directoryList = new LinkedList<File>();
-            directoryList.add(new File(repositoryTab.repository.rootPath));
+            if (showAllFlag)
+            {
+Dprintf.dprintf("");
+              for (Repository repository : repositoryTab.onzen.getRepositoryList())
+              {
+                directoryList.add(new File(repository.rootPath));
+              }
+            }
+            else
+            {
+              directoryList.add(new File(repositoryTab.repository.rootPath));
+            }
             while (directoryList.size() > 0)
             {
-              // check for quit/restart find
-              if (data.quitFlag || ((data.findText != null) && !data.findText.equals(findText))) break;
+              // check for modified data
+              if (isDataModified()) break;
 
               File directory = directoryList.removeFirst();
 //Dprintf.dprintf("directory=%s",directory);
               for (final File file : directory.listFiles())
               {
-                // check for quit/restart find
-                if (data.quitFlag || ((data.findText != null) && !data.findText.equals(findText))) break;
+                // check for modified data
+                if (isDataModified()) break;
 
                 if     (file.isFile())
                 {
                   final String fileName = repositoryTab.repository.getFileName(file);
 //Dprintf.dprintf("file=%s %s %s",fileName,file.isHidden(),repositoryTab.repository.isHiddenFile(fileName));
 
-                  if (   !repositoryTab.repository.isHiddenFile(fileName)
+                  if (   (showHiddenFlag || !repositoryTab.repository.isHiddenFile(fileName))
                       && (   fileName.toLowerCase().contains(findText)
                           || findPattern.matcher(fileName).matches()
                          )
@@ -388,7 +452,8 @@ class CommandFindFiles
           // wait for new filter pattern/quit
           synchronized(data)
           {
-            while (!data.quitFlag && ((data.findText == null) || data.findText.equals(findText)))
+            // wait for new find data
+            while (!isDataModified())
             {
               try
               {
@@ -399,6 +464,8 @@ class CommandFindFiles
                 // ignored
               }
             }
+
+            // get new find data
             if (data.findText != null)
             {
               // get new find text/pattern
@@ -408,6 +475,8 @@ class CommandFindFiles
               // clear existing text
               data.findText = null;
             }
+            showAllFlag    = data.showAllFlag;
+            showHiddenFlag = data.showHiddenFlag;
           }
         }
       }
@@ -445,19 +514,20 @@ class CommandFindFiles
 
   //-----------------------------------------------------------------------
 
-  /** find files matching filter
-   * @param widgetFind filter pattern widget
+  /** restart find files matching filters
    */
-  private void findFiles(Combo widgetFind)
+  private void restartFindFiles()
   {
-    if (!widgetFind.isDisposed())
+    if (!dialog.isDisposed())
     {
       String findText = widgetFind.getText().toLowerCase();
       if (!findText.isEmpty())
       {
         synchronized(data)
         {
-          data.findText = findText;
+          data.findText       = findText;
+          data.showAllFlag    = widgetShowAll.getSelection();
+          data.showHiddenFlag = widgetShowHidden.getSelection();
           data.notifyAll();
         }
       }
