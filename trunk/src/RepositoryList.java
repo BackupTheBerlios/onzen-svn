@@ -52,7 +52,7 @@ public class RepositoryList implements Iterable<Repository>
   public String                  name;              // repository list name
 
   @XmlElement(name = "repository")
-  private LinkedList<Repository> repositories;      // list of repositories
+  private LinkedList<Repository> repositoryList;    // list of repositories
 
   // ------------------------ native functions ----------------------------
 
@@ -63,7 +63,7 @@ public class RepositoryList implements Iterable<Repository>
    */
   RepositoryList(String name)
   {
-    this.repositories = new LinkedList<Repository>();
+    this.repositoryList = new LinkedList<Repository>();
     if (name != null) load(name);
   }
 
@@ -134,10 +134,10 @@ Dprintf.dprintf("");
 
         // read xml file
         RepositoryList tmpRepositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(fileName));
-        synchronized(repositories)
+        synchronized(repositoryList)
         {
-          repositories.clear();
-          repositories.addAll(tmpRepositoryList.repositories);
+          repositoryList.clear();
+          repositoryList.addAll(tmpRepositoryList.repositoryList);
         }
       }
 
@@ -192,7 +192,7 @@ Dprintf.dprintf("exception=%s",exception);
 //marshaller.marshal(controlConfig, System.out);
 
 /*
-for (Repository repository : repositories)
+for (Repository repository : repositoryList)
 {
 Dprintf.dprintf("repository=%s",repository);
 for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
@@ -243,9 +243,9 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public Iterator<Repository> iterator()
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      return repositories.iterator();
+      return repositoryList.iterator();
     }
   }
 
@@ -253,9 +253,9 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public void clear()
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      repositories.clear();
+      repositoryList.clear();
     }
   }
 
@@ -264,9 +264,9 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public int size()
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      return repositories.size();
+      return repositoryList.size();
     }
   }
 
@@ -275,9 +275,32 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public Repository get(int index)
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      return repositories.get(index);
+      return repositoryList.get(index);
+    }
+  }
+
+  /** add repository to list
+   * @param repository repository
+   */
+  public void insert(Repository prevRepository, Repository repository)
+  {
+    synchronized(repositoryList)
+    {
+      // find index
+      int index = 0;
+      for (Repository tmpRespository : repositoryList)
+      {
+        if (prevRepository == tmpRespository)
+        {
+          break;
+        }
+        index++;
+      }
+
+      // insert
+      repositoryList.add(index,repository);
     }
   }
 
@@ -286,9 +309,9 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public void add(Repository repository)
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      repositories.add(repository);
+      repositoryList.add(repository);
     }
   }
 
@@ -297,9 +320,9 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public void remove(Repository repository)
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      repositories.remove(repository);
+      repositoryList.remove(repository);
     }
   }
 
@@ -309,10 +332,10 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
    */
   public void move(Repository repository, int newIndex)
   {
-    synchronized(repositories)
+    synchronized(repositoryList)
     {
-      repositories.remove(repository);
-      repositories.add(newIndex,repository);
+      repositoryList.remove(repository);
+      repositoryList.add(newIndex,repository);
     }
   }
 }
