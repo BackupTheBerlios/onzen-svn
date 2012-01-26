@@ -620,7 +620,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryDeleteLocalFiles       = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryFindFiles              = new Point(600,400);
+  public static Point                    geometryFindFiles              = new Point(800,400);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryFindFilesColumn        = new ColumnSizes(300,160,60);
   @SettingValue(type=SettingValueAdapterSize.class)
