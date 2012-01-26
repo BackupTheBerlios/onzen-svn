@@ -312,20 +312,10 @@ Dprintf.dprintf("");
  */
 abstract class DialogRunnable
 {
-  /** executed when dialog is closed
+  /** executed when dialog is done
    * @param result result
    */
-  public void run(Object result)
-  {
-  }
-
-  /** executed when dialog is closed sucessful
-   */
-  abstract public void done();
-
-  /** executed when dialog is aborted
-   */
-  abstract public void cancel();
+  abstract public void done(Object result);
 }
 
 /** dialog
@@ -843,7 +833,7 @@ class Dialogs
           // execute dialog runnable
           if (dialogRunnable != null)
           {
-            dialogRunnable.run(result[0]);
+            dialogRunnable.done(result[0]);
           }
 
           // close the dialog
