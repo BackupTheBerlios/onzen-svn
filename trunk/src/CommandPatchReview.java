@@ -1130,7 +1130,7 @@ class CommandPatchReview
       Widgets.setFocus(widgetSummary);
       Dialogs.run(dialog,false,new DialogRunnable()
       {
-        public void run(Object result)
+        public void done(Object result)
         {
           // get data values
           repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
@@ -1144,25 +1144,6 @@ class CommandPatchReview
           {
             if (tableItem.getChecked()) testSet.add((String)tableItem.getData());
           }
-
-          if ((Boolean)result)
-          {
-            done();
-          }
-          else
-          {
-            cancel();
-          }
-        }
-
-        public void done()
-        {
-          dialogRunnable.done();
-        }
-
-        public void cancel()
-        {
-          dialogRunnable.cancel();
         }
       });
     }
