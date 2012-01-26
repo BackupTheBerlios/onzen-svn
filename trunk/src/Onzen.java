@@ -47,6 +47,8 @@ import java.util.Locale;
 import java.util.Iterator;
 import java.util.zip.Adler32;
 
+import javax.activation.MimetypesFileTypeMap;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -55,18 +57,6 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 // graphics
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.dnd.ByteArrayTransfer;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DragSource;
-import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.DragSourceListener;
-import org.eclipse.swt.dnd.DropTarget;
-import org.eclipse.swt.dnd.DropTargetAdapter;
-import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -77,8 +67,6 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
@@ -93,10 +81,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -110,9 +96,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeColumn;
-import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
@@ -265,58 +248,59 @@ public class Onzen
   // --------------------------- constants --------------------------------
 
   // exit codes
-  public static int              EXITCODE_OK             =   0;
-  public static int              EXITCODE_INTERNAL_ERROR = 127;
+  public static int                  EXITCODE_OK             =   0;
+  public static int                  EXITCODE_INTERNAL_ERROR = 127;
 
   // colors
-  public static Color            COLOR_BLACK;
-  public static Color            COLOR_WHITE;
-  public static Color            COLOR_GREEN;
-  public static Color            COLOR_DARK_RED;
-  public static Color            COLOR_RED;
-  public static Color            COLOR_DARK_BLUE;
-  public static Color            COLOR_BLUE;
-  public static Color            COLOR_DARK_YELLOW;
-  public static Color            COLOR_YELLOW;
-  public static Color            COLOR_DARK_GRAY;
-  public static Color            COLOR_GRAY;
-  public static Color            COLOR_MAGENTA;
-  public static Color            COLOR_BACKGROUND;
+  public static Color                COLOR_BLACK;
+  public static Color                COLOR_WHITE;
+  public static Color                COLOR_GREEN;
+  public static Color                COLOR_DARK_RED;
+  public static Color                COLOR_RED;
+  public static Color                COLOR_DARK_BLUE;
+  public static Color                COLOR_BLUE;
+  public static Color                COLOR_DARK_YELLOW;
+  public static Color                COLOR_YELLOW;
+  public static Color                COLOR_DARK_GRAY;
+  public static Color                COLOR_GRAY;
+  public static Color                COLOR_MAGENTA;
+  public static Color                COLOR_BACKGROUND;
 
   // images
-  public static Image            IMAGE_DIRECTORY;
-  public static Image            IMAGE_FILE;
-  public static Image            IMAGE_LINK;
-  public static Image            IMAGE_ARROW_UP;
-  public static Image            IMAGE_ARROW_DOWN;
-  public static Image            IMAGE_ARROW_LEFT;
-  public static Image            IMAGE_ARROW_RIGHT;
+  public static Image                IMAGE_DIRECTORY;
+  public static Image                IMAGE_FILE;
+  public static Image                IMAGE_LINK;
+  public static Image                IMAGE_ARROW_UP;
+  public static Image                IMAGE_ARROW_DOWN;
+  public static Image                IMAGE_ARROW_LEFT;
+  public static Image                IMAGE_ARROW_RIGHT;
 
   // fonts
-  public static Font             FONT_DIFF;
-  public static Font             FONT_DIFF_LINE;
-  public static Font             FONT_CHANGES;
+  public static Font                 FONT_DIFF;
+  public static Font                 FONT_DIFF_LINE;
+  public static Font                 FONT_CHANGES;
 
   // cursors
-  public static Cursor           CURSOR_WAIT;
+  public static Cursor               CURSOR_WAIT;
 
   // date/time format
-  public static SimpleDateFormat DATE_FORMAT     = new SimpleDateFormat(Settings.dateFormat);
-  public static SimpleDateFormat TIME_FORMAT     = new SimpleDateFormat(Settings.timeFormat);
-  public static SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat(Settings.dateTimeFormat);
+  public static SimpleDateFormat     DATE_FORMAT     = new SimpleDateFormat(Settings.dateFormat);
+  public static SimpleDateFormat     TIME_FORMAT     = new SimpleDateFormat(Settings.timeFormat);
+  public static SimpleDateFormat     DATETIME_FORMAT = new SimpleDateFormat(Settings.dateTimeFormat);
 
+  public static MimetypesFileTypeMap MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
 
   // command line options
   private static final Option[] options =
   {
-    new Option("--help",              "-h",Options.Types.BOOLEAN,    "helpFlag"),
+    new Option("--help",                       "-h",Options.Types.BOOLEAN, "helpFlag"),
 
-    new Option("--debug",             null,Options.Types.BOOLEAN,    "debugFlag"),
+    new Option("--debug",                      null,Options.Types.BOOLEAN, "debugFlag"),
 
-    new Option("--cvs-prune-empty-directories",null,Options.Types.BOOLEAN,"cvsPruneEmtpyDirectories"),
+    new Option("--cvs-prune-empty-directories",null,Options.Types.BOOLEAN, "cvsPruneEmtpyDirectories"),
 
     // ignored
-    new Option("--swing",             null, Options.Types.BOOLEAN,   null),
+    new Option("--swing",                      null, Options.Types.BOOLEAN,null),
   };
 
   // --------------------------- variables --------------------------------
@@ -872,7 +856,24 @@ exception.printStackTrace();
     return repositoryTabMap.get(getRepository(rootPath));
   }
 
+  /** get mime type of file
+   * @param fileName file name
+   * @return mime type or null
+   */
+  public static String getMimeType(String fileName)
+  {
+    return MIMETYPES_FILE_TYPE_MAP.getContentType(fileName);
+  }
+
   //-----------------------------------------------------------------------
+
+  /** static initializer
+   */
+  {
+    // add known additional mime types
+    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-c c cpp c++");
+    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-java java");
+  }
 
   /** print program usage
    */
