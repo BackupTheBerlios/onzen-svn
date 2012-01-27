@@ -136,8 +136,8 @@ class CommandChangedFiles
   private final Shell         dialog;
 
   // widgets
-  private final Text          widgetFilter;
   private final Table         widgetFiles;
+  private final Text          widgetFilter;
   private final Button        widgetButtonUpdate;
   private final Button        widgetButtonCommit;
   private final Button        widgetButtonCreatePatch;
@@ -188,41 +188,212 @@ class CommandChangedFiles
     dialog = Dialogs.open(shell,"Changed files",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0},1.0,4));
+    composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
+      widgetFiles = Widgets.newTable(composite);
+      Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
+      SelectionListener selectionListener = new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          TableColumn tableColumn = (TableColumn)selectionEvent.widget;
+
+          if      (tableColumn == widgetFiles.getColumn(0)) data.fileDataComparator.setSortMode(FileDataComparator.SortModes.NAME );
+          else if (tableColumn == widgetFiles.getColumn(1)) data.fileDataComparator.setSortMode(FileDataComparator.SortModes.STATE);
+          Widgets.sortTableColumn(widgetFiles,tableColumn,data.fileDataComparator);
+        }
+      };
+      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",  SWT.LEFT);
+      tableColumn.addSelectionListener(selectionListener);
+      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT);
+      tableColumn.addSelectionListener(selectionListener);
+      Widgets.sortTableColumn(widgetFiles,0,data.fileDataComparator);
+      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryChangedFilesColumn.width);
+      widgetFiles.setToolTipText("Changed files.");
+
+      menu = Widgets.newPopupMenu(dialog);
+      {
+        menuItem = Widgets.addMenuItem(menu,"Open file");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+
+            if (fileData != null)
+            {
+              repositoryTab.openFile(fileData);
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+
+            if (fileData != null)
+            {
+              repositoryTab.openFileWith(fileData);
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Update",Settings.keyUpdate);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonUpdate);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Commit",Settings.keyCommit);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonCommit);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Create patch",Settings.keyCreatePatch);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonCreatePatch);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Add",Settings.keyAdd);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonAdd);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Remove",Settings.keyRemove);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonRemove);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Revert",Settings.keyRevert);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonRevert);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Diff",Settings.keyDiff);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonDiff);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Revisions",Settings.keyRevisions);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonRevisions);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Solve",Settings.keySolve);
+menuItem.setEnabled(false);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonSolve);
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Reread",Settings.keyReread);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonReread);
+          }
+        });
+      }
+      widgetFiles.setMenu(menu);
+      widgetFiles.setToolTipText("Changed files. Right-click to open context menu.");
+
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0}));
-      Widgets.layout(subComposite,0,0,TableLayoutData.WE);
+      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Filter:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFilter = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         Widgets.layout(widgetFilter,0,1,TableLayoutData.WE);
-        widgetFilter.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.notify(dialog,USER_EVENT_FILTER);
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-          }
-        });
-        widgetFilter.addModifyListener(new ModifyListener()
-        {
-          public void modifyText(ModifyEvent modifyEvent)
-          {
-            Widgets.notify(dialog,USER_EVENT_FILTER);
-          }
-        });
         widgetFilter.setToolTipText("Filter name list. Enter multiple words which entires must contain to become listed.");
       }
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,0.0));
-      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+      Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Show:");
         Widgets.layout(label,0,0,TableLayoutData.W);
@@ -443,195 +614,6 @@ class CommandChangedFiles
           }
         });
       }
-
-      widgetFiles = Widgets.newTable(composite);
-      Widgets.layout(widgetFiles,2,0,TableLayoutData.NSWE);
-      SelectionListener selectionListener = new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          TableColumn tableColumn = (TableColumn)selectionEvent.widget;
-
-          if      (tableColumn == widgetFiles.getColumn(0)) data.fileDataComparator.setSortMode(FileDataComparator.SortModes.NAME );
-          else if (tableColumn == widgetFiles.getColumn(1)) data.fileDataComparator.setSortMode(FileDataComparator.SortModes.STATE);
-          Widgets.sortTableColumn(widgetFiles,tableColumn,data.fileDataComparator);
-        }
-      };
-      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",  SWT.LEFT);
-      tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT);
-      tableColumn.addSelectionListener(selectionListener);
-      Widgets.sortTableColumn(widgetFiles,0,data.fileDataComparator);
-      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryChangedFilesColumn.width);
-      widgetFiles.setToolTipText("Changed files.");
-
-      menu = Widgets.newPopupMenu(dialog);
-      {
-        menuItem = Widgets.addMenuItem(menu,"Open file");
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            FileData fileData = getSelectedFileData();
-
-            if (fileData != null)
-            {
-              repositoryTab.openFile(fileData);
-            }
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            FileData fileData = getSelectedFileData();
-
-            if (fileData != null)
-            {
-              repositoryTab.openFileWith(fileData);
-            }
-          }
-        });
-
-        menuItem = Widgets.addMenuSeparator(menu);
-
-        menuItem = Widgets.addMenuItem(menu,"Update",Settings.keyUpdate);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonUpdate);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Commit",Settings.keyCommit);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonCommit);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Create patch",Settings.keyCreatePatch);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonCreatePatch);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Add",Settings.keyAdd);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonAdd);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Remove",Settings.keyRemove);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonRemove);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Revert",Settings.keyRevert);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonRevert);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Diff",Settings.keyDiff);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonDiff);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Revisions",Settings.keyRevisions);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonRevisions);
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Solve",Settings.keySolve);
-menuItem.setEnabled(false);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonSolve);
-          }
-        });
-
-        menuItem = Widgets.addMenuSeparator(menu);
-
-        menuItem = Widgets.addMenuItem(menu,"Reread",Settings.keyReread);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Widgets.invoke(widgetButtonReread);
-          }
-        });
-      }
-      widgetFiles.setMenu(menu);
-
-      widgetFiles.setToolTipText("Changed files. Right-click to open context menu.");
     }
 
     // buttons
@@ -946,8 +928,6 @@ Dprintf.dprintf("");
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        TableItem tableItem = (TableItem)selectionEvent.item;
-
         Widgets.modified(data);
       }
     });
@@ -956,15 +936,134 @@ Dprintf.dprintf("");
       public void keyPressed(KeyEvent keyEvent)
       {
 //Dprintf.dprintf("keyEvent=%s KEY_MASK=%x MODIFIER_MASK=%x",keyEvent,keyEvent.stateMask & SWT.KEY_MASK,keyEvent.stateMask & SWT.MODIFIER_MASK);
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyUpdate     )) Widgets.invoke(widgetButtonUpdate     );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommit     )) Widgets.invoke(widgetButtonCommit     );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyCreatePatch)) Widgets.invoke(widgetButtonCreatePatch);
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyAdd        )) Widgets.invoke(widgetButtonAdd        );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRemove     )) Widgets.invoke(widgetButtonRemove     );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert     )) Widgets.invoke(widgetButtonRevert     );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff       )) Widgets.invoke(widgetButtonDiff       );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevisions  )) Widgets.invoke(widgetButtonRevisions  );
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyReread     )) Widgets.invoke(widgetButtonReread     );
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          Widgets.setFocus(widgetFilter);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyUpdate))
+        {
+          Widgets.invoke(widgetButtonUpdate);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommit))
+        {
+          Widgets.invoke(widgetButtonCommit);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCreatePatch))
+        {
+          Widgets.invoke(widgetButtonCreatePatch);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyAdd))
+        {
+          Widgets.invoke(widgetButtonAdd);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRemove))
+        {
+          Widgets.invoke(widgetButtonRemove);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert))
+        {
+          Widgets.invoke(widgetButtonRevert);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff))
+        {
+          Widgets.invoke(widgetButtonDiff);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevisions))
+        {
+          Widgets.invoke(widgetButtonRevisions);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyReread     ))
+        {
+          Widgets.invoke(widgetButtonReread);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
+
+    widgetFilter.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        int index = widgetFiles.getSelectionIndex();
+        if (index >= 0)
+        {
+          TableItem tableItem = widgetFiles.getItem(index);
+          FileData  fileData  = (FileData)tableItem.getData();
+
+          repositoryTab.openFile(fileData);
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetFilter.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Widgets.notify(dialog,USER_EVENT_FILTER);
+      }
+    });
+    widgetFilter.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          Widgets.setFocus(widgetFilter);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyUpdate))
+        {
+          Widgets.invoke(widgetButtonUpdate);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommit))
+        {
+          Widgets.invoke(widgetButtonCommit);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCreatePatch))
+        {
+          Widgets.invoke(widgetButtonCreatePatch);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyAdd))
+        {
+          Widgets.invoke(widgetButtonAdd);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRemove))
+        {
+          Widgets.invoke(widgetButtonRemove);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevert))
+        {
+          Widgets.invoke(widgetButtonRevert);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff))
+        {
+          Widgets.invoke(widgetButtonDiff);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevisions))
+        {
+          Widgets.invoke(widgetButtonRevisions);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyReread     ))
+        {
+          Widgets.invoke(widgetButtonReread);
+        }
+        else if (keyEvent.keyCode == SWT.ARROW_UP)
+        {
+          int index = widgetFiles.getSelectionIndex();
+          if (index > 0) index--;
+          widgetFiles.setSelection(index,index);
+          Widgets.modified(data);
+        }
+        else if (keyEvent.keyCode == SWT.ARROW_DOWN)
+        {
+          int index = widgetFiles.getSelectionIndex();
+          if (index < widgetFiles.getItemCount()-1) index++;
+          widgetFiles.setSelection(index,index);
+          Widgets.modified(data);
+        }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
