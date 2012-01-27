@@ -3,7 +3,7 @@ Onzen
 Onzen is a graphical front end for the revision control systems CVS,
 SVN, and HG. It represent the files managed by the RCS in a tree-view
 with detailed information and offers functions to e. g. update,
-commit, add, remove, rename, revert, diff, view files.
+commit, add, remove, rename, revert, diff, view files and others.
 
 Note:
 
@@ -59,7 +59,7 @@ Then do:
 On Linux, Solaris, MacOSX:
 
   onzen.sh
- 
+
 On Windows:
 
   onzen.bat
