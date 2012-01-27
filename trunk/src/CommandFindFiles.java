@@ -32,6 +32,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -137,12 +138,11 @@ class CommandFindFiles
   };
 
   // --------------------------- constants --------------------------------
-  private static final int MAX_HISTORY_LENGTH = 20;
 
   // --------------------------- variables --------------------------------
 
   // stored settings
-  private static String[]       findHistory    = new String[0];
+  private static String         findText       = "";
   private static boolean        showAllFlag    = false;
   private static boolean        showHiddenFlag = false;
 
@@ -156,7 +156,7 @@ class CommandFindFiles
 
   // widgets
   private final Table           widgetFiles;
-  private final Combo           widgetFind;
+  private final Text            widgetFind;
   private final Button          widgetShowAll;
   private final Button          widgetShowHidden;
   private final Button          widgetClose;
@@ -226,21 +226,23 @@ class CommandFindFiles
         label = Widgets.newLabel(subComposite,"Find pattern:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFind = Widgets.newCombo(subComposite);
+        widgetFind = Widgets.newText(subComposite);
+        widgetFind.setText(findText);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         widgetFind.setToolTipText("Find file pattern. Use * and ? as wildcards.");
         widgetFind.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
-            // restart find files
-            restartFindFiles();
-
-            // add to history
-            widgetFind.add(widgetFind.getText().trim(),0);
-            while (widgetFind.getItemCount() > MAX_HISTORY_LENGTH)
+            int index = widgetFiles.getSelectionIndex();
+            if (index >= 0)
             {
-              widgetFind.remove(MAX_HISTORY_LENGTH,MAX_HISTORY_LENGTH);
+              TableItem tableItem = widgetFiles.getItem(index);
+              File      file      = (File)tableItem.getData();
+
+              String fileName = file.getPath();
+              String mimeType = repositoryTab.onzen.getMimeType(fileName);
+              repositoryTab.openFile(fileName,mimeType);
             }
           }
           public void widgetSelected(SelectionEvent selectionEvent)
@@ -297,13 +299,7 @@ class CommandFindFiles
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          findHistory    = widgetFind.getItems();
-          showAllFlag    = widgetShowAll.getSelection();
-          showHiddenFlag = widgetShowHidden.getSelection();
-
-          Settings.geometryView = dialog.getSize();
-
-          Dialogs.close(dialog,false);
+          Dialogs.close(dialog);
         }
       });
     }
@@ -313,54 +309,71 @@ class CommandFindFiles
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-         Table widget = (Table)selectionEvent.widget;
+        Table widget = (Table)selectionEvent.widget;
 
-         int index = widget.getSelectionIndex();
-         if (index >= 0)
-         {
-           TableItem tableItem = widgetFiles.getItem(index);
-           File      file      = (File)tableItem.getData();
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
+        {
+          TableItem tableItem = widget.getItem(index);
+          File      file      = (File)tableItem.getData();
 
-           String fileName = file.getPath();
-           String mimeType = repositoryTab.onzen.getMimeType(fileName);
-           repositoryTab.openFile(fileName,mimeType);
-         }
+          String fileName = file.getPath();
+          String mimeType = repositoryTab.onzen.getMimeType(fileName);
+          repositoryTab.openFile(fileName,mimeType);
+        }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
       }
     });
 
-    KeyListener keyListener = new KeyListener()
+    widgetFiles.addKeyListener(new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
         if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
         {
-          widgetFind.forceFocus();
+          Widgets.setFocus(widgetFind);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
+    widgetFind.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          Widgets.setFocus(widgetFind);
+        }
+        else if (keyEvent.keyCode == SWT.ARROW_UP)
+        {
+          int index = widgetFiles.getSelectionIndex();
+          if (index > 0) index--;
+          widgetFiles.setSelection(index,index);
+        }
+        else if (keyEvent.keyCode == SWT.ARROW_DOWN)
+        {
+          int index = widgetFiles.getSelectionIndex();
+          if (index < widgetFiles.getItemCount()-1) index++;
+          widgetFiles.setSelection(index,index);
         }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
         restartFindFiles();
       }
-    };
-    widgetFiles.addKeyListener(keyListener);
-    widgetFind.addKeyListener(keyListener);
+    });
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryFindFiles);
 
-    // add history
-    for (String string : findHistory)
-    {
-      widgetFind.add(string);
-    }
-
     // start find files
     Background.run(new BackgroundRunnable()
     {
-      String  findText       =  "";
+      String  findText       = "";
       Pattern findPattern    = null;
       boolean showAllFlag    = false;
       boolean showHiddenFlag = false;
@@ -489,11 +502,19 @@ Dprintf.dprintf("");
   {
     if (!dialog.isDisposed())
     {
-      widgetFind.setFocus();
+      Widgets.setFocus(widgetFind);
       Dialogs.run(dialog,new DialogRunnable()
       {
         public void done(Object result)
         {
+          // store values
+          findText       = widgetFind.getText().trim();
+          showAllFlag    = widgetShowAll.getSelection();
+          showHiddenFlag = widgetShowHidden.getSelection();
+
+          Settings.geometryView = dialog.getSize();
+
+          // signal quit to find thread
           synchronized(data)
           {
             data.quitFlag = true;
@@ -520,7 +541,7 @@ Dprintf.dprintf("");
   {
     if (!dialog.isDisposed())
     {
-      String findText = widgetFind.getText().toLowerCase();
+      String findText = widgetFind.getText().trim().toLowerCase();
       if (!findText.isEmpty())
       {
         synchronized(data)
