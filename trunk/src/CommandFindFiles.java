@@ -186,7 +186,13 @@ class CommandFindFiles
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"Find files in '"+repositoryTab.repository.rootPath+"'",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,
+                          showAllFlag
+                            ? "Find files"
+                            : "Find files in '"+repositoryTab.repository.rootPath+"'",
+                          new double[]{1.0,0.0},
+                          1.0
+                         );
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
@@ -226,7 +232,7 @@ class CommandFindFiles
         label = Widgets.newLabel(subComposite,"Find pattern:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFind = Widgets.newText(subComposite);
+        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
         widgetFind.setText(findText);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         widgetFind.setToolTipText("Find file pattern. Use * and ? as wildcards.");
@@ -252,12 +258,15 @@ class CommandFindFiles
       }
 
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,1.0));
-      Widgets.layout(subComposite,2,0,TableLayoutData.W);
+      subComposite.setLayout(new TableLayout(null,0.0));
+      Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
+        label = Widgets.newLabel(subComposite,"Show:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
         widgetShowAll = Widgets.newCheckbox(subComposite,"all repositories");
         widgetShowAll.setSelection(showAllFlag);
-        Widgets.layout(widgetShowAll,0,0,TableLayoutData.W);
+        Widgets.layout(widgetShowAll,0,1,TableLayoutData.W);
         widgetShowAll.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -271,7 +280,7 @@ class CommandFindFiles
 
         widgetShowHidden = Widgets.newCheckbox(subComposite,"show hidden");
         widgetShowHidden.setSelection(showHiddenFlag);
-        Widgets.layout(widgetShowHidden,0,1,TableLayoutData.W);
+        Widgets.layout(widgetShowHidden,0,2,TableLayoutData.W);
         widgetShowHidden.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -404,7 +413,6 @@ class CommandFindFiles
             LinkedList<File> directoryList = new LinkedList<File>();
             if (showAllFlag)
             {
-Dprintf.dprintf("");
               for (Repository repository : repositoryTab.onzen.getRepositoryList())
               {
                 directoryList.add(new File(repository.rootPath));
@@ -512,7 +520,8 @@ Dprintf.dprintf("");
           showAllFlag    = widgetShowAll.getSelection();
           showHiddenFlag = widgetShowHidden.getSelection();
 
-          Settings.geometryView = dialog.getSize();
+          Settings.geometryFindFiles       = dialog.getSize();
+          Settings.geometryFindFilesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
 
           // signal quit to find thread
           synchronized(data)
@@ -541,6 +550,11 @@ Dprintf.dprintf("");
   {
     if (!dialog.isDisposed())
     {
+      dialog.setText(widgetShowAll.getSelection()
+                       ? "Find files"
+                       : "Find files in '"+repositoryTab.repository.rootPath+"'"
+                    );
+
       String findText = widgetFind.getText().trim().toLowerCase();
       if (!findText.isEmpty())
       {
@@ -549,6 +563,7 @@ Dprintf.dprintf("");
           data.findText       = findText;
           data.showAllFlag    = widgetShowAll.getSelection();
           data.showHiddenFlag = widgetShowHidden.getSelection();
+
           data.notifyAll();
         }
       }
