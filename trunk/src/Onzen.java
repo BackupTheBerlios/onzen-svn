@@ -2671,7 +2671,7 @@ exception.printStackTrace();
             Button widget = (Button)selectionEvent.widget;
 
             int index = widgetNames.getSelectionIndex();
-            if ((index >= 0) && (index < data.names.length))
+            if (index >= 0)
             {
               data.name = data.names[index];
 
@@ -2697,8 +2697,6 @@ exception.printStackTrace();
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           data.name = widgetNewName.getText().trim();
 
           Dialogs.close(dialog,true);
@@ -2719,7 +2717,7 @@ exception.printStackTrace();
           Button widget = (Button)selectionEvent.widget;
 
           int index = widgetNames.getSelectionIndex();
-          if ((index >= 0) && (index < data.names.length))
+          if (index >= 0)
           {
             if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",data.names[index])))
             {
@@ -2768,7 +2766,7 @@ exception.printStackTrace();
         List widget = (List)selectionEvent.widget;
 
         int index = widget.getSelectionIndex();
-        if ((index >= 0) && (index < data.names.length))
+        if (index >= 0)
         {
           if (openButton)
           {
@@ -2786,7 +2784,7 @@ exception.printStackTrace();
         List widget = (List)selectionEvent.widget;
 
         int index = widget.getSelectionIndex();
-        if ((index >= 0) && (index < data.names.length))
+        if (index >= 0)
         {
           if (openButton) widgetOpen.setEnabled(true);
           widgetNew.setEnabled(true);
@@ -2801,16 +2799,71 @@ exception.printStackTrace();
         }
       }
     });
+    widgetNewName.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        int index = widgetNames.getSelectionIndex();
+        if (index >= 0)
+        {
+          if (openButton)
+          {
+            data.name = data.names[index];
+          }
+          else
+          {
+            data.name = widgetNewName.getText().trim();
+          }
+          if (!data.name.isEmpty())
+          {
+            Dialogs.close(dialog,true);
+          }
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
     widgetNewName.addKeyListener(new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
+        if      (keyEvent.keyCode == SWT.ARROW_UP)
+        {
+          if (widgetNames.getItemCount() > 0)
+          {
+            int index = widgetNames.getSelectionIndex();
+            if      (index < 0) index = 0;
+            else if (index > 0) index--;
+            widgetNames.setSelection(index,index);
+            widgetOpen.setEnabled(true);
+          }
+          else
+          {
+            widgetOpen.setEnabled(false);
+          }
+        }
+        else if (keyEvent.keyCode == SWT.ARROW_DOWN)
+        {
+          if (widgetNames.getItemCount() > 0)
+          {
+            int index = widgetNames.getSelectionIndex();
+            if (index < widgetNames.getItemCount()-1) index++;
+            widgetNames.setSelection(index,index);
+          }
+          else
+          {
+            widgetOpen.setEnabled(false);
+          }
+        }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
         Text widget = (Text)keyEvent.widget;
 
-        widgetNew.setEnabled(!widget.getText().isEmpty());
+        boolean emptyFlag = widget.getText().trim().isEmpty();
+        widgetOpen.setEnabled(emptyFlag);
+        widgetNew.setEnabled(!emptyFlag);
       }
     });
 
@@ -2994,7 +3047,7 @@ exception.printStackTrace();
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             int index = widgetList.getSelectionIndex();
-            if ((index >= 0) && (index < repositoryList.size()))
+            if (index >= 0)
             {
               RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
               if (editRepository(repositoryTab))
@@ -3016,7 +3069,7 @@ exception.printStackTrace();
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             int index = widgetList.getSelectionIndex();
-            if ((index >= 0) && (index < repositoryList.size()))
+            if (index >= 0)
             {
               RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
               closeRepository(repositoryTab);
@@ -3112,7 +3165,7 @@ exception.printStackTrace();
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
         int index = widgetList.getSelectionIndex();
-        if ((index >= 0) && (index < repositoryList.size()))
+        if (index >= 0)
         {
           RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
           editRepository(repositoryTab);
