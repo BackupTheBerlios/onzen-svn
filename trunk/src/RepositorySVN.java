@@ -683,6 +683,7 @@ Dprintf.dprintf("exception=%s",exception);
                 )
           {
             exec.ungetStdout(line);
+//Dprintf.dprintf("line=%s",line);
 
             // get keep lines
             keepLinesList.clear();
@@ -782,7 +783,24 @@ Dprintf.dprintf("exception=%s",exception);
               diffDataList.add(diffData);
 //Dprintf.dprintf("c %d %d",addedLinesCount,deletedLinesCount);
             }
+            else
+            {
+              // unknown -> stop
+              break;
+            }
           }
+          exec.ungetStdout(line);
+        }
+        else if (line.startsWith("Property "))
+        {
+          // skip "Property ..."
+          do
+          {
+            lineNb++;
+          }
+          while (   ((line = exec.getStdout()) != null)
+                 && !line.startsWith("@@")
+                );
           exec.ungetStdout(line);
         }
         else
