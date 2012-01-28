@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandRevisions.java,v $
-* $Revision: 1.5 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command to show incoming/outgoing file changes
 * Systems: all
 *

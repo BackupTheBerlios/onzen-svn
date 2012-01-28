@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Option.java,v $
-* $Revision: 1.1 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command line option
 * Systems: all
 *

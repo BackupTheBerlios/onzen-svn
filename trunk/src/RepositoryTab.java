@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/RepositoryTab.java,v $
-* $Revision: 1.8 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: repository tab
 * Systems: all
 *

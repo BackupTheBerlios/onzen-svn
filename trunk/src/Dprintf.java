@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Dprintf.java,v $
-* $Revision: 1.1 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: dprintf functions with level and groups
 * Systems: all
 *

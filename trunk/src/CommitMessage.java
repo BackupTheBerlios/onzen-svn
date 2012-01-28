@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommitMessage.java,v $
-* $Revision: 1.3 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: commit message functions
 * Systems: all
 *

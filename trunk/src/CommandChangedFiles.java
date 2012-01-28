@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandChangedFiles.java,v $
-* $Revision: 1.6 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command to show changed files
 * Systems: all
 *

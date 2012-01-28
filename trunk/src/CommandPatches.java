@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandPatches.java,v $
-* $Revision: 1.1 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: patches command
 * Systems: all
 *

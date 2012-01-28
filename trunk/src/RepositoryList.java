@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/RepositoryList.java,v $
-* $Revision: 1.4 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: repository lists
 * Systems: all
 *

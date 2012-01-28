@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandCreatePatch.java,v $
-* $Revision: 1.1 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: create patch command
 * Systems: all
 *

@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Widgets.java,v $
-* $Revision: 1.1 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: simple widgets functions
 * Systems: all
 *

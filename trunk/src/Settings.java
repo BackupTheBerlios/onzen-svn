@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Settings.java,v $
-* $Revision: 1.9 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: load/save program settings
 * Systems: all
 *

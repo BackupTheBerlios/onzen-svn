@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/RepositoryHG.java,v $
-* $Revision: 1.12 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: Mecurial repository functions
 * Systems: all
 *

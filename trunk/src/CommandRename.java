@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandRename.java,v $
-* $Revision: 1.6 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command rename file/directory
 * Systems: all
 *

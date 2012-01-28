@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Repository.java,v $
-* $Revision: 1.8 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: repository
 * Systems: all
 *
@@ -2123,9 +2123,12 @@ abstract class Repository implements Serializable
   public boolean isSkipWhitespaceCheckFile(String fileName)
   {
     boolean skipFlag = false;
+    File file = new File(fileName);
     for (Settings.FilePattern filePattern : Settings.skipWhitespaceCheckFilePatterns)
     {
-      if (filePattern.pattern.matcher(fileName).matches())
+      if (   filePattern.pattern.matcher(file.getName()).matches()
+          || filePattern.pattern.matcher(file.getPath()).matches()
+         )
       {
         skipFlag = true;
         break;

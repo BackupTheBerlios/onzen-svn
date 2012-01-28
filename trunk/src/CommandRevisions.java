@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandRevisions.java,v $
-* $Revision: 1.5 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command show file revisions tree
 * Systems: all
 *

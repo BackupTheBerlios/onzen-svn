@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandDiff.java,v $
-* $Revision: 1.5 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command show file diff
 * Systems: all
 *

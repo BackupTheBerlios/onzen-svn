@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Onzen.java,v $
-* $Revision: 1.5 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: Onzen
 * Systems: all
 *

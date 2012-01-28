@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandRevert.java,v $
-* $Revision: 1.6 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command revert files
 * Systems: all
 *

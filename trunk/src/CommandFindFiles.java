@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandView.java,v $
-* $Revision: 1.5 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command find files
 * Systems: all
 *

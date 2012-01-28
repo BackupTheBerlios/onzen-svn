@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/RepositorySVN.java,v $
-* $Revision: 1.11 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: Apache Subversion (SVN) repository
 * Systems: all
 *

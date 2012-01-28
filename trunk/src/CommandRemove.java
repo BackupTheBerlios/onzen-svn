@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandRemove.java,v $
-* $Revision: 1.7 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command remove files/directories
 * Systems: all
 *

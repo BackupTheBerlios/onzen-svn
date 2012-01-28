@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Exec.java,v $
-* $Revision: 1.4 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: execute external command
 * Systems: all
 *

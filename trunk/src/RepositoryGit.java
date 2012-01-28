@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/RepositoryGit.java,v $
-* $Revision: 1.9 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: repository
 * Systems: all
 *

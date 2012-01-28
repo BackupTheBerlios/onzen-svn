@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/RepositoryCVS.java,v $
-* $Revision: 1.11 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: CVS repository functions
 * Systems: all
 *

@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/Background.java,v $
-* $Revision: 1.2 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: background task
 * Systems: all
 *

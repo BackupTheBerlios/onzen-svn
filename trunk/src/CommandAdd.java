@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandAdd.java,v $
-* $Revision: 1.10 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command add files/directories
 * Systems: all
 *

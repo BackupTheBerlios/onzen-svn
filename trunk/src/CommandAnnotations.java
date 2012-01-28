@@ -1,8 +1,8 @@
 /***********************************************************************\
 *
-* $Source: /tmp/cvs/onzen/src/CommandAnnotations.java,v $
-* $Revision: 1.6 $
-* $Author: torsten $
+* $Revision$
+* $Date$
+* $Author$
 * Contents: command view file annotations
 * Systems: all
 *
