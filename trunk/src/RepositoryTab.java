@@ -225,6 +225,9 @@ class RepositoryTab
   // map file name -> tree item
   private WeakHashMap<String,TreeItem> fileNameMap = new WeakHashMap<String,TreeItem>();
 
+  // last convert whitespaces dialog location
+  private static Point convertWhiteDialogLocation = new Point(SWT.DEFAULT,SWT.DEFAULT);
+
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
@@ -2164,6 +2167,7 @@ Dprintf.dprintf("");
             data.spacesPerTAB              = widgetSpacesPerTAB.getSelection();
             data.removeTrailingWhitespaces = widgetRemoveTrailingWhitespaces.getSelection();
 
+            convertWhiteDialogLocation          = dialog.getLocation();
             Settings.geometryConvertWhitespaces = dialog.getSize();
 
             Dialogs.close(dialog,true);
@@ -2188,7 +2192,7 @@ Dprintf.dprintf("");
       // listeners
 
       // show dialog
-      Dialogs.show(dialog,Settings.geometryConvertWhitespaces);
+      Dialogs.show(dialog,convertWhiteDialogLocation,Settings.geometryConvertWhitespaces);
 
       // add files
       for (FileData fileData : fileDataSet)
@@ -2376,6 +2380,9 @@ Dprintf.dprintf("");
           data.removeTrailingWhitespaces = widgetRemoveTrailingWhitespaces.getSelection();
           data.convertAll                = false;
 
+          convertWhiteDialogLocation          = dialog.getLocation();
+          Settings.geometryConvertWhitespaces = dialog.getSize();
+
           Dialogs.close(dialog,true);
         }
       });
@@ -2394,6 +2401,9 @@ Dprintf.dprintf("");
           data.removeTrailingWhitespaces = false;
           data.convertAll                = false;
 
+          convertWhiteDialogLocation          = dialog.getLocation();
+          Settings.geometryConvertWhitespaces = dialog.getSize();
+
           Dialogs.close(dialog,true);
         }
       });
@@ -2411,6 +2421,9 @@ Dprintf.dprintf("");
           data.spacesPerTAB              = widgetSpacesPerTAB.getSelection();
           data.removeTrailingWhitespaces = widgetRemoveTrailingWhitespaces.getSelection();
           data.convertAll                = true;
+
+          convertWhiteDialogLocation          = dialog.getLocation();
+          Settings.geometryConvertWhitespaces = dialog.getSize();
 
           Dialogs.close(dialog,true);
         }
@@ -2434,7 +2447,7 @@ Dprintf.dprintf("");
     // listeners
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,convertWhiteDialogLocation,Settings.geometryConvertWhitespaces);
 
     // run
     widgetAbort.setFocus();

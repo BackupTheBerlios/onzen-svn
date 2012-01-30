@@ -729,9 +729,10 @@ class Dialogs
 
   /** show dialog
    * @param dialog dialog shell
+   * @param location top/left location or null
    * @param size size of dialog or null
    */
-  public static void show(Shell dialog, Point size)
+  public static void show(Shell dialog, Point location, Point size)
   {
     int x,y;
 
@@ -742,17 +743,23 @@ class Dialogs
 
       // get location for dialog (keep 16/64 pixel away form right/bottom)
       Display display = dialog.getDisplay();
-      Point cursorPoint = display.getCursorLocation();
       Rectangle displayBounds = display.getBounds();
+      Point cursorPoint = display.getCursorLocation();
       Rectangle bounds = dialog.getBounds();
-      x = Math.min(Math.max(cursorPoint.x-bounds.width /2,0),displayBounds.width -bounds.width -16);
-      y = Math.min(Math.max(cursorPoint.y-bounds.height/2,0),displayBounds.height-bounds.height-64);
-      dialog.setLocation(x,y);
+      x = ((location != null) && (location.x != SWT.DEFAULT))
+            ? location.x
+            : Math.max(cursorPoint.x-bounds.width /2,0);
+      y = ((location != null) && (location.y != SWT.DEFAULT))
+            ? location.y
+            : Math.max(cursorPoint.y-bounds.height/2,0);
+      dialog.setLocation(Math.min(x,displayBounds.width -bounds.width -16),
+                         Math.min(y,displayBounds.height-bounds.height-64)
+                        );
 
       // set size (if given)
-      Point newSize = dialog.getSize();
       if (size != null)
       {
+        Point newSize = dialog.getSize();
         if (size.x != SWT.DEFAULT) newSize.x = size.x;
         if (size.y != SWT.DEFAULT) newSize.y = size.y;
         dialog.setSize(newSize);
@@ -764,6 +771,15 @@ class Dialogs
       // update all
       display.update();
     }
+  }
+
+  /** show dialog
+   * @param dialog dialog shell
+   * @param size size of dialog or null
+   */
+  public static void show(Shell dialog, Point size)
+  {
+    show(dialog,null,size);
   }
 
   /** show dialog

@@ -624,7 +624,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryFindFilesColumn        = new ColumnSizes(300,160,60);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryConvertWhitespaces     = new Point(400,300);
+  public static Point                    geometryConvertWhitespaces     = new Point(700,200);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryChangedFiles           = new Point(850,500);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
