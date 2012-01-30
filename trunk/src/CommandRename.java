@@ -140,6 +140,7 @@ class CommandRename
   {
     Composite composite,subComposite;
     Label     label;
+    Text      text;
     Button    button;
 
     // initialize variables
@@ -153,7 +154,7 @@ class CommandRename
     // get history
     history = CommitMessage.getHistory();
 
-    // rename files dialog
+    // rename file dialog
     dialog = Dialogs.openModal(shell,"Rename file",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
@@ -167,9 +168,9 @@ class CommandRename
         label = Widgets.newLabel(subComposite,"Old name:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        label = Widgets.newLabel(subComposite);
-        label.setText(fileData.getFileName());
-        Widgets.layout(label,0,1,TableLayoutData.WE);
+        text = Widgets.newStringView(subComposite);
+        text.setText(fileData.getFileName());
+        Widgets.layout(text,0,1,TableLayoutData.WE);
 
         label = Widgets.newLabel(subComposite,"New name:");
         Widgets.layout(label,1,0,TableLayoutData.W);

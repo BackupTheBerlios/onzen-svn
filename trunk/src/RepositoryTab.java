@@ -1819,14 +1819,14 @@ Dprintf.dprintf("");
       composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
       Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
       {
-        label = Widgets.newLabel(composite,"Old file name:");
+        label = Widgets.newLabel(composite,"Old name:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         text = Widgets.newStringView(composite);
         text.setText(fileData.getFileName());
         Widgets.layout(text,0,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(composite,"New file name:");
+        label = Widgets.newLabel(composite,"New name:");
         Widgets.layout(label,1,0,TableLayoutData.W);
 
         widgetNewFileName = Widgets.newText(composite);
