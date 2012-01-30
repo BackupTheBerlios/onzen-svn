@@ -1807,6 +1807,7 @@ Dprintf.dprintf("");
       final Shell dialog;
       Composite   composite,subComposite;
       Label       label;
+      Text        text;
       Button      button;
 
       // rename file/directory dialog
@@ -1821,9 +1822,9 @@ Dprintf.dprintf("");
         label = Widgets.newLabel(composite,"Old file name:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        label = Widgets.newView(composite);
-        label.setText(fileData.getFileName());
-        Widgets.layout(label,0,1,TableLayoutData.WE);
+        text = Widgets.newStringView(composite);
+        text.setText(fileData.getFileName());
+        Widgets.layout(text,0,1,TableLayoutData.WE);
 
         label = Widgets.newLabel(composite,"New file name:");
         Widgets.layout(label,1,0,TableLayoutData.W);
