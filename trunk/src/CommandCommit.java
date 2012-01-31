@@ -209,7 +209,7 @@ class CommandCommit
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           widgetFiles = Widgets.newList(subComposite);
-          widgetFiles.setBackground(Onze.COLOR_GRAY);
+          widgetFiles.setBackground(Onzen.COLOR_GRAY);
           Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
           widgetFiles.setToolTipText("Files to commit.");
         }
