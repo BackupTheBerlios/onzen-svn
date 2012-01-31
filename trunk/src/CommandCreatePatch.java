@@ -247,6 +247,7 @@ class CommandCreatePatch
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           widgetFileNames = Widgets.newList(subComposite);
+          widgetFileNames.setBackground(Onzen.COLOR_GRAY);
           Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
         }
       }

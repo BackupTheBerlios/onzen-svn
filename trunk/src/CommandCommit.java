@@ -104,9 +104,6 @@ class CommandCommit
 
   // --------------------------- constants --------------------------------
 
-  // colors
-  private final Color COLOR_INACTIVE;
-
   // --------------------------- variables --------------------------------
 
   // global variable references
@@ -124,7 +121,7 @@ class CommandCommit
   private final StyledText        widgetChanges;
   private final ScrollBar         widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final Button            widgetIgnoreWhitespaces;
-  private final List              widgetFileNames;
+  private final List              widgetFiles;
   private final List              widgetHistory;
   private final Text              widgetMessage;
   private final Button            widgetCommit;
@@ -153,9 +150,6 @@ class CommandCommit
     // get display
     display = shell.getDisplay();
 
-    // colors
-    COLOR_INACTIVE = new Color(display,Settings.colorInactive.background);
-
     // get history
     history = CommitMessage.getHistory();
 
@@ -174,7 +168,7 @@ class CommandCommit
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
           widgetChanges = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
-          widgetChanges.setBackground(COLOR_INACTIVE);
+          widgetChanges.setBackground(Onzen.COLOR_GRAY);
           Widgets.layout(widgetChanges,0,0,TableLayoutData.NSWE);
           widgetChanges.setToolTipText("Changes to commit.");
           widgetHorizontalScrollBar = widgetChanges.getHorizontalBar();
@@ -214,10 +208,10 @@ class CommandCommit
         subComposite.setLayout(new TableLayout(1.0,1.0,2));
         Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
         {
-          widgetFileNames = Widgets.newList(subComposite);
-          widgetFileNames.setBackground(COLOR_INACTIVE);
-          Widgets.layout(widgetFileNames,0,0,TableLayoutData.NSWE);
-          widgetFileNames.setToolTipText("Files to commit.");
+          widgetFiles = Widgets.newList(subComposite);
+          widgetFiles.setBackground(Onze.COLOR_GRAY);
+          Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
+          widgetFiles.setToolTipText("Files to commit.");
         }
       }
 
@@ -225,7 +219,7 @@ class CommandCommit
       Widgets.layout(label,1,0,TableLayoutData.W);
 
       widgetHistory = Widgets.newList(composite);
-      widgetHistory.setBackground(COLOR_INACTIVE);
+      widgetHistory.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetHistory,2,0,TableLayoutData.NSWE);
       widgetHistory.setToolTipText("Commit message history.");
 
@@ -384,11 +378,11 @@ class CommandCommit
     Dialogs.show(dialog,Settings.geometryCommit);
 
     // add files
-    if (!widgetFileNames.isDisposed())
+    if (!widgetFiles.isDisposed())
     {
-      for (FileData fileData : fileDataSet)
+      for (String fileName : FileData.toSortedFileNameArray(fileDataSet))
       {
-        widgetFileNames.add(fileData.getFileName());
+        widgetFiles.add(fileName);
       }
     }
 
