@@ -26,6 +26,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -476,6 +478,27 @@ class FileData
     return fileDataSet;
   }
 
+  /** convert to sorted set
+   * @param file data set
+   * @param comparator comparator
+   * @return sorted file data set
+   */
+  static public TreeSet<FileData> toSortedSet(HashSet<FileData> fileDataSet, Comparator comparator)
+  {
+    TreeSet<FileData> fileDataTreeSet = new TreeSet<FileData>(comparator);
+    fileDataTreeSet.addAll(fileDataSet);
+    return fileDataTreeSet;
+  }
+
+  /** convert to sorted set
+   * @param file data set
+   * @return sorted file data set
+   */
+  static public TreeSet<FileData> toSortedSet(HashSet<FileData> fileDataSet)
+  {
+    return toSortedSet(fileDataSet,new FileDataComparator());
+  }
+
   /** convert to set
    * @param fileNames file name array
    * @return file data set
@@ -537,15 +560,66 @@ class FileData
 
   /** convert to file name array
    * @param file data set
+   * @param repository repository
    * @return file name array
    */
-  static public String[] toArray(HashSet<FileData> fileDataSet, Repository repository)
+  static public String[] toFileNameArray(HashSet<FileData> fileDataSet, Repository repository)
   {
     ArrayList<String> fileNameList = new ArrayList<String>();
     for (FileData fileData : fileDataSet)
     {
       fileNameList.add(fileData.getFileName(repository));
     }
+
+    return fileNameList.toArray(new String[fileNameList.size()]);
+  }
+
+  /** convert to file name array
+   * @param file data set
+   * @return file name array
+   */
+  static public String[] toFileNameArray(HashSet<FileData> fileDataSet)
+  {
+    ArrayList<String> fileNameList = new ArrayList<String>();
+    for (FileData fileData : fileDataSet)
+    {
+      fileNameList.add(fileData.getFileName());
+    }
+
+    return fileNameList.toArray(new String[fileNameList.size()]);
+  }
+
+  /** convert to file name array
+   * @param file data set
+   * @param repository repository
+   * @return file name array
+   */
+  static public String[] toSortedFileNameArray(HashSet<FileData> fileDataSet, Repository repository)
+  {
+    ArrayList<String> fileNameList = new ArrayList<String>();
+    for (FileData fileData : fileDataSet)
+    {
+      fileNameList.add(fileData.getFileName(repository));
+    }
+
+    Collections.sort(fileNameList);
+
+    return fileNameList.toArray(new String[fileNameList.size()]);
+  }
+
+  /** convert to file name array
+   * @param file data set
+   * @return file name array
+   */
+  static public String[] toSortedFileNameArray(HashSet<FileData> fileDataSet)
+  {
+    ArrayList<String> fileNameList = new ArrayList<String>();
+    for (FileData fileData : fileDataSet)
+    {
+      fileNameList.add(fileData.getFileName());
+    }
+
+    Collections.sort(fileNameList);
 
     return fileNameList.toArray(new String[fileNameList.size()]);
   }

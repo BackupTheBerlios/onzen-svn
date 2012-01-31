@@ -1081,7 +1081,7 @@ Dprintf.dprintf("");
         widgetFiles.removeAll();
         if (data.fileDataSet != null)
         {
-          for (FileData fileData : data.fileDataSet)
+          for (FileData fileData : FileData.toSortedSet(data.fileDataSet))
           {
             // check state filter
             if (data.showStates.contains(fileData.state))

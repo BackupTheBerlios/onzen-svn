@@ -592,7 +592,7 @@ class CommandCommit
     try
     {
       // get file names
-      final String[] fileNames = FileData.toArray(fileDataSet,repositoryTab.repository);
+      final String[] fileNames = FileData.toSortedFileNameArray(fileDataSet,repositoryTab.repository);
 
       // check for TABs/trailing whitespaces in files and convert/remove
       for (final String fileName : fileNames)

@@ -96,6 +96,14 @@ class RepositoryTab
     private int sortMode;
 
     /** create file data comparator
+     * @param sortMode sort mode
+     */
+    FileDataComparator(int sortMode)
+    {
+      this.sortMode = sortMode;
+    }
+
+    /** create file data comparator
      * @param tree file tree
      * @param sortColumn column to sort
      */
@@ -2880,7 +2888,7 @@ Dprintf.dprintf("");
     return fileDataSet;
   }
 
-  /** get selected all data set
+  /** get all file data set
    * @return all file data hash set
    */
   private HashSet<FileData> getAllFileDataSet()

@@ -361,9 +361,9 @@ class CommandAdd
     // add files
     if (!widgetFiles.isDisposed())
     {
-      for (FileData fileData : fileDataSet)
+      for (String fileName : FileData.toSortedFileNameArray(fileDataSet))
       {
-        widgetFiles.add(fileData.getFileName());
+        widgetFiles.add(fileName);
       }
     }
 
@@ -446,7 +446,7 @@ class CommandAdd
       if (!data.binaryFlag)
       {
         // get file names
-        final String[] fileNames = FileData.toArray(fileDataSet,repositoryTab.repository);
+        final String[] fileNames = FileData.toSortedFileNameArray(fileDataSet,repositoryTab.repository);
 
         // check for TABs/trailing whitespaces in files and convert/remove
         for (final String fileName : fileNames)

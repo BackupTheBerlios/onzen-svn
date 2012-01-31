@@ -218,9 +218,9 @@ class CommandRevert
     // add files
     if (!widgetFiles.isDisposed())
     {
-      for (FileData fileData : fileDataSet)
+      for (String fileName : FileData.toSortedFileNameArray(fileDataSet))
       {
-        widgetFiles.add(fileData.getFileName());
+        widgetFiles.add(fileName);
       }
     }
 
