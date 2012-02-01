@@ -55,8 +55,9 @@ class CommandFindFiles
   {
     // Note: enum in inner classes are not possible in Java, thus use the old way...
     private final static int SORTMODE_NAME = 0;
-    private final static int SORTMODE_DATE = 1;
-    private final static int SORTMODE_SIZE = 2;
+    private final static int SORTMODE_PATH = 1;
+    private final static int SORTMODE_DATE = 2;
+    private final static int SORTMODE_SIZE = 3;
 
     private int sortMode;
 
@@ -67,8 +68,9 @@ class CommandFindFiles
     FileComparator(Table table, TableColumn sortColumn)
     {
       if      (table.getColumn(0) == sortColumn) sortMode = SORTMODE_NAME;
-      else if (table.getColumn(1) == sortColumn) sortMode = SORTMODE_DATE;
-      else if (table.getColumn(2) == sortColumn) sortMode = SORTMODE_SIZE;
+      else if (table.getColumn(1) == sortColumn) sortMode = SORTMODE_PATH;
+      else if (table.getColumn(2) == sortColumn) sortMode = SORTMODE_DATE;
+      else if (table.getColumn(3) == sortColumn) sortMode = SORTMODE_SIZE;
       else                                       sortMode = SORTMODE_NAME;
     }
 
@@ -88,27 +90,51 @@ class CommandFindFiles
      */
     public int compare(File file1, File file2)
     {
-      switch (sortMode)
+      final int[][] SORT_ORDERING = new int[][]{new int[]{SORTMODE_NAME,SORTMODE_PATH,SORTMODE_DATE,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_PATH,SORTMODE_NAME,SORTMODE_DATE,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_DATE,SORTMODE_NAME,SORTMODE_PATH,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_SIZE,SORTMODE_NAME,SORTMODE_PATH,SORTMODE_DATE}
+                                               };
+
+      int result = 0;
+
+      int z = 0;
+      do
       {
-        case SORTMODE_NAME:
-          String name1 = repositoryTab.repository.getFileName(file1);
-          String name2 = repositoryTab.repository.getFileName(file2);
-          return name1.compareTo(name2);
-        case SORTMODE_DATE:
-          long lastModified1 = file1.lastModified();
-          long lastModified2 = file2.lastModified();
-          if      (lastModified1 < lastModified2) return -1;
-          else if (lastModified1 > lastModified2) return  1;
-          else                                    return  0;
-        case SORTMODE_SIZE:
-          long length1 = file1.length();
-          long length2 = file2.length();
-          if      (length1 < length2) return -1;
-          else if (length1 > length2) return  1;
-          else                        return  0;
-        default:
-          return 0;
+        switch (SORT_ORDERING[sortMode][z])
+        {
+          case SORTMODE_NAME:
+            String name1 = file1.getName(); //repositoryTab.repository.getFileName(file1);
+            String name2 = file2.getName(); //repositoryTab.repository.getFileName(file2);
+            result = name1.compareTo(name2);
+            break;
+          case SORTMODE_PATH:
+            String path1 = file1.getParent();
+            String path2 = file2.getParent();
+            result = path1.compareTo(path2);
+            break;
+          case SORTMODE_DATE:
+            long lastModified1 = file1.lastModified();
+            long lastModified2 = file2.lastModified();
+            if      (lastModified1 < lastModified2) result = -1;
+            else if (lastModified1 > lastModified2) result =  1;
+            else                                    result =  0;
+            break;
+          case SORTMODE_SIZE:
+            long length1 = file1.length();
+            long length2 = file2.length();
+            if      (length1 < length2) result = -1;
+            else if (length1 > length2) result =  1;
+            else                        result =  0;
+            break;
+          default:
+            break;
+        }
+        z++;
       }
+      while ((z < SORT_ORDERING[sortMode].length) && (result == 0));
+
+      return result;
     }
 
     /** convert data to string
@@ -231,9 +257,11 @@ class CommandFindFiles
       };
       tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",        SWT.LEFT, true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Date",        SWT.LEFT, false);
+      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Path",        SWT.LEFT, true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,2,"Size [bytes]",SWT.RIGHT,false);
+      tableColumn = Widgets.addTableColumn(widgetFiles,2,"Date",        SWT.LEFT, false);
+      tableColumn.addSelectionListener(selectionListener);
+      tableColumn = Widgets.addTableColumn(widgetFiles,3,"Size [bytes]",SWT.RIGHT,false);
       tableColumn.addSelectionListener(selectionListener);
       Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumn.width);
 
@@ -426,50 +454,53 @@ class CommandFindFiles
             {
               // check for modified data
               if (isDataModified()) break;
+//Dprintf.dprintf("directory=%s",directory);
 
               LinkedList<File> directoryList = new LinkedList<File>();
               do
               {
 //Dprintf.dprintf("directory=%s",directory);
-                File[] files = directory.listFiles();
-                if (files != null)
+                String[] fileNames = directory.list();
+                if (fileNames != null)
                 {
-                  for (final File file : files)
+                  for (String fileName : fileNames)
                   {
                     // check for modified data
                     if (isDataModified()) break;
 
-                    if     (file.isFile())
+//Dprintf.dprintf("fileName=%s %s",fileName,repositoryTab.repository.isHiddenFile(fileName));
+                    if (showHiddenFlag || !repositoryTab.repository.isHiddenFile(fileName))
                     {
-                      final String fileName = repositoryTab.repository.getFileName(file);
-    //Dprintf.dprintf("file=%s %s %s",fileName,file.isHidden(),repositoryTab.repository.isHiddenFile(fileName));
-
-                      if (   (showHiddenFlag || !repositoryTab.repository.isHiddenFile(fileName))
-                          && (   fileName.toLowerCase().contains(findText)
-                              || findPattern.matcher(fileName).matches()
-                             )
-                         )
+                      final File file = new File(directory,fileName);
+                      if     (file.isFile())
                       {
-                        display.syncExec(new Runnable()
+                        if (   fileName.toLowerCase().contains(findText)
+                            || findPattern.matcher(fileName).matches()
+                           )
                         {
-                          public void run()
+                          display.syncExec(new Runnable()
                           {
-                            FileComparator fileComparator = new FileComparator(widgetFiles);
+                            public void run()
+                            {
+                              FileComparator fileComparator = new FileComparator(widgetFiles);
 
-                            Widgets.insertTableEntry(widgetFiles,
-                                                     fileComparator,
-                                                     file,
-                                                     fileName,
-                                                     Onzen.DATETIME_FORMAT.format(file.lastModified()),
-                                                     Long.toString(file.length())
-                                                    );
-                          }
-                        });
+                              Widgets.insertTableEntry(widgetFiles,
+                                                       fileComparator,
+                                                       file,
+                                                       file.getName(),
+                                                       file.getParent(),
+                                                       Onzen.DATETIME_FORMAT.format(file.lastModified()),
+                                                       Long.toString(file.length())
+                                                      );
+                            }
+                          });
+                        }
                       }
-                    }
-                    else if (file.isDirectory())
-                    {
-                      directoryList.add(file);
+                      else if (file.isDirectory())
+                      {
+//Dprintf.dprintf("add dir=%s %s",fileName,file.getPath());
+                        directoryList.add(file);
+                      }
                     }
                   }
                 }
