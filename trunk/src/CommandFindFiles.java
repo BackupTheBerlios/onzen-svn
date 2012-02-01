@@ -13,6 +13,7 @@
 import java.io.File;
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Comparator;
 import java.util.regex.Pattern;
@@ -150,6 +151,9 @@ class CommandFindFiles
   private final RepositoryTab   repositoryTab;
   private final Display         display;
 
+  private final ArrayList<File> thisDirectoryList;
+  private final ArrayList<File> allDirectoryList;
+
   // dialog
   private final Data            data = new Data();
   private final Shell           dialog;
@@ -180,10 +184,18 @@ class CommandFindFiles
     Listener    listener;
 
     // initialize variables
-    this.repositoryTab = repositoryTab;
+    this.repositoryTab    = repositoryTab;
+    this.thisDirectoryList    = new ArrayList<File>();
+    this.thisDirectoryList.add(new File(repositoryTab.repository.rootPath));
+    this.allDirectoryList = new ArrayList<File>();
+    for (Repository repository : repositoryTab.onzen.getRepositoryList())
+    {
+      this.allDirectoryList.add(new File(repository.rootPath));
+    }
 
     // get display
     display = shell.getDisplay();
+
 
     // add files dialog
     dialog = Dialogs.open(shell,
@@ -410,63 +422,59 @@ class CommandFindFiles
           if (!findText.isEmpty())
           {
 //Dprintf.dprintf("findPattern=%s",findPattern);
-            LinkedList<File> directoryList = new LinkedList<File>();
-            if (showAllFlag)
-            {
-              for (Repository repository : repositoryTab.onzen.getRepositoryList())
-              {
-                directoryList.add(new File(repository.rootPath));
-              }
-            }
-            else
-            {
-              directoryList.add(new File(repositoryTab.repository.rootPath));
-            }
-            while (directoryList.size() > 0)
+            for (File directory : (showAllFlag) ? allDirectoryList : thisDirectoryList)
             {
               // check for modified data
               if (isDataModified()) break;
 
-              File directory = directoryList.removeFirst();
-//Dprintf.dprintf("directory=%s",directory);
-              for (final File file : directory.listFiles())
+              LinkedList<File> directoryList = new LinkedList<File>();
+              do
               {
-                // check for modified data
-                if (isDataModified()) break;
-
-                if     (file.isFile())
+//Dprintf.dprintf("directory=%s",directory);
+                File[] files = directory.listFiles();
+                if (files != null)
                 {
-                  final String fileName = repositoryTab.repository.getFileName(file);
-//Dprintf.dprintf("file=%s %s %s",fileName,file.isHidden(),repositoryTab.repository.isHiddenFile(fileName));
-
-                  if (   (showHiddenFlag || !repositoryTab.repository.isHiddenFile(fileName))
-                      && (   fileName.toLowerCase().contains(findText)
-                          || findPattern.matcher(fileName).matches()
-                         )
-                     )
+                  for (final File file : files)
                   {
-                    display.syncExec(new Runnable()
-                    {
-                      public void run()
-                      {
-                        FileComparator fileComparator = new FileComparator(widgetFiles);
+                    // check for modified data
+                    if (isDataModified()) break;
 
-                        Widgets.insertTableEntry(widgetFiles,
-                                                 fileComparator,
-                                                 file,
-                                                 fileName,
-                                                 Onzen.DATETIME_FORMAT.format(file.lastModified()),
-                                                 Long.toString(file.length())
-                                                );
+                    if     (file.isFile())
+                    {
+                      final String fileName = repositoryTab.repository.getFileName(file);
+    //Dprintf.dprintf("file=%s %s %s",fileName,file.isHidden(),repositoryTab.repository.isHiddenFile(fileName));
+
+                      if (   (showHiddenFlag || !repositoryTab.repository.isHiddenFile(fileName))
+                          && (   fileName.toLowerCase().contains(findText)
+                              || findPattern.matcher(fileName).matches()
+                             )
+                         )
+                      {
+                        display.syncExec(new Runnable()
+                        {
+                          public void run()
+                          {
+                            FileComparator fileComparator = new FileComparator(widgetFiles);
+
+                            Widgets.insertTableEntry(widgetFiles,
+                                                     fileComparator,
+                                                     file,
+                                                     fileName,
+                                                     Onzen.DATETIME_FORMAT.format(file.lastModified()),
+                                                     Long.toString(file.length())
+                                                    );
+                          }
+                        });
                       }
-                    });
+                    }
+                    else if (file.isDirectory())
+                    {
+                      directoryList.add(file);
+                    }
                   }
                 }
-                else if (file.isDirectory())
-                {
-                  directoryList.add(file);
-                }
               }
+              while ((directory = directoryList.pollFirst()) != null);
             }
           }
 
