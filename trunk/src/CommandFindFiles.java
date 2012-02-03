@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 // graphics
@@ -49,9 +50,23 @@ import org.eclipse.swt.widgets.Text;
  */
 class CommandFindFiles
 {
-  /** file comparator
+  /** find data
    */
-  class FileComparator implements Comparator<File>
+  class FindData
+  {
+    RepositoryTab repositoryTab;
+    File          file;
+
+    FindData(RepositoryTab repositoryTab, File file)
+    {
+      this.repositoryTab = repositoryTab;
+      this.file          = file;
+    }
+  }
+
+  /** find data comparator
+   */
+  class FindDataComparator implements Comparator<FindData>
   {
     // Note: enum in inner classes are not possible in Java, thus use the old way...
     private final static int SORTMODE_NAME = 0;
@@ -65,7 +80,7 @@ class CommandFindFiles
      * @param table table
      * @param sortColumn column to sort
      */
-    FileComparator(Table table, TableColumn sortColumn)
+    FindDataComparator(Table table, TableColumn sortColumn)
     {
       if      (table.getColumn(0) == sortColumn) sortMode = SORTMODE_NAME;
       else if (table.getColumn(1) == sortColumn) sortMode = SORTMODE_PATH;
@@ -77,18 +92,18 @@ class CommandFindFiles
     /** create file data comparator
      * @param table table
      */
-    FileComparator(Table table)
+    FindDataComparator(Table table)
     {
       this(table,table.getSortColumn());
     }
 
     /** compare file tree data without taking care about type
      * @param fileData1, fileData2 file tree data to compare
-     * @return -1 iff file1 < file2,
-                0 iff file1 = file2,
-                1 iff file1 > file2
+     * @return -1 iff findData1 < findData2,
+                0 iff findData1 = findData2,
+                1 iff findData1 > findData2
      */
-    public int compare(File file1, File file2)
+    public int compare(FindData findData1, FindData findData2)
     {
       final int[][] SORT_ORDERING = new int[][]{new int[]{SORTMODE_NAME,SORTMODE_PATH,SORTMODE_DATE,SORTMODE_SIZE},
                                                 new int[]{SORTMODE_PATH,SORTMODE_NAME,SORTMODE_DATE,SORTMODE_SIZE},
@@ -104,25 +119,25 @@ class CommandFindFiles
         switch (SORT_ORDERING[sortMode][z])
         {
           case SORTMODE_NAME:
-            String name1 = file1.getName(); //repositoryTab.repository.getFileName(file1);
-            String name2 = file2.getName(); //repositoryTab.repository.getFileName(file2);
+            String name1 = findData1.file.getName();
+            String name2 = findData2.file.getName();
             result = name1.compareTo(name2);
             break;
           case SORTMODE_PATH:
-            String path1 = file1.getParent();
-            String path2 = file2.getParent();
+            String path1 = findData1.file.getParent();
+            String path2 = findData2.file.getParent();
             result = path1.compareTo(path2);
             break;
           case SORTMODE_DATE:
-            long lastModified1 = file1.lastModified();
-            long lastModified2 = file2.lastModified();
+            long lastModified1 = findData1.file.lastModified();
+            long lastModified2 = findData2.file.lastModified();
             if      (lastModified1 < lastModified2) result = -1;
             else if (lastModified1 > lastModified2) result =  1;
             else                                    result =  0;
             break;
           case SORTMODE_SIZE:
-            long length1 = file1.length();
-            long length2 = file2.length();
+            long length1 = findData1.file.length();
+            long length2 = findData2.file.length();
             if      (length1 < length2) result = -1;
             else if (length1 > length2) result =  1;
             else                        result =  0;
@@ -142,7 +157,7 @@ class CommandFindFiles
      */
     public String toString()
     {
-      return "FileComparator {"+sortMode+"}";
+      return "FindDataComparator {"+sortMode+"}";
     }
   }
 
@@ -189,6 +204,17 @@ class CommandFindFiles
   private final Text            widgetFind;
   private final Button          widgetShowAll;
   private final Button          widgetShowHidden;
+
+//  private final Button        widgetButtonUpdate;
+//  private final Button        widgetButtonCommit;
+//  private final Button        widgetButtonCreatePatch;
+//  private final Button        widgetButtonAdd;
+//  private final Button        widgetButtonRemove;
+//  private final Button        widgetButtonRevert;
+//  private final Button        widgetButtonDiff;
+  private final Button        widgetButtonRevisions;
+//  private final Button        widgetButtonSolve;
+
   private final Button          widgetClose;
 
   // ------------------------ native functions ----------------------------
@@ -246,12 +272,12 @@ class CommandFindFiles
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          TableColumn    tableColumn    = (TableColumn)selectionEvent.widget;
-          FileComparator fileComparator = new FileComparator(widgetFiles,tableColumn);
+          TableColumn        tableColumn    = (TableColumn)selectionEvent.widget;
+          FindDataComparator findDataComparator = new FindDataComparator(widgetFiles,tableColumn);
 
           synchronized(widgetFiles)
           {
-            Widgets.sortTableColumn(widgetFiles,tableColumn,fileComparator);
+            Widgets.sortTableColumn(widgetFiles,tableColumn,findDataComparator);
           }
         }
       };
@@ -284,10 +310,10 @@ class CommandFindFiles
             if (index >= 0)
             {
               TableItem tableItem = widgetFiles.getItem(index);
-              File      file      = (File)tableItem.getData();
+              FindData  findData  = (FindData)tableItem.getData();
 
-              String fileName = file.getPath();
-              String mimeType = repositoryTab.onzen.getMimeType(fileName);
+              String fileName = findData.file.getPath();
+              String mimeType = Onzen.getMimeType(fileName);
               repositoryTab.openFile(fileName,mimeType);
             }
           }
@@ -339,6 +365,32 @@ class CommandFindFiles
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
+      widgetButtonRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
+      widgetButtonRevisions.setEnabled(false);
+      Widgets.layout(widgetButtonRevisions,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetListener(widgetButtonRevisions,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
+        }
+      });
+      widgetButtonRevisions.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          FindData findData = getSelectedFile();
+          if (findData != null)
+          {
+            CommandRevisions commandRevisions = new CommandRevisions(shell,findData.repositoryTab,new FileData(findData.file));
+            commandRevisions.run();
+          }
+        }
+      });
+
       widgetClose = Widgets.newButton(composite,"Close");
       Widgets.layout(widgetClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
@@ -364,15 +416,16 @@ class CommandFindFiles
         if (index >= 0)
         {
           TableItem tableItem = widget.getItem(index);
-          File      file      = (File)tableItem.getData();
+          FindData  findData  = (FindData)tableItem.getData();
 
-          String fileName = file.getPath();
-          String mimeType = repositoryTab.onzen.getMimeType(fileName);
+          String fileName = findData.file.getPath();
+          String mimeType = Onzen.getMimeType(fileName);
           repositoryTab.openFile(fileName,mimeType);
         }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
+        Widgets.modified(data);
       }
     });
 
@@ -393,7 +446,11 @@ class CommandFindFiles
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyRevisions))
+        {
+          Widgets.invoke(widgetButtonRevisions);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFind))
         {
           Widgets.setFocus(widgetFind);
         }
@@ -482,11 +539,11 @@ class CommandFindFiles
                           {
                             public void run()
                             {
-                              FileComparator fileComparator = new FileComparator(widgetFiles);
+                              FindDataComparator findDataComparator = new FindDataComparator(widgetFiles);
 
                               Widgets.insertTableEntry(widgetFiles,
-                                                       fileComparator,
-                                                       file,
+                                                       findDataComparator,
+                                                       new FindData(repositoryTab,file),
                                                        file.getName(),
                                                        file.getParent(),
                                                        Onzen.DATETIME_FORMAT.format(file.lastModified()),
@@ -602,10 +659,42 @@ class CommandFindFiles
           data.findText       = findText;
           data.showAllFlag    = widgetShowAll.getSelection();
           data.showHiddenFlag = widgetShowHidden.getSelection();
-
           data.notifyAll();
+
+          Widgets.modified(data);
         }
       }
+    }
+  }
+
+  /** get selected file data set
+   * @return file data set
+   */
+  private HashSet<File> getSelectedFileSet()
+  {
+    HashSet<File> fileSet = new HashSet<File>();
+
+    for (TableItem tableItem : widgetFiles.getSelection())
+    {
+      fileSet.add((File)tableItem.getData());
+    }
+
+    return (fileSet.size() > 0) ? fileSet : null;
+  }
+
+  /** get selected find data
+   * @return find data or null
+   */
+  private FindData getSelectedFile()
+  {
+    int index = widgetFiles.getSelectionIndex();
+    if (index >= 0)
+    {
+      return (FindData)widgetFiles.getItem(index).getData();
+    }
+    else
+    {
+      return null;
     }
   }
 }
