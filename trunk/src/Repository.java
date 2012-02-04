@@ -346,6 +346,15 @@ class FileData
     this(name,States.UNKNOWN);
   }
 
+  /** create file data
+   * @param name file name
+   */
+  public FileData(File file)
+  {
+    this(file.getPath(),States.UNKNOWN);
+Dprintf.dprintf("");
+  }
+
   /** get absolute file name
    * @param rootPath root path
    * @return file name
