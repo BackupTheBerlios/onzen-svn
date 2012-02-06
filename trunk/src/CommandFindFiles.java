@@ -184,7 +184,6 @@ class CommandFindFiles
   // --------------------------- variables --------------------------------
 
   // stored settings
-  private static String         findText       = "";
   private static boolean        showAllFlag    = false;
   private static boolean        showHiddenFlag = false;
 
@@ -299,7 +298,6 @@ class CommandFindFiles
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
-        widgetFind.setText(findText);
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         widgetFind.setToolTipText("Find file pattern. Use * and ? as wildcards.");
         widgetFind.addSelectionListener(new SelectionListener()
@@ -612,7 +610,6 @@ class CommandFindFiles
         public void done(Object result)
         {
           // store values
-          findText       = widgetFind.getText().trim();
           showAllFlag    = widgetShowAll.getSelection();
           showHiddenFlag = widgetShowHidden.getSelection();
 
