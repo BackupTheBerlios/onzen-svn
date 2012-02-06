@@ -1153,16 +1153,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
             // get file name
             String fileName;
-            if      (name.startsWith(rootPath))
+            if      (name.startsWith(rootPath+File.separator))
             {
               // absolute path -> convert to relative path to root path
-              fileName = name.substring(rootPath.length());
-              if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
+              fileName = name.substring(rootPath.length()+1);
             }
             else if (Settings.hgRelativePatchPaths)
             {
               // relative hg path -> convert to relative path to root path
-              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()):name;
+              fileName = name.startsWith(subDirectory+File.separator)?name.substring(subDirectory.length()+1):name;
             }
             else
             {
@@ -1186,16 +1185,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
             // get file name
             String fileName;
-            if      (name.startsWith(rootPath))
+            if      (name.startsWith(rootPath+File.separator))
             {
               // absolute path -> convert to relative path to root path
-              fileName = name.substring(rootPath.length());
-              if (fileName.startsWith(File.separator)) fileName = fileName.substring(1);
+              fileName = name.substring(rootPath.length()+1);
             }
             else if (Settings.hgRelativePatchPaths)
             {
               // relative hg path -> convert to relative path to root path
-              fileName = name.startsWith(subDirectory)?name.substring(subDirectory.length()):name;
+              fileName = name.startsWith(subDirectory+File.separator)?name.substring(subDirectory.length()+1):name;
             }
             else
             {
