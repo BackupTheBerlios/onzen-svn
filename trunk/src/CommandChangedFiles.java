@@ -313,6 +313,7 @@ class CommandChangedFiles
         });
 
         menuItem = Widgets.addMenuItem(menu,"Solve",Settings.keySolve);
+// NYI
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -322,6 +323,41 @@ menuItem.setEnabled(false);
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             Widgets.invoke(widgetButtonSolve);
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Rename local file/directory...",Settings.keyRenameLocal);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+
+            if (fileData != null)
+            {
+              repositoryTab.renameLocalFile(fileData);
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Delete local files/directories...",Settings.keyDeleteLocal);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+            if (fileDataSet != null)
+            {
+              repositoryTab.deleteLocalFiles(fileDataSet);
+            }
           }
         });
 

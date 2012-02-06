@@ -1796,10 +1796,10 @@ Dprintf.dprintf("");
   }
 
   /** rename local file/directory
+   * @param fileData file to rename
    */
-  public void renameLocalFile()
+  public void renameLocalFile(final FileData fileData)
   {
-    final FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
       /** dialog data
@@ -1934,12 +1934,19 @@ Dprintf.dprintf("");
     }
   }
 
-  /** delete local files/directories
+  /** rename local file/directory
    */
-  public void deleteLocalFiles()
+  public void renameLocalFile()
   {
-    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
-    if (fileDataSet != null)
+    renameLocalFile(getSelectedFileData());
+  }
+
+  /** delete local files/directories
+   * @param fileDataSet files to delete
+   */
+  public void deleteLocalFiles(HashSet<FileData> fileDataSet)
+  {
+    if ((fileDataSet != null) && (fileDataSet.size() > 0))
     {
       final Shell dialog;
       Composite   composite,subComposite;
@@ -2078,6 +2085,13 @@ Dprintf.dprintf("");
         asyncUpdateFileStates(fileDataSet);
       }
     }
+  }
+
+  /** delete local files/directories
+   */
+  public void deleteLocalFiles()
+  {
+    deleteLocalFiles(getSelectedFileDataSet());
   }
 
   /** find files
