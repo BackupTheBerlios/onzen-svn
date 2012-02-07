@@ -298,7 +298,7 @@ public class Settings
     }
   }
 
-  /** config value adapter String <-> editor
+  /** config value adapter String <-> Color
    */
   class SettingValueAdapterColor extends SettingValueAdapter<String,Color>
   {
@@ -351,7 +351,7 @@ public class Settings
     }
   }
 
-  /** config value adapter String <-> editor
+  /** config value adapter String <-> Key
    */
   class SettingValueAdapterKey extends SettingValueAdapter<String,Integer>
   {
@@ -452,79 +452,79 @@ public class Settings
     }
   }
 
-  /** config value adapter String <-> file data state set
+  /** shell command
    */
-/* obsolete, replaced by generic EnumSet type
-  class SettingValueAdapterDiffTypes extends SettingValueAdapter<String,EnumSet<DiffData.Types>>
+  static class ShellCommand implements Cloneable
   {
-    public EnumSet<DiffData.Types> toValue(String string) throws Exception
+    public String name;
+    public String command;
+
+    /** create shell command
+     * @param name name
+     * @param command command
+     */
+    ShellCommand(String name, String command)
     {
-      EnumSet<DiffData.Types> enumSet = EnumSet.noneOf(DiffData.Types.class);
-
-      StringTokenizer tokenizer = new StringTokenizer(string,",");
-      while (tokenizer.hasMoreTokens())
-      {
-        enumSet.add(DiffData.Types.parse(tokenizer.nextToken()));
-      }
-
-      return enumSet;
+      this.name    = name;
+      this.command = command;
     }
 
-    public String toString(EnumSet<DiffData.Types> enumSet) throws Exception
+    /** create shell command
+     */
+    ShellCommand()
     {
-      StringBuilder buffer = new StringBuilder();
+      this("","");
+    }
 
-      for (DiffData.Types state : enumSet)
-      {
-        String string = state.toString();
-        if (string != null)
-        {
-          if (buffer.length() > 0) buffer.append(',');
-          buffer.append(string);
-        }
-      }
+    /** clone object
+     * @return cloned object
+     */
+    public ShellCommand clone()
+    {
+      return new ShellCommand(name,command);
+    }
 
-      return buffer.toString();
+    /** convert data to string
+     * @return string
+     */
+    public String toString()
+    {
+      return "ShellCommand {"+name+", command: "+command+"}";
     }
   }
-*/
 
-  /** config value adapter String <-> file data state set
+  /** config value adapter String <-> shell command
    */
-/* obsolete, replaced by generic EnumSet type
-  class SettingValueAdapterFileDataStates extends SettingValueAdapter<String,EnumSet<FileData.States>>
+  class SettingValueAdapterShellCommand extends SettingValueAdapter<String,ShellCommand>
   {
-    public EnumSet<FileData.States> toValue(String string) throws Exception
+    public ShellCommand toValue(String string) throws Exception
     {
-      EnumSet<FileData.States> enumSet = EnumSet.noneOf(FileData.States.class);
+      ShellCommand shellCommand = null;
 
-      StringTokenizer tokenizer = new StringTokenizer(string,",");
-      while (tokenizer.hasMoreTokens())
+      Object[] data = new Object[2];
+      if (StringParser.parse(string,"%S% s",data,StringParser.QUOTE_CHARS))
       {
-        enumSet.add(FileData.States.parse(tokenizer.nextToken()));
+        shellCommand = new ShellCommand(((String)data[0]).trim(),((String)data[1]).trim());
+      }
+      else
+      {
+        throw new Exception(String.format("Cannot parse shell command definition '%s'",string));
       }
 
-      return enumSet;
+      return shellCommand;
     }
 
-    public String toString(EnumSet<FileData.States> enumSet) throws Exception
+    public String toString(ShellCommand shellCommand) throws Exception
     {
-      StringBuilder buffer = new StringBuilder();
+      return StringUtils.escape(shellCommand.name)+" "+shellCommand.command;
+    }
 
-      for (FileData.States state : enumSet)
-      {
-        String string = state.toString();
-        if (string != null)
-        {
-          if (buffer.length() > 0) buffer.append(',');
-          buffer.append(string);
-        }
-      }
-
-      return buffer.toString();
+    public boolean equals(ShellCommand shellCommand0, ShellCommand shellCommand1)
+    {
+      return    shellCommand0.name.equals(shellCommand1.name)
+             && shellCommand0.command.equals(shellCommand1.command);
     }
   }
-*/
 
   /** config value adapter String <-> font data
    */
@@ -829,6 +829,10 @@ public class Settings
   @SettingComment(text={"","Editors: <mime type>:<command>","Macros %file%:","  file - file name"})
   @SettingValue(type=SettingValueAdapterEditor.class)
   public static Editor[]         editors                                = new Editor[0];
+
+  @SettingComment(text={"","Shell: <name>:<command>","Macros %file%:","  file - file name"})
+  @SettingValue(type=SettingValueAdapterShellCommand.class)
+  public static ShellCommand[]   shellCommands                          = new ShellCommand[0];
 
   @SettingComment(text={"","Default mail settings"})
   @SettingValue

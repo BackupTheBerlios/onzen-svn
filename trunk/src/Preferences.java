@@ -93,6 +93,7 @@ class Preferences
   private final Table         widgetFonts;
 
   private final Table         widgetEditors;
+  private final Table         widgetShellCommands;
   private final Text          widgetCommandMail;
   private final Text          widgetCommandMailAttachment;
 
@@ -296,7 +297,7 @@ class Preferences
         addFonts();
       }
 
-      composite = Widgets.addTab(tabFolder,"Commands");
+      composite = Widgets.addTab(tabFolder,"Editors");
       composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
       Widgets.layout(composite,0,3,TableLayoutData.NSWE);
       {
@@ -308,9 +309,6 @@ class Preferences
         widgetEditors.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
           {
             Table widget = (Table)selectionEvent.widget;
 
@@ -324,6 +322,9 @@ class Preferences
                 Widgets.updateTableEntry(widgetEditors,editor,editor.mimeTypePattern,editor.command);
               }
             }
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
           }
         });
         for (Settings.Editor editor : Settings.editors)
@@ -369,10 +370,90 @@ class Preferences
             }
           });
         }
+      }
 
+      composite = Widgets.addTab(tabFolder,"Shell commands");
+      composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,2));
+      Widgets.layout(composite,0,3,TableLayoutData.NSWE);
+      {
+        widgetShellCommands = Widgets.newTable(composite);
+        Widgets.layout(widgetShellCommands,0,0,TableLayoutData.NSWE);
+        Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT,200,true);
+        Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT,100,true);
+        widgetShellCommands.setToolTipText("Colors list.");
+        widgetShellCommands.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+            Table widget = (Table)selectionEvent.widget;
+
+            int index = widget.getSelectionIndex();
+            if (index >= 0)
+            {
+              Settings.ShellCommand shellCommand = (Settings.ShellCommand)(widget.getItem(index).getData());
+
+              if (editShellCommand(shellCommand,"Edit shell commands","Save"))
+              {
+                Widgets.updateTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.command);
+              }
+            }
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+        for (Settings.ShellCommand shellCommand : Settings.shellCommands)
+        {
+          Widgets.addTableEntry(widgetShellCommands,shellCommand.clone(),shellCommand.name,shellCommand.command);
+        }
+
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,null));
+        Widgets.layout(subComposite,1,0,TableLayoutData.E);
+        {
+          button = Widgets.newButton(subComposite,"Add");
+          Widgets.layout(button,0,0,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              Settings.ShellCommand shellCommand = new Settings.ShellCommand();
+
+              if (editShellCommand(shellCommand,"Add shell command","Add"))
+              {
+                Widgets.addTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.command);
+              }
+            }
+          });
+          button = Widgets.newButton(subComposite,"Remove");
+          Widgets.layout(button,0,1,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetShellCommands.getSelectionIndex();
+              if (index >= 0)
+              {
+                widgetShellCommands.remove(index);
+              }
+            }
+          });
+        }
+      }
+
+      composite = Widgets.addTab(tabFolder,"Mail");
+      composite.setLayout(new TableLayout(0.0,1.0,2));
+      Widgets.layout(composite,0,3,TableLayoutData.NSWE);
+      {
         subComposite = Widgets.newGroup(composite,"External Mail");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,2,0,TableLayoutData.WE);
+        Widgets.layout(subComposite,0,0,TableLayoutData.WE);
         {
           label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,0,0,TableLayoutData.W);
@@ -391,7 +472,7 @@ class Preferences
 
         subComposite = Widgets.newGroup(composite,"SMTP Mail");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,3,0,TableLayoutData.WE);
+        Widgets.layout(subComposite,1,0,TableLayoutData.WE);
         {
           label = Widgets.newLabel(subComposite,"Server:");
           Widgets.layout(label,0,0,TableLayoutData.W,0,0,2);
@@ -453,7 +534,7 @@ class Preferences
 
         subComposite = Widgets.newGroup(composite,"Post review server");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
-        Widgets.layout(subComposite,4,0,TableLayoutData.WE);
+        Widgets.layout(subComposite,2,0,TableLayoutData.WE);
         {
           label = Widgets.newLabel(subComposite,"Server:");
           Widgets.layout(label,0,0,TableLayoutData.W);
@@ -1225,6 +1306,7 @@ class Preferences
           Settings.messageBroadcastPort                   = Integer.parseInt(widgetMessageBroadcastPort.getText());
 
           Settings.editors                                = getEditors();
+          Settings.shellCommands                          = getShellCommands();
 
           Settings.commandMail                            = widgetCommandMail.getText();
           Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText().trim();
@@ -1702,6 +1784,20 @@ class Preferences
     return editors;
   }
 
+  /** get shell commands array from widget
+   * @return shell commands array
+   */
+  private Settings.ShellCommand[] getShellCommands()
+  {
+    Settings.ShellCommand[] shellCommands = new Settings.ShellCommand[widgetShellCommands.getItemCount()];
+    for (int z = 0; z < widgetShellCommands.getItemCount(); z++)
+    {
+      shellCommands[z] = (Settings.ShellCommand)(widgetShellCommands.getItem(z).getData());
+    }
+
+    return shellCommands;
+  }
+
   /** edit keyboard shortcut
    * @param key key code
    * @return new key code
@@ -1978,7 +2074,7 @@ class Preferences
       widgetCommand = Widgets.newText(composite);
       widgetCommand.setText(editor.command);
       Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name");
+      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
     }
 
     // buttons
@@ -2038,6 +2134,106 @@ class Preferences
       }
     });
 
+    // run dialog
+    Widgets.setFocus(widgetMimeTypePattern);
+    return (Boolean)Dialogs.run(dialog,false);
+  }
+
+  /** edit shell command
+   * @param editor editor command
+   * @return true if edit OK, false on cancel
+   */
+  private boolean editShellCommand(final Settings.ShellCommand shellCommand, String title, String buttonText)
+  {
+    Composite composite;
+    Label     label;
+    Button    button;
+
+    // add editor dialog
+    final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetName;
+    final Text   widgetCommand;
+    final Button widgetAddSave;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Name:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+      widgetName = Widgets.newText(composite);
+      widgetName.setText(shellCommand.name);
+      Widgets.layout(widgetName,0,1,TableLayoutData.WE);
+      widgetName.setToolTipText("Name of command");
+
+      label = Widgets.newLabel(composite,"Command:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+      widgetCommand = Widgets.newText(composite);
+      widgetCommand.setText(shellCommand.command);
+      Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
+      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetAddSave = Widgets.newButton(composite,buttonText);
+      Widgets.layout(widgetAddSave,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetAddSave.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          shellCommand.name    = widgetName.getText().trim();
+          shellCommand.command = widgetCommand.getText();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetName.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetCommand.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetCommand.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetAddSave.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+
+    // run dialog
+    Widgets.setFocus(widgetName);
     return (Boolean)Dialogs.run(dialog,false);
   }
 }

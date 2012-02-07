@@ -323,6 +323,7 @@ public class Onzen
   private MenuItem                          menuItemPushChanges;
   private MenuItem                          menuSetFileMode;
 
+  private Menu                              menuShellCommands;
   private Menu                              menuRepositories;
 
   private TabFolder                         widgetTabFolder;
@@ -1870,112 +1871,16 @@ Dprintf.dprintf("");
       });
     }
 
+    menuShellCommands = Widgets.addMenu(menuBar,"Shell");
+    {
+    }
+
     menuRepositories = Widgets.addMenu(menuBar,"Repositories");
     {
     }
 
     menu = Widgets.addMenu(menuBar,"Options");
     {
-      menuItem = Widgets.addMenuItem(menu,"New master password...");
-      menuItem.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Composite composite;
-          Label     label;
-          Button    button;
-
-          final Shell dialog = Dialogs.openModal(shell,"New master password",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
-
-          final Text   widgetOldMasterPassword;
-          final Text   widgetNewMasterPassword1,widgetNewMasterPassword2;
-          final Button widgetSetPassword;
-
-          composite = Widgets.newComposite(dialog);
-          composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-          Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
-          {
-            label = Widgets.newLabel(composite,"Old password:");
-            Widgets.layout(label,0,0,TableLayoutData.W);
-
-            widgetOldMasterPassword = Widgets.newPassword(composite);
-            Widgets.layout(widgetOldMasterPassword,0,1,TableLayoutData.WE);
-
-            label = Widgets.newLabel(composite,"New password:");
-            Widgets.layout(label,1,0,TableLayoutData.W);
-
-            widgetNewMasterPassword1 = Widgets.newPassword(composite);
-            Widgets.layout(widgetNewMasterPassword1,1,1,TableLayoutData.WE);
-
-            label = Widgets.newLabel(composite,"Verify password:");
-            Widgets.layout(label,2,0,TableLayoutData.W);
-
-            widgetNewMasterPassword2 = Widgets.newPassword(composite);
-            Widgets.layout(widgetNewMasterPassword2,2,1,TableLayoutData.WE);
-          }
-
-          // buttons
-          composite = Widgets.newComposite(dialog);
-          composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
-          Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
-          {
-            widgetSetPassword = Widgets.newButton(composite,"Set password");
-            Widgets.layout(widgetSetPassword,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            widgetSetPassword.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String oldMasterPassword  = widgetOldMasterPassword.getText();
-                String newMasterPassword1 = widgetNewMasterPassword1.getText();
-                String newMasterPassword2 = widgetNewMasterPassword2.getText();
-                if (!newMasterPassword1.equals(newMasterPassword2))
-                {
-                  Dialogs.error(dialog,"New passwords differ!");
-                  Widgets.setFocus(widgetNewMasterPassword1);
-                  return;
-                }
-
-                setNewMasterPassword(oldMasterPassword,newMasterPassword1);
-
-                Dialogs.close(dialog,true);
-              }
-            });
-
-            button = Widgets.newButton(composite,"Cancel");
-            Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                Button widget = (Button)selectionEvent.widget;
-
-                Dialogs.close(dialog,false);
-              }
-            });
-          }
-
-          // listeners
-          Widgets.setNextFocus(widgetOldMasterPassword,widgetNewMasterPassword1);
-          Widgets.setNextFocus(widgetNewMasterPassword1,widgetNewMasterPassword2);
-          Widgets.setNextFocus(widgetNewMasterPassword2,widgetSetPassword);
-
-          // run dialog
-          Widgets.setFocus(widgetOldMasterPassword);
-          Dialogs.run(dialog,false);
-        }
-      });
-
-      Widgets.addMenuSeparator(menu);
-
       menuItem = Widgets.addMenuItem(menu,"Preferences...");
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1987,6 +1892,21 @@ Dprintf.dprintf("");
           editPreferences();
         }
       });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuItem = Widgets.addMenuItem(menu,"New master password...");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          editMasterPassword();
+        }
+      });
+
     }
 
     menu = Widgets.addMenu(menuBar,"Help");
@@ -2045,6 +1965,9 @@ menuItem.addSelectionListener(new SelectionListener()
     createWindow();
     createMenu();
     createEventHandlers();
+
+    // add shell command menu
+    addShellCommands();
 
     // add empty repository tab
     addRepositoryTabEmpty();
@@ -2340,6 +2263,38 @@ exception.printStackTrace();
     }
 
     return password;
+  }
+
+  /** add shell commands to menu
+   */
+  private void addShellCommands()
+  {
+    // remove old entries in shell command menu
+    MenuItem[] menuItems = menuShellCommands.getItems();
+    for (MenuItem menuItem : menuShellCommands.getItems())
+    {
+      menuItem.dispose();
+    }
+
+    // add new shell commands to menu
+    for (Settings.ShellCommand shellCommand : Settings.shellCommands)
+    {
+      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
+      menuItem.setData(shellCommand);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          MenuItem              widget       = (MenuItem)selectionEvent.widget;
+          Settings.ShellCommand shellCommand = (Settings.ShellCommand)widget.getData();
+
+          selectedRepositoryTab.executeShellCommand(shellCommand);
+        }
+      });
+    }
   }
 
   /** add empty "New" tab repository
@@ -4616,10 +4571,107 @@ exception.printStackTrace();
     }
   }
 
+  /** edit preferences
+   */
   private void editPreferences()
   {
     Preferences preferences = new Preferences(shell,this);
     preferences.run();
+
+    addShellCommands();
+  }
+
+  /** set new master password
+   */
+  private void editMasterPassword()
+  {
+    Composite composite;
+    Label     label;
+    Button    button;
+
+    final Shell dialog = Dialogs.openModal(shell,"New master password",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetOldMasterPassword;
+    final Text   widgetNewMasterPassword1,widgetNewMasterPassword2;
+    final Button widgetSetPassword;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Old password:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      widgetOldMasterPassword = Widgets.newPassword(composite);
+      Widgets.layout(widgetOldMasterPassword,0,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"New password:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      widgetNewMasterPassword1 = Widgets.newPassword(composite);
+      Widgets.layout(widgetNewMasterPassword1,1,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Verify password:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+
+      widgetNewMasterPassword2 = Widgets.newPassword(composite);
+      Widgets.layout(widgetNewMasterPassword2,2,1,TableLayoutData.WE);
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetSetPassword = Widgets.newButton(composite,"Set password");
+      Widgets.layout(widgetSetPassword,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetSetPassword.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          String oldMasterPassword  = widgetOldMasterPassword.getText();
+          String newMasterPassword1 = widgetNewMasterPassword1.getText();
+          String newMasterPassword2 = widgetNewMasterPassword2.getText();
+          if (!newMasterPassword1.equals(newMasterPassword2))
+          {
+            Dialogs.error(dialog,"New passwords differ!");
+            Widgets.setFocus(widgetNewMasterPassword1);
+            return;
+          }
+
+          setNewMasterPassword(oldMasterPassword,newMasterPassword1);
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    Widgets.setNextFocus(widgetOldMasterPassword,widgetNewMasterPassword1);
+    Widgets.setNextFocus(widgetNewMasterPassword1,widgetNewMasterPassword2);
+    Widgets.setNextFocus(widgetNewMasterPassword2,widgetSetPassword);
+
+    // run dialog
+    Widgets.setFocus(widgetOldMasterPassword);
+    Dialogs.run(dialog,false);
   }
 }
 

@@ -1329,14 +1329,15 @@ Dprintf.dprintf("");
     if (command != null)
     {
       // expand command
-      command = (command.indexOf("%file%") >= 0)
-                  ?command.replace("%file%",fileName)
-                  :command+" "+fileName;
+      Macro macro = new Macro(command,Macro.PATTERN_PERCENTAGE);
+      macro.expand("file",fileName);
+      macro.expand("",    "%");
+      String commandLine = macro.getValue();
 
       // run command
       try
       {
-        Runtime.getRuntime().exec(command);
+        Runtime.getRuntime().exec(commandLine);
       }
       catch (IOException exception)
       {
@@ -1494,10 +1495,10 @@ Dprintf.dprintf("");
     if ((Boolean)Dialogs.run(dialog,false))
     {
       // expand command
-      String command = data.command;
-      command = (command.indexOf("%file%")>=0)
-                  ?command.replace("%file%",fileData.getFileName(repository.rootPath))
-                  :command+" "+fileData.getFileName(repository.rootPath);
+      Macro macro = new Macro(data.command,Macro.PATTERN_PERCENTAGE);
+      macro.expand("file",fileData.getFileName(repository.rootPath));
+      macro.expand("",    "%");
+      String command = macro.getValue();
 
       // run command
       try
@@ -2529,6 +2530,62 @@ Dprintf.dprintf("");
   public String toString()
   {
     return "RepositoryTab {"+repository.title+"}";
+  }
+
+  /** execute shell command
+   * @param fileDataSet files for shell command
+   */
+  public void executeShellCommand(Settings.ShellCommand shellCommand, HashSet<FileData> fileDataSet)
+  {
+    if (fileDataSet != null)
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        // expand command
+        Macro macro = new Macro(shellCommand.command,Macro.PATTERN_PERCENTAGE);
+        macro.expand("file",fileData.getFileName(repository.rootPath));
+        macro.expand("",    "%");
+        final String commandLine = macro.getValue();
+//Dprintf.dprintf("command=#%s#",command);
+
+        // run command
+        try
+        {
+          Process process = Runtime.getRuntime().exec(commandLine);
+
+          int exitCode = -1;
+          do
+          {
+            try { exitCode = process.waitFor(); } catch (InterruptedException exception) { /* ignored */ }
+          }
+          while (exitCode == -1);
+
+          if (exitCode != 0)
+          {
+            final String message = String.format("Execute external command fail: \n\n'%s'\n\n (exit code: %s)",commandLine,exitCode);
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,message);
+              }
+            });
+          }
+        }
+        catch (IOException exception)
+        {
+          Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",commandLine,exception.getMessage());
+          return;
+        }
+      }
+    }
+  }
+
+  /** rename local file/directory
+   */
+  public void executeShellCommand(Settings.ShellCommand shellCommand)
+  {
+    executeShellCommand(shellCommand,getSelectedFileDataSet());
   }
 
   //-----------------------------------------------------------------------
