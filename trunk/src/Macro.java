@@ -44,9 +44,17 @@ public class Macro
   };
 
   // --------------------------- constants --------------------------------
+  public final static String   PATTERN_START_DOLLAR = "\\$\\{";
+  public final static String   PATTERN_END_DOLLAR   = "\\}";
+  public final static String[] PATTERN_DOLLAR       = new String[]{PATTERN_START_DOLLAR,PATTERN_END_DOLLAR};
+
+  public final static String   PATTERN_START_PERCENTAGE = "%";
+  public final static String   PATTERN_END_PERCENTAGE   = "%";
+  public final static String[] PATTERN_PERCENTAGE       = new String[]{PATTERN_START_PERCENTAGE,PATTERN_END_PERCENTAGE};
 
   // --------------------------- variables --------------------------------
   private String[]                 parameters;
+  private Pattern                  patterVariable;
   private HashMap<String,Object[]> variableSet;
 
   // ------------------------ native functions ----------------------------
@@ -55,11 +63,48 @@ public class Macro
 
   /** create macro
    * @param parameters parameters to expand
+   * @param start, end variable start/end regular expression pattern
+   */
+  Macro(String[] parameters, String start, String end)
+  {
+    this.parameters = parameters;
+    patterVariable  = Pattern.compile("(.*?)"+start+"\\s*(\\w*)\\s*(.*?)"+end+"(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
+    variableSet     = new HashMap<String,Object[]>();
+  }
+
+  /** create macro
+   * @param parameters parameters to expand
+   * @param startEnd variable start/end regular expression pattern
+   */
+  Macro(String[] parameters, String[] startEnd)
+  {
+    this(parameters,startEnd[0],startEnd[1]);
+  }
+
+  /** create macro
+   * @param parameters parameters to expand
    */
   Macro(String[] parameters)
   {
-    this.parameters = parameters;
-    variableSet  = new HashMap<String,Object[]>();
+    this(parameters,PATTERN_START_DOLLAR,PATTERN_END_DOLLAR);
+  }
+
+  /** create macro
+   * @param string string to expand
+   * @param start, end variable start/end regular expression pattern
+   */
+  Macro(String string, String start, String end)
+  {
+    this(new String[]{string},start,end);
+  }
+
+  /** create macro
+   * @param string string to expand
+   * @param startEnd variable start/end regular expression pattern
+   */
+  Macro(String string, String[] startEnd)
+  {
+    this(string,startEnd[0],startEnd[1]);
   }
 
   /** create macro
@@ -67,7 +112,7 @@ public class Macro
    */
   Macro(String string)
   {
-    this(new String[]{string});
+    this(string,PATTERN_DOLLAR);
   }
 
   /** add expand variable
@@ -103,8 +148,6 @@ public class Macro
    */
   public String[] getValueArray()
   {
-    final Pattern PATTERN_VARIABLE = Pattern.compile("(.*?)\\$\\{\\s*(\\w+)\\s*(.*?)\\}(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
-
     String[] values = new String[parameters.length];
 
     for (int z = 0; z < parameters.length; z++)
@@ -114,7 +157,7 @@ public class Macro
       while (!template.isEmpty())
       {
 //Dprintf.dprintf("value=%s",value);
-        Matcher matcher = PATTERN_VARIABLE.matcher(template);
+        Matcher matcher = patterVariable.matcher(template);
         if (matcher.matches())
         {
           value.append(matcher.group(1));
@@ -253,7 +296,7 @@ public class Macro
   {
     String[] values = getValueArray();
 
-    return (values.length > 0)?values[0]:"";
+    return (values.length > 0) ? values[0] : "";
   }
 }
 
