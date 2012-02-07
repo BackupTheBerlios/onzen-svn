@@ -15,6 +15,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 
 // graphics
@@ -1794,6 +1796,14 @@ class Preferences
     {
       shellCommands[z] = (Settings.ShellCommand)(widgetShellCommands.getItem(z).getData());
     }
+
+    Arrays.sort(shellCommands,new Comparator<Settings.ShellCommand>()
+    {
+      public int compare(Settings.ShellCommand shellCommand1, Settings.ShellCommand shellCommand2)
+      {
+        return shellCommand1.name.compareTo(shellCommand2.name);
+      }
+    });
 
     return shellCommands;
   }

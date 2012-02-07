@@ -1966,7 +1966,7 @@ menuItem.addSelectionListener(new SelectionListener()
     createMenu();
     createEventHandlers();
 
-    // add shell command menu
+    // add shell commands to menu
     addShellCommands();
 
     // add empty repository tab
@@ -2294,6 +2294,149 @@ exception.printStackTrace();
           selectedRepositoryTab.executeShellCommand(shellCommand);
         }
       });
+    }
+
+    Widgets.addMenuSeparator(menuShellCommands);
+
+    MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command...");
+    menuItem.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        addShellCommand();
+      }
+    });
+  }
+
+  /** add new shell command to menu
+   */
+  private void addShellCommand()
+  {
+    /** dialog data
+     */
+    class Data
+    {
+     String name;
+     String command;
+
+      Data()
+      {
+        this.name    = null;
+        this.command = null;
+      }
+    };
+
+    final Data data = new Data();
+
+    Composite composite;
+    Label     label;
+    Button    button;
+
+    // add editor dialog
+    final Shell dialog = Dialogs.openModal(shell,"Add shell command",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetName;
+    final Text   widgetCommand;
+    final Button widgetAddSave;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Name:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+      widgetName = Widgets.newText(composite);
+      Widgets.layout(widgetName,0,1,TableLayoutData.WE);
+      widgetName.setToolTipText("Name of command");
+
+      label = Widgets.newLabel(composite,"Command:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+      widgetCommand = Widgets.newText(composite);
+      Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
+      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetAddSave = Widgets.newButton(composite,"Add");
+      Widgets.layout(widgetAddSave,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetAddSave.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.name    = widgetName.getText().trim();
+          data.command = widgetCommand.getText();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetName.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetCommand.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    widgetCommand.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetAddSave.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+
+    // run dialog
+    Widgets.setFocus(widgetName);
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      // add shell command
+      Settings.ShellCommand[] newShellCommands = new Settings.ShellCommand[Settings.shellCommands.length+1];
+      System.arraycopy(Settings.shellCommands,0,newShellCommands,0,Settings.shellCommands.length);
+      newShellCommands[newShellCommands.length-1] = new Settings.ShellCommand(data.name,data.command);
+      Settings.shellCommands = newShellCommands;
+
+      // sort
+      Arrays.sort(Settings.shellCommands,new Comparator<Settings.ShellCommand>()
+      {
+        public int compare(Settings.ShellCommand shellCommand1, Settings.ShellCommand shellCommand2)
+        {
+          return shellCommand1.name.compareTo(shellCommand2.name);
+        }
+      });
+
+      // add shell commands to menu
+      addShellCommands();
     }
   }
 
@@ -4575,9 +4718,11 @@ exception.printStackTrace();
    */
   private void editPreferences()
   {
+    // edit preferences
     Preferences preferences = new Preferences(shell,this);
     preferences.run();
 
+    // add shell commands to menu
     addShellCommands();
   }
 
