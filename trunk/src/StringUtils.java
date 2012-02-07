@@ -35,9 +35,9 @@ public class StringUtils
 
   // ---------------------------- methods ---------------------------------
 
-  /** escape ' and \ in string, enclose in "
+  /** escape quote character and \ in string, enclose in quote character
    * @param string string to escape
-   * @param enclosingQuotes true to add enclosing quotes "
+   * @param enclosingQuotes true to add enclosing quotes character
    * @param quoteChar quote character
    * @return escaped string
    */
@@ -68,7 +68,7 @@ public class StringUtils
     return buffer.toString();
   }
 
-  /** escape ' and \ in string, enclose in "
+  /** escape " and \ in string, enclose in "
    * @param string string to escape
    * @param enclosingQuotes true to add enclosing quotes "
    * @return escaped string
@@ -78,7 +78,7 @@ public class StringUtils
     return escape(string,enclosingQuotes,'"');
   }
 
-  /** escape ' and \ in string, enclose in "
+  /** escape " and \ in string, enclose in "
    * @param string string to escape
    * @param quoteChar quote character
    * @return escaped string
@@ -88,7 +88,7 @@ public class StringUtils
     return escape(string,true,quoteChar);
   }
 
-  /** escape ' and \ in string, enclose in "
+  /** escape " and \ in string, enclose in "
    * @param string string to escape
    * @return escaped string
    */
