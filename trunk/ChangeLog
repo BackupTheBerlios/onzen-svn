@@ -18,7 +18,8 @@
   * add convert TABs/tailing whitespaces before commit,
     add, create patch
   * improved drawing revision tree graphics
-
+  * added file find function
+  * added shell menu
 
 2011-09-06 0.02
   * support sending mails with JavaMail
