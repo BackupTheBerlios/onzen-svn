@@ -229,6 +229,7 @@ class RepositoryTab
   private final TabFolder     widgetTabFolder;
   public  final Composite     widgetComposite;
   private final Tree          widgetFileTree;
+  private final Menu          menuShellCommands;
 
   // map file name -> tree item
   private WeakHashMap<String,TreeItem> fileNameMap = new WeakHashMap<String,TreeItem>();
@@ -580,7 +581,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Rename local...",Settings.keyRenameLocal);
+        menuItem = Widgets.addMenuItem(menu,"Rename local file/directory...",Settings.keyRenameLocal);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -592,7 +593,7 @@ Dprintf.dprintf("");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Delete local...",Settings.keyDeleteLocal);
+        menuItem = Widgets.addMenuItem(menu,"Delete local files/directories...",Settings.keyDeleteLocal);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -617,6 +618,10 @@ Dprintf.dprintf("");
             convertWhitespaces();
           }
         });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuShellCommands = Widgets.addMenu(menu,"Shell");
       }
       widgetFileTree.setMenu(menu);
     }
@@ -721,6 +726,38 @@ Dprintf.dprintf("");
   public void clearStatusText()
   {
     onzen.clearStatusText();
+  }
+
+  /** update shell commands in context menu
+   */
+  public void updateShellCommands()
+  {
+    // remove old entries in shell command menu
+    MenuItem[] menuItems = menuShellCommands.getItems();
+    for (MenuItem menuItem : menuShellCommands.getItems())
+    {
+      menuItem.dispose();
+    }
+
+    // add new shell commands to menu
+    for (Settings.ShellCommand shellCommand : Settings.shellCommands)
+    {
+      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
+      menuItem.setData(shellCommand);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          MenuItem              widget       = (MenuItem)selectionEvent.widget;
+          Settings.ShellCommand shellCommand = (Settings.ShellCommand)widget.getData();
+
+          executeShellCommand(shellCommand);
+        }
+      });
+    }
   }
 
   //-----------------------------------------------------------------------

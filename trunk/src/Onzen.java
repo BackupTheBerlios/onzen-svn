@@ -1942,6 +1942,9 @@ menuItem.addSelectionListener(new SelectionListener()
 */
       }
     }
+
+    // update shell commands in menu
+    updateShellCommands();
   }
 
   /** create event handlers
@@ -1965,9 +1968,6 @@ menuItem.addSelectionListener(new SelectionListener()
     createWindow();
     createMenu();
     createEventHandlers();
-
-    // add shell commands to menu
-    addShellCommands();
 
     // add empty repository tab
     addRepositoryTabEmpty();
@@ -2265,9 +2265,9 @@ exception.printStackTrace();
     return password;
   }
 
-  /** add shell commands to menu
+  /** update shell commands to menu
    */
-  private void addShellCommands()
+  private void updateShellCommands()
   {
     // remove old entries in shell command menu
     MenuItem[] menuItems = menuShellCommands.getItems();
@@ -2295,9 +2295,7 @@ exception.printStackTrace();
         }
       });
     }
-
     Widgets.addMenuSeparator(menuShellCommands);
-
     MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command...");
     menuItem.addSelectionListener(new SelectionListener()
     {
@@ -2309,6 +2307,12 @@ exception.printStackTrace();
         addShellCommand();
       }
     });
+
+    // update context menu in repository tabs
+    for (RepositoryTab repositoryTab : repositoryTabMap.values())
+    {
+      repositoryTab.updateShellCommands();
+    }
   }
 
   /** add new shell command to menu
@@ -2435,8 +2439,8 @@ exception.printStackTrace();
         }
       });
 
-      // add shell commands to menu
-      addShellCommands();
+      // update shell commands to menu
+      updateShellCommands();
     }
   }
 
@@ -2512,6 +2516,9 @@ exception.printStackTrace();
           repository.closeDirectory(directory);
         }
       }
+
+      // update context menu in repository tabs
+      repositoryTab.updateShellCommands();
     }
 
     // remove empty tab if repository list is not empty
@@ -2526,7 +2533,7 @@ exception.printStackTrace();
       // nothing
     }
 
-    // reset repository menu entries
+    // update repository menu entries
     for (Repository repository : repositoryList)
     {
       MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
@@ -2613,6 +2620,11 @@ exception.printStackTrace();
                                       repository
                                      );
     repositoryTabMap.put(repository,repositoryTab);
+
+    // update context menu in repository tabs
+    repositoryTab.updateShellCommands();
+
+    // update repository menu entries
     MenuItem menuItem = Widgets.addMenuItem(menuRepositories,repository.title);
     menuItem.setData(repositoryTab);
     menuItem.addSelectionListener(new SelectionListener()
@@ -4722,8 +4734,8 @@ exception.printStackTrace();
     Preferences preferences = new Preferences(shell,this);
     preferences.run();
 
-    // add shell commands to menu
-    addShellCommands();
+    // update shell commands to menu
+    updateShellCommands();
   }
 
   /** set new master password
