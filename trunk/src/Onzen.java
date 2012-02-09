@@ -1212,39 +1212,6 @@ Dprintf.dprintf("");
       widgetStatus = Widgets.newView(composite,"",SWT.NONE);
       Widgets.layout(widgetStatus,0,1,TableLayoutData.WE);
     }
-
-    // window listener
-    display.addFilter(SWT.KeyDown,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-//        if (event.stateMaks & SWT.CTRL)
-        switch (event.keyCode)
-        {
-          case SWT.F1:
-//            Widgets.showTab(widgetTabFolder,tabStatus.widgetTab);
-            event.doit = false;
-            break;
-          case SWT.F2:
-//            Widgets.showTab(widgetTabFolder,tabJobs.widgetTab);
-            event.doit = false;
-            break;
-          case SWT.F3:
-//            Widgets.showTab(widgetTabFolder,tabRestore.widgetTab);
-            event.doit = false;
-            break;
-          case SWT.F5:
-            if (selectedRepositoryTab != null)
-            {
-              selectedRepositoryTab.updateStates();
-            }
-            event.doit = false;
-            break;
-          default:
-            break;
-        }
-      }
-    });
   }
 
   /** create menu
