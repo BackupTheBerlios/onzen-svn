@@ -327,6 +327,10 @@ class RepositoryTab
 
       menu = Widgets.newPopupMenu(shell);
       {
+        menuShellCommands = Widgets.addMenu(menu,"Shell");
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
         menuItem = Widgets.addMenuItem(menu,"Update",Settings.keyUpdate);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -618,10 +622,6 @@ Dprintf.dprintf("");
             convertWhitespaces();
           }
         });
-
-        menuItem = Widgets.addMenuSeparator(menu);
-
-        menuShellCommands = Widgets.addMenu(menu,"Shell");
       }
       widgetFileTree.setMenu(menu);
     }
