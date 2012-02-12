@@ -208,6 +208,9 @@ class CommandDiff
     // show diff dialog
     dialog = Dialogs.open(shell,"Diff: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
+GC gc = new GC(dialog);
+Dprintf.dprintf("%d",gc.getFontMetrics().getAverageCharWidth());
+
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,0.0},new double[]{1.0,0.0,1.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
@@ -236,7 +239,7 @@ class CommandDiff
         if (revisionRight != null) widgetRevisionRight.setText(revisionRight);
       }
 
-      subComposite = Widgets.newComposite(composite,SWT.H_SCROLL|SWT.V_SCROLL);
+      subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
@@ -252,7 +255,7 @@ class CommandDiff
           }
         });
 
-        widgetTextLeft = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetTextLeft = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.V_SCROLL|SWT.H_SCROLL|SWT.READ_ONLY);
         widgetTextLeft.setFont(Onzen.FONT_DIFF);
         widgetTextLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetTextLeft,0,1,TableLayoutData.NSWE);
@@ -264,13 +267,13 @@ class CommandDiff
           }
         });
       }
-      widgetHorizontalScrollBarLeft = subComposite.getHorizontalBar();
-      widgetVerticalScrollBarLeft   = subComposite.getVerticalBar();
+      widgetHorizontalScrollBarLeft = widgetTextLeft.getHorizontalBar();
+      widgetVerticalScrollBarLeft   = widgetTextLeft.getVerticalBar();
 
       widgetBar = Widgets.newCanvas(composite,SWT.BORDER);
       Widgets.layout(widgetBar,1,1,TableLayoutData.NS,0,0,0,0,20,SWT.DEFAULT);
 
-      subComposite = Widgets.newComposite(composite,SWT.H_SCROLL|SWT.V_SCROLL);
+      subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,2,TableLayoutData.NSWE);
       {
@@ -286,7 +289,7 @@ class CommandDiff
           }
         });
 
-        widgetTextRight = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetTextRight = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL|SWT.READ_ONLY);
         widgetTextRight.setFont(Onzen.FONT_DIFF);
         widgetTextRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetTextRight,0,1,TableLayoutData.NSWE);
@@ -298,8 +301,8 @@ class CommandDiff
           }
         });
       }
-      widgetHorizontalScrollBarRight = subComposite.getHorizontalBar();
-      widgetVerticalScrollBarRight   = subComposite.getVerticalBar();
+      widgetHorizontalScrollBarRight = widgetTextRight.getHorizontalBar();
+      widgetVerticalScrollBarRight   = widgetTextRight.getVerticalBar();
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
@@ -308,7 +311,8 @@ class CommandDiff
         label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
+        widgetFindLeft.setMessage("Find text");
         Widgets.layout(widgetFindLeft,0,1,TableLayoutData.WE);
 
         widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
@@ -343,7 +347,8 @@ class CommandDiff
         label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
+        widgetFindLeft.setMessage("Find text");
         Widgets.layout(widgetFindRight,0,1,TableLayoutData.WE);
 
         widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
@@ -641,8 +646,7 @@ class CommandDiff
     {
       public void handleEvent(Event event)
       {
-        StyledText widget = (StyledText)event.widget;
-        int        topIndex = widget.getTopIndex();
+        int topIndex = widgetLineNumbersLeft.getTopIndex();
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         // sync left text widget
@@ -657,8 +661,11 @@ class CommandDiff
         if (widgetSync.getSelection())
         {
           widgetLineNumbersRight.setTopIndex(topIndex);
-          widgetTextRight.setTopIndex(topIndex);
-          widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
+          if (widgetTextRight.getTopIndex() != topIndex)
+          {
+            widgetTextRight.setTopIndex(topIndex);
+            widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
+          }
         }
       }
     };
@@ -673,8 +680,7 @@ class CommandDiff
     {
       public void handleEvent(Event event)
       {
-        StyledText widget   = (StyledText)event.widget;
-        int        topIndex = widget.getTopIndex();
+        int topIndex = widgetLineNumbersRight.getTopIndex();
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         // sync right text widget
@@ -705,21 +711,30 @@ class CommandDiff
     {
       public void handleEvent(Event event)
       {
-        StyledText widget = (StyledText)event.widget;
-        int        topIndex = widget.getTopIndex();
+        int topIndex           = widgetTextLeft.getTopIndex();
+        int horizontalPixel    = widgetTextLeft.getHorizontalPixel();
+        int scrollBarSelection = widgetHorizontalScrollBarLeft.getSelection();
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         // sync left number text widget, vertical scrollbar
         widgetLineNumbersLeft.setTopIndex(topIndex);
-        widgetVerticalScrollBarLeft.setSelection(topIndex);
 
         // sync to right
         if (widgetSync.getSelection())
         {
-          widgetLineNumbersRight.setTopIndex(topIndex);
-          widgetTextRight.setTopIndex(topIndex);
-          widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
-          widgetVerticalScrollBarRight.setSelection(topIndex);
+          if (widgetTextRight.getTopIndex() != topIndex)
+          {
+            widgetLineNumbersRight.setTopIndex(topIndex);
+            widgetTextRight.setTopIndex(topIndex);
+            widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
+          }
+          if (   (widgetTextRight.getHorizontalPixel() != horizontalPixel)
+              || (widgetHorizontalScrollBarRight.getSelection() != scrollBarSelection)
+             )
+          {
+            widgetTextRight.setHorizontalPixel(horizontalPixel);
+            widgetHorizontalScrollBarRight.setSelection(scrollBarSelection);
+          }
         }
       }
     };
@@ -848,25 +863,30 @@ class CommandDiff
     {
       public void handleEvent(Event event)
       {
-        StyledText widget = (StyledText)event.widget;
-        int        topIndex = widget.getTopIndex();
+        int topIndex           = widgetTextRight.getTopIndex();
+        int horizontalPixel    = widgetTextRight.getHorizontalPixel();
+        int scrollBarSelection = widgetHorizontalScrollBarRight.getSelection();
 //Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
 
         // sync right number text widget
         widgetLineNumbersRight.setTopIndex(topIndex);
-        widgetVerticalScrollBarRight.setSelection(topIndex);
 
         // sync to left
         if (widgetSync.getSelection())
         {
-          widgetLineNumbersLeft.setTopIndex(topIndex);
           if (widgetTextLeft.getTopIndex() != topIndex)
           {
+            widgetLineNumbersLeft.setTopIndex(topIndex);
             widgetTextLeft.setTopIndex(topIndex);
             widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
-            widgetBar.redraw();
           }
-          widgetVerticalScrollBarLeft.setSelection(topIndex);
+          if (   (widgetTextLeft.getHorizontalPixel() != horizontalPixel)
+              || (widgetHorizontalScrollBarLeft.getSelection() != scrollBarSelection)
+             )
+          {
+            widgetTextLeft.setHorizontalPixel(horizontalPixel);
+            widgetHorizontalScrollBarLeft.setSelection(scrollBarSelection);
+          }
         }
       }
     };
@@ -1000,13 +1020,10 @@ class CommandDiff
         ScrollBar widget = (ScrollBar)selectionEvent.widget;
         int       index = widget.getSelection();
 
-        // sync left text widget
-        widgetTextLeft.setHorizontalIndex(index);
-
         // sync to right
         if (widgetSync.getSelection())
         {
-          widgetTextRight.setHorizontalIndex(index);
+          widgetTextRight.setHorizontalPixel(index);
           widgetHorizontalScrollBarRight.setSelection(index);
         }
       }
@@ -1018,24 +1035,20 @@ class CommandDiff
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        ScrollBar widget = (ScrollBar)selectionEvent.widget;
-        int       index = widget.getSelection();
-//Dprintf.dprintf("widget=%s: %d %d %d",widget,widget.getSelection(),widget.getMinimum(),widget.getMaximum());
+        int topIndex = widgetTextLeft.getTopIndex();
+//Dprintf.dprintf("widget=%s: %d",widgetTextLeft,topIndex);
 
         // sync left number text widget, text widget
-        widgetLineNumbersLeft.setTopIndex(index);
-        if (widgetTextLeft.getTopIndex() != index)
-        {
-          widgetTextLeft.setTopIndex(index);
-          widgetBar.redraw();
-        }
+        widgetLineNumbersLeft.setTopIndex(topIndex);
 
         // sync to right
         if (widgetSync.getSelection())
         {
-          widgetLineNumbersRight.setTopIndex(index);
-          widgetTextRight.setTopIndex(index);
-          widgetVerticalScrollBarRight.setSelection(index);
+          widgetLineNumbersRight.setTopIndex(topIndex);
+          if (widgetTextRight.getTopIndex() != topIndex)
+          {
+            widgetTextRight.setTopIndex(topIndex);
+          }
         }
       }
     });
@@ -1049,15 +1062,11 @@ class CommandDiff
       {
         ScrollBar widget = (ScrollBar)selectionEvent.widget;
         int       index = widget.getSelection();
-//Dprintf.dprintf("widget=%s: %d %d %d",widget,widget.getSelection(),widget.getMinimum(),widget.getMaximum());
-
-        // sync right number text widget
-        widgetTextRight.setHorizontalIndex(index);
 
         // sync to left
         if (widgetSync.getSelection())
         {
-          widgetTextLeft.setHorizontalIndex(index);
+          widgetTextLeft.setHorizontalPixel(index);
           widgetHorizontalScrollBarLeft.setSelection(index);
         }
       }
@@ -1069,24 +1078,20 @@ class CommandDiff
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        ScrollBar widget = (ScrollBar)selectionEvent.widget;
-        int       index = widget.getSelection();
-//Dprintf.dprintf("widget=%s: %d %d %d",widget,widget.getSelection(),widget.getMinimum(),widget.getMaximum());
+        int topIndex = widgetTextRight.getTopIndex();
+//Dprintf.dprintf("widget=%s: %d",widgetTextRight,topIndex);
 
         // sync right number text widget, text widget
-        widgetLineNumbersRight.setTopIndex(index);
-        widgetTextRight.setTopIndex(index);
+        widgetLineNumbersRight.setTopIndex(topIndex);
 
         // sync to left
         if (widgetSync.getSelection())
         {
-          widgetLineNumbersLeft.setTopIndex(index);
-          if (widgetTextLeft.getTopIndex() != index)
+          widgetLineNumbersLeft.setTopIndex(topIndex);
+          if (widgetTextRight.getTopIndex() != topIndex)
           {
-            widgetTextLeft.setTopIndex(index);
-            widgetBar.redraw();
+            widgetTextLeft.setTopIndex(topIndex);
           }
-          widgetVerticalScrollBarLeft.setSelection(index);
         }
       }
     });
@@ -1636,6 +1641,8 @@ class CommandDiff
     int           maxWidth         = 0;
     ArrayList<DiffData.Types> lineTypeList = new ArrayList<DiffData.Types>();
 
+GC gc = new GC(widgetTextLeft);
+
     // get text
     for (DiffData diffData : diffData_)
     {
@@ -1653,7 +1660,8 @@ class CommandDiff
             lineNumbersRight.append(String.format("%d\n",lineNbRight)); lineNbRight++;
             textRight.append(line); textRight.append('\n');
 
-            maxWidth = Math.max(maxWidth,line.length());
+//            maxWidth = Math.max(maxWidth,line.length());
+maxWidth = Math.max(maxWidth,Widgets.getTextWidth(gc,line));
 
             lineTypeList.add(DiffData.Types.NONE);
           }
@@ -1671,7 +1679,8 @@ class CommandDiff
             lineNumbersRight.append(String.format("%d\n",lineNbRight)); lineNbRight++;
             textRight.append(line); textRight.append('\n');
 
-            maxWidth = Math.max(maxWidth,line.length());
+//            maxWidth = Math.max(maxWidth,line.length());
+maxWidth = Math.max(maxWidth,Widgets.getTextWidth(gc,line));
 
             lineTypeList.add(DiffData.Types.ADDED);
           }
@@ -1689,7 +1698,8 @@ class CommandDiff
             lineNumbersRight.append('\n');
             textRight.append('\n');
 
-            maxWidth = Math.max(maxWidth,line.length());
+//            maxWidth = Math.max(maxWidth,line.length());
+maxWidth = Math.max(maxWidth,Widgets.getTextWidth(gc,line));
 
             lineTypeList.add(DiffData.Types.DELETED);
           }
@@ -1707,7 +1717,8 @@ class CommandDiff
             textLeft.append(line); textLeft.append('\n');
 //Dprintf.dprintf("L %s",line);
 
-            maxWidth = Math.max(maxWidth,line.length());
+//            maxWidth = Math.max(maxWidth,line.length());
+maxWidth = Math.max(maxWidth,Widgets.getTextWidth(gc,line));
           }
           for (int z = diffData.deletedLines.length; z < diffData.addedLines.length; z++)
           {
@@ -1721,7 +1732,8 @@ class CommandDiff
             textRight.append(line); textRight.append('\n');
 //Dprintf.dprintf("R %s",line);
 
-            maxWidth = Math.max(maxWidth,line.length());
+//            maxWidth = Math.max(maxWidth,line.length());
+maxWidth = Math.max(maxWidth,Widgets.getTextWidth(gc,line));
           }
           for (int z = diffData.addedLines.length; z < diffData.deletedLines.length; z++)
           {
@@ -1757,7 +1769,11 @@ class CommandDiff
     assert(widgetTextLeft.getLineCount() == index+1);
     assert(widgetTextRight.getLineCount() == index+1);
 
+/*
+Rectangle bounds;
     // set scrollbars
+    bounds = widgetTextLeft.getBounds();
+Dprintf.dprintf("maxWidth=%d widgetTextLeft=%s %d",maxWidth,widgetTextLeft.getBounds(),(maxWidth+bounds.width-1)/bounds.width);
     widgetHorizontalScrollBarLeft.setMinimum(0);
     widgetHorizontalScrollBarLeft.setMaximum(maxWidth);
     widgetHorizontalScrollBarRight.setMinimum(0);
@@ -1766,6 +1782,7 @@ class CommandDiff
     widgetVerticalScrollBarLeft.setMaximum(index);
     widgetVerticalScrollBarRight.setMinimum(0);
     widgetVerticalScrollBarRight.setMaximum(index);
+*/
 
     // force redraw (Note: for some reason this is necessary to keep texts and scrollbars in sync)
     widgetLineNumbersLeft.redraw();
