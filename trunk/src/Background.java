@@ -39,8 +39,8 @@ abstract class BackgroundRunnable implements Runnable
    */
   BackgroundRunnable(Object... userData)
   {
-    this.userData = userData;
-    this.stackTrace         = Thread.currentThread().getStackTrace();
+    this.userData   = userData;
+    this.stackTrace = Thread.currentThread().getStackTrace();
   }
 
   /** run method
