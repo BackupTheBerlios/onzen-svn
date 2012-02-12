@@ -404,6 +404,7 @@ class CommandAnnotations
                                               "goto next revision "+data.nextRevision,
                                               "show revision "+data.selectedRevision
                                              },
+                                 null,
                                  new boolean[]{!data.selectedRevision.equals(widgetRevision.getText()),
                                                data.prevRevision != null,
                                                data.nextRevision != null,

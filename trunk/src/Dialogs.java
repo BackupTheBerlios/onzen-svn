@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
+* $Source: /tmp/cvs/onzen/src/Dialogs.java,v $
 * $Revision$
-* $Date$
 * $Author$
 * Contents: dialog functions
 * Systems: all
@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Text;
 
 /** simply busy dialog
  */
-class BusyDialog
+class SimpleBusyDialog
 {
   /** dialog data
    */
@@ -70,14 +70,14 @@ class BusyDialog
 
   // ---------------------------- methods ---------------------------------
 
-  /** create busy dialog
+  /** create simple busy dialog
    * @param parentShell parent shell
    * @param title window title
    * @param image image to show
    * @param imageSize size of image
    * @param message message to show
    */
-  BusyDialog(Shell parentShell, String title, Image image, Point imageSize, String message)
+  SimpleBusyDialog(Shell parentShell, String title, Image image, Point imageSize, String message)
   {
     Composite       composite;
     Label           label;
@@ -97,7 +97,7 @@ class BusyDialog
     composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
     {
       widgetImage = new Canvas(composite,SWT.LEFT);
-      widgetImage.setSize(48,48);
+      widgetImage.setSize(imageSize.x,imageSize.y);
       widgetImage.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
 
       label = new Label(composite,SWT.LEFT|SWT.WRAP);
@@ -107,6 +107,27 @@ class BusyDialog
 
     Dialogs.show(dialog);
     animate();
+  }
+
+  /** create simple busy dialog
+   * @param parentShell parent shell
+   * @param title window title
+   * @param image image to show
+   * @param message message to show
+   */
+  SimpleBusyDialog(Shell parentShell, String title, Image image, String message)
+  {
+    this(parentShell,title,image,new Point(48,48),message);
+  }
+
+  /** create simple busy dialog
+   * @param parentShell parent shell
+   * @param title window title
+   * @param message message to show
+   */
+  SimpleBusyDialog(Shell parentShell, String title, String message)
+  {
+    this(parentShell,title,Widgets.loadImage(parentShell.getDisplay(),"working.png"),message);
   }
 
   /** animate dialog
@@ -175,9 +196,11 @@ class BusyDialog
   }
 }
 
+// ------------------------------------------------------------------------
+
 /** simply progress dialog
  */
-class ProgressDialog
+class SimpleProgressDialog
 {
   /** dialog data
    */
@@ -205,12 +228,12 @@ class ProgressDialog
 
   // ---------------------------- methods ---------------------------------
 
-  /** create progress dialog
+  /** create simgple progress dialog
    * @param parentShell parent shell
    * @param title window title
    * @param message message to show
    */
-  ProgressDialog(Shell parentShell, String title, String message)
+  SimpleProgressDialog(Shell parentShell, String title, String message)
   {
     Composite composite;
     Label     label;
@@ -307,6 +330,8 @@ Dprintf.dprintf("");
     Dialogs.close(dialog);
   }
 }
+
+// ------------------------------------------------------------------------
 
 /** dialog runnable
  */
@@ -1081,6 +1106,72 @@ class Dialogs
     error(parentShell,null,format,arguments);
   }
 
+  /** warning dialog
+   * @param parentShell parent shell
+   * @param message error message
+   */
+  static void warning(Shell parentShell, String message)
+  {
+    TableLayoutData tableLayoutData;
+    Composite       composite;
+    Label           label;
+    Button          button;
+
+    final Shell dialog = open(parentShell,"Warning",200,70);
+    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+    Image image = Widgets.loadImage(parentShell.getDisplay(),"warning.png");
+
+    // message
+    composite = new Composite(dialog,SWT.NONE);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+    {
+      label = new Label(composite,SWT.LEFT);
+      label.setImage(image);
+      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+
+      label = new Label(composite,SWT.LEFT|SWT.WRAP);
+      label.setText(message);
+      label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+    }
+
+    // buttons
+    composite = new Composite(dialog,SWT.NONE);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
+    {
+      button = new Button(composite,SWT.CENTER);
+      button.setText("Close");
+      button.setFocus();
+      button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,60,SWT.DEFAULT));
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          close(dialog);
+        }
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+      });
+    }
+
+    run(dialog);
+  }
+
+  /** warning dialog
+   * @param parentShell parent shell
+   * @param format format string
+   * @param arguments optional arguments
+   */
+  static void warning(Shell parentShell, String format, Object... arguments)
+  {
+    warning(parentShell,String.format(format,arguments));
+  }
+
   /** confirmation dialog
    * @param parentShell parent shell
    * @param title title string
@@ -1267,13 +1358,14 @@ class Dialogs
    * @param title title string
    * @param message confirmation message
    * @param texts array with texts
+   * @param helpTexts help texts or null
    * @param enabled array with enabled flags
    * @param okText ok-text
    * @param cancelText cancel-text
    * @param defaultValue default value (0..n-1)
    * @return selection index (0..n-1) or -1
    */
-  public static int select(Shell parentShell, String title, String message, String[] texts, boolean[] enabled, String okText, String cancelText, int defaultValue)
+  public static int select(Shell parentShell, String title, String message, String[] texts, String[] helpTexts, boolean[] enabled, String okText, String cancelText, int defaultValue)
   {
     final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"question.png");
 
@@ -1344,6 +1436,10 @@ class Dialogs
                   result[0] = (Integer)widget.getData();
                 }
               });
+              if ((helpTexts != null) && (z < helpTexts.length))
+              {
+                button.setToolTipText(helpTexts[z]);
+              }
             }
           }
         }
@@ -1445,13 +1541,42 @@ class Dialogs
    * @param title title string
    * @param message confirmation message
    * @param texts array with texts
+   * @param helpTexts help texts or null
+   * @param enabled array with enabled flags
+   * @param defaultValue default value (0..n-1)
+   * @return selection index (0..n-1)
+   */
+  public static int select(Shell parentShell, String title, String message, String[] texts, String[] helpTexts, boolean[] enabled, int defaultValue)
+  {
+    return select(parentShell,title,message,texts,helpTexts,null,null,null,defaultValue);
+  }
+
+  /** select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
    * @param enabled array with enabled flags
    * @param defaultValue default value (0..n-1)
    * @return selection index (0..n-1)
    */
   public static int select(Shell parentShell, String title, String message, String[] texts, boolean[] enabled, int defaultValue)
   {
-    return select(parentShell,title,message,texts,null,null,null,defaultValue);
+    return select(parentShell,title,message,texts,null,null,null,null,defaultValue);
+  }
+
+  /** select dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param message confirmation message
+   * @param texts array with texts
+   * @param helpTexts help texts or null
+   * @param defaultValue default value (0..n-1)
+   * @return selection index (0..n-1)
+   */
+  public static int select(Shell parentShell, String title, String message, String[] texts, String[] helpTexts, int defaultValue)
+  {
+    return select(parentShell,title,message,texts,helpTexts,null,defaultValue);
   }
 
   /** select dialog
@@ -1464,7 +1589,7 @@ class Dialogs
    */
   public static int select(Shell parentShell, String title, String message, String[] texts, int defaultValue)
   {
-    return select(parentShell,title,message,texts,null,defaultValue);
+    return select(parentShell,title,message,texts,null,null,defaultValue);
   }
 
   /** multiple select dialog
@@ -2077,39 +2202,59 @@ class Dialogs
     return string(parentShell,title,text,"");
   }
 
-/// NYI not complete
-  /** busy dialog
-   * @param parentShell parent shell
-   * @param title text
-   * @param image image to show
-   * @param message info message
-   */
-  public static BusyDialog openBusy(Shell parentShell, String title, Image image, String message)
-  {
-    return new BusyDialog(parentShell,title,image,new Point(48,48),message);
-  }
-
-  /** busy dialog
+  /** open simple busy dialog
    * @param parentShell parent shell
    * @param title title text
    * @param message info message
+   * @return simple busy dialog
+   */
+  public static SimpleBusyDialog openSimpleBusy(Shell parentShell, String title, String message)
+  {
+    return new SimpleBusyDialog(parentShell,title,message);
+  }
+
+  /** open simple busy dialog
+   * @param parentShell parent shell
+   * @param message info message
+   * @return simple busy dialog
+   */
+  public static SimpleBusyDialog openSimpleBusy(Shell parentShell, String message)
+  {
+    return openSimpleBusy(parentShell,"Busy",message);
+  }
+
+  /** close simple busy dialog
+   * @param simpleBusyDialog busy dialog
+   */
+  public static void closeSimpleBusy(SimpleBusyDialog simpleBusyDialog)
+  {
+    simpleBusyDialog.close();
+  }
+
+  /** open busy dialog
+   * @param parentShell parent shell
+   * @param title title text
+   * @param message info message
+   * @return busy dialog
    */
   public static BusyDialog openBusy(Shell parentShell, String title, String message)
   {
-    final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"working.png");
-
-    return openBusy(parentShell,title,IMAGE,message);
+    return new BusyDialog(parentShell,title,message);
   }
 
-  /** busy dialog
+  /** open busy dialog
    * @param parentShell parent shell
    * @param message info message
+   * @return busy dialog
    */
   public static BusyDialog openBusy(Shell parentShell, String message)
   {
     return openBusy(parentShell,"Busy",message);
   }
 
+  /** close busy dialog
+   * @param busyDialog busy dialog
+   */
   public static void closeBusy(BusyDialog busyDialog)
   {
     busyDialog.close();
@@ -2120,24 +2265,29 @@ class Dialogs
    * @param parentShell parent shell
    * @param title text
    * @param message info message
+   * @return simple progress dialog
    */
-  public static ProgressDialog openProgress(Shell parentShell, String title, String message)
+  public static SimpleProgressDialog openSimpleProgress(Shell parentShell, String title, String message)
   {
-    return new ProgressDialog(parentShell,title,message);
+    return new SimpleProgressDialog(parentShell,title,message);
   }
 
   /** progress dialog
    * @param parentShell parent shell
    * @param message info message
+   * @return simple progress dialog
    */
-  public static ProgressDialog openProgress(Shell parentShell, String message)
+  public static SimpleProgressDialog openSimpleProgress(Shell parentShell, String message)
   {
-    return openProgress(parentShell,"Progress",message);
+    return openSimpleProgress(parentShell,"Progress",message);
   }
 
-  public static void closeProgress(ProgressDialog progressDialog)
+  /** close simple progress dialog
+   * @param simpleProgressDialog simple progress dialog
+   */
+  public static void closeSimpleProgress(SimpleProgressDialog simpleProgressDialog)
   {
-    progressDialog.close();
+    simpleProgressDialog.close();
   }
 }
 

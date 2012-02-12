@@ -831,12 +831,12 @@ Dprintf.dprintf("");
   {
     final HashSet<FileData> fileDataSet = getAllFileDataSet();
 
-    final BusyDialog busyDialog = Dialogs.openBusy(shell,"Update all directories and files...");
-    busyDialog.autoAnimate(50);
+    final SimpleBusyDialog simpleBusyDialog = Dialogs.openSimpleBusy(shell,"Update all directories and files...");
+    simpleBusyDialog.autoAnimate(50);
 
-    Background.run(new BackgroundRunnable(repository,fileDataSet,busyDialog)
+    Background.run(new BackgroundRunnable(repository,fileDataSet,simpleBusyDialog)
     {
-      public void run(Repository repository, HashSet<FileData> fileDataSet, final BusyDialog busyDialog)
+      public void run(Repository repository, HashSet<FileData> fileDataSet, final SimpleBusyDialog simpleBusyDialog)
       {
         setStatusText("Update all directories and files...");
         try
@@ -861,7 +861,7 @@ Dprintf.dprintf("");
           {
             public void run()
             {
-              busyDialog.close();
+              simpleBusyDialog.close();
             }
           });
           clearStatusText();
