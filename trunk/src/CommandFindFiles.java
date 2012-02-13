@@ -297,7 +297,8 @@ class CommandFindFiles
         label = Widgets.newLabel(subComposite,"Find pattern:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
+        widgetFind.setMessage("Enter find file pattern");
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
         widgetFind.setToolTipText("Find file pattern. Use * and ? as wildcards.");
         widgetFind.addSelectionListener(new SelectionListener()
