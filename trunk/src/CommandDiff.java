@@ -208,9 +208,6 @@ class CommandDiff
     // show diff dialog
     dialog = Dialogs.open(shell,"Diff: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
 
-GC gc = new GC(dialog);
-Dprintf.dprintf("%d",gc.getFontMetrics().getAverageCharWidth());
-
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,0.0},new double[]{1.0,0.0,1.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
@@ -312,7 +309,7 @@ Dprintf.dprintf("%d",gc.getFontMetrics().getAverageCharWidth());
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindLeft = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
-        widgetFindLeft.setMessage("Find text");
+        widgetFindLeft.setMessage("Enter text to find");
         Widgets.layout(widgetFindLeft,0,1,TableLayoutData.WE);
 
         widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
@@ -348,7 +345,7 @@ Dprintf.dprintf("%d",gc.getFontMetrics().getAverageCharWidth());
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
-        widgetFindLeft.setMessage("Find text");
+        widgetFindLeft.setMessage("Enter text to find");
         Widgets.layout(widgetFindRight,0,1,TableLayoutData.WE);
 
         widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
