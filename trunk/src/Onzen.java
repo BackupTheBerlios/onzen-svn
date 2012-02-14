@@ -3369,6 +3369,22 @@ exception.printStackTrace();
             if (widget.getSelection()) data.type = Repository.Types.HG;
           }
         });
+
+        button = Widgets.newRadio(subComposite,"GIT");
+        button.setSelection(false);
+        Widgets.layout(button,0,3,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection()) data.type = Repository.Types.GIT;
+          }
+        });
       }
 
       label = Widgets.newLabel(composite,"Repository:");
