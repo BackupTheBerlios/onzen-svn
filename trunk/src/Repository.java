@@ -103,6 +103,7 @@ class FileData
     CONFLICT,
     ADDED,
     REMOVED,
+    RENAMED,
     NOT_EXISTS,
     WAITING,
     ERROR;
@@ -151,6 +152,10 @@ class FileData
       {
         state = States.REMOVED;
       }
+      else if (string.equalsIgnoreCase("renamed"))
+      {
+        state = States.RENAMED;
+      }
       else if (string.equalsIgnoreCase("not exists"))
       {
         state = States.NOT_EXISTS;
@@ -187,6 +192,7 @@ class FileData
         case CONFLICT:   return "conflict";
         case ADDED:      return "added";
         case REMOVED:    return "removed";
+        case RENAMED:    return "renamed";
         case NOT_EXISTS: return "not exists";
         case WAITING:    return "waiting";
         case ERROR:      return "error";
@@ -203,7 +209,8 @@ class FileData
                                                          States.MERGE,
                                                          States.CONFLICT,
                                                          States.ADDED,
-                                                         States.REMOVED
+                                                         States.REMOVED,
+                                                         States.RENAMED
                                                         );
   final static EnumSet<States> STATES_NONE  = EnumSet.allOf(States.class);
 

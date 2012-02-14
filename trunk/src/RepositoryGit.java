@@ -16,7 +16,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -28,6 +32,7 @@ import java.util.LinkedList;
 class RepositoryGit extends Repository
 {
   // --------------------------- constants --------------------------------
+  private final String LAST_REVISION_NAME = "HEAD";
 
   // --------------------------- variables --------------------------------
 
@@ -50,6 +55,14 @@ class RepositoryGit extends Repository
     this(null);
   }
 
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.GIT;
+  }
+
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param rootPath root path
@@ -66,6 +79,154 @@ class RepositoryGit extends Repository
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
+    final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(\\S+)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
+
+    Command         command            = new Command();
+    Exec            exec;
+    String          line;
+    Matcher         matcher;
+    String          name               = null;
+    FileData.States state              = FileData.States.UNKNOWN;
+    FileData.Modes  mode               = FileData.Modes.UNKNOWN;
+    String          workingRevision    = "";
+    String          repositoryRevision = "";
+    for (String directory : fileDirectorySet)
+    {
+      exec = null;
+      try
+      {
+        // get status
+        command.clear();
+        command.append(Settings.gitCommand,"status","-s","--porcelain");
+        command.append("--");
+        if (!directory.isEmpty()) command.append(directory);
+        exec = new Exec(rootPath,command);
+
+        // parse status data
+        while ((line = exec.getStdout()) != null)
+        {
+//Dprintf.dprintf("line=%s",line);
+          // check if one entry is complete
+          // match name, state
+          if      ((matcher = PATTERN_STATUS.matcher(line)).matches())
+          {
+            state = parseState(matcher.group(1));
+            name  = matcher.group(2);
+
+            FileData fileData;
+            fileData = findFileData(fileDataSet,name);
+            if      (fileData != null)
+            {
+              fileData.state              = state;
+              fileData.mode               = mode;
+              fileData.workingRevision    = workingRevision;
+              fileData.repositoryRevision = repositoryRevision;
+            }
+            else if (   (newFileDataSet != null)
+                     && !isHiddenFile(name)
+                    )
+            {
+              // check if file not in sub-directory (hg list all files :-()
+              String parentDirectory = new File(name).getParent();
+              if (   ((parentDirectory == null) && directory.isEmpty())
+                  || ((parentDirectory != null) && parentDirectory.equals(directory))
+                 )
+              {
+                // get file type, size, date/time
+                File file = new File(rootPath,name);
+                FileData.Types type     = getFileType(file);
+                long           size     = file.length();
+                Date           datetime = new Date(file.lastModified());
+
+                // create file data
+                newFileDataSet.add(new FileData(name,
+                                                type,
+                                                state,
+                                                mode,
+                                                size,
+                                                datetime,
+                                                workingRevision,
+                                                repositoryRevision
+                                               )
+                                  );
+              }
+            }
+          }
+          else
+          {
+            // unknown line
+            Onzen.printWarning("No match for line '%s'",line);
+          }
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+
+      exec = null;
+      try
+      {
+        // get revision (identity)
+        command.clear();
+        command.append(Settings.gitCommand,"identify","-t");
+        command.append("--");
+        exec = new Exec(rootPath,command);
+        if ((line = exec.getStdout()) != null)
+        {
+          for (FileData fileData : fileDataSet)
+          {
+            fileData.workingRevision = line;
+          }
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+
+      exec = null;
+      try
+      {
+        // get branch
+        command.clear();
+        command.append(Settings.gitCommand,"branch");
+        command.append("--");
+        exec = new Exec(rootPath,command);
+        if ((line = exec.getStdout()) != null)
+        {
+          for (FileData fileData : fileDataSet)
+          {
+            fileData.branch = line;
+          }
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+    }
   }
 
   /** get last revision name
@@ -73,7 +234,7 @@ class RepositoryGit extends Repository
    */
   public String getLastRevision()
   {
-    return "???";
+    return LAST_REVISION_NAME;
   }
 
   /** get revision names of file
@@ -303,6 +464,23 @@ class RepositoryGit extends Repository
   }
 
   //-----------------------------------------------------------------------
+
+  /** parse git state string
+   * @param string state string
+   * @return state
+   */
+  private FileData.States parseState(String string)
+  {
+    if      (string.equalsIgnoreCase(" " )) return FileData.States.OK;
+    else if (string.equalsIgnoreCase("M" )) return FileData.States.MODIFIED;
+    else if (string.equalsIgnoreCase("A" )) return FileData.States.ADDED;
+    else if (string.equalsIgnoreCase("D" )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("R" )) return FileData.States.RENAMED;
+    else if (string.equalsIgnoreCase("C" )) return FileData.States.MODIFIED;
+    else if (string.equalsIgnoreCase("U" )) return FileData.States.CHECKOUT;
+    else if (string.equalsIgnoreCase("??")) return FileData.States.UNKNOWN;
+    else                                    return FileData.States.OK;
+  }
 
 }
 
