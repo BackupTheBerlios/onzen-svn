@@ -38,6 +38,8 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -204,6 +206,9 @@ class CommandFindFiles
   private final Button          widgetShowAll;
   private final Button          widgetShowHidden;
 
+  private final Button          widgetButtonOpenDirectory;
+  private final Button          widgetButtonOpen;
+  private final Button          widgetButtonOpenWith;
 //  private final Button        widgetButtonUpdate;
 //  private final Button        widgetButtonCommit;
 //  private final Button        widgetButtonCreatePatch;
@@ -228,7 +233,9 @@ class CommandFindFiles
    */
   CommandFindFiles(final Shell shell, final RepositoryTab repositoryTab)
   {
-    Composite composite,subComposite;
+    Composite   composite,subComposite;
+    Menu        menu;
+    MenuItem    menuItem;
     Label       label;
     Button      button;
     TableColumn tableColumn;
@@ -290,11 +297,173 @@ class CommandFindFiles
       tableColumn.addSelectionListener(selectionListener);
       Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumn.width);
 
+      menu = Widgets.newPopupMenu(dialog);
+      {
+        menuItem = Widgets.addMenuItem(menu,"Open directory");
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonOpenDirectory);
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Revisions...");
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonRevisions);
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Open file...");
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonOpen);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetButtonOpenWith);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Rename local file/directory...",Settings.keyRenameLocal);
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FindData findData = getSelectedFile();
+            if (findData != null)
+            {
+              findData.repositoryTab.renameLocalFile(findData.file);
+              dialog.setActive();
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Delete local files/directories...",Settings.keyDeleteLocal);
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FindData findData = getSelectedFile();
+            if (findData != null)
+            {
+              findData.repositoryTab.deleteLocalFile(findData.file);
+              dialog.setActive();
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyDeleteLocal);
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+//            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+Dprintf.dprintf("");
+//  public boolean convertWhitespaces(String fileName, String[] fileNames, String message)
+//            convertWhitespaces();
+          }
+        });
+      }
+      widgetFiles.setMenu(menu);
+
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Find pattern:");
+        label = Widgets.newLabel(subComposite,"Find pattern:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
@@ -361,12 +530,87 @@ class CommandFindFiles
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,1.0));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
+      widgetButtonOpenDirectory = Widgets.newButton(composite,"Open directory");
+      widgetButtonOpenDirectory.setEnabled(false);
+      Widgets.layout(widgetButtonOpenDirectory,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetListener(widgetButtonOpenDirectory,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
+        }
+      });
+      widgetButtonOpenDirectory.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          FindData findData = getSelectedFile();
+          if (findData != null)
+          {
+            findData.repositoryTab.openDirectory(findData.file);
+          }
+        }
+      });
+
+      widgetButtonOpen = Widgets.newButton(composite,"Open file");
+      widgetButtonOpen.setEnabled(false);
+      Widgets.layout(widgetButtonOpen,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetListener(widgetButtonOpen,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
+        }
+      });
+      widgetButtonOpen.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          FindData findData = getSelectedFile();
+          if (findData != null)
+          {
+            findData.repositoryTab.openFile(findData.file);
+          }
+        }
+      });
+
+      widgetButtonOpenWith = Widgets.newButton(composite,"Open file with...",Settings.keyOpenFileWith);
+      widgetButtonOpenWith.setEnabled(false);
+      Widgets.layout(widgetButtonOpenWith,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetListener(widgetButtonOpenWith,data)
+      {
+        public void modified(Control control)
+        {
+          Widgets.setEnabled(control,(widgetFiles.getSelectionCount() > 0));
+        }
+      });
+      widgetButtonOpenWith.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          FindData findData = getSelectedFile();
+          if (findData != null)
+          {
+            findData.repositoryTab.openFileWith(findData.file);
+          }
+        }
+      });
+
       widgetButtonRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
       widgetButtonRevisions.setEnabled(false);
-      Widgets.layout(widgetButtonRevisions,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetButtonRevisions,0,3,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonRevisions,data)
       {
         public void modified(Control control)
@@ -391,7 +635,7 @@ class CommandFindFiles
       });
 
       widgetClose = Widgets.newButton(composite,"Close");
-      Widgets.layout(widgetClose,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(widgetClose,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetClose.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -435,6 +679,14 @@ class CommandFindFiles
         if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
         {
           Widgets.setFocus(widgetFind);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyOpenFileWith))
+        {
+          Widgets.invoke(widgetButtonOpenWith);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyRevisions))
+        {
+          Widgets.invoke(widgetButtonRevisions);
         }
       }
       public void keyReleased(KeyEvent keyEvent)

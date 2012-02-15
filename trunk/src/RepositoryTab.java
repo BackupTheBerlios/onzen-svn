@@ -712,6 +712,15 @@ Dprintf.dprintf("");
     }
   }
 
+  /** open directory in file-tree
+   * @param directory directory to open
+   * @return true iff directory opened
+   */
+  public boolean openDirectory(File file)
+  {
+    return openDirectory(repository.getFileName(file.getParent()));
+  }
+
   /** set status text
    * @param format format string
    * @param arguments optional arguments
@@ -1395,6 +1404,17 @@ Dprintf.dprintf("");
   }
 
   /** open file (with external command)
+   * @param file file to open
+   */
+  public void openFile(File file)
+  {
+    String fileName = file.getPath();
+    openFile(fileName,
+             Onzen.getMimeType(fileName)
+            );
+  }
+
+  /** open file (with external command)
    */
   public void openFile()
   {
@@ -1406,9 +1426,9 @@ Dprintf.dprintf("");
   }
 
   /** open file with external program
-   * @param fileData file data
+   * @param fileName file name
    */
-  public void openFileWith(FileData fileData)
+  public void openFileWith(String fileName)
   {
     /** dialog data
      */
@@ -1533,7 +1553,7 @@ Dprintf.dprintf("");
     {
       // expand command
       Macro macro = new Macro(data.command,Macro.PATTERN_PERCENTAGE);
-      macro.expand("file",fileData.getFileName(repository.rootPath));
+      macro.expand("file",fileName);
       macro.expand("",    "%");
       String command = macro.getValue();
 
@@ -1548,6 +1568,22 @@ Dprintf.dprintf("");
         return;
       }
     }
+  }
+
+  /** open file with external program
+   * @param fileData file data
+   */
+  public void openFileWith(FileData fileData)
+  {
+    openFileWith(fileData.getFileName(repository.rootPath));
+  }
+
+  /** open file with external program
+   * @param file file
+   */
+  public void openFileWith(File file)
+  {
+    openFileWith(file.getPath());
   }
 
   /** open file with external program
@@ -1836,140 +1872,154 @@ Dprintf.dprintf("");
   /** rename local file/directory
    * @param fileData file to rename
    */
-  public void renameLocalFile(final FileData fileData)
+  public void renameLocalFile(final String fileName)
   {
-    if (fileData != null)
+    /** dialog data
+     */
+    class Data
     {
-      /** dialog data
-       */
-      class Data
+      String newFileName;
+
+      Data()
       {
-        String newFileName;
-
-        Data()
-        {
-          this.newFileName = null;
-        }
-      };
-
-      final Data  data = new Data();
-      final Shell dialog;
-      Composite   composite,subComposite;
-      Label       label;
-      Text        text;
-      Button      button;
-
-      // rename file/directory dialog
-      dialog = Dialogs.openModal(shell,"Rename file/directory",new double[]{1.0,0.0},1.0);
-
-      final Text   widgetNewFileName;
-      final Button widgetRename;
-      composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
-      Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
-      {
-        label = Widgets.newLabel(composite,"Old name:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
-
-        text = Widgets.newStringView(composite);
-        text.setText(fileData.getFileName());
-        Widgets.layout(text,0,1,TableLayoutData.WE);
-
-        label = Widgets.newLabel(composite,"New name:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
-
-        widgetNewFileName = Widgets.newText(composite);
-        Widgets.layout(widgetNewFileName,1,1,TableLayoutData.WE);
+        this.newFileName = null;
       }
+    };
 
-      // buttons
-      composite = Widgets.newComposite(dialog);
-      composite.setLayout(new TableLayout(0.0,1.0));
-      Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
-      {
-        widgetRename = Widgets.newButton(composite,"Rename");
-        widgetRename.setEnabled(false);
-        Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
-        widgetRename.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            data.newFileName                 = widgetNewFileName.getText();
-            Settings.geometryRenameLocalFile = dialog.getSize();
+    final Data  data = new Data();
+    final Shell dialog;
+    Composite   composite,subComposite;
+    Label       label;
+    Text        text;
+    Button      button;
 
-            Dialogs.close(dialog,true);
-          }
-        });
-        widgetRename.setToolTipText("Rename file.");
+    // rename file/directory dialog
+    dialog = Dialogs.openModal(shell,"Rename file/directory",new double[]{1.0,0.0},1.0);
 
-        button = Widgets.newButton(composite,"Cancel");
-        Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Dialogs.close(dialog,false);
-          }
-        });
-      }
+    final Text   widgetNewFileName;
+    final Button widgetRename;
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Old name:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
 
-      // listeners
-      widgetNewFileName.addModifyListener(new ModifyListener()
-      {
-        public void modifyText(ModifyEvent modifyEvent)
-        {
-          Text widget = (Text)modifyEvent.widget;
+      text = Widgets.newStringView(composite);
+      text.setText(fileName);
+      Widgets.layout(text,0,1,TableLayoutData.WE);
 
-          widgetRename.setEnabled(!widget.getText().equals(fileData.getFileName()));
-        }
-      });
-      widgetNewFileName.addSelectionListener(new SelectionListener()
+      label = Widgets.newLabel(composite,"New name:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      widgetNewFileName = Widgets.newText(composite);
+      Widgets.layout(widgetNewFileName,1,1,TableLayoutData.WE);
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetRename = Widgets.newButton(composite,"Rename");
+      widgetRename.setEnabled(false);
+      Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetRename.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
-          widgetRename.setFocus();
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          data.newFileName                 = widgetNewFileName.getText();
+          Settings.geometryRenameLocalFile = dialog.getSize();
+
+          Dialogs.close(dialog,true);
         }
       });
+      widgetRename.setToolTipText("Rename file.");
 
-      // show dialog
-      Dialogs.show(dialog,Settings.geometryRenameLocalFile.x,SWT.DEFAULT);
-
-      // update
-      data.newFileName = fileData.getFileName();
-      widgetNewFileName.setText(data.newFileName);
-
-      // run
-      Widgets.setFocus(widgetNewFileName);
-      if ((Boolean)Dialogs.run(dialog,false))
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
       {
-        // rename file
-        File oldFile = new File(fileData.getFileName(repository));
-        File newFile = new File(repository.rootPath,data.newFileName);
-        if (!oldFile.renameTo(newFile))
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
-          Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n%s",fileData.getFileName(),data.newFileName);
-          return;
         }
-
-        // update tree
-        TreeItem subTreeItem = fileNameMap.get(fileData.getFileName());
-        fileNameMap.remove(fileData.getFileName());
-        fileData.setFileName(data.newFileName);
-        fileNameMap.put(fileData.getFileName(),subTreeItem);
-
-        // start update file data
-        asyncUpdateFileStates(fileData);
-      }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
     }
+
+    // listeners
+    widgetNewFileName.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        widgetRename.setEnabled(!widget.getText().equals(fileName));
+      }
+    });
+    widgetNewFileName.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        widgetRename.setFocus();
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+
+    // show dialog
+    Dialogs.show(dialog,Settings.geometryRenameLocalFile.x,SWT.DEFAULT);
+
+    // update
+    data.newFileName = fileName;
+    widgetNewFileName.setText(data.newFileName);
+
+    // run
+    Widgets.setFocus(widgetNewFileName);
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      // rename local file/directory
+      File oldFile = new File(fileName);
+      File newFile = new File(repository.rootPath,data.newFileName);
+      if (!oldFile.renameTo(newFile))
+      {
+        Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n%s",fileName,data.newFileName);
+        return;
+      }
+
+      // update tree
+      TreeItem subTreeItem = fileNameMap.get(fileName);
+      FileData fileData = (FileData)subTreeItem.getData();
+      fileNameMap.remove(fileName);
+      fileData.setFileName(data.newFileName);
+      fileNameMap.put(fileData.getFileName(),subTreeItem);
+
+      // start update file data
+      asyncUpdateFileStates(fileData);
+    }
+  }
+
+  /** rename local file/directory
+   * @param fileData file to rename
+   */
+  public void renameLocalFile(FileData fileData)
+  {
+    renameLocalFile(fileData.getFileName());
+  }
+
+  /** rename local file/directory
+   * @param file file to rename
+   */
+  public void renameLocalFile(File file)
+  {
+    renameLocalFile(file.getPath());
   }
 
   /** rename local file/directory
@@ -1980,11 +2030,11 @@ Dprintf.dprintf("");
   }
 
   /** delete local files/directories
-   * @param fileDataSet files to delete
+   * @param fileNameSet files to delete
    */
   public void deleteLocalFiles(HashSet<FileData> fileDataSet)
   {
-    if ((fileDataSet != null) && (fileDataSet.size() > 0))
+    if (fileDataSet.size() > 0)
     {
       final Shell dialog;
       Composite   composite,subComposite;
@@ -2049,19 +2099,18 @@ Dprintf.dprintf("");
       // add files
       for (FileData fileData : fileDataSet)
       {
-        widgetFiles.add(fileData.name);
+        widgetFiles.add(fileData.getFileName());
       }
 
       // run
       widgetCancel.setFocus();
       if ((Boolean)Dialogs.run(dialog,false))
       {
-        // delete local files/directories
         boolean deleteAll  = false;
         boolean skipErrors = false;
         for (FileData fileData : fileDataSet)
         {
-          File file = new File(fileData.getFileName(repository));
+          File file = new File(fileData.getFileName(repository.rootPath));
 
           // delete local file/directory
           boolean deleted = false;
@@ -2098,34 +2147,58 @@ Dprintf.dprintf("");
           }
 
           // check if deleted
-          if (!deleted && !skipErrors)
+          if (deleted)
           {
-            switch (Dialogs.select(shell,
-                                   "Error",
-                                   String.format("Cannot delete local file/directory '%s'.\n\nContinue?",file.getPath()),
-                                   new String[]{"Yes","Yes, always","No"},
-                                   2
-                                  )
-                   )
+            // remove from tree
+            fileNameMap.remove(fileData.getFileName());
+
+            // start update file data
+            asyncUpdateFileStates(fileData);
+          }
+          else
+          {
+            if (!skipErrors)
             {
-              case 0:
-                break;
-              case 1:
-                skipErrors = true;
-                break;
-              case 2:
-                return;
+              switch (Dialogs.select(shell,
+                                     "Error",
+                                     String.format("Cannot delete local file/directory '%s'.\n\nContinue?",file.getPath()),
+                                     new String[]{"Yes","Yes, always","No"},
+                                     2
+                                    )
+                     )
+              {
+                case 0:
+                  break;
+                case 1:
+                  skipErrors = true;
+                  break;
+                case 2:
+                  return;
+              }
             }
           }
         }
-
-        // start update file data
-        asyncUpdateFileStates(fileDataSet);
       }
     }
   }
 
-  /** delete local files/directories
+  /** delete local file/directory
+   */
+  public void deleteLocalFile(String fileName)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(new FileData(fileName));
+    deleteLocalFiles(fileDataSet);
+  }
+
+  /** delete local file/directory
+   */
+  public void deleteLocalFile(File file)
+  {
+    deleteLocalFile(file.getPath());
+  }
+
+  /** delete selected local files/directories
    */
   public void deleteLocalFiles()
   {
@@ -2866,6 +2939,7 @@ Dprintf.dprintf("");
       if (!treeItem.isDisposed())
       {
         FileData fileData = (FileData)treeItem.getData();
+//Dprintf.dprintf("fileData.getFileName()=%s %s",fileData.getFileName(),directory);
 
         if (directory.startsWith(fileData.getFileName()))
         {

@@ -2070,7 +2070,7 @@ abstract class Repository implements Serializable
   }
 
   /** get file name relative to root path
-   * @param fileName
+   * @param fileName file name
    * @return file name relative to root path or unchanged file name
    */
   public String getFileName(String fileName)
