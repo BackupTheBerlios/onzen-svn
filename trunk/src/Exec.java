@@ -351,7 +351,7 @@ class Exec
   {
     String line = getStdout();
     ungetStdout(line);
-    return line != null;
+    return line == null;
   }
 
   /** get next line from stderr
@@ -405,7 +405,7 @@ class Exec
   {
     String line = getStderr();
     ungetStderr(line);
-    return line != null;
+    return line == null;
   }
 
   /** read data from stdout
