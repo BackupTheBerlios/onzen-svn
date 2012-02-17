@@ -1051,7 +1051,7 @@ else {
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
    * @param output patch output or null
-   * @param lineLine patch data lines or null
+   * @param lineList patch data lines or null
    */
   public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
@@ -1140,7 +1140,7 @@ else {
           output.println(String.format("diff -u %s",fileData.getFileName()));
           output.println(String.format("--- /dev/null\t%s",dateString));
           output.println(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
-          output.println(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
+          output.println(String.format("@@ -1,%d +1,%d @@",lineCount,lineCount));
           while ((line = bufferedReader.readLine()) != null)
           {
             output.println("+"+line);
@@ -1151,7 +1151,7 @@ else {
           lineList.add(String.format("diff -u %s",fileData.getFileName()));
           lineList.add(String.format("--- /dev/null\t%s",dateString));
           lineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
-          lineList.add(String.format("@@ -1,%d +1,%d @@",lineList.size(),lineList.size()));
+          lineList.add(String.format("@@ -1,%d +1,%d @@",lineCount,lineCount));
           while ((line = bufferedReader.readLine()) != null)
           {
             lineList.add("+"+line);
