@@ -987,7 +987,7 @@ exception.printStackTrace();
     // create window
     shell = new Shell(display,SWT.SHELL_TRIM);
     shell.setText("Onzen");
-    shell.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+    shell.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0));
 
     // create tab
     widgetTabFolder = Widgets.newTabFolder(shell);
