@@ -669,7 +669,6 @@ Dprintf.dprintf("");
           // convert TABs, remove trailing whitespaces
           if (containTABs || containTrailingWhitespaces)
           {
-
             final boolean[] result = new boolean[1];
             display.syncExec(new Runnable()
             {
@@ -681,7 +680,11 @@ Dprintf.dprintf("");
                                                             );
               }
             });
-            if (!result[0]) return;
+            if (!result[0])
+            {
+              Dialogs.close(dialog,false);
+              return;
+            }
           }
         }
 
