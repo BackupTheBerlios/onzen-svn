@@ -2424,7 +2424,7 @@ Dprintf.dprintf("");
     }
   }
 
-  /** convert whitespaces in file
+  /** convert whitespaces in file dialog
    * @param fileName file name
    * @param fileNames all file names
    * @return true iff OK, false for abort
@@ -2462,9 +2462,10 @@ Dprintf.dprintf("");
     final Spinner widgetSpacesPerTAB;
     final Button  widgetConvertTABs;
     final Button  widgetRemoveTrailingWhitespaces;
-    final Button  widgetContinue;
     final Button  widgetConvert;
+    final Button  widgetKeep;
     final Button  widgetConvertAll;
+    final Button  widgetKeepAll;
     final Button  widgetAbort;
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0,4));
@@ -2496,11 +2497,11 @@ Dprintf.dprintf("");
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,1.0,0.0}));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetConvert = Widgets.newButton(composite,"Convert whitespaces");
-      Widgets.layout(widgetConvert,0,0,TableLayoutData.W);
+      widgetConvert = Widgets.newButton(composite,"Convert");
+      Widgets.layout(widgetConvert,0,0,TableLayoutData.W,0,0,0,0,140,SWT.DEFAULT);
       widgetConvert.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2521,9 +2522,9 @@ Dprintf.dprintf("");
       });
       widgetConvert.setToolTipText("Convert whitespaces in file.");
 
-      widgetContinue = Widgets.newButton(composite,"Keep whitespaces");
-      Widgets.layout(widgetContinue,0,1,TableLayoutData.W);
-      widgetContinue.addSelectionListener(new SelectionListener()
+      widgetKeep = Widgets.newButton(composite,"Keep");
+      Widgets.layout(widgetKeep,0,1,TableLayoutData.W,0,0,0,0,140,SWT.DEFAULT);
+      widgetKeep.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -2540,9 +2541,10 @@ Dprintf.dprintf("");
           Dialogs.close(dialog,true);
         }
       });
+      widgetKeep.setToolTipText("Keep whitespaces in file.");
 
-      widgetConvertAll = Widgets.newButton(composite,"Convert whitespaces in all files");
-      Widgets.layout(widgetConvertAll,0,2,TableLayoutData.NONE);
+      widgetConvertAll = Widgets.newButton(composite,"Convert in all files");
+      Widgets.layout(widgetConvertAll,0,2,TableLayoutData.W,0,0,0,0,140,SWT.DEFAULT);
       widgetConvertAll.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2563,8 +2565,29 @@ Dprintf.dprintf("");
       });
       widgetConvertAll.setToolTipText("Convert whitespaces in all files.");
 
+      widgetKeepAll = Widgets.newButton(composite,"Keep in all files");
+      Widgets.layout(widgetKeepAll,0,3,TableLayoutData.W,0,0,0,0,140,SWT.DEFAULT);
+      widgetKeepAll.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.convertTABs               = false;
+          data.removeTrailingWhitespaces = false;
+          data.convertAll                = true;
+
+          convertWhiteDialogLocation          = dialog.getLocation();
+          Settings.geometryConvertWhitespaces = dialog.getSize();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+      widgetKeepAll.setToolTipText("Keep whitespaces in all files.");
+
       widgetAbort = Widgets.newButton(composite,"Abort");
-      Widgets.layout(widgetAbort,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetAbort,0,4,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
       widgetAbort.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
