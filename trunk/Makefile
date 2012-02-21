@@ -11,7 +11,7 @@
 #---------------------------------- settings ---------------------------------
 
 PLATFORM           = Linux
-JAVA_DATA_MODEL    := $(shell if test ! -f classes/DataModel.class; then javac -d classes src/DataModel.java; fi; java -cp classes DataModel)
+JAVA_DATA_MODEL    := $(shell if test ! -f classes/DataModel.class; then install -d classes; javac -d classes src/DataModel.java; fi; java -cp classes DataModel)
 
 ENABLE_DEBUG       = no
 
