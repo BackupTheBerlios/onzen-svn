@@ -316,7 +316,7 @@ class RepositoryGit extends Repository
    * @param revision1,revision2 revisions to get patch for
    * @param ignoreWhitespaces true to ignore white spaces
    * @param output patch output or null
-   * @param lineLine patch data lines or null
+   * @param lineList patch data lines or null
    */
   public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
