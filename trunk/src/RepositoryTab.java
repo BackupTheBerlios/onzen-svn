@@ -2962,9 +2962,13 @@ Dprintf.dprintf("");
       if (!treeItem.isDisposed())
       {
         FileData fileData = (FileData)treeItem.getData();
-//Dprintf.dprintf("fileData.getFileName()=%s %s",fileData.getFileName(),directory);
+        String   fileName = fileData.getFileName();
+//Dprintf.dprintf("fileData.getFileName()=#%s# e=#%s#",fileName,directory);
 
-        if (directory.startsWith(fileData.getFileName()))
+        if (   fileName.isEmpty()
+            || directory.equals(fileName)
+            || directory.startsWith(fileName+File.separator)
+           )
         {
           // open this tree item
           openFileTreeItem(treeItem);
