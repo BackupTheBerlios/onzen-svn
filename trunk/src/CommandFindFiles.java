@@ -186,40 +186,40 @@ class CommandFindFiles
   // --------------------------- variables --------------------------------
 
   // stored settings
-  private static boolean        showAllFlag    = false;
-  private static boolean        showHiddenFlag = false;
+  private static boolean                 showAllFlag    = false;
+  private static boolean                 showHiddenFlag = false;
 
   // global variable references
-  private final RepositoryTab   repositoryTab;
-  private final Display         display;
+  private final RepositoryTab            repositoryTab;
+  private final Display                  display;
 
-  private final ArrayList<File> thisDirectoryList;
-  private final ArrayList<File> allDirectoryList;
+  private final RepositoryTab[]          thisRepositoryTabs;
+  private final RepositoryTab[]          allRepositoryTabs;
 
   // dialog
-  private final Data            data = new Data();
-  private final Shell           dialog;
+  private final Data                     data = new Data();
+  private final Shell                    dialog;
 
   // widgets
-  private final Table           widgetFiles;
-  private final Text            widgetFind;
-  private final Button          widgetShowAll;
-  private final Button          widgetShowHidden;
+  private final Table                    widgetFiles;
+  private final Text                     widgetFind;
+  private final Button                   widgetShowAll;
+  private final Button                   widgetShowHidden;
 
-  private final Button          widgetButtonOpenDirectory;
-  private final Button          widgetButtonOpen;
-  private final Button          widgetButtonOpenWith;
-//  private final Button        widgetButtonUpdate;
-//  private final Button        widgetButtonCommit;
-//  private final Button        widgetButtonCreatePatch;
-//  private final Button        widgetButtonAdd;
-//  private final Button        widgetButtonRemove;
-//  private final Button        widgetButtonRevert;
+  private final Button                   widgetButtonOpenDirectory;
+  private final Button                   widgetButtonOpen;
+  private final Button                   widgetButtonOpenWith;
+//  private final Button         widgetButtonUpdate;
+//  private final Button         widgetButtonCommit;
+//  private final Button         widgetButtonCreatePatch;
+//  private final Button         widgetButtonAdd;
+//  private final Button         widgetButtonRemove;
+//  private final Button         widgetButtonRevert;
 //  private final Button        widgetButtonDiff;
-  private final Button        widgetButtonRevisions;
+  private final Button                   widgetButtonRevisions;
 //  private final Button        widgetButtonSolve;
 
-  private final Button          widgetClose;
+  private final Button                   widgetClose;
 
   // ------------------------ native functions ----------------------------
 
@@ -242,14 +242,9 @@ class CommandFindFiles
     Listener    listener;
 
     // initialize variables
-    this.repositoryTab    = repositoryTab;
-    this.thisDirectoryList    = new ArrayList<File>();
-    this.thisDirectoryList.add(new File(repositoryTab.repository.rootPath));
-    this.allDirectoryList = new ArrayList<File>();
-    for (Repository repository : repositoryTab.onzen.getRepositoryList())
-    {
-      this.allDirectoryList.add(new File(repository.rootPath));
-    }
+    this.repositoryTab      = repositoryTab;
+    this.thisRepositoryTabs = new RepositoryTab[]{repositoryTab};
+    this.allRepositoryTabs  = repositoryTab.onzen.getRepositoryTabs();
 
     // get display
     display = shell.getDisplay();
@@ -553,6 +548,7 @@ Dprintf.dprintf("");
           FindData findData = getSelectedFile();
           if (findData != null)
           {
+            findData.repositoryTab.onzen.selectRepositoryTab(findData.repositoryTab);
             findData.repositoryTab.openDirectory(findData.file);
           }
         }
@@ -672,7 +668,7 @@ Dprintf.dprintf("");
       }
     });
 
-    widgetFiles.addKeyListener(new KeyListener()
+    KeyListener keyListener = new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
@@ -692,20 +688,16 @@ Dprintf.dprintf("");
       public void keyReleased(KeyEvent keyEvent)
       {
       }
-    });
+    };
+    widgetFiles.addKeyListener(keyListener);
+    widgetFind.addKeyListener(keyListener);
+    widgetShowAll.addKeyListener(keyListener);
+    widgetShowHidden.addKeyListener(keyListener);
     widgetFind.addKeyListener(new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        if      (Widgets.isAccelerator(keyEvent,Settings.keyRevisions))
-        {
-          Widgets.invoke(widgetButtonRevisions);
-        }
-        else if (Widgets.isAccelerator(keyEvent,Settings.keyFind))
-        {
-          Widgets.setFocus(widgetFind);
-        }
-        else if (keyEvent.keyCode == SWT.ARROW_UP)
+        if      (keyEvent.keyCode == SWT.ARROW_UP)
         {
           int index = widgetFiles.getSelectionIndex();
           if (index > 0) index--;
@@ -758,8 +750,10 @@ Dprintf.dprintf("");
           if (!findText.isEmpty())
           {
 //Dprintf.dprintf("findPattern=%s",findPattern);
-            for (File directory : (showAllFlag) ? allDirectoryList : thisDirectoryList)
+            for (final RepositoryTab repositoryTab : (showAllFlag) ? allRepositoryTabs : thisRepositoryTabs)
             {
+              File directory = new File(repositoryTab.repository.rootPath);
+
               // check for modified data
               if (isDataModified()) break;
 //Dprintf.dprintf("directory=%s",directory);

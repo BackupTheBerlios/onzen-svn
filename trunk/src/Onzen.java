@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
@@ -863,6 +864,15 @@ exception.printStackTrace();
   public RepositoryTab getRepositoryTab(String rootPath)
   {
     return repositoryTabMap.get(getRepository(rootPath));
+  }
+
+  /** get all repository tabs
+   * @return repository tabs
+   */
+  public RepositoryTab[] getRepositoryTabs()
+  {
+    Collection<RepositoryTab> repositoryTabs = repositoryTabMap.values();
+    return repositoryTabs.toArray(new RepositoryTab[repositoryTabs.size()]);
   }
 
   /** get mime type of file
@@ -4641,7 +4651,7 @@ exception.printStackTrace();
   /** select repository tab
    * @param repositoryTab repository tab to select
    */
-  private void selectRepositoryTab(RepositoryTab repositoryTab)
+  public void selectRepositoryTab(RepositoryTab repositoryTab)
   {
     // deselect previous repository
     if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
@@ -4649,6 +4659,7 @@ exception.printStackTrace();
     // select new repository
     if (repositoryTab != null)
     {
+Dprintf.dprintf("");
       // select
       repositoryTab.repository.selected = true;
 
