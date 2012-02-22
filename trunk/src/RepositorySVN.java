@@ -94,14 +94,6 @@ class RepositorySVN extends Repository
     this(null);
   }
 
-  /** get repository type
-   * @return repository type
-   */
-  public Types getType()
-  {
-    return Types.SVN;
-  }
-
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param rootPath root path
@@ -243,6 +235,57 @@ class RepositorySVN extends Repository
 Dprintf.dprintf("exception=%s",exception);
       }
     }
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.SVN;
+  }
+
+  /** get repository path
+   * @return repository path
+   */
+  public String getRepositoryPath()
+  {
+    final Pattern PATTERN_REPOSITORTY_PATH = Pattern.compile("^Repository\\s+Root:\\s*(.+)",Pattern.CASE_INSENSITIVE);
+
+    String repositoryPath = "";
+
+    // get info
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+    Matcher matcher;
+    try
+    {
+      command.clear();
+      command.append(Settings.svnCommand,"info");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // parse info output
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match name, state
+        if      ((matcher = PATTERN_REPOSITORTY_PATH.matcher(line)).matches())
+        {
+          repositoryPath = matcher.group(1);
+        }
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+
+    return repositoryPath;
   }
 
   /** get last revision name

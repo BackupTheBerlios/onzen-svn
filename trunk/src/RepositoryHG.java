@@ -173,14 +173,6 @@ class RepositoryHG extends Repository
     this(null);
   }
 
-  /** get repository type
-   * @return repository type
-   */
-  public Types getType()
-  {
-    return Types.HG;
-  }
-
   /** check if repository support incoming/outgoing commands
    * @return true iff incoming/outgoing commands are supported
    */
@@ -378,6 +370,46 @@ class RepositoryHG extends Repository
         if (exec != null) exec.done();
       }
     }
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.HG;
+  }
+
+  /** get repository path
+   * @return repository path
+   */
+  public String getRepositoryPath()
+  {
+    String repositoryPath = "";
+
+    // get root
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+    try
+    {
+      command.clear();
+      command.append(Settings.hgCommand,"root");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      repositoryPath = exec.getStdout();
+Dprintf.dprintf("repositoryPath=%s",repositoryPath);
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+
+    return repositoryPath;
   }
 
   /** get last revision name

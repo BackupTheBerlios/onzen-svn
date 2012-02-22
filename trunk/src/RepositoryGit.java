@@ -55,14 +55,6 @@ class RepositoryGit extends Repository
     this(null);
   }
 
-  /** get repository type
-   * @return repository type
-   */
-  public Types getType()
-  {
-    return Types.GIT;
-  }
-
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param rootPath root path
@@ -227,6 +219,22 @@ class RepositoryGit extends Repository
         if (exec != null) exec.done();
       }
     }
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.GIT;
+  }
+
+  /** get repository path
+   * @return repository path
+   */
+  public String getRepositoryPath()
+  {
+    return "";
   }
 
   /** get last revision name

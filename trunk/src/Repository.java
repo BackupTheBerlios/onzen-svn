@@ -1810,6 +1810,9 @@ abstract class Repository implements Serializable
   }
 
   // --------------------------- constants --------------------------------
+
+  /** repository types
+   */
   enum Types
   {
     CVS,
@@ -1963,14 +1966,6 @@ abstract class Repository implements Serializable
   Repository()
   {
     this(null);
-  }
-
-  /** get repository type
-   * @return repository type
-   */
-  public Types getType()
-  {
-    return Types.UNKNOWN;
   }
 
   /** check if repository support setting file mode
@@ -2324,6 +2319,22 @@ abstract class Repository implements Serializable
     }
 
     updateStates(fileDataSet);
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.UNKNOWN;
+  }
+
+  /** get repository path
+   * @return repository path
+   */
+  public String getRepositoryPath()
+  {
+    return "";
   }
 
   /** get last revision name

@@ -121,14 +121,6 @@ class RepositoryCVS extends Repository
     this(null);
   }
 
-  /** get repository type
-   * @return repository type
-   */
-  public Types getType()
-  {
-    return Types.CVS;
-  }
-
   /** check if repository support setting file mode
    * @return true iff file modes are supported
    */
@@ -426,6 +418,22 @@ class RepositoryCVS extends Repository
         // ignored
       }
     }
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.CVS;
+  }
+
+  /** get repository path
+   * @return repository path
+   */
+  public String getRepositoryPath()
+  {
+    return "";
   }
 
   /** get last revision name
