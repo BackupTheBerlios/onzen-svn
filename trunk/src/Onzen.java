@@ -3666,20 +3666,27 @@ Dprintf.dprintf("repository=%s",repository);
         label.setText(repositoryTab.repository.getType().toString());
         Widgets.layout(label,0,1,TableLayoutData.W);
 
-        label = Widgets.newLabel(subComposite,"Title:");
+        label = Widgets.newLabel(subComposite,"Repository path:");
         Widgets.layout(label,1,0,TableLayoutData.W);
+
+        label = Widgets.newLabel(subComposite);
+        label.setText(repositoryTab.repository.getRepositoryPath());
+        Widgets.layout(label,1,1,TableLayoutData.W);
+
+        label = Widgets.newLabel(subComposite,"Title:");
+        Widgets.layout(label,2,0,TableLayoutData.W);
 
         widgetTitle = Widgets.newText(subComposite);
         widgetTitle.setText(repositoryTab.repository.title);
-        Widgets.layout(widgetTitle,1,1,TableLayoutData.WE);
+        Widgets.layout(widgetTitle,2,1,TableLayoutData.WE);
         widgetTitle.setToolTipText("Repository title.");
 
         label = Widgets.newLabel(subComposite,"Root path:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
+        Widgets.layout(label,3,0,TableLayoutData.W);
 
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-        Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
+        Widgets.layout(subSubComposite,3,1,TableLayoutData.WE);
         {
           widgetRootPath = Widgets.newText(subSubComposite);
           widgetRootPath.setText(repositoryTab.repository.rootPath);
