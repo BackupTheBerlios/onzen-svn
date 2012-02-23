@@ -399,7 +399,6 @@ class RepositoryHG extends Repository
       exec = new Exec(rootPath,command);
 
       repositoryPath = exec.getStdout();
-Dprintf.dprintf("repositoryPath=%s",repositoryPath);
 
       // done
       exec.done();
