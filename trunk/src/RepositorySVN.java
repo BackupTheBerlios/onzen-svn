@@ -101,6 +101,25 @@ class RepositorySVN extends Repository
   public void checkout(String repositoryPath, String rootPath)
     throws RepositoryException
   {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // checkout
+      command.clear();
+      command.append(Settings.svnCommand,"checkout",repositoryPath,".");
+      command.append("--");
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(exception);
+    }
   }
 
   /** update file states
