@@ -3291,11 +3291,11 @@ exception.printStackTrace();
   }
 
   /** checkout and open repository
-   * @param
-   * @return repository or null
    */
-  private Repository checkoutRepository()
+  private void checkoutRepository()
   {
+    /** dialog data
+     */
     class Data
     {
       Repository.Types type;
@@ -3317,7 +3317,7 @@ exception.printStackTrace();
     final Data  data   = new Data();
     final Shell dialog = Dialogs.openModal(shell,"Checkout repository",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Text   widgetRepository;
+    final Combo  widgetRepository;
     final Text   widgetRootPath;
     final Button widgetCheckout;
 
@@ -3400,7 +3400,7 @@ exception.printStackTrace();
       label = Widgets.newLabel(composite,"Repository:");
       Widgets.layout(label,1,0,TableLayoutData.W);
 
-      widgetRepository = Widgets.newText(composite);
+      widgetRepository = Widgets.newCombo(composite);
       Widgets.layout(widgetRepository,1,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Destination:");
@@ -3496,32 +3496,92 @@ exception.printStackTrace();
     Widgets.setNextFocus(widgetRepository,widgetRootPath);
     Widgets.setNextFocus(widgetRootPath,widgetCheckout);
 
+    // add existing repository paths
+    Background.run(new BackgroundRunnable()
+    {
+      public void run()
+      {
+        // get repository paths
+        ArrayList<String> repositoryPathArray = new ArrayList<String>();
+        for (Repository repository : repositoryList)
+        {
+          String repositoryPath = repository.getRepositoryPath();
+          if (!repositoryPath.isEmpty()) repositoryPathArray.add(repositoryPath);
+        }
+        final String[] repositoryPaths = repositoryPathArray.toArray(new String[repositoryPathArray.size()]);
+
+        // sort
+        Arrays.sort(repositoryPaths);
+
+        // add to widget
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            for (String repositoryPath : repositoryPaths)
+            {
+              widgetRepository.add(repositoryPath);
+            }
+          }
+        });
+      }
+    });
+
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      Repository repository = null;
-      try
-      {
-        // checkout
-        repository = Repository.newInstance(data.rootPath,data.type);
-Dprintf.dprintf("repository=%s",repository);
-        repository.checkout(data.repositoryPath,data.rootPath);
-      }
-      catch (RepositoryException exception)
-      {
-        Dialogs.error(shell,"Cannot checkout repository '%s' (error: %s).",data.repositoryPath,exception.getMessage());
-        return null;
-      }
+      final SimpleBusyDialog simpleBusyDialog = Dialogs.openSimpleBusy(shell,"Checkout repository '" + data.repositoryPath + "'...");
+      simpleBusyDialog.autoAnimate(50);
 
-      // add repository tab
-//      RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
-//      repositoryTabMap.put(repository,repositoryTab);
+      Background.run(new BackgroundRunnable(this,simpleBusyDialog)
+      {
+        public void run(final Onzen onzen, final SimpleBusyDialog simpleBusyDialog)
+        {
+          setStatusText("Checkout repository '" + data.repositoryPath + "'...");
+          try
+          {
+            final Repository repository = Repository.newInstance(data.rootPath,data.type);;
+            repository.checkout(data.repositoryPath,data.rootPath);
 
-      return repository;
-    }
-    else
-    {
-      return null;
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                // add repository tab
+                RepositoryTab repositoryTab = new RepositoryTab(onzen,widgetTabFolder,repository);
+                repositoryTabMap.put(repository,repositoryTab);
+
+                // select repository tab
+                selectRepositoryTab(repositoryTab);
+              }
+            });
+          }
+          catch (RepositoryException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,"Cannot checkout repository '%s' (error: %s).",data.repositoryPath,message);
+              }
+            });
+            return;
+          }
+          finally
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                simpleBusyDialog.close();
+              }
+            });
+            clearStatusText();
+          }
+        }
+      });
+
     }
   }
 
@@ -4666,7 +4726,6 @@ exception.printStackTrace();
     // select new repository
     if (repositoryTab != null)
     {
-Dprintf.dprintf("");
       // select
       repositoryTab.repository.selected = true;
 
