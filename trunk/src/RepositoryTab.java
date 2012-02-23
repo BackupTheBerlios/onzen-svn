@@ -879,7 +879,6 @@ Dprintf.dprintf("");
         updateFileStates(fileDataSet);
       }
     });
-
   }
 
   /** commit selected entries
