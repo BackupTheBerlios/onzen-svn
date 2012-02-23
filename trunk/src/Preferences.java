@@ -281,9 +281,9 @@ class Preferences
               FontData newFontData = fontDialog.open();
               if (newFontData != null)
               {
-                fontData.name   = newFontData.name;
-                fontData.height = newFontData.height;
-                fontData.style  = newFontData.style;
+                fontData.setName(newFontData.getName());
+                fontData.setHeight(newFontData.getHeight());
+                fontData.setStyle(newFontData.getStyle());
                 Widgets.updateTableEntry(widgetFonts,fontData,null,Widgets.fontDataToText(fontData));
                 Widgets.setTableEntryFont(widgetFonts,fontData,1,fontData);
               }
@@ -1546,7 +1546,7 @@ class Preferences
                 String string = (String)settingValueAdapter.toString(field.get(null));
 
                 // add entry
-                fontData = (fontData != null)?new FontData(fontData.name,(int)fontData.height,fontData.style):new FontData();
+                fontData = (fontData != null) ? new FontData(fontData.getName(),(int)fontData.getHeight(),fontData.getStyle()) : new FontData();
                 Widgets.addTableEntry(widgetFonts,fontData,name.substring(4),string);
                 Widgets.setTableEntryFont(widgetFonts,fontData,1,fontData);
               }
