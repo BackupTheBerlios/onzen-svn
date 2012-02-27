@@ -108,8 +108,9 @@ class RepositorySVN extends Repository
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand,"checkout",repositoryPath,".");
+      command.append(Settings.svnCommand,"checkout");
       command.append("--");
+      command.append(repositoryPath,rootPath);
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
@@ -118,7 +119,7 @@ class RepositorySVN extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -357,7 +358,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     // convert to array and sort
@@ -420,7 +421,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return revisionData;
@@ -464,7 +465,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 //for (RevisionDataSVN revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -506,7 +507,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return lineList.toArray(new String[lineList.size()]);
@@ -547,7 +548,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     // convert byte array stream into array
@@ -632,7 +633,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return fileDataSet;
@@ -703,7 +704,7 @@ Dprintf.dprintf("exception=%s",exception);
         }
         catch (IOException exception)
         {
-          throw new RepositoryException(exception);
+          throw new RepositoryException(Onzen.reniceIOException(exception));
         }
       }
 
@@ -891,7 +892,7 @@ Dprintf.dprintf("exception=%s",exception);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 /*
 int lineNb=1;
@@ -1030,7 +1031,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
     }
 
@@ -1080,7 +1081,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
     }
   }
@@ -1119,7 +1120,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     // convert byte array stream into array
@@ -1236,7 +1237,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
@@ -1266,7 +1267,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1292,7 +1293,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1321,7 +1322,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1365,7 +1366,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1415,7 +1416,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1450,7 +1451,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1497,7 +1498,7 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 

@@ -462,7 +462,7 @@ class RepositoryHG extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -532,7 +532,7 @@ class RepositoryHG extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -613,7 +613,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -661,7 +661,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -707,7 +707,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -780,7 +780,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -835,7 +835,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
       finally
       {
@@ -865,7 +865,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
     }
 
@@ -1057,7 +1057,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1257,7 +1257,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
       finally
       {
@@ -1311,7 +1311,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
     }
   }
@@ -1353,7 +1353,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1406,7 +1406,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1475,7 +1475,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1654,7 +1654,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1711,7 +1711,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1754,7 +1754,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1803,7 +1803,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1849,7 +1849,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1893,7 +1893,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -1985,7 +1985,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -2079,7 +2079,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -2114,7 +2114,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -2160,7 +2160,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -2208,7 +2208,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -2256,7 +2256,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {
@@ -2329,7 +2329,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
     {

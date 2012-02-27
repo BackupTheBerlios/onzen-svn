@@ -137,9 +137,6 @@ class RepositoryCVS extends Repository
     throws RepositoryException
   {
     Command command = new Command();
-    Exec    exec;
-    String  line;
-    Matcher matcher;
     int     exitCode;
     try
     {
@@ -147,19 +144,8 @@ class RepositoryCVS extends Repository
       command.clear();
       command.append(Settings.cvsCommand,"co");
       command.append("--");
-      command.append(repositoryPath);
-      command.append(rootPath);
-      exec = new Exec(command);
-
-      // parse status data
-      while ((line = exec.getStdout()) != null)
-      {
-//Dprintf.dprintf("line=%s",line);
-      }
-//while ((line = exec.getStderr()) != null) Dprintf.dprintf("err %s",line);
-
-      // done
-      exitCode = exec.done();
+      command.append(repositoryPath,rootPath);
+      exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
@@ -167,7 +153,7 @@ class RepositoryCVS extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -483,7 +469,7 @@ class RepositoryCVS extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -559,7 +545,7 @@ class RepositoryCVS extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return revisionDataCVS;
@@ -604,7 +590,7 @@ class RepositoryCVS extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -646,7 +632,7 @@ class RepositoryCVS extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return lineList.toArray(new String[lineList.size()]);
@@ -687,7 +673,7 @@ class RepositoryCVS extends Repository
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     // convert byte array stream into array
@@ -807,7 +793,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return fileDataSet;
@@ -880,7 +866,7 @@ Dprintf.dprintf("unknown %s",line);
         }
         catch (IOException exception)
         {
-          throw new RepositoryException(exception);
+          throw new RepositoryException(Onzen.reniceIOException(exception));
         }
       }
 
@@ -1048,7 +1034,7 @@ else {
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return diffDataList.toArray(new DiffData[diffDataList.size()]);
@@ -1119,7 +1105,7 @@ else {
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
     }
 
@@ -1169,7 +1155,7 @@ else {
       }
       catch (IOException exception)
       {
-        throw new RepositoryException(exception);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
     }
   }
@@ -1210,7 +1196,7 @@ else {
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     // convert byte array stream into array
@@ -1261,7 +1247,7 @@ else {
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -1326,7 +1312,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
@@ -1357,7 +1343,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1386,7 +1372,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1431,7 +1417,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1481,7 +1467,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1524,7 +1510,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1610,7 +1596,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
@@ -1706,7 +1692,7 @@ Dprintf.dprintf("unknown %s",line);
     }
     catch (IOException exception)
     {
-      throw new RepositoryException(exception);
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
