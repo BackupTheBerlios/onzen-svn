@@ -42,10 +42,12 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.Adler32;
 
 import javax.activation.MimetypesFileTypeMap;
@@ -392,6 +394,23 @@ public class Onzen
       System.err.print(" at "+stackTrace[2].getFileName()+", "+stackTrace[2].getLineNumber());
     }
     System.err.println();
+  }
+
+  /** renice i/o exception (removed java.io.IOExcpetion text)
+   * @param exception i/o exception to renice
+   * @return reniced exception
+   */
+  public static IOException reniceIOException(IOException exception)
+  {
+    final Pattern PATTERN = Pattern.compile("^(.*?)\\s*java.io.IOException: error=\\d+,\\s*(.*)$",Pattern.CASE_INSENSITIVE);
+
+    Matcher matcher;
+    if ((matcher = PATTERN.matcher(exception.getMessage())).matches())
+    {
+      exception = new IOException(matcher.group(1)+" "+matcher.group(2));
+    }
+
+    return exception;
   }
 
   /** main
@@ -3540,6 +3559,34 @@ exception.printStackTrace();
           setStatusText("Checkout repository '" + data.repositoryPath + "'...");
           try
           {
+            // create directory
+            File file = new File(data.rootPath);
+            if      (!file.exists())
+            {
+              if (!file.mkdirs())
+              {
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryPath);
+                    }
+                });
+                return;
+              }
+            }
+            else if (!file.isDirectory())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
+                  }
+              });
+              return;
+            }
+
             final Repository repository = Repository.newInstance(data.rootPath,data.type);;
             repository.checkout(data.repositoryPath,data.rootPath);
 
@@ -3563,7 +3610,7 @@ exception.printStackTrace();
             {
               public void run()
               {
-                Dialogs.error(shell,"Cannot checkout repository '%s' (error: %s).",data.repositoryPath,message);
+                Dialogs.error(shell,"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,message);
               }
             });
             return;
