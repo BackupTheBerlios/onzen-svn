@@ -742,6 +742,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keySetFileMode                 = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyNewBranch                   = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevert                      = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyApplyPatches                = SWT.NONE;

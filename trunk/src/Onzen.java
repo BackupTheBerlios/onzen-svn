@@ -1656,8 +1656,8 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuSetFileMode = Widgets.addMenuItem(menu,"New branch...",Settings.keySetFileMode);
-      menuSetFileMode.addSelectionListener(new SelectionListener()
+      menuItem = Widgets.addMenuItem(menu,"New branch...",Settings.keyNewBranch);
+      menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
