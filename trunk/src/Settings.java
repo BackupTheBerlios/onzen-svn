@@ -1169,7 +1169,7 @@ exception.printStackTrace();
         }
 
         // close file
-        input.close();
+        input.close(); input = null;
       }
       catch (IOException exception)
       {
