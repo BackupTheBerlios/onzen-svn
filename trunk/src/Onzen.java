@@ -84,6 +84,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -100,6 +101,9 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
+
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
 
 /****************************** Classes ********************************/
 
@@ -1257,7 +1261,7 @@ Dprintf.dprintf("");
     menu = Widgets.addMenu(menuBar,"Program");
     {
       menuItem = Widgets.addMenuItem(menu,"New repository...");
-menuItem.setEnabled(false);
+//menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1266,7 +1270,7 @@ menuItem.setEnabled(false);
         public void widgetSelected(SelectionEvent selectionEvent)
         {
 Dprintf.dprintf("");
-//          newRepository(rootPath);
+          newRepository();
         }
       });
 
@@ -1646,6 +1650,23 @@ Dprintf.dprintf("");
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.setFileMode();
+          }
+        }
+      });
+
+      Widgets.addMenuSeparator(menu);
+
+      menuSetFileMode = Widgets.addMenuItem(menu,"New branch...",Settings.keySetFileMode);
+      menuSetFileMode.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.newBranch();
           }
         }
       });
@@ -3309,10 +3330,126 @@ exception.printStackTrace();
     }
   }
 
-  /** checkout and open repository
+  /** create new repository
    */
-  private void checkoutRepository()
+  private void newRepository()
   {
+    /** file data comparator
+     */
+    class FileDataComparator implements Comparator<FileData>
+    {
+      // Note: enum in inner classes are not possible in Java, thus use the old way...
+      private final static int SORTMODE_NAME = 0;
+      private final static int SORTMODE_TYPE = 1;
+      private final static int SORTMODE_SIZE = 2;
+      private final static int SORTMODE_DATE = 3;
+
+      private int sortMode;
+
+      /** create file data comparator
+       * @param sortMode sort mode
+       */
+      FileDataComparator(int sortMode)
+      {
+        this.sortMode = sortMode;
+      }
+
+      /** create file data comparator
+       * @param tree file tree
+       * @param sortColumn column to sort
+       */
+      FileDataComparator(Tree tree, TreeColumn sortColumn)
+      {
+        if      (tree.getColumn(0) == sortColumn) sortMode = SORTMODE_NAME;
+        else if (tree.getColumn(1) == sortColumn) sortMode = SORTMODE_TYPE;
+        else if (tree.getColumn(2) == sortColumn) sortMode = SORTMODE_SIZE;
+        else if (tree.getColumn(3) == sortColumn) sortMode = SORTMODE_DATE;
+        else                                      sortMode = SORTMODE_NAME;
+      }
+
+      /** create file data comparator
+       * @param tree file tree
+       */
+      FileDataComparator(Tree tree)
+      {
+        this(tree,tree.getSortColumn());
+      }
+
+      /** compare file tree data without taking care about type
+       * @param fileData1, fileData2 file tree data to compare
+       * @return -1 iff fileData1 < fileData2,
+                  0 iff fileData1 = fileData2,
+                  1 iff fileData1 > fileData2
+       */
+      private int compareWithoutType(FileData fileData1, FileData fileData2)
+      {
+        switch (sortMode)
+        {
+          case SORTMODE_NAME:
+            return fileData1.name.compareTo(fileData2.name);
+          case SORTMODE_TYPE:
+            return fileData1.type.compareTo(fileData2.type);
+          case SORTMODE_SIZE:
+            if      (fileData1.size < fileData2.size) return -1;
+            else if (fileData1.size > fileData2.size) return  1;
+            else                                      return  0;
+          case SORTMODE_DATE:
+            if      (fileData1.date.before(fileData2.date)) return -1;
+            else if (fileData1.date.after(fileData2.date))  return  1;
+            else                                            return  0;
+          default:
+            return 0;
+        }
+      }
+
+      /** compare file tree data
+       * @param fileData1, fileData2 file tree data to compare
+       * @return -1 iff fileData1 < fileData2,
+                  0 iff fileData1 = fileData2,
+                  1 iff fileData1 > fileData2
+       */
+      public int compare(FileData fileData1, FileData fileData2)
+      {
+        if ((fileData1 != null) && (fileData2 != null))
+        {
+          if (fileData1.type == FileData.Types.DIRECTORY)
+          {
+            if (fileData2.type == FileData.Types.DIRECTORY)
+            {
+              return compareWithoutType(fileData1,fileData2);
+            }
+            else
+            {
+              return -1;
+            }
+          }
+          else
+          {
+            if (fileData2.type == FileData.Types.DIRECTORY)
+            {
+              return 1;
+            }
+            else
+            {
+              return compareWithoutType(fileData1,fileData2);
+            }
+          }
+        }
+        else
+        {
+          return 0;
+        }
+      }
+
+      /** convert data to string
+       * @return string
+       */
+      public String toString()
+      {
+        return "FileDataComparator {"+sortMode+"}";
+      }
+    }
+
     /** dialog data
      */
     class Data
@@ -3320,29 +3457,39 @@ exception.printStackTrace();
       Repository.Types type;
       String           repositoryPath;
       String           rootPath;
+      boolean          quitFlag;
+      String           importPath;
+      String           excludePatterns;
 
       Data()
       {
-        this.type           = Repository.Types.CVS;
-        this.repositoryPath = null;
-        this.rootPath       = null;
+        this.type            = Repository.Types.CVS;
+        this.repositoryPath  = null;
+        this.rootPath        = null;
+        this.quitFlag        = false;
+        this.importPath      = null;
+        this.excludePatterns = null;
       }
     }
 
-    Composite composite,subComposite;
-    Button    button;
-    Label     label;
+    Composite    composite,subComposite,subSubComposite;
+    Button       button;
+    Label        label;
+    TreeColumn   treeColumn;
 
-    final Data  data   = new Data();
-    final Shell dialog = Dialogs.openModal(shell,"Checkout repository",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    final Data   data   = new Data();
+    final Shell  dialog = Dialogs.openModal(shell,"Create new repository",500,500,new double[]{1.0,0.0},1.0);
 
     final Combo  widgetRepository;
     final Text   widgetRootPath;
-    final Button widgetCheckout;
+    final Text   widgetImportPath;
+    final Tree   widgetFileTree;
+    final Text   widgetExcludePatterns;
+    final Button widgetCreate;
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Type:");
       Widgets.layout(label,0,0,TableLayoutData.W);
@@ -3421,17 +3568,18 @@ exception.printStackTrace();
 
       widgetRepository = Widgets.newCombo(composite);
       Widgets.layout(widgetRepository,1,1,TableLayoutData.WE);
+      widgetRepository.setToolTipText("Respository path URI.");
 
       label = Widgets.newLabel(composite,"Destination:");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,2,1,TableLayoutData.WE);
+      Widgets.layout(subComposite,2,1,TableLayoutData.NSWE);
       {
         widgetRootPath = Widgets.newText(subComposite);
         Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
-        widgetRootPath.setToolTipText("Destination check-out directory root path.");
+        widgetRootPath.setToolTipText("Destination check-out directory path.");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -3443,7 +3591,7 @@ exception.printStackTrace();
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             String path = Dialogs.directory(shell,
-                                           "Select destination directory root path",
+                                           "Select destination directory path",
                                             widgetRootPath.getText()
                                            );
             if (path != null)
@@ -3453,6 +3601,85 @@ exception.printStackTrace();
           }
         });
       }
+
+      label = Widgets.newLabel(composite,"Import from:");
+      Widgets.layout(label,3,0,TableLayoutData.NW);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0},1.0));
+      Widgets.layout(subComposite,3,1,TableLayoutData.NSWE);
+      {
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+        Widgets.layout(subSubComposite,0,0,TableLayoutData.NSWE);
+        {
+          widgetImportPath = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+          Widgets.layout(widgetImportPath,0,0,TableLayoutData.WE);
+          widgetImportPath.setToolTipText("Import directory path.");
+
+          button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
+          Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String path = Dialogs.directory(shell,
+                                             "Select import directory path",
+                                              widgetRootPath.getText()
+                                             );
+              if (path != null)
+              {
+                widgetImportPath.setText(path);
+              }
+            }
+          });
+        }
+
+        widgetFileTree = Widgets.newTree(subComposite,SWT.MULTI);
+        widgetFileTree.setBackground(Onzen.COLOR_GRAY);
+        Widgets.layout(widgetFileTree,1,0,TableLayoutData.NSWE);
+        SelectionListener selectionListener = new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            TreeColumn         treeColumn         = (TreeColumn)selectionEvent.widget;
+            FileDataComparator fileDataComparator = new FileDataComparator(widgetFileTree,treeColumn);
+
+            synchronized(widgetFileTree)
+            {
+              Widgets.sortTreeColumn(widgetFileTree,treeColumn,fileDataComparator);
+            }
+          }
+        };
+        treeColumn = Widgets.addTreeColumn(widgetFileTree,"Name",        SWT.LEFT, 390,true );
+        treeColumn.addSelectionListener(selectionListener);
+        treeColumn = Widgets.addTreeColumn(widgetFileTree,"Path",        SWT.LEFT, 160,true );
+        treeColumn.addSelectionListener(selectionListener);
+        treeColumn = Widgets.addTreeColumn(widgetFileTree,"Date",        SWT.LEFT, 100,false);
+        treeColumn.addSelectionListener(selectionListener);
+        treeColumn = Widgets.addTreeColumn(widgetFileTree,"Size [bytes]",SWT.RIGHT,100,false);
+        treeColumn.addSelectionListener(selectionListener);
+//        Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumn.width);
+        treeColumn.setToolTipText("Files to import.");
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+        Widgets.layout(subSubComposite,3,0,TableLayoutData.WE);
+        {
+          label = Widgets.newLabel(subSubComposite,"Exclude:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          widgetExcludePatterns = Widgets.newText(subSubComposite);
+          Widgets.layout(widgetExcludePatterns,0,1,TableLayoutData.WE);
+          widgetExcludePatterns.setToolTipText("Import exclude patterns. Separate patterns by space and use * and ? for wildcards.");
+        }
+      }
     }
 
     // buttons
@@ -3460,18 +3687,20 @@ exception.printStackTrace();
     composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetCheckout = Widgets.newButton(composite,"Check-out");
-      widgetCheckout.setEnabled(false);
-      Widgets.layout(widgetCheckout,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetCheckout.addSelectionListener(new SelectionListener()
+      widgetCreate = Widgets.newButton(composite,"Create");
+      widgetCreate.setEnabled(false);
+      Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetCreate.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.repositoryPath = widgetRepository.getText();
-          data.rootPath       = widgetRootPath.getText();
+          data.repositoryPath  = widgetRepository.getText();
+          data.rootPath        = widgetRootPath.getText();
+          data.importPath      = widgetImportPath.getText();
+          data.excludePatterns = widgetExcludePatterns.getText().trim();
 
           Dialogs.close(dialog,true);
         }
@@ -3498,22 +3727,22 @@ exception.printStackTrace();
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
-                                  && !widgetRootPath.getText().trim().isEmpty()
-                                 );
+        widgetCreate.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                && !widgetRootPath.getText().trim().isEmpty()
+                               );
       }
     });
     widgetRootPath.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
-                                  && !widgetRootPath.getText().trim().isEmpty()
-                                 );
+        widgetCreate.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                && !widgetRootPath.getText().trim().isEmpty()
+                               );
       }
     });
     Widgets.setNextFocus(widgetRepository,widgetRootPath);
-    Widgets.setNextFocus(widgetRootPath,widgetCheckout);
+    Widgets.setNextFocus(widgetRootPath,widgetCreate);
 
     // add existing repository paths
     Background.run(new BackgroundRunnable()
@@ -3546,17 +3775,152 @@ exception.printStackTrace();
       }
     });
 
+    // start find files
+    Background.run(new BackgroundRunnable()
+    {
+      String             excludePatterns    = "";
+      ArrayList<Pattern> excludePatternList = new ArrayList<Pattern>();
+
+      boolean matchExcludePatterns(String fileName)
+      {
+Dprintf.dprintf("");
+        return false;
+      }
+
+      /** check if data is modified
+       * @return true iff data is modified
+       */
+      boolean isDataModified()
+      {
+        return    data.quitFlag
+               || ((data.excludePatterns != null) && !data.excludePatterns.equals(excludePatterns));
+      }
+
+      /** run method
+       */
+      public void run()
+      {
+        while (!data.quitFlag)
+        {
+          // find files
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+Dprintf.dprintf("");
+//              Widgets.removeAllTableEntries(widgetFiles);
+            }
+          });
+          if (!excludePatterns.isEmpty())
+          {
+//Dprintf.dprintf("findPattern=%s",findPattern);
+            File directory = new File(data.importPath);
+
+            // check for modified data
+            if (isDataModified()) break;
+//Dprintf.dprintf("directory=%s",directory);
+
+            LinkedList<File> directoryList = new LinkedList<File>();
+            do
+            {
+//Dprintf.dprintf("directory=%s",directory);
+              String[] fileNames = directory.list();
+              if (fileNames != null)
+              {
+                for (String fileName : fileNames)
+                {
+                  // check for modified data
+                  if (isDataModified()) break;
+
+//Dprintf.dprintf("fileName=%s %s",fileName,repositoryTab.repository.isHiddenFile(fileName));
+                  if (true) //!repositoryTab.repository.isHiddenFile(fileName))
+                  {
+                    final File file = new File(directory,fileName);
+                    if     (file.isFile())
+                    {
+                      if (!matchExcludePatterns(fileName))
+                      {
+                        display.syncExec(new Runnable()
+                        {
+                          public void run()
+                          {
+                            FileDataComparator fileDataComparator = new FileDataComparator(widgetFileTree);
+
+/*
+                            Widgets.insertTableEntry(widgetFileTree,
+                                                     fileDataComparator,
+null,//                                                       new FindData(repositoryTab,file),
+                                                     file.getName(),
+                                                     file.getParent(),
+                                                     Onzen.DATETIME_FORMAT.format(file.lastModified()),
+                                                     Long.toString(file.length())
+                                                    );
+*/
+Dprintf.dprintf("");
+
+                          }
+                        });
+                      }
+                    }
+                    else if (file.isDirectory())
+                    {
+//Dprintf.dprintf("add dir=%s %s",fileName,file.getPath());
+                      directoryList.add(file);
+                    }
+                  }
+                }
+              }
+            }
+            while ((directory = directoryList.pollFirst()) != null);
+          }
+
+          // wait for new filter pattern/quit
+          synchronized(data)
+          {
+            // wait for new find data
+            while (!isDataModified())
+            {
+              try
+              {
+                data.wait();
+              }
+              catch (InterruptedException exception)
+              {
+                // ignored
+              }
+            }
+
+            // get new exclude pattners
+            if (data.excludePatterns != null)
+            {
+              // get new exclude patterns
+              excludePatterns = new String(data.excludePatterns);
+              excludePatternList.clear();
+              for (String excludePattern : StringUtils.split(excludePatterns))
+              {
+                excludePatternList.add(Pattern.compile(StringUtils.globToRegex(excludePattern),Pattern.CASE_INSENSITIVE));
+              }
+
+              // clear existing text
+              data.excludePatterns = null;
+            }
+          }
+        }
+      }
+    });
+
     // run dialog
+    Widgets.setFocus(widgetRepository);
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      final SimpleBusyDialog simpleBusyDialog = Dialogs.openSimpleBusy(shell,"Checkout repository '" + data.repositoryPath + "'...");
+      final SimpleBusyDialog simpleBusyDialog = Dialogs.openSimpleBusy(shell,"Create new repository '" + data.repositoryPath + "'...");
       simpleBusyDialog.autoAnimate(50);
 
       Background.run(new BackgroundRunnable(this,simpleBusyDialog)
       {
         public void run(final Onzen onzen, final SimpleBusyDialog simpleBusyDialog)
         {
-          setStatusText("Checkout repository '" + data.repositoryPath + "'...");
+          setStatusText("Create new repository '" + data.repositoryPath + "'...");
           try
           {
             // create directory
@@ -3588,7 +3952,8 @@ exception.printStackTrace();
             }
 
             final Repository repository = Repository.newInstance(data.rootPath,data.type);;
-            repository.checkout(data.repositoryPath,data.rootPath);
+Dprintf.dprintf("");
+//            repository.checkout(data.repositoryPath,data.rootPath);
 
             display.syncExec(new Runnable()
             {
@@ -3610,7 +3975,7 @@ exception.printStackTrace();
             {
               public void run()
               {
-                Dialogs.error(shell,"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,message);
+                Dialogs.error(shell,"Cannot create new repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,message);
               }
             });
             return;
@@ -3622,6 +3987,399 @@ exception.printStackTrace();
               public void run()
               {
                 simpleBusyDialog.close();
+              }
+            });
+            clearStatusText();
+          }
+        }
+      });
+
+    }
+  }
+
+  /** checkout and open repository
+   */
+  private void checkoutRepository()
+  {
+    /** dialog data
+     */
+    class Data
+    {
+      Repository.Types type;
+      String           repositoryPath;
+      String           moduleName;
+      String           revision;
+      String           destinationPath;
+
+      Data()
+      {
+        this.type            = Repository.Types.CVS;
+        this.repositoryPath  = null;
+        this.moduleName      = null;
+        this.revision        = null;
+        this.destinationPath = null;
+      }
+    }
+
+    Composite composite,subComposite;
+    Button    button;
+    Label     label;
+
+    final Data  data   = new Data();
+    final Shell dialog = Dialogs.openModal(shell,"Checkout repository",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Combo  widgetRepository;
+    final Text   widgetModuleName;
+    final Text   widgetRevision;
+    final Text   widgetDestinationPath;
+    final Button widgetCheckout;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Type:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,null));
+      Widgets.layout(subComposite,0,1,TableLayoutData.W);
+      {
+        button = Widgets.newRadio(subComposite,"CVS");
+        button.setSelection(true);
+        Widgets.layout(button,0,0,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              data.type = Repository.Types.CVS;
+              Widgets.modified(data);
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"SVN");
+        button.setSelection(false);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              data.type = Repository.Types.SVN;
+              Widgets.modified(data);
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"HG");
+        button.setSelection(false);
+        Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              data.type = Repository.Types.HG;
+              Widgets.modified(data);
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"GIT");
+        button.setSelection(false);
+        Widgets.layout(button,0,3,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              data.type = Repository.Types.GIT;
+              Widgets.modified(data);
+            }
+          }
+        });
+      }
+
+      label = Widgets.newLabel(composite,"Repository:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      widgetRepository = Widgets.newCombo(composite);
+      Widgets.layout(widgetRepository,1,1,TableLayoutData.WE);
+
+      label = Widgets.newLabel(composite,"Module:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+
+      widgetModuleName = Widgets.newText(composite);
+      Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
+      widgetModuleName.setToolTipText("Module name in repository.");
+      Widgets.addModifyListener(new WidgetListener(widgetModuleName,data)
+      {
+        public void modified(Control control)
+        {
+          widgetModuleName.setEnabled(data.type == Repository.Types.CVS);
+        }
+      });
+
+      label = Widgets.newLabel(composite,"Revision:");
+      Widgets.layout(label,3,0,TableLayoutData.W);
+
+      widgetRevision = Widgets.newText(composite);
+      Widgets.layout(widgetRevision,3,1,TableLayoutData.WE);
+      widgetRevision.setToolTipText("Revision to check-out.");
+
+      label = Widgets.newLabel(composite,"Destination:");
+      Widgets.layout(label,4,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,4,1,TableLayoutData.WE);
+      {
+        widgetDestinationPath = Widgets.newText(subComposite);
+        Widgets.layout(widgetDestinationPath,0,0,TableLayoutData.WE);
+        widgetDestinationPath.setToolTipText("Destination check-out directory path.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select destination directory path",
+                                            widgetDestinationPath.getText()
+                                           );
+            if (path != null)
+            {
+              widgetDestinationPath.setText(path);
+            }
+          }
+        });
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetCheckout = Widgets.newButton(composite,"Check-out");
+      widgetCheckout.setEnabled(false);
+      Widgets.layout(widgetCheckout,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetCheckout.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.repositoryPath  = widgetRepository.getText();
+          data.moduleName      = widgetModuleName.getText().trim();
+          data.revision        = widgetRevision.getText().trim();
+          data.destinationPath = widgetDestinationPath.getText();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Button widget = (Button)selectionEvent.widget;
+
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetRepository.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                  && !widgetDestinationPath.getText().trim().isEmpty()
+                                 );
+      }
+    });
+    widgetDestinationPath.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                  && !widgetDestinationPath.getText().trim().isEmpty()
+                                 );
+      }
+    });
+    Widgets.setNextFocus(widgetRepository,widgetModuleName);
+    Widgets.setNextFocus(widgetModuleName,widgetRevision);
+    Widgets.setNextFocus(widgetRevision,widgetDestinationPath);
+    Widgets.setNextFocus(widgetDestinationPath,widgetCheckout);
+
+    // add existing repository paths
+    Background.run(new BackgroundRunnable()
+    {
+      public void run()
+      {
+        // get repository paths
+        HashSet<String> repositoryPathArray = new HashSet<String>();
+        for (Repository repository : repositoryList)
+        {
+          String repositoryPath = repository.getRepositoryPath();
+          if (!repositoryPath.isEmpty()) repositoryPathArray.add(repositoryPath);
+        }
+        final String[] repositoryPaths = repositoryPathArray.toArray(new String[repositoryPathArray.size()]);
+
+        // sort
+        Arrays.sort(repositoryPaths);
+
+        // add to widget
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            for (String repositoryPath : repositoryPaths)
+            {
+              widgetRepository.add(repositoryPath);
+            }
+          }
+        });
+      }
+    });
+
+    // run dialog
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      BusyDialog busyDialog = new BusyDialog(shell,
+                                             "Checkout repository",
+                                             "Checkout repository '"+
+                                             data.repositoryPath+
+                                             (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
+                                             (!data.revision.isEmpty() ? ":"+data.revision : "")+
+                                             "' into '"+
+                                             data.destinationPath+
+                                             "':",
+                                             BusyDialog.TEXT0
+                                            );
+      busyDialog.autoAnimate();
+
+      Background.run(new BackgroundRunnable(this,busyDialog)
+      {
+        public void run(final Onzen onzen, final BusyDialog busyDialog)
+        {
+          setStatusText("Checkout repository '"+
+                        data.repositoryPath+
+                        (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
+                        (!data.revision.isEmpty() ? ":"+data.revision : "")+
+                        "' into '"+
+                        data.destinationPath+
+                        "'"
+                       );
+          try
+          {
+            // create directory
+            if (!busyDialog.isAborted())
+            {
+              File file = new File(data.destinationPath);
+              if      (!file.exists())
+              {
+                if (!file.mkdirs())
+                {
+                  display.syncExec(new Runnable()
+                  {
+                    public void run()
+                    {
+                      Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryPath);
+                    }
+                  });
+                  return;
+                }
+              }
+              else if (!file.isDirectory())
+              {
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
+                    }
+                });
+                return;
+              }
+            }
+
+            final Repository repository = Repository.newInstance(data.destinationPath,data.type);;
+            repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.destinationPath,busyDialog);
+
+            if (!busyDialog.isAborted())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  // add repository tab
+                  RepositoryTab repositoryTab = new RepositoryTab(onzen,widgetTabFolder,repository);
+                  repositoryTabMap.put(repository,repositoryTab);
+
+                  // select repository tab
+                  selectRepositoryTab(repositoryTab);
+                }
+              });
+            }
+          }
+          catch (RepositoryException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,message);
+              }
+            });
+            return;
+          }
+          finally
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                busyDialog.close();
               }
             });
             clearStatusText();
