@@ -303,6 +303,7 @@ class RepositoryTab
         {
           TreeColumn         treeColumn         = (TreeColumn)selectionEvent.widget;
           FileDataComparator fileDataComparator = new FileDataComparator(widgetFileTree,treeColumn);
+
           synchronized(widgetFileTree)
           {
             Widgets.sortTreeColumn(widgetFileTree,treeColumn,fileDataComparator);
@@ -450,6 +451,22 @@ class RepositoryTab
             setFileMode();
           }
         });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
+        menuItem = Widgets.addMenuItem(menu,"New branch...",Settings.keySetFileMode);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            newBranch();
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
 
         menuItem = Widgets.addMenuItem(menu,"Revision info...",Settings.keyRevisionInfo);
         menuItem.addSelectionListener(new SelectionListener()
@@ -1070,6 +1087,133 @@ Dprintf.dprintf("");
     {
       CommandSetFileMode commandSetFileMode = new CommandSetFileMode(shell,this,fileDataSet);
       commandSetFileMode.run();
+    }
+  }
+
+  /** create new branch
+   */
+  public void newBranch()
+  {
+Dprintf.dprintf("");
+    /** dialog data
+     */
+    class Data
+    {
+      String name;
+
+      Data()
+      {
+        this.name = null;
+      }
+    };
+
+    final Data data = new Data();
+
+    Composite composite,subComposite,subSubComposite;
+    Label     label;
+    Button    button;
+
+    // command selection dialog
+    final Shell dialog = Dialogs.openModal(shell,"Create new branch",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    // create widgets
+    final Text   widgetName;
+    final Button widgetCreate;
+    composite = Widgets.newComposite(dialog,SWT.NONE,4);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Name:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+
+      widgetName = Widgets.newText(composite);
+      Widgets.layout(widgetName,0,1,TableLayoutData.WE);
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog,SWT.NONE,4);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetCreate = Widgets.newButton(composite,"Create");
+      widgetCreate.setEnabled(false);
+      Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
+      widgetCreate.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.name = widgetName.getText().trim();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,60,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetName.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        Text widget = (Text)modifyEvent.widget;
+
+        widgetCreate.setEnabled(!widget.getText().trim().isEmpty());
+      }
+    });
+    Widgets.setNextFocus(widgetName,widgetCreate);
+
+    // run
+    widgetName.setFocus();
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      if (!data.name.isEmpty())
+      {
+        final BusyDialog busyDialog = new BusyDialog(shell,
+                                                     "Create new branch",
+                                                     "Create new branch '"+
+                                                     data.name+
+                                                     "':",
+                                                     BusyDialog.TEXT0
+                                                    );
+        busyDialog.autoAnimate();
+
+        setStatusText("Create branch '"+data.name+"'...");
+        try
+        {
+          repository.newBranch(data.name,(CommitMessage)null,busyDialog);
+        }
+        catch (RepositoryException exception)
+        {
+          Dialogs.error(shell,"Create branch fail: %s",exception.getMessage());
+          return;
+        }
+        finally
+        {
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              busyDialog.close();
+            }
+          });
+          clearStatusText();
+        }
+      }
     }
   }
 
@@ -3224,7 +3368,7 @@ Dprintf.dprintf("");
         if ((new File(fileData.getFileName(repository.rootPath)).exists()))
         {
           // file exists -> show state
-  //Dprintf.dprintf("fileData=%s",fileData);
+//Dprintf.dprintf("fileData=%s",fileData);
           final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
           if (treeItem != null)
           {
@@ -3241,7 +3385,7 @@ Dprintf.dprintf("");
         {
           // file disappeared -> remove tree entry
           fileDataSet.remove(fileData);
-  //Dprintf.dprintf("removed %s",fileData);
+//Dprintf.dprintf("removed %s",fileData);
 
           final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
           if (treeItem != null)
