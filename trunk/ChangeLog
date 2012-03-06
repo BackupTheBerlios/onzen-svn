@@ -20,6 +20,9 @@
   * improved drawing revision tree graphics
   * added file find function
   * added shell menu
+  * implemented check-out repository
+  * start GIT support
+  
 
 2011-09-06 0.02
   * support sending mails with JavaMail
