@@ -460,10 +460,17 @@ class Exec
     return exitCode;
   }
 
+  /** destroy process
+   */
+  public void destroy()
+  {
+    process.destroy();
+  }
+
   /** check if external command terminated
    * @return true iff external command terminated, false otherwise
    */
-  public boolean terminated()
+  public boolean isTerminated()
   {
     try
     {
