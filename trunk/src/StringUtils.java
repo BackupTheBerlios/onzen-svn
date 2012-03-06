@@ -586,6 +586,15 @@ public class StringUtils
     return split(string,splitChar,true);
   }
 
+  /** split string (no quotes) at white-spaces
+   * @param string string to split
+   * @return string array
+   */
+  public static String[] split(String string)
+  {
+    return split(string,WHITE_SPACES);
+  }
+
   /** replace string in stringn array
    * @param strings string array
    * @param from,to from/to string
