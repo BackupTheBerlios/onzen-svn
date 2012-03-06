@@ -727,6 +727,9 @@ Dprintf.dprintf("");
       boolean showAllFlag    = false;
       boolean showHiddenFlag = false;
 
+      /** check if data is modified
+       * @return true iff data is modified
+       */
       boolean isDataModified()
       {
         return    data.quitFlag
@@ -735,6 +738,8 @@ Dprintf.dprintf("");
                || (data.showHiddenFlag != showHiddenFlag);
       }
 
+      /** run method
+       */
       public void run()
       {
         while (!data.quitFlag)
