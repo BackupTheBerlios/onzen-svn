@@ -1935,7 +1935,7 @@ abstract class Repository implements Serializable
       case SVN: return new RepositorySVN(rootPath);
       case HG:  return new RepositoryHG(rootPath);
       case GIT: return new RepositoryGit(rootPath);
-      default:  throw new RepositoryException("no repository (CVS/SVN/HG/Git) found");
+      default:  throw new RepositoryException("no repository CVS/SVN/HG/Git found");
     }
   }
 
@@ -2258,10 +2258,25 @@ abstract class Repository implements Serializable
 
   /** checkout repository from server
    * @param repositoryPath repository server
-   * @param rootPath root path
+   * @param moduleName module name
+   * @param revision revision to checkout
+   * @param destinationPath destination path
+   * @param busyDialog busy dialog or null
    */
-  abstract public void checkout(String repositoryPath, String rootPath)
+  abstract public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException;
+
+  /** checkout repository from server
+   * @param repositoryPath repository server
+   * @param moduleName module name
+   * @param revision revision to checkout
+   * @param destinationPath destination path
+   */
+  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath)
+    throws RepositoryException
+  {
+    checkout(repositoryPath,moduleName,revision,destinationPath,null);
+  }
 
   /** update file states
    * @param fileDataSet file data set to update
@@ -2951,6 +2966,14 @@ Dprintf.dprintf("fileName=%s",fileName);
 
     setFileMode(fileDataSet,mode,commitMessage);
   }
+
+  /** create new branch
+   * @param name branch name
+   * @param commitMessage commit message
+   * @param buysDialog busy dialog or null
+   */
+  abstract public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+    throws RepositoryException;
 
   /** post to review server
    */

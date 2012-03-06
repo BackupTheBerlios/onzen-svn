@@ -131,25 +131,64 @@ class RepositoryCVS extends Repository
 
   /** checkout repository from server
    * @param repositoryPath repository server
-   * @param rootPath root path
+   * @param moduleName module name
+   * @param revision revision to checkout
+   * @param destinationPath destination path
+   * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String rootPath)
+  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
     Command command = new Command();
-    int     exitCode;
     try
     {
+      // create temporary directory for check-out
+      File tmpDirectory = createTempDirectory(destinationPath);
+
       // checkout
       command.clear();
-      command.append(Settings.cvsCommand,"co");
-      command.append("--");
-      command.append(repositoryPath,rootPath);
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
+      command.append(Settings.cvsCommand,"-d",repositoryPath,"co","-d",tmpDirectory.getName());
+      if (!revision.isEmpty()) command.append("-r",revision);
+      command.append(moduleName);
+      Exec exec = new Exec(rootPath,command);
+
+      // read output
+      String line;
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && ((line = exec.getStdout()) != null)
+            )
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+//Dprintf.dprintf("line=%s",line);
+        if (busyDialog != null) busyDialog.updateText(line);
       }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        exec.destroy();
+      }
+
+      // done
+      exec.done();
+
+      // move files from temporary directory to destination directory
+      File[] files = tmpDirectory.listFiles();
+      if (files != null)
+      {
+        for (File file : files)
+        {
+          file.renameTo(new File(destinationPath,file.getName()));
+        }
+      }
+
+      // delete temporary directory
+      tmpDirectory.delete();
     }
     catch (IOException exception)
     {
@@ -306,10 +345,6 @@ class RepositoryCVS extends Repository
             {
               branch = matcher.group(1).replace(".","-")+" "+matcher.group(2).replace(".",":");
             }
-            else
-            {
-              branch = "";
-            }
           }
 
           // match sticky options
@@ -419,7 +454,36 @@ class RepositoryCVS extends Repository
    */
   public String getRepositoryPath()
   {
-    return "";
+    String repositoryPath = "";
+
+    File file = new File(rootPath,"CVS"+File.separator+"Root");
+
+    BufferedReader bufferedReader = null;
+    try
+    {
+      // open file
+      bufferedReader = new BufferedReader(new FileReader(file));
+
+      // read repository path
+      String line;
+      if ((line = bufferedReader.readLine()) != null)
+      {
+        repositoryPath = line;
+      }
+
+      // close file
+      bufferedReader.close(); bufferedReader = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      try { if (bufferedReader != null) bufferedReader.close(); } catch (IOException exception) { /* ignored */ }
+    }
+
+    return repositoryPath;
   }
 
   /** get last revision name
@@ -847,10 +911,11 @@ Dprintf.dprintf("unknown %s",line);
       else
       {
         // use local revision
+        BufferedReader bufferedReader = null;
         try
         {
           // open file
-          BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+          bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
 
           // read content
           ArrayList<String> newFileLineList = new ArrayList<String>();
@@ -860,13 +925,18 @@ Dprintf.dprintf("unknown %s",line);
           }
 
           // close file
-          bufferedReader.close();
+          bufferedReader.close(); bufferedReader = null;
 
+          // get lines array
           newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
         }
         catch (IOException exception)
         {
           throw new RepositoryException(Onzen.reniceIOException(exception));
+        }
+        finally
+        {
+          try { if (bufferedReader != null) bufferedReader.close(); } catch (IOException exception) { /* ignored */ }
         }
       }
 
@@ -1112,10 +1182,10 @@ else {
     // get complete patches for new files
     for (FileData fileData : newFileDataSet)
     {
+      BufferedReader bufferedReader = null;
       try
       {
-        BufferedReader bufferedReader;
-        String         line;
+        String line;
 
         // count number of lines in file
         int lineCount = 0;
@@ -1151,11 +1221,15 @@ else {
             lineList.add("+"+line);
           }
         }
-        bufferedReader.close();
+        bufferedReader.close(); bufferedReader = null;
       }
       catch (IOException exception)
       {
         throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+      finally
+      {
+        try { if (bufferedReader != null) bufferedReader.close(); } catch (IOException exception) { /* ignored */ }
       }
     }
   }
@@ -1696,7 +1770,79 @@ Dprintf.dprintf("unknown %s",line);
     }
   }
 
+  /** create new branch
+   * @param name branch name
+   * @param commitMessage commit message
+   * @param buysDialog busy dialog or null
+   */
+  public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+
+      // create branch
+      command.clear();
+      command.append(Settings.cvsCommand,"tag","-b",name);
+      Exec exec = new Exec(rootPath,command);
+
+      // read output
+      String line;
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && ((line = exec.getStdout()) != null)
+            )
+      {
+//Dprintf.dprintf("line=%s",line);
+        if (busyDialog != null) busyDialog.updateText(line);
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        exec.destroy();
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+  }
+
   //-----------------------------------------------------------------------
+
+  /** create temporary directory
+   * @param path path
+   * @return temporary directory
+   */
+  private File createTempDirectory(String path)
+    throws IOException
+  {
+    final int MAX_TRIES = 10000;
+
+    for (int i = 0; i < MAX_TRIES; i++)
+    {
+      File tmpDirectory = new File(path,String.format("tmp-%06x",i));
+      if (tmpDirectory.mkdirs())
+      {
+        return tmpDirectory;
+      }
+    }
+
+    throw new IOException("too many retries when creating temporary directory");
+  }
+
+  private File createTempDirectory()
+    throws IOException
+  {
+    return createTempDirectory(System.getProperty("java.io.tmpdir"));
+  }
 
   /** parse CVS state string
    * @param string state string

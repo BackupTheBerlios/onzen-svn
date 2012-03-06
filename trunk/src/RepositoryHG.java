@@ -209,9 +209,12 @@ class RepositoryHG extends Repository
 
   /** checkout repository from server
    * @param repositoryPath repository server
-   * @param rootPath root path
+   * @param moduleName module name
+   * @param revision revision to checkout
+   * @param destinationPath destination path
+   * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String rootPath)
+  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
   }
@@ -2270,6 +2273,16 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    * @param commitMessage commit message
    */
   public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** create new branch
+   * @param name branch name
+   * @param commitMessage commit message
+   * @param buysDialog busy dialog or null
+   */
+  public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
   }
