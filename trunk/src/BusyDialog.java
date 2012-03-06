@@ -46,9 +46,11 @@ class BusyDialog
   // --------------------------- variables --------------------------------
   private Display     display;
 
-  private Image       images[] = new Image[2];
-  private long        imageTimestamp;
-  private int         imageIndex;
+  private int         animateInterval;
+  private long        animateTimestamp;
+  private Image       animateImages[] = new Image[2];
+  private int         animateImageIndex;
+  private boolean     animationQuit;
 
   private Shell       dialog;
   private Label       widgetImage;
@@ -81,11 +83,11 @@ class BusyDialog
 
     display = parentShell.getDisplay();
 
-    // load images
-    images[0] = Widgets.loadImage(parentShell.getDisplay(),"busy0.png");
-    images[1] = Widgets.loadImage(parentShell.getDisplay(),"busy1.png");
-    imageTimestamp = System.currentTimeMillis();
-    imageIndex = 0;
+    // load animation images
+    animateImages[0] = Widgets.loadImage(parentShell.getDisplay(),"busy0.png");
+    animateImages[1] = Widgets.loadImage(parentShell.getDisplay(),"busy1.png");
+    animateTimestamp  = System.currentTimeMillis();
+    animateImageIndex = 0;
 
     // create dialog
     dialog = new Shell(parentShell,SWT.DIALOG_TRIM|SWT.RESIZE|SWT.APPLICATION_MODAL);
@@ -102,7 +104,7 @@ class BusyDialog
     composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
     {
       widgetImage = new Label(composite,SWT.LEFT);
-      widgetImage.setImage(images[imageIndex]);
+      widgetImage.setImage(animateImages[animateImageIndex]);
       widgetImage.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NW,0,0,4,4));
 
       subComposite = new Composite(composite,SWT.NONE);
@@ -175,7 +177,7 @@ class BusyDialog
     {
       widgetAbortButton = new Button(composite,SWT.CENTER|SWT.BORDER);
       widgetAbortButton.setText("Abort");
-      widgetAbortButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE)); //,0,0,0,0,60,SWT.DEFAULT));
+      widgetAbortButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,60,SWT.DEFAULT));
       widgetAbortButton.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -257,10 +259,32 @@ class BusyDialog
    * @param parentShell parent shell
    * @param title dialog title
    * @param width,height width/height of dialog
+   * @param flags busy dialog flags
+   */
+  public BusyDialog(Shell parentShell, String title, int width, int height, int flags)
+  {
+    this(parentShell,title,width,height,null,flags);
+  }
+
+  /** create busy dialog
+   * @param parentShell parent shell
+   * @param title dialog title
+   * @param width,height width/height of dialog
    */
   public BusyDialog(Shell parentShell, String title, int width, int height)
   {
-    this(parentShell,title,width,height,null);
+    this(parentShell,title,width,height,NONE);
+  }
+
+  /** create busy dialog
+   * @param parentShell parent shell
+   * @param title dialog title
+   * @param message dialog message
+   * @param flags busy dialog flags
+   */
+  public BusyDialog(Shell parentShell, String title, String message, int flags)
+  {
+    this(parentShell,title,300,150,message,flags);
   }
 
   /** create busy dialog
@@ -270,7 +294,17 @@ class BusyDialog
    */
   public BusyDialog(Shell parentShell, String title, String message)
   {
-    this(parentShell,title,300,150,message);
+    this(parentShell,title,message,NONE);
+  }
+
+  /** create busy dialog
+   * @param parentShell parent shell
+   * @param title dialog title
+   * @param flags busy dialog flags
+   */
+  public BusyDialog(Shell parentShell, String title, int flags)
+  {
+    this(parentShell,title,null,flags);
   }
 
   /** create busy dialog
@@ -279,7 +313,7 @@ class BusyDialog
    */
   public BusyDialog(Shell parentShell, String title)
   {
-    this(parentShell,title,null);
+    this(parentShell,title,NONE);
   }
 
   /** close busy dialog
@@ -293,6 +327,14 @@ class BusyDialog
         dialog.dispose();
       }
     });
+  }
+
+  /** check if dialog is closed
+   * @return true iff closed
+   */
+  public boolean isClosed()
+  {
+    return dialog.isDisposed();
   }
 
   /** close busy dialog
@@ -352,17 +394,11 @@ class BusyDialog
       {
         public void run()
         {
-          long timestamp = System.currentTimeMillis();
-          if (timestamp > (imageTimestamp+250))
-          {
-            imageTimestamp = timestamp;
-            imageIndex     = (imageIndex+1)%2;
-            widgetImage.setImage(images[imageIndex]);
-          }
+          animate();
 
           if (text != null)
           {
-            Label widgetText        = null;
+            Label widgetText = null;
             switch (i)
             {
               case 0: widgetText = widgetText0; break;
@@ -406,13 +442,7 @@ class BusyDialog
       {
         public void run()
         {
-          long timestamp = System.currentTimeMillis();
-          if (timestamp > (imageTimestamp+250))
-          {
-            imageTimestamp = timestamp;
-            imageIndex     = (imageIndex+1)%2;
-            widgetImage.setImage(images[imageIndex]);
-          }
+          animate();
 
           ProgressBar widgetProgressBar = null;
           switch (i)
@@ -486,6 +516,69 @@ class BusyDialog
   public boolean update()
   {
     return update(0);
+  }
+
+  /** set animate interval
+   * @param interval animate time interval [ms]
+   */
+  public void setAnimateInterval(int interval)
+  {
+    this.animateInterval = interval;
+  }
+
+  /** auto animate dialog
+   * @param interval animate time interval [ms]
+   */
+  public void autoAnimate(int interval)
+  {
+    setAnimateInterval(interval);
+
+    animationQuit = false;
+    Thread thread = new Thread()
+    {
+      public void run()
+      {
+        while (!animationQuit)
+        {
+          animate();
+          try { Thread.sleep(animateInterval); } catch (InterruptedException exception) { /* ignore */ }
+        }
+      }
+    };
+    thread.start();
+  }
+
+  /** auto animate dialog
+   */
+  public void autoAnimate()
+  {
+    autoAnimate(250);
+  }
+
+  //-----------------------------------------------------------------------
+
+  /** animate dialog
+   */
+  private void animate()
+  {
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          long timestamp = System.currentTimeMillis();
+          if (timestamp > (animateTimestamp+animateInterval))
+          {
+            animateTimestamp  = timestamp;
+            animateImageIndex = (animateImageIndex+1)%2;
+            widgetImage.setImage(animateImages[animateImageIndex]);
+
+            display.update();
+          }
+        }
+      });
+    }
   }
 }
 
