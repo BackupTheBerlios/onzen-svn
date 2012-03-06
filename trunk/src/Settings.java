@@ -598,6 +598,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometrySetFileMode            = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryCreateBranch           = new Point(500,400);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryDiff                   = new Point(800,600);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRevisions              = new Point(800,400);
