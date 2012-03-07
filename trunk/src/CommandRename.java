@@ -151,7 +151,7 @@ class CommandRename
     // get display
     display = shell.getDisplay();
 
-    // get history
+    // get commit history
     history = CommitMessage.getHistory();
 
     // rename file dialog
@@ -238,8 +238,6 @@ class CommandRename
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           data.newFileName         = widgetNewFileName.getText();
           data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();

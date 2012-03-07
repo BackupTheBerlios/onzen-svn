@@ -120,7 +120,7 @@ class CommandCommit
     // get display
     display = shell.getDisplay();
 
-    // get history
+    // get commit history
     history = CommitMessage.getHistory();
 
     // commit files dialog
@@ -215,8 +215,6 @@ class CommandCommit
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           // get message
           data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
 

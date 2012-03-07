@@ -147,7 +147,7 @@ class CommandRemove
     // get display
     display = shell.getDisplay();
 
-    // get history
+    // get commit history
     history = CommitMessage.getHistory();
 
     // init data
@@ -227,8 +227,6 @@ class CommandRemove
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
           data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 

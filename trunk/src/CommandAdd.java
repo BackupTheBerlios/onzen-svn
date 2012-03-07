@@ -151,7 +151,7 @@ class CommandAdd
     // get display
     display = shell.getDisplay();
 
-    // get history
+    // get commit history
     history = CommitMessage.getHistory();
 
     // init data
