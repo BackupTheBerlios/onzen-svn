@@ -153,13 +153,27 @@ class RepositoryCVS extends Repository
       Exec exec = new Exec(rootPath,command);
 
       // read output
-      String line;
+      int n = tmpDirectory.getName().length();
       while (   ((busyDialog == null) || !busyDialog.isAborted())
-             && ((line = exec.getStdout()) != null)
+             && !exec.isTerminated()
             )
       {
-//Dprintf.dprintf("line=%s",line);
-        if (busyDialog != null) busyDialog.updateText(line);
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if (line != null)
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateText(line.substring(1+1+n+1));
+        }
+
+        // discard stderr
+        line = exec.pollStderr();
+        if (line != null)
+        {
+//Dprintf.dprintf("err1: %s",line);
+        }
       }
       if ((busyDialog == null) || !busyDialog.isAborted())
       {
