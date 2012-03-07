@@ -217,6 +217,58 @@ class RepositoryHG extends Repository
   public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
+    Command command = new Command();
+    try
+    {
+      // checkout
+      command.clear();
+      command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
+      if (!revision.isEmpty()) command.append("-r",revision);
+      command.append(repositoryPath+File.separator+moduleName,destinationPath);
+      Exec exec = new Exec(rootPath,command);
+
+      // read output
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && !exec.isTerminated()
+            )
+      {
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if ((line != null) && line.startsWith("getting "))
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateText(line.substring(8));
+        }
+
+        // discard stderr
+        line = exec.pollStderr();
+        if (line != null)
+        {
+//Dprintf.dprintf("err1: %s",line);
+        }
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        exec.destroy();
+      }
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   /** update file states
