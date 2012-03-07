@@ -117,14 +117,29 @@ class RepositorySVN extends Repository
       Exec exec = new Exec(destinationPath,command);
 
       // read output
-      String line;
-      while (   ((busyDialog == null) || !busyDialog.isClosed())
-             && ((line = exec.getStdout()) != null)
+      int n = destinationPath.length();
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && !exec.isTerminated()
             )
       {
-//Dprintf.dprintf("line=%s",line);
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if (line != null)
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateText(line.substring(4+1+n+1));
+        }
+
+        // discard stderr
+        line = exec.pollStderr();
+        if (line != null)
+        {
+//Dprintf.dprintf("err1: %s",line);
+        }
       }
-      if ((busyDialog == null) || !busyDialog.isClosed())
+      if ((busyDialog == null) || !busyDialog.isAborted())
       {
         int exitCode = exec.waitFor();
         if (exitCode != 0)
@@ -1586,6 +1601,44 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
   public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
+    String repositoryPath = getRepositoryPath();
+
+    try
+    {
+      Command command = new Command();
+
+      // create branch
+      command.clear();
+      command.append(Settings.svnCommand,"copy",repositoryPath,repositoryPath+File.separator+name);
+      command.append(Settings.svnCommand,"-F",commitMessage.getFileName());
+      Exec exec = new Exec(rootPath,command);
+
+      // read output
+      String line;
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && ((line = exec.getStdout()) != null)
+            )
+      {
+//Dprintf.dprintf("line=%s",line);
+        if (busyDialog != null) busyDialog.updateText(line);
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        exec.destroy();
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   //-----------------------------------------------------------------------
