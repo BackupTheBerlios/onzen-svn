@@ -298,7 +298,7 @@ class Exec
   }
 
   /** get next line from stdout
-   * @return line or null
+   * @return line or null at EOF
    */
   public String getStdout()
   {
@@ -306,16 +306,16 @@ class Exec
 
     if (stdoutStack.isEmpty())
     {
-      if (stdout != null)
+      try
       {
-        try
+        if (stdout != null)
         {
           line = stdout.readLine();
         }
-        catch (IOException exception)
-        {
-          /* ignored => no input */
-        }
+      }
+      catch (IOException exception)
+      {
+        /* ignored => no input */
       }
     }
     else
@@ -334,6 +334,45 @@ class Exec
     if (line != null) stdoutStack.push(line);
   }
 
+  /** poll next line from stdout
+   * @return line or null
+   */
+  public String pollStdout()
+  {
+    String line = null;
+
+    if (stdoutStack.isEmpty())
+    {
+      try
+      {
+        if ((stdout != null) && stdout.ready())
+        {
+          // check/wait a short time for data
+          if (!stdout.ready())
+          {
+            try { Thread.sleep(100); } catch (InterruptedException exception) { /* ignored */ }
+          }
+
+          // read data
+          if (stdout.ready())
+          {
+            line = stdout.readLine();
+          }
+        }
+      }
+      catch (IOException exception)
+      {
+        /* ignored => no input */
+      }
+    }
+    else
+    {
+      line = stdoutStack.pop();
+    }
+
+    return line;
+  }
+
   /** peek  (do not get) next line from stdout
    * @return line or null
    */
@@ -342,6 +381,13 @@ class Exec
     String line = getStdout();
     ungetStdout(line);
     return line;
+  }
+
+  /** discard next line from stdout
+   */
+  public void discardStdout()
+  {
+    getStdout();
   }
 
   /** check if EOF of stdout
@@ -365,7 +411,10 @@ class Exec
     {
       try
       {
-        line = stderr.readLine();
+        if (stderr != null)
+        {
+          line = stderr.readLine();
+        }
       }
       catch (IOException exception)
       {
@@ -388,6 +437,45 @@ class Exec
     if (line != null) stderrStack.push(line);
   }
 
+  /** poll next line from stderr
+   * @return line or null
+   */
+  public String pollStderr()
+  {
+    String line = null;
+
+    if (stderrStack.isEmpty())
+    {
+      try
+      {
+        if (stderr != null)
+        {
+          // check/wait a short time for data
+          if (!stderr.ready())
+          {
+            try { Thread.sleep(100); } catch (InterruptedException exception) { /* ignored */ }
+          }
+
+          // read data
+          if (stderr.ready())
+          {
+            line = stderr.readLine();
+          }
+        }
+      }
+      catch (IOException exception)
+      {
+        /* ignored => no input */
+      }
+    }
+    else
+    {
+      line = stderrStack.pop();
+    }
+
+    return line;
+  }
+
   /** peek (do not get) next line from stderr
    * @return line or null
    */
@@ -396,6 +484,13 @@ class Exec
     String line = getStderr();
     ungetStderr(line);
     return line;
+  }
+
+  /** discard next line from stderr
+   */
+  public void discardStderr()
+  {
+    getStderr();
   }
 
   /** check if EOF of stdout
