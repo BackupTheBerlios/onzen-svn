@@ -356,7 +356,7 @@ class BusyDialog
   /** set message
    * @param message message to show
    */
-  public void setMessage(final String message)
+  public void setMessage(final String format, final Object... args)
   {
     if ((widgetMessage != null) && !dialog.isDisposed())
     {
@@ -364,14 +364,17 @@ class BusyDialog
       {
         public void run()
         {
-          widgetMessage.setText(message);
+          String text = String.format(format,args);
+
+          // set message text
+          widgetMessage.setText(text);
           display.update();
 
-          /* resize dialog (it not manually changed) */
+          // resize dialog (it not manually changed)
           if (!resizedFlag)
           {
             GC gc = new GC(widgetMessage);
-            int width = gc.stringExtent(message).x;
+            int width = gc.stringExtent(text).x;
             gc.dispose();
 
             if (widgetMessage.getSize().x < width) dialog.pack();
@@ -384,9 +387,10 @@ class BusyDialog
   /** update busy dialog text
    * @param i index 0|1
    * @param text text to show (can be null)
+   * @param args optional arguments
    * @return true if closed, false otherwise
    */
-  public boolean updateText(final int i, final String text)
+  public boolean updateText(final int i, final String format, final Object... args)
   {
     if (!dialog.isDisposed())
     {
@@ -396,17 +400,20 @@ class BusyDialog
         {
           animate();
 
-          if (text != null)
+          if (format != null)
           {
+            String text = String.format(format,args);
+
+            // set message text
             Label widgetText = null;
             switch (i)
             {
               case 0: widgetText = widgetText0; break;
               case 1: widgetText = widgetText1; break;
             }
-            if ((text != null) && (widgetText != null)) widgetText.setText(text);
+            if (widgetText != null) widgetText.setText(text);
 
-            /* resize dialog (it not manually changed) */
+            // resize dialog (it not manually changed)
             if (!resizedFlag)
             {
               GC gc = new GC(widgetText);
@@ -429,6 +436,34 @@ class BusyDialog
     }
   }
 
+  /** update busy dialog text
+   * @param i index 0|1
+   * @param n number to show
+   * @return true if closed, false otherwise
+   */
+  public boolean updateText(int i, Long n)
+  {
+    return updateText(i,Long.toString(n));
+  }
+
+  /** update busy dialog text
+   * @param i index 0|1
+   * @return true if closed, false otherwise
+   */
+  public boolean update(int i)
+  {
+    return updateText(i,(String)null);
+  }
+
+  /** update busy dialog text
+   * @param text text to show (can be null)
+   * @return true if closed, false otherwise
+   */
+  public boolean updateText(String text)
+  {
+    return updateText(0,text);
+  }
+
   /** update busy dialog progress bar
    * @param i index 0|1
    * @param n progress value
@@ -444,6 +479,7 @@ class BusyDialog
         {
           animate();
 
+          // set progress bar value
           ProgressBar widgetProgressBar = null;
           switch (i)
           {
@@ -462,34 +498,6 @@ class BusyDialog
     {
       return false;
     }
-  }
-
-  /** update busy dialog
-   * @param i index 0|1
-   * @param n number to show
-   * @return true if closed, false otherwise
-   */
-  public boolean updateText(int i, Long n)
-  {
-    return updateText(i,Long.toString(n));
-  }
-
-  /** update busy dialog
-   * @param i index 0|1
-   * @return true if closed, false otherwise
-   */
-  public boolean update(int i)
-  {
-    return updateText(i,(String)null);
-  }
-
-  /** update busy dialog text
-   * @param text text to show (can be null)
-   * @return true if closed, false otherwise
-   */
-  public boolean updateText(String text)
-  {
-    return updateText(0,text);
   }
 
   /** update busy dialog progress bar
@@ -540,7 +548,16 @@ class BusyDialog
       {
         while (!animationQuit)
         {
-          animate();
+          // animate
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              animate();
+            }
+          });
+
+          // sleep
           try { Thread.sleep(animateInterval); } catch (InterruptedException exception) { /* ignore */ }
         }
       }
@@ -563,21 +580,13 @@ class BusyDialog
   {
     if (!dialog.isDisposed())
     {
-      display.syncExec(new Runnable()
+      long timestamp = System.currentTimeMillis();
+      if (timestamp > (animateTimestamp+animateInterval))
       {
-        public void run()
-        {
-          long timestamp = System.currentTimeMillis();
-          if (timestamp > (animateTimestamp+animateInterval))
-          {
-            animateTimestamp  = timestamp;
-            animateImageIndex = (animateImageIndex+1)%2;
-            widgetImage.setImage(animateImages[animateImageIndex]);
-
-            display.update();
-          }
-        }
-      });
+        animateTimestamp  = timestamp;
+        animateImageIndex = (animateImageIndex+1)%2;
+        widgetImage.setImage(animateImages[animateImageIndex]);
+      }
     }
   }
 }
