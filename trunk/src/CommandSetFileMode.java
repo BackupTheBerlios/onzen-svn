@@ -145,7 +145,7 @@ class CommandSetFileMode
     // get display
     display = shell.getDisplay();
 
-    // get history
+    // get commit history
     history = CommitMessage.getHistory();
 
     // add files dialog
