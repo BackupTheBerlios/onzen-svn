@@ -180,6 +180,33 @@ class CommandChangedFiles
 
       menu = Widgets.newPopupMenu(dialog);
       {
+        menuItem = Widgets.addMenuItem(menu,"Open directory");
+        menuItem.setEnabled(false);
+        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        {
+          public void modified(MenuItem menuItem)
+          {
+            menuItem.setEnabled((widgetFiles.getSelectionCount() > 0));
+          }
+        });
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+
+            if (fileData != null)
+            {
+              repositoryTab.openDirectory(fileData.getDirectoryName());
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
         menuItem = Widgets.addMenuItem(menu,"Open file");
         menuItem.addSelectionListener(new SelectionListener()
         {
