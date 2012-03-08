@@ -34,6 +34,7 @@ import java.util.ListIterator;
 import java.util.WeakHashMap;
 
 // graphics
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
@@ -224,6 +225,7 @@ class RepositoryTab
   protected final Onzen       onzen;
   private final Shell         shell;
   private final Display       display;
+  private final Clipboard     clipboard;
 
   // widgets
   private final TabFolder     widgetTabFolder;
@@ -263,9 +265,10 @@ class RepositoryTab
     this.repository      = repository;
     this.widgetTabFolder = parentTabFolder;
 
-    // get shell, display
-    shell   = parentTabFolder.getShell();
-    display = shell.getDisplay();
+    // get shell, display, clipboard
+    shell     = parentTabFolder.getShell();
+    display   = shell.getDisplay();
+    clipboard = new Clipboard(display);
 
     // init colors
     COLOR_OK            = new Color(display,Settings.colorStatusOK.background          );
@@ -2855,6 +2858,14 @@ Dprintf.dprintf("");
               default:
                 break;
             }
+          }
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          TreeItem[] treeItems = widgetFileTree.getSelection();
+          if (treeItems != null)
+          {
+            Widgets.setClipboard(clipboard,treeItems,0);
           }
         }
       }
