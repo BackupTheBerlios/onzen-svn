@@ -22,7 +22,9 @@
   * added shell menu
   * implemented check-out repository
   * start GIT support
-  
+  * Ctlr-C in tree list copy file naem to clipboard
+  * implemented checkout
+  * implemented create new repository
 
 2011-09-06 0.02
   * support sending mails with JavaMail
