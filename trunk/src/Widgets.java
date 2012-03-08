@@ -4676,11 +4676,12 @@ private static void printTree(Tree tree)
       Table table = tableItems[0].getParent();
 
       StringBuilder buffer = new StringBuilder();
+      String lineSeparator = System.getProperty("line.separator");
       if (columnNb >= 0)
       {
         for (int z = 0; z < tableItems.length ; z++)
         {
-          buffer.append(tableItems[z].getText(columnNb)); buffer.append('\n');
+          buffer.append(tableItems[z].getText(columnNb)); buffer.append(lineSeparator);
         }
       }
       else
@@ -4693,7 +4694,7 @@ private static void printTree(Tree tree)
             if (i > 0) buffer.append('\t');
             buffer.append(tableItems[z].getText(i));
           }
-          buffer.append('\n');
+          buffer.append(lineSeparator);
         }
       }
       setClipboard(clipboard,buffer.toString());
@@ -4707,6 +4708,52 @@ private static void printTree(Tree tree)
   public static void setClipboard(Clipboard clipboard, TableItem[] tableItems)
   {
     setClipboard(clipboard,tableItems,-1);
+  }
+
+  /** set clipboard with text from table item
+   * @param clipboard clipboard
+   * @param treeItems tree item
+   * @param columnNb or -1 for all columns
+   */
+  public static void setClipboard(Clipboard clipboard, TreeItem[] treeItems, int columnNb)
+  {
+    if (treeItems.length > 0)
+    {
+      Tree tree = treeItems[0].getParent();
+
+      StringBuilder buffer = new StringBuilder();
+      String lineSeparator = System.getProperty("line.separator");
+      if (columnNb >= 0)
+      {
+        for (int z = 0; z < treeItems.length ; z++)
+        {
+          buffer.append(treeItems[z].getText(columnNb)); buffer.append(lineSeparator);
+        }
+      }
+      else
+      {
+        int columnCount = Math.max(tree.getColumnCount(),1);
+        for (int z = 0; z < treeItems.length ; z++)
+        {
+          for (int i = 0; i < columnCount ; i++)
+          {
+            if (i > 0) buffer.append('\t');
+            buffer.append(treeItems[z].getText(i));
+          }
+          buffer.append(lineSeparator);
+        }
+      }
+      setClipboard(clipboard,buffer.toString());
+    }
+  }
+
+  /** set clipboard with text from table item
+   * @param clipboard clipboard
+   * @param treeItems tree item
+   */
+  public static void setClipboard(Clipboard clipboard, TreeItem[] treeItems)
+  {
+    setClipboard(clipboard,treeItems,-1);
   }
 
   /** add copy listener (copy content to clipboard on ctrl-c)
