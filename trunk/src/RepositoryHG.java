@@ -623,8 +623,8 @@ class RepositoryHG extends Repository
       if (parseLogHeader(exec))
       {
         // parse data
-        HashMap<Integer,RevisionData> revisionDataMap = new HashMap<Integer,RevisionData>();
-        HashMap<RevisionData,ParentData> fileParentMap = new HashMap<RevisionData,ParentData>();
+        HashMap<Integer,RevisionData>    revisionDataMap = new HashMap<Integer,RevisionData>();
+        HashMap<RevisionData,ParentData> fileParentMap   = new HashMap<RevisionData,ParentData>();
         RevisionDataHG revisionData;
         while ((revisionData = parseLogData(exec,revisionDataMap,fileParentMap)) != null)
         {
@@ -678,7 +678,6 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
 
     // create revision data tree (=list of revisions)
     return revisionDataList.toArray(new RevisionData[revisionDataList.size()]);
-
   }
 
   /** get file data (text lines)
@@ -1467,7 +1466,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       if (exec != null) exec.done();
     }
-//for (RevisionDataHG revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+//for (LogData logData : logDataList) Dprintf.dprintf("logData=%s",logData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
