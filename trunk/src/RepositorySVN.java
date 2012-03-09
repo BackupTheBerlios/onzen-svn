@@ -1208,10 +1208,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     catch (Exception exception)
     {
-Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
       throw new RepositoryException(exception);
     }
-//for (RevisionDataSVN revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+//for (LogData logData : logDataList) Dprintf.dprintf("logData=%s",logData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
@@ -1773,7 +1772,8 @@ Dprintf.dprintf("xxxxxxxxxxxxxxxxxx");
         }
 
         // get commit message lines
-        while (  ((line = exec.getStdout()) != null)
+        commitMessageList.clear();
+        while (   ((line = exec.getStdout()) != null)
                && !line.startsWith("-----")
               )
         {
