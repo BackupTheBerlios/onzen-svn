@@ -55,6 +55,22 @@ class RepositoryGit extends Repository
     this(null);
   }
 
+  /** check if repository support incoming/outgoing commands
+   * @return true iff incoming/outgoing commands are supported
+   */
+  public boolean supportIncomingOutgoing()
+  {
+    return true;
+  }
+
+  /** check if repository support pull/push commands
+   * @return true iff pull/push commands are supported
+   */
+  public boolean supportPullPush()
+  {
+    return true;
+  }
+
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param moduleName module name
@@ -74,8 +90,16 @@ class RepositoryGit extends Repository
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
   {
-    final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(\\S+)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_STATUS         = Pattern.compile("^\\s*(\\S+)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_CURRENT_BRANCH = Pattern.compile("^\\*\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
 
+    // all not reported files have state OK
+    for (FileData fileData : fileDataSet)
+    {
+      fileData.state = FileData.States.OK;
+    }
+
+    // get status of files
     Command         command            = new Command();
     Exec            exec;
     String          line;
@@ -92,7 +116,7 @@ class RepositoryGit extends Repository
       {
         // get status
         command.clear();
-        command.append(Settings.gitCommand,"status","-s","--porcelain");
+        command.append(Settings.gitCommand,"status","-s","--porcelain","--untracked-files=all");
         command.append("--");
         if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,command);
@@ -166,47 +190,25 @@ class RepositoryGit extends Repository
         if (exec != null) exec.done();
       }
 
+      // get branch
       exec = null;
       try
       {
-        // get revision (identity)
-        command.clear();
-        command.append(Settings.gitCommand,"identify","-t");
-        command.append("--");
-        exec = new Exec(rootPath,command);
-        if ((line = exec.getStdout()) != null)
-        {
-          for (FileData fileData : fileDataSet)
-          {
-            fileData.workingRevision = line;
-          }
-        }
-
-        // done
-        exec.done(); exec = null;
-      }
-      catch (IOException exception)
-      {
-        // ignored
-      }
-      finally
-      {
-        if (exec != null) exec.done();
-      }
-
-      exec = null;
-      try
-      {
-        // get branch
         command.clear();
         command.append(Settings.gitCommand,"branch");
         command.append("--");
         exec = new Exec(rootPath,command);
-        if ((line = exec.getStdout()) != null)
+        // parse branch
+        while ((line = exec.getStdout()) != null)
         {
-          for (FileData fileData : fileDataSet)
+          if ((matcher = PATTERN_CURRENT_BRANCH.matcher(line)).matches())
           {
-            fileData.branch = line;
+            name = matcher.group(1);
+
+            for (FileData fileData : fileDataSet)
+            {
+              fileData.branch = name;
+            }
           }
         }
 
@@ -237,6 +239,7 @@ class RepositoryGit extends Repository
    */
   public String getRepositoryPath()
   {
+Dprintf.dprintf("");
     return "";
   }
 
@@ -255,7 +258,8 @@ class RepositoryGit extends Repository
   public String[] getRevisionNames(FileData fileData)
     throws RepositoryException
   {
-    return null;
+Dprintf.dprintf("");
+    return new String[0];
   }
 
   /** get revision data
@@ -266,6 +270,7 @@ class RepositoryGit extends Repository
   public RevisionData getRevisionData(FileData fileData, String revision)
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -276,7 +281,44 @@ class RepositoryGit extends Repository
   public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException
   {
-    return null;
+    LinkedList<RevisionData> revisionDataList = new LinkedList<RevisionData>();
+
+    // get revision info list
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // get log
+      command.clear();
+      command.append(Settings.gitCommand,"log");
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      // parse data
+      RevisionData revisionData;
+      while ((revisionData = parseLogData(exec)) != null)
+      {
+        // add revision info entry
+        revisionDataList.addFirst(revisionData);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+//for (RevisionData revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+
+    // create revision data tree (=list of revisions)
+    return revisionDataList.toArray(new RevisionData[revisionDataList.size()]);
   }
 
   /** get file data (text lines)
@@ -287,7 +329,40 @@ class RepositoryGit extends Repository
   public String[] getFileLines(FileData fileData, String revision)
     throws RepositoryException
   {
-    return null;
+    ArrayList<String> lineList = new ArrayList<String>();
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+
+      // get file
+      command.clear();
+      command.append(Settings.gitCommand,"show",((revision != null) ? revision : LAST_REVISION_NAME)+":"+getFileDataName(fileData));
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      // read file data
+      while ((line = exec.getStdout()) != null)
+      {
+        lineList.add(line);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return lineList.toArray(new String[lineList.size()]);
   }
 
   /** get file data (byte array)
@@ -298,6 +373,7 @@ class RepositoryGit extends Repository
   public byte[] getFileBytes(FileData fileData, String revision)
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -308,6 +384,7 @@ class RepositoryGit extends Repository
   public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -319,7 +396,286 @@ class RepositoryGit extends Repository
   public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
-    return null;
+    final Pattern PATTERN_DIFF_START  = Pattern.compile("^\\+\\+\\+.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF        = Pattern.compile("^@@\\s+\\-([\\d,]*)\\s+\\+([\\d,]*)\\s+@@$",Pattern.CASE_INSENSITIVE);
+
+    ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
+
+    String[] newFileLines = null;
+    if (newRevision != null)
+    {
+      Exec exec = null;
+      try
+      {
+        Command command = new Command();
+        Matcher matcher;
+        String  line;
+
+        // check out new revision
+        command.clear();
+        command.append(Settings.gitCommand,"show",newRevision+":"+getFileDataName(fileData));
+        exec = new Exec(rootPath,command);
+
+        // read content
+        ArrayList<String> newFileLineList = new ArrayList<String>();
+        while ((line = exec.getStdout()) != null)
+        {
+          newFileLineList.add(line);
+        }
+
+        // done
+        exec.done(); exec = null;
+
+        // convert to lines array
+        newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+    }
+    else
+    {
+      // use local revision
+      try
+      {
+        // open file
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+
+        // read content
+        ArrayList<String> newFileLineList = new ArrayList<String>();
+        String line;
+        while ((line = bufferedReader.readLine()) != null)
+        {
+          newFileLineList.add(line);
+        }
+
+        // close file
+        bufferedReader.close();
+
+        newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+    }
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      Matcher matcher;
+      String  line;
+
+      // diff file
+      command.clear();
+      command.append(Settings.gitCommand,"diff");
+      if (oldRevision != null) command.append("-r",oldRevision);
+      if (newRevision != null) command.append("-r",newRevision);
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      /* skip diff header (3 lines)
+           diff -r ...
+           --- ...
+           +++ ...
+      */
+      exec.getStdout();
+      exec.getStdout();
+      exec.getStdout();
+
+      /* parse diff output
+           Format:
+             @@ -<i> +<j> @@
+      */
+      int               lineNb = 1;
+      DiffData          diffData;
+      ArrayList<String> keepLinesList = new ArrayList<String>();
+      ArrayList<String> addedLinesList = new ArrayList<String>();
+      ArrayList<String> deletedLinesList = new ArrayList<String>();
+      String[]          lines;
+      while ((line = exec.getStdout()) != null)
+      {
+        if      ((matcher = PATTERN_DIFF.matcher(line)).matches())
+        {
+          int[] oldIndex = parseDiffIndex(matcher.group(1));
+          int[] newIndex = parseDiffIndex(matcher.group(2));
+//Dprintf.dprintf("oldIndex=%d,%d",oldIndex[0],oldIndex[1]);
+//Dprintf.dprintf("newIndex=%d,%d",newIndex[0],newIndex[1]);
+
+          // read until @@ is found
+          while (   ((line = exec.peekStdout()) != null)
+                 && !line.startsWith("@@")
+                )
+          {
+//Dprintf.dprintf("line=#%s#",line);
+            // skip unknown lines
+            while (   ((line = exec.getStdout()) != null)
+                   && !line.isEmpty()
+                   && !line.startsWith(" ")
+                   && !line.startsWith("-")
+                   && !line.startsWith("+")
+                  )
+            {
+//Dprintf.dprintf("skip=#%s#",line);
+            }
+            exec.ungetStdout(line);
+
+            // get keep lines
+            keepLinesList.clear();
+            while ((lineNb < newIndex[0]) && (lineNb <= newFileLines.length))
+            {
+              keepLinesList.add(newFileLines[lineNb-1]);
+              lineNb++;
+            }
+            while (   ((line = exec.getStdout()) != null)
+                   && (line.isEmpty() || line.startsWith(" "))
+                  )
+            {
+              keepLinesList.add(newFileLines[lineNb-1]);
+              lineNb++;
+            }
+            exec.ungetStdout(line);
+            diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
+            diffDataList.add(diffData);
+
+            // get deleted lines
+            deletedLinesList.clear();
+            while (   ((line = exec.getStdout()) != null)
+                   && line.startsWith("-")
+                  )
+            {
+              deletedLinesList.add(line.substring(1));
+            }
+            exec.ungetStdout(line);
+
+            // get added lines
+            addedLinesList.clear();
+            while (   ((line = exec.getStdout()) != null)
+                   && line.startsWith("+")
+                  )
+            {
+              addedLinesList.add(line.substring(1));
+              lineNb++;
+            }
+            exec.ungetStdout(line);
+
+            int deletedLinesCount = deletedLinesList.size();
+            int addedLinesCount   = addedLinesList.size();
+            if      (deletedLinesCount < addedLinesCount)
+            {
+              // changed
+              if (deletedLinesCount > 0)
+              {
+                lines = new String[deletedLinesCount];
+                for (int z = 0; z < deletedLinesCount; z++)
+                {
+                  lines[z] = addedLinesList.get(z);
+                }
+                diffData = new DiffData(DiffData.Types.CHANGED,lines,deletedLinesList);
+                diffDataList.add(diffData);
+//Dprintf.dprintf("c %d %d",lines.length,deletedLinesCount);
+              }
+
+              // added
+              lines = new String[addedLinesCount-deletedLinesCount];
+              for (int z = 0; z < addedLinesCount-deletedLinesCount; z++)
+              {
+                 lines[z] = addedLinesList.get(deletedLinesCount+z);
+              }
+              diffData = new DiffData(DiffData.Types.ADDED,lines);
+              diffDataList.add(diffData);
+//Dprintf.dprintf("a %d",lines.length);
+            }
+            else if (deletedLinesCount > addedLinesCount)
+            {
+              // changed
+              if (addedLinesCount > 0)
+              {
+                lines = new String[addedLinesCount];
+                for (int z = 0; z < addedLinesCount; z++)
+                {
+                  lines[z] = deletedLinesList.get(z);
+                }
+                diffData = new DiffData(DiffData.Types.CHANGED,addedLinesList,lines);
+                diffDataList.add(diffData);
+//Dprintf.dprintf("c %d %d",addedLinesCount,lines.length);
+              }
+
+              // deleted
+              lines = new String[deletedLinesCount-addedLinesCount];
+              for (int z = 0; z < deletedLinesCount-addedLinesCount; z++)
+              {
+                 lines[z] = deletedLinesList.get(addedLinesCount+z);
+              }
+              diffData = new DiffData(DiffData.Types.DELETED,lines);
+              diffDataList.add(diffData);
+//Dprintf.dprintf("d %d",lines.length);
+            }
+            else if ((deletedLinesCount > 0) && (addedLinesCount > 0))
+            {
+              // changed
+              diffData = new DiffData(DiffData.Types.CHANGED,addedLinesList,deletedLinesList);
+              diffDataList.add(diffData);
+//Dprintf.dprintf("c %d %d",addedLinesCount,deletedLinesCount);
+            }
+          }
+        }
+        else
+        {
+          // unknown line
+          Onzen.printWarning("No match for line '%s'",line);
+        }
+      }
+
+      // get rest of keep lines
+      if (lineNb <= newFileLines.length)
+      {
+        keepLinesList.clear();
+        while (lineNb <= newFileLines.length)
+        {
+          keepLinesList.add(newFileLines[lineNb-1]);
+          lineNb++;
+        }
+        diffData = new DiffData(DiffData.Types.KEEP,keepLinesList);
+        diffDataList.add(diffData);
+      }
+//Dprintf.dprintf("diffData=%s",diffData);
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+/*
+int lineNb=1;
+for (DiffData d : diffDataList)
+{
+Dprintf.dprintf("%s %d: %d %d %d",d.blockType,
+lineNb,
+(d.keepLines!=null)?d.keepLines.length:0,
+(d.addedLines!=null)?d.addedLines.length:0,
+(d.deletedLines!=null)?d.deletedLines.length:0
+);
+if (d.blockType==DiffData.Types.CHANGE) for (int z = 0; z < d.deletedLines.length; z++) Dprintf.dprintf("%s -----> %s",d.deletedLines[z],d.addedLines[z]);
+if (d.blockType==DiffData.Types.KEEP) lineNb += d.keepLines.length;
+if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
+}
+*/
+
+    return diffDataList.toArray(new DiffData[diffDataList.size()]);
   }
 
   /** get patch for file
@@ -332,6 +688,7 @@ class RepositoryGit extends Repository
   public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** get patch data for file
@@ -342,6 +699,7 @@ class RepositoryGit extends Repository
   public byte[] getPatchBytes(HashSet<FileData> fileDataSet, String revision1, String revision2)
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -352,7 +710,46 @@ class RepositoryGit extends Repository
   public LogData[] getLog(FileData fileData)
     throws RepositoryException
   {
-    return null;
+    ArrayList<LogData> logDataList = new ArrayList<LogData>();
+
+    Exec exec = null;
+    try
+    {
+      // get log
+      Command command = new Command();
+      command.clear();
+      command.append(Settings.gitCommand,"log");
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      // parse data
+      RevisionData revisionData;
+      while ((revisionData = parseLogData(exec)) != null)
+      {
+        // add log info entry
+        logDataList.add(new LogData(revisionData.revision,
+                                    revisionData.date,
+                                    revisionData.author,
+                                    revisionData.commitMessage
+                                   )
+                       );
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+//for (LogData logData : logDataList) Dprintf.dprintf("logData=%s",logData);
+
+    return logDataList.toArray(new LogData[logDataList.size()]);
   }
 
   /** get annotations to file
@@ -363,6 +760,7 @@ class RepositoryGit extends Repository
   public AnnotationData[] getAnnotations(FileData fileData, String revision)
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -371,6 +769,7 @@ class RepositoryGit extends Repository
    */
   public void update(HashSet<FileData> fileDataSet)
   {
+Dprintf.dprintf("");
   }
 
   /** commit files
@@ -380,6 +779,7 @@ class RepositoryGit extends Repository
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** add files
@@ -390,6 +790,7 @@ class RepositoryGit extends Repository
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** remove files
@@ -399,6 +800,7 @@ class RepositoryGit extends Repository
   public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** revert files
@@ -408,6 +810,7 @@ class RepositoryGit extends Repository
   public void revert(HashSet<FileData> fileDataSet, String revision)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** rename file
@@ -418,6 +821,7 @@ class RepositoryGit extends Repository
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** get incoming changes list
@@ -425,6 +829,7 @@ class RepositoryGit extends Repository
   public LogData[] getIncomingChanges()
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -433,6 +838,7 @@ class RepositoryGit extends Repository
   public LogData[] getOutgoingChanges()
     throws RepositoryException
   {
+Dprintf.dprintf("");
     return null;
   }
 
@@ -441,6 +847,7 @@ class RepositoryGit extends Repository
   public void pullChanges()
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** push changes
@@ -448,6 +855,7 @@ class RepositoryGit extends Repository
   public void pushChanges()
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** apply patches
@@ -455,6 +863,7 @@ class RepositoryGit extends Repository
   public void applyPatches()
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** unapply patches
@@ -462,6 +871,7 @@ class RepositoryGit extends Repository
   public void unapplyPatches()
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** set files mode
@@ -472,6 +882,7 @@ class RepositoryGit extends Repository
   public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   /** create new branch
@@ -482,6 +893,7 @@ class RepositoryGit extends Repository
   public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
+Dprintf.dprintf("");
   }
 
   //-----------------------------------------------------------------------
@@ -503,6 +915,117 @@ class RepositoryGit extends Repository
     else                                    return FileData.States.OK;
   }
 
+  /** parse log data
+   * @param exec exec command
+   * @return revision info or null
+   */
+  private RevisionData parseLogData(Exec exec)
+    throws IOException
+  {
+    final Pattern PATTERN_COMMIT = Pattern.compile("^commit\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_AUTHOR = Pattern.compile("^Author:\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DATE   = Pattern.compile("^Date:\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+
+    RevisionData       revisionData      = null;
+
+    boolean            dataDone          = false;
+    Matcher            matcher;
+    String             line;
+    String             revision          = null;
+    String             changeSet         = null;
+    Date               date              = null;
+    String             author            = null;
+    LinkedList<String> commitMessageList = new LinkedList<String>();
+    while (   !dataDone
+           && ((line = exec.getStdout()) != null)
+          )
+    {
+//Dprintf.dprintf("line=%s",line);
+      if      ((matcher = PATTERN_COMMIT.matcher(line)).matches())
+      {
+        revision  = matcher.group(1);
+        changeSet = matcher.group(1);
+      }
+      else if ((matcher = PATTERN_AUTHOR.matcher(line)).matches())
+      {
+        author = matcher.group(1);
+      }
+      else if ((matcher = PATTERN_DATE.matcher(line)).matches())
+      {
+        date = parseDate(matcher.group(1));
+      }
+      else if (line.isEmpty())
+      {
+        // get commit message lines
+        commitMessageList.clear();
+        while (   ((line = exec.getStdout()) != null)
+               && line.startsWith("    ")
+              )
+        {
+          commitMessageList.add(line.substring(4));
+        }
+        while (   (commitMessageList.peekFirst() != null)
+               && commitMessageList.peekFirst().trim().isEmpty()
+              )
+        {
+          commitMessageList.removeFirst();
+        }
+        while (   (commitMessageList.peekLast() != null)
+               && commitMessageList.peekLast().trim().isEmpty()
+              )
+        {
+          commitMessageList.removeLast();
+        }
+
+        // skip empty lines
+        while (   ((line = exec.getStdout()) != null)
+               && line.isEmpty()
+              )
+        {
+        }
+        exec.ungetStdout(line);
+
+        // create log info entry
+        revisionData = new RevisionData(revision,
+                                        (String)null,
+                                        date,
+                                        author,
+                                        commitMessageList
+                                       );
+
+        dataDone = true;
+      }
+      else
+      {
+        // unknown line
+        Onzen.printWarning("No match for line '%s'",line);
+      }
+    }
+//Dprintf.dprintf("revisionData=%s",revisionData);
+
+    return revisionData;
+  }
+
+  /** parse HG diff index
+   * @param string diff index string
+   * @return index array [lineNb,length] or null
+   */
+  private int[] parseDiffIndex(String string)
+  {
+    Object[] data = new Object[2];
+    if      (StringParser.parse(string,"%d,%d",data))
+    {
+      return new int[]{(Integer)data[0],(Integer)data[1]-(Integer)data[0]-1};
+    }
+    else if (StringParser.parse(string,"%d",data))
+    {
+      return new int[]{(Integer)data[0],1};
+    }
+    else
+    {
+      return null;
+    }
+  }
 }
 
 /* end of file */
