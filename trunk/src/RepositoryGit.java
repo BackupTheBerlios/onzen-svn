@@ -11,17 +11,22 @@
 /****************************** Imports ********************************/
 // base
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import java.text.DateFormat;
+
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -53,22 +58,6 @@ class RepositoryGit extends Repository
   RepositoryGit()
   {
     this(null);
-  }
-
-  /** check if repository support incoming/outgoing commands
-   * @return true iff incoming/outgoing commands are supported
-   */
-  public boolean supportIncomingOutgoing()
-  {
-    return true;
-  }
-
-  /** check if repository support pull/push commands
-   * @return true iff pull/push commands are supported
-   */
-  public boolean supportPullPush()
-  {
-    return true;
   }
 
   /** checkout repository from server
@@ -239,8 +228,30 @@ class RepositoryGit extends Repository
    */
   public String getRepositoryPath()
   {
-Dprintf.dprintf("");
-    return "";
+    String repositoryPath = "";
+
+    // get root
+    Command command = new Command();
+    Exec    exec;
+    String  line;
+    try
+    {
+      command.clear();
+      command.append(Settings.gitCommand,"rev-parse","--show-toplevel");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      repositoryPath = exec.getStdout();
+
+      // done
+      exec.done();
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+
+    return repositoryPath;
   }
 
   /** get last revision name
@@ -258,8 +269,54 @@ Dprintf.dprintf("");
   public String[] getRevisionNames(FileData fileData)
     throws RepositoryException
   {
-Dprintf.dprintf("");
-    return new String[0];
+    final Pattern PATTERN_COMMIT = Pattern.compile("^commit\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+
+    ArrayList<String> revisionList = new ArrayList<String>();
+
+    // get revision info list
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+      Matcher matcher;
+
+      // get log
+      command.clear();
+      command.append(Settings.gitCommand,"log");
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      // parse revisions in log output
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match name, state
+        if      ((matcher = PATTERN_COMMIT.matcher(line)).matches())
+        {
+          // add log info entry
+          revisionList.add(matcher.group(1));
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    // convert to array and sort
+    String[] revisions = revisionList.toArray(new String[revisionList.size()]);
+    Arrays.sort(revisions);
+
+    return revisions;
   }
 
   /** get revision data
@@ -270,8 +327,37 @@ Dprintf.dprintf("");
   public RevisionData getRevisionData(FileData fileData, String revision)
     throws RepositoryException
   {
-Dprintf.dprintf("");
-    return null;
+    RevisionData revisionData = null;
+
+    // get revision data
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // get single log entry
+      command.clear();
+      command.append(Settings.gitCommand,"log","-1");
+      command.append("--");
+      command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      // parse data
+      revisionData = parseLogData(exec);
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return revisionData;
   }
 
   /** get revision data tree
@@ -339,9 +425,9 @@ Dprintf.dprintf("");
 
       // get file
       command.clear();
-      command.append(Settings.gitCommand,"show",((revision != null) ? revision : LAST_REVISION_NAME)+":"+getFileDataName(fileData));
+      command.append(Settings.gitCommand,"show");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // read file data
@@ -373,8 +459,42 @@ Dprintf.dprintf("");
   public byte[] getFileBytes(FileData fileData, String revision)
     throws RepositoryException
   {
-Dprintf.dprintf("");
-    return null;
+    ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     n;
+      byte[]  buffer  = new byte[64*1024];
+
+      // get file data
+      command.clear();
+      command.append(Settings.gitCommand,"show");
+      command.append("--");
+      command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
+      exec = new Exec(rootPath,command,true);
+
+      // read file bytes into byte array stream
+      while ((n = exec.readStdout(buffer)) > 0)
+      {
+        output.write(buffer,0,n);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    // convert byte array stream into array
+    return output.toByteArray();
   }
 
   /** get all changed/unknown files
@@ -688,7 +808,184 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+    final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(a[/\\\\])(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(b[/\\\\])(.*?)(\\t.*){0,1}",Pattern.CASE_INSENSITIVE);
+
+    // get existing/new files
+    HashMap<String,FileData> existingFileDataMap = new HashMap<String,FileData>();
+    HashSet<FileData>        newFileDataSet      = new HashSet<FileData>();
+    if (fileDataSet != null)
+    {
+      for (FileData fileData : fileDataSet)
+      {
+        if (fileData.state != FileData.States.UNKNOWN)
+        {
+          existingFileDataMap.put(getFileDataName(fileData),fileData);
+        }
+        else
+        {
+          newFileDataSet.add(fileData);
+        }
+      }
+    }
+
+    // get patch for existing files
+    if ((fileDataSet == null) || (existingFileDataMap.size() > 0))
+    {
+      Exec exec = null;
+      try
+      {
+        Command command = new Command();
+        String  line;
+
+        // get patch
+        command.clear();
+        command.append(Settings.gitCommand,"diff","--patch");
+        if (ignoreWhitespaces)
+        {
+          command.append("-w","-b","--ignore-space-at-eol");
+        }
+        else
+        {
+        }
+        if (revision1 != null) command.append("-r",revision1);
+        if (revision2 != null) command.append("-r",revision2);
+        command.append("--");
+        if (fileDataSet != null) command.append(getFileDataNames(existingFileDataMap));
+        exec = new Exec(rootPath,command);
+
+        // read patch data
+        HashSet<FileData> patchFileDataSet = new HashSet<FileData>();
+        Matcher matcher;
+        while ((line = exec.getStdout()) != null)
+        {
+//Dprintf.dprintf("line=%s",line);
+          // fix +++/--- lines: check if absolute path and convert or remove prefixes
+          if      ((matcher = PATTERN_OLD_FILE.matcher(line)).matches())
+          {
+            String prefix     = matcher.group(1);
+            String name       = matcher.group(2);
+            String dateString = matcher.group(3);
+
+            // store
+            patchFileDataSet.add(existingFileDataMap.get(name));
+
+            // get file name
+            String fileName;
+            if      (name.startsWith(rootPath+File.separator))
+            {
+              // absolute path -> convert to relative path to root path
+              fileName = name.substring(rootPath.length()+1);
+            }
+            else
+            {
+              // use original name
+              fileName = prefix+name;
+            }
+
+            line = "--- "+fileName+((dateString != null)?"\t"+dateString:"");
+          }
+          else if ((matcher = PATTERN_NEW_FILE.matcher(line)).matches())
+          {
+            String prefix     = matcher.group(1);
+            String name       = matcher.group(2);
+            String dateString = matcher.group(3);
+
+            // store
+            patchFileDataSet.add(existingFileDataMap.get(name));
+
+            // get file name
+            String fileName;
+            if      (name.startsWith(rootPath+File.separator))
+            {
+              // absolute path -> convert to relative path to root path
+              fileName = name.substring(rootPath.length()+1);
+            }
+            else
+            {
+              // use original name
+              fileName = prefix+name;
+            }
+
+            line = "+++ "+fileName+((dateString != null)?"\t"+dateString:"");
+          }
+
+          if      (output   != null) output.println(line);
+          else if (lineList != null) lineList.add(line);
+        }
+
+        // get file names for not modified files
+        for (FileData fileData : existingFileDataMap.values())
+        {
+          if (!patchFileDataSet.contains(fileData))
+          {
+            if      (output   != null) output.println("File: "+getFileDataName(fileData));
+            else if (lineList != null) lineList.add("File: "+getFileDataName(fileData));
+          }
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+    }
+
+    // get complete patches for new files
+    for (FileData fileData : newFileDataSet)
+    {
+      try
+      {
+        BufferedReader bufferedReader;
+        String         line;
+
+        // count number of lines in file
+        int lineCount = 0;
+        bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+        while ((line = bufferedReader.readLine()) != null)
+        {
+          lineCount++;
+        }
+        bufferedReader.close();
+
+        // add as patch
+        bufferedReader = new BufferedReader(new FileReader(fileData.getFileName(rootPath)));
+        String dateString = DateFormat.getDateInstance().format(new Date());
+        if      (output   != null)
+        {
+          output.println(String.format("diff -u %s",fileData.getFileName()));
+          output.println(String.format("--- /dev/null\t%s",dateString));
+          output.println(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+          output.println(String.format("@@ -1,%d +1,%d @@",lineCount,lineCount));
+          while ((line = bufferedReader.readLine()) != null)
+          {
+            output.println("+"+line);
+          }
+        }
+        else if (lineList != null)
+        {
+          lineList.add(String.format("diff -u %s",fileData.getFileName()));
+          lineList.add(String.format("--- /dev/null\t%s",dateString));
+          lineList.add(String.format("+++ %s\t%s",fileData.getFileName(),dateString));
+          lineList.add(String.format("@@ -1,%d +1,%d @@",lineCount,lineCount));
+          while ((line = bufferedReader.readLine()) != null)
+          {
+            lineList.add("+"+line);
+          }
+        }
+        bufferedReader.close();
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+    }
   }
 
   /** get patch data for file
@@ -760,16 +1057,90 @@ Dprintf.dprintf("");
   public AnnotationData[] getAnnotations(FileData fileData, String revision)
     throws RepositoryException
   {
-Dprintf.dprintf("");
-    return null;
+    final Pattern PATTERN_ANNOTATION = Pattern.compile("^(\\S+)\\s+\\((\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+\\d+\\)\\s(.*)",Pattern.CASE_INSENSITIVE);
+//    final Pattern PATTERN_COMMIT = Pattern.compile("^(\\S+)\\s+(\\d+)\\s+(\\d+)\\s(\\d+)",Pattern.CASE_INSENSITIVE);
+//    final Pattern PATTERN_AUTHOR = Pattern.compile("^author\\s+(.+)",Pattern.CASE_INSENSITIVE);
+//    final Pattern PATTERN_DATE   = Pattern.compile("^commit-date\\s+(.+)",Pattern.CASE_INSENSITIVE);
+//    final Pattern PATTERN_LINE   = Pattern.compile("^\\t(.*)",Pattern.CASE_INSENSITIVE);
+
+    ArrayList<AnnotationData> annotationDataList = new ArrayList<AnnotationData>();
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      Matcher matcher;
+      String  line;
+
+      // get annotations
+      command.clear();
+      command.append(Settings.gitCommand,"blame","--date","iso");
+      if (revision != null) command.append(revision);
+      command.append("--");
+      command.append(getFileDataName(fileData));
+      exec = new Exec(rootPath,command);
+
+      /* parse annotation output
+           Format:
+             <revision> (<author> <date> <time> <time zone> <line nb>) <line>
+      */
+      while ((line = exec.getStdout()) != null)
+      {
+        if      ((matcher = PATTERN_ANNOTATION.matcher(line)).matches())
+        {
+          annotationDataList.add(new AnnotationData(matcher.group(1),
+                                                    matcher.group(2),
+                                                    parseDate(matcher.group(3)),
+                                                    matcher.group(4))
+                                                   );
+        }
+        else
+        {
+          // unknown line
+          Onzen.printWarning("No match for line '%s'",line);
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
   }
 
   /** update file from respository
    * @param fileDataSet file data set
    */
   public void update(HashSet<FileData> fileDataSet)
+    throws RepositoryException
   {
-Dprintf.dprintf("");
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // update files
+      command.clear();
+      command.append(Settings.gitCommand,"pull");
+      command.append("--");
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   /** commit files
@@ -779,7 +1150,26 @@ Dprintf.dprintf("");
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // commit files
+      command.clear();
+      command.append(Settings.gitCommand,"commit","-F",commitMessage.getFileName());
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   /** add files
@@ -790,7 +1180,39 @@ Dprintf.dprintf("");
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // add files
+      command.clear();
+      command.append(Settings.gitCommand,"add");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+      exec.done(); exec = null;
+
+      // immediate commit when message is given
+      if (commitMessage != null)
+      {
+        commit(fileDataSet,commitMessage);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** remove files
@@ -800,7 +1222,40 @@ Dprintf.dprintf("");
   public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+    try
+    {
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
+      // remove from repository
+      Command command = new Command();
+      int     exitCode;
+
+      // remove files
+      command.clear();
+      command.append(Settings.gitCommand,"rm");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+
+      // immediate commit when message is given
+      if (commitMessage != null)
+      {
+        // commit removed files
+        commit(fileDataSet,commitMessage);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   /** revert files
@@ -811,6 +1266,32 @@ Dprintf.dprintf("");
     throws RepositoryException
   {
 Dprintf.dprintf("");
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
+      // revert files
+      command.clear();
+      command.append(Settings.gitCommand,"pull");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   /** rename file
