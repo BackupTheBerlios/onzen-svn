@@ -1386,18 +1386,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
+      // immediate commit when message is given
       if (commitMessage != null)
       {
-        // commit added files
-        command.clear();
-        command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
@@ -1436,18 +1428,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
       }
 
+      // immediate commit when message is given
       if (commitMessage != null)
       {
-        // commit removed files
-        command.clear();
-        command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
