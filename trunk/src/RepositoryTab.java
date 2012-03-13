@@ -1885,7 +1885,7 @@ Dprintf.dprintf("");
       }
 
       // start update file data
-      if (fileData != null) asyncUpdateFileStates(fileData);
+      asyncUpdateFileStates(fileData);
     }
   }
 
@@ -2176,9 +2176,6 @@ Dprintf.dprintf("");
           // check if deleted
           if (deleted)
           {
-            // remove from tree
-            fileNameMap.remove(fileData.getFileName());
-
             // start update file data
             asyncUpdateFileStates(fileData);
           }
@@ -3235,7 +3232,7 @@ Dprintf.dprintf("");
       // update tree items: status update in progress
       for (final FileData fileData : fileDataSet)
       {
-  //Dprintf.dprintf("fileData=%s",fileData);
+//Dprintf.dprintf("fileData=%s",fileData);
         final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
         if (treeItem != null)
         {
@@ -3277,7 +3274,7 @@ Dprintf.dprintf("");
         {
           // file disappeared -> remove tree entry
           fileDataSet.remove(fileData);
-//Dprintf.dprintf("removed %s",fileData);
+//Dprintf.dprintf("removed %s %s",fileData,fileData.getFileName());
 
           final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
           if (treeItem != null)
@@ -3299,7 +3296,7 @@ Dprintf.dprintf("");
         TreeItem treeItem = fileNameMap.get(newFileData.getFileName());
         if ((treeItem == null) || treeItem.isDisposed())
         {
-  //Dprintf.dprintf("newFileData=%s",newFileData);
+//Dprintf.dprintf("newFileData=%s",newFileData);
           // add new tree item
           display.syncExec(new Runnable()
           {
@@ -3314,7 +3311,7 @@ Dprintf.dprintf("");
                   for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
                   {
                     FileData fileData = (FileData)rootTreeItem.getData();
-      //Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
+//Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
                     if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
                     {
                       treeItem = rootTreeItem;
@@ -3333,7 +3330,7 @@ Dprintf.dprintf("");
                     // store tree item reference
                     fileNameMap.put(newFileData.getFileName(),newTreeItem);
                   }
-    //else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
+//else { for (TreeItem i : fileNameMap.values()) Dprintf.dprintf("i=%s",i); }
                 }
               }
             }
@@ -3352,7 +3349,10 @@ Dprintf.dprintf("");
    */
   protected void updateFileStates(HashSet<FileData> fileDataSet)
   {
-    updateFileStates(fileDataSet,null);
+    if (fileDataSet != null)
+    {
+      updateFileStates(fileDataSet,null);
+    }
   }
 
   /** update file state
@@ -3378,13 +3378,16 @@ Dprintf.dprintf("");
    */
   protected void asyncUpdateFileStates(HashSet<FileData> fileDataSet, String title)
   {
-    Background.run(new BackgroundRunnable(repository,fileDataSet,title)
+    if (fileDataSet != null)
     {
-      public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
+      Background.run(new BackgroundRunnable(repository,fileDataSet,title)
       {
-        updateFileStates(fileDataSet,(title != null) ? title : repository.title);
-      }
-    });
+        public void run(Repository repository, HashSet<FileData> fileDataSet, String title)
+        {
+          updateFileStates(fileDataSet,(title != null) ? title : repository.title);
+        }
+      });
+    }
   }
 
   /** asyncronous update file states
