@@ -1260,7 +1260,6 @@ Dprintf.dprintf("");
     menu = Widgets.addMenu(menuBar,"Program");
     {
       menuItem = Widgets.addMenuItem(menu,"New repository...");
-//menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1268,7 +1267,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
           newRepository();
         }
       });
