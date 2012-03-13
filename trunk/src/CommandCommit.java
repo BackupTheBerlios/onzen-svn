@@ -96,6 +96,8 @@ class CommandCommit
   private final Text              widgetMessage;
   private final Button            widgetCommit;
 
+  private static String[]         lastMessage = new String[0];
+
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
@@ -197,6 +199,7 @@ class CommandCommit
       Widgets.layout(label,3,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetMessage.setText(StringUtils.join(lastMessage,widgetMessage.DELIMITER));
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
       widgetMessage.setToolTipText("Commit message.\nCtrl-Up/Down/Home/End to select message from history.\nCtrl-Return to commit changed files.");
     }
@@ -244,7 +247,8 @@ class CommandCommit
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
+          // get message
+          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
 
           // close dialog
           Dialogs.close(dialog,false);
@@ -477,6 +481,12 @@ class CommandCommit
           commit();
         }
       });
+
+      lastMessage = new String[0];
+    }
+    else
+    {
+      lastMessage = data.message;
     }
   }
 
@@ -489,10 +499,14 @@ class CommandCommit
     {
       commit();
 
+      lastMessage = new String[0];
+
       return true;
     }
     else
     {
+      lastMessage = data.message;
+
       return false;
     }
   }
