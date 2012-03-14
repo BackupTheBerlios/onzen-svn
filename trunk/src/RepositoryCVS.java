@@ -1704,6 +1704,15 @@ Dprintf.dprintf("unknown %s",line);
     return null;
   }
 
+  /** get incoming/outgoing changes lines
+   * @param revision revision to get changes lines for
+   */
+  public String[] getChanges(String revision)
+    throws RepositoryException
+  {
+    return null;
+  }
+
   /** pull changes
    */
   public void pullChanges()

@@ -2925,6 +2925,12 @@ Dprintf.dprintf("fileName=%s",fileName);
   abstract public LogData[] getOutgoingChanges()
     throws RepositoryException;
 
+  /** get incoming/outgoing changes lines
+   * @param revision revision to get changes lines for
+   */
+  abstract public String[] getChanges(String revision)
+    throws RepositoryException;
+
   /** pull changes
    */
   abstract public void pullChanges()

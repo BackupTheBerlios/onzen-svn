@@ -2143,6 +2143,47 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
 
+  /** get incoming/outgoing changes lines
+   * @param revision revision to get changes lines for
+   */
+  public String[] getChanges(String revision)
+    throws RepositoryException
+  {
+    ArrayList<String> lineList = new ArrayList<String>();
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+
+      // get file
+      command.clear();
+      command.append(Settings.hgCommand,"-y","export","-r",revision);
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // read file data
+      while ((line = exec.getStdout()) != null)
+      {
+        lineList.add(line);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return lineList.toArray(new String[lineList.size()]);
+  }
+
   /** pull changes
    */
   public void pullChanges()

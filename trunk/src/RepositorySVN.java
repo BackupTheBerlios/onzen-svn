@@ -1538,6 +1538,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     return null;
   }
 
+  /** get outgoing changes list
+   */
+  public String[] getChanges(String revision)
+    throws RepositoryException
+  {
+    return null;
+  }
+
   /** pull changes
    */
   public void pullChanges()
