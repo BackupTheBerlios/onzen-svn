@@ -1722,6 +1722,33 @@ class Widgets
 
   //-----------------------------------------------------------------------
 
+  /** create new text view
+   * @param composite composite widget
+   * @param style view style
+   * @return new view
+   */
+  public static Text newTextView(Composite composite, int style)
+  {
+    Text text;
+
+    text = new Text(composite,style|SWT.READ_ONLY|SWT.H_SCROLL|SWT.V_SCROLL);
+    text.setBackground(composite.getBackground());
+    text.setText("");
+
+    return text;
+  }
+
+  /** create new string view
+   * @param composite composite widget
+   * @return new view
+   */
+  public static Text newTextView(Composite composite)
+  {
+    return newTextView(composite,SWT.LEFT|SWT.BORDER);
+  }
+
+  //-----------------------------------------------------------------------
+
   /** create new button
    * @param composite composite widget
    * @param text text
