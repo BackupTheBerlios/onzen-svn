@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 // graphics
+import org.eclipse.swt.custom.LineStyleEvent;
+import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.events.FocusEvent;
@@ -55,6 +57,8 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.StyleRange;
 
 /****************************** Classes ********************************/
 
@@ -88,6 +92,9 @@ class CommandChanges
   };
 
   // --------------------------- constants --------------------------------
+  private final Color COLOR_BACKGROUND        = Onzen.COLOR_GRAY;
+  private final Color COLOR_SEARCH_BACKGROUND = Onzen.COLOR_RED;
+  private final Color COLOR_SEARCH_TEXT       = Onzen.COLOR_BLUE;
 
   // --------------------------- variables --------------------------------
 
@@ -459,20 +466,113 @@ class CommandChanges
     });
   }
 
+  /** search previous text
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void findPrev(StyledText widgetText, Text widgetFind)
+  {
+    if (!widgetText.isDisposed())
+    {
+      String findText = widgetFind.getText().toLowerCase();
+      if (!findText.isEmpty())
+      {
+        // get cursor position
+        int cursorIndex = widgetText.getCaretOffset();
+
+        // search
+        int offset = -1;
+        if (cursorIndex > 0)
+        {
+          String text = widgetText.getText(0,cursorIndex-1);
+          offset = text.toLowerCase().lastIndexOf(findText);
+        }
+        if (offset >= 0)
+        {
+          int index = offset;
+
+          widgetText.setCaretOffset(index);
+          widgetText.setSelection(index);
+          widgetText.redraw();
+        }
+        else
+        {
+          Widgets.flash(widgetFind);
+        }
+      }
+    }
+  }
+
+  /** search next text
+   * @param widgetText text widget
+   * @param widgetFind search text widget
+   */
+  private void findNext(StyledText widgetText, Text widgetFind)
+  {
+    if (!widgetText.isDisposed())
+    {
+      String findText = widgetFind.getText().toLowerCase();
+      if (!findText.isEmpty())
+      {
+        // get cursor position
+        int cursorIndex = widgetText.getCaretOffset();
+
+        // search
+        int offset = -1;
+        if (cursorIndex >= 0)
+        {
+          String text = widgetText.getText();
+          offset = (cursorIndex+1 < text.length()) ? text.substring(cursorIndex+1).toLowerCase().indexOf(findText) : -1;
+        }
+        if (offset >= 0)
+        {
+          int index = cursorIndex+1+offset;
+
+          widgetText.setCaretOffset(index);
+          widgetText.setSelection(index);
+          widgetText.redraw();
+        }
+        else
+        {
+          Widgets.flash(widgetFind);
+        }
+      }
+    }
+  }
+
   /** show changed lines
    * @param revision revision to show changes for
    */
   private void showLines(String revision)
   {
-    Text      widgetLines;
-    Composite composite;
-    Button    button;
+    /** dialog data
+     */
+    class Data
+    {
+      String[] lines;
+
+      Data()
+      {
+        this.lines = null;
+      }
+    };
+
+    final Data       data = new Data();
+
+    final StyledText widgetText;
+    final Text       widgetFind;
+    final Button     widgetFindPrev;
+    final Button     widgetFindNext;
+
+    Composite    composite,subComposite;
+    Label        label;
+    Button       button;
 
     // get changed lines
-    String[] lines;
+    repositoryTab.setStatusText("Get changes for revison "+revision+"...");
     try
     {
-      lines = repositoryTab.repository.getChanges(revision);
+      data.lines = repositoryTab.repository.getChanges(revision);
     }
     catch (RepositoryException exception)
     {
@@ -492,14 +592,39 @@ class CommandChanges
     }
 
     // show
-    if (lines != null)
+    if (data.lines != null)
     {
       if (!dialog.isDisposed())
       {
         final Shell subDialog = Dialogs.open(dialog,"Changes revision "+revision,new double[]{1.0,0.0},1.0);
 
-        widgetLines = Widgets.newTextView(subDialog);
-        Widgets.layout(widgetLines,0,0,TableLayoutData.NSWE,0,0,4);
+        composite = Widgets.newComposite(subDialog);
+        composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
+        Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
+        {
+          widgetText = Widgets.newTextView(composite);
+          Widgets.layout(widgetText,0,0,TableLayoutData.NSWE,0,0,4);
+
+          subComposite = Widgets.newComposite(composite);
+          subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+          Widgets.layout(subComposite,2,0,TableLayoutData.WE);
+          {
+            label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
+            Widgets.layout(label,0,0,TableLayoutData.W);
+
+            widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+            widgetFind.setMessage("Enter text to find");
+            Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
+
+            widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
+            Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
+            widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
+
+            widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
+            Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
+            widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
+          }
+        }
 
         // buttons
         composite = Widgets.newComposite(subDialog);
@@ -522,17 +647,104 @@ class CommandChanges
           });
         }
 
+        // listeners
+        widgetText.addLineStyleListener(new LineStyleListener()
+        {
+          public void lineGetStyle(LineStyleEvent lineStyleEvent)
+          {
+             String findText = widgetFind.getText().toLowerCase();
+             int    findTextLength = findText.length();
+             if (findTextLength > 0)
+             {
+               ArrayList<StyleRange> styleRangeList = new ArrayList<StyleRange>();
+               int                   index = 0;
+               while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
+               {
+                 styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_SEARCH_TEXT,COLOR_SEARCH_BACKGROUND));
+                 index += findTextLength;
+               }
+               lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
+             }
+             else
+             {
+               lineStyleEvent.styles = null;
+             }
+          }
+        });
+        widgetFind.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+            findNext(widgetText,widgetFind);
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+        widgetFindPrev.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            findPrev(widgetText,widgetFind);
+          }
+        });
+        widgetFindNext.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            findNext(widgetText,widgetFind);
+          }
+        });
+
+        KeyListener keyListener = new KeyListener()
+        {
+          public void keyPressed(KeyEvent keyEvent)
+          {
+            if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+            {
+              widgetFind.forceFocus();
+            }
+            else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+            {
+              Widgets.invoke(widgetFindPrev);
+            }
+            else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+            {
+              Widgets.invoke(widgetFindNext);
+            }
+            else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+            {
+              String string = widgetText.getSelectionText();
+              Widgets.setClipboard(clipboard,string);
+            }
+          }
+          public void keyReleased(KeyEvent keyEvent)
+          {
+          }
+        };
+        widgetText.addKeyListener(keyListener);
+        widgetFind.addKeyListener(keyListener);
+        widgetFindPrev.addKeyListener(keyListener);
+        widgetFindNext.addKeyListener(keyListener);
+
         // show dialog
         Dialogs.show(subDialog,Settings.geometryChangesLines);
 
         // add text
         StringBuilder buffer = new StringBuilder();
-        for (String line : lines)
+        for (String line : data.lines)
         {
           buffer.append(line); buffer.append('\n');
         }
-        widgetLines.setText(buffer.toString());
+        widgetText.setText(buffer.toString());
 
+        Widgets.setFocus(widgetFind);
         Dialogs.run(subDialog);
       }
     }
