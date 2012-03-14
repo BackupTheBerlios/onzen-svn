@@ -1725,26 +1725,26 @@ class Widgets
   /** create new text view
    * @param composite composite widget
    * @param style view style
-   * @return new view
+   * @return new text view
    */
-  public static Text newTextView(Composite composite, int style)
+  public static StyledText newTextView(Composite composite, int style)
   {
-    Text text;
+    StyledText styledText;
 
-    text = new Text(composite,style|SWT.READ_ONLY|SWT.H_SCROLL|SWT.V_SCROLL);
-    text.setBackground(composite.getBackground());
-    text.setText("");
+    styledText = new StyledText(composite,style|SWT.READ_ONLY);
+    styledText.setBackground(composite.getBackground());
+    styledText.setText("");
 
-    return text;
+    return styledText;
   }
 
   /** create new string view
    * @param composite composite widget
    * @return new view
    */
-  public static Text newTextView(Composite composite)
+  public static StyledText newTextView(Composite composite)
   {
-    return newTextView(composite,SWT.LEFT|SWT.BORDER);
+    return newTextView(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
   }
 
   //-----------------------------------------------------------------------
