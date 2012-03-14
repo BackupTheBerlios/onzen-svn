@@ -209,6 +209,7 @@ class CommandRevisions
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        widgetFind.setMessage("Enter text to find");
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);

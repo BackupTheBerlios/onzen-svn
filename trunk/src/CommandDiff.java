@@ -345,7 +345,7 @@ class CommandDiff
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFindRight = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
-        widgetFindLeft.setMessage("Enter text to find");
+        widgetFindRight.setMessage("Enter text to find");
         Widgets.layout(widgetFindRight,0,1,TableLayoutData.WE);
 
         widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);

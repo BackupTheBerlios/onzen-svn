@@ -288,6 +288,7 @@ class CommandAnnotations
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        widgetFind.setMessage("Enter text to find");
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
@@ -737,7 +738,7 @@ class CommandAnnotations
   {
     int index = -1;
 
-    if (!widgetFind.isDisposed())
+    if (!widgetAnnotations.isDisposed() && !widgetFind.isDisposed())
     {
       String findText = widgetFind.getText().toLowerCase();
       if (!findText.isEmpty())
