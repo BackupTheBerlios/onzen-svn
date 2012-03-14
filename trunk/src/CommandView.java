@@ -107,8 +107,9 @@ class CommandView
   // --------------------------- constants --------------------------------
 
   // colors
-  private final Color COLOR_VIEW_NONE        = Onzen.COLOR_WHITE;
-  private final Color COLOR_VIEW_SEARCH_TEXT = Onzen.COLOR_BLUE;
+  private final Color COLOR_VIEW_NONE              = Onzen.COLOR_WHITE;
+  private final Color COLOR_VIEW_SEARCH_BACKGROUND = Onzen.COLOR_RED;
+  private final Color COLOR_VIEW_SEARCH_TEXT       = Onzen.COLOR_BLUE;
 
   // user events
   private final int USER_EVENT_NEW_REVISION  = 0xFFFF+0;
@@ -129,7 +130,7 @@ class CommandView
   private final Combo         widgetRevision;
   private final Button        widgetRevisionPrev;
   private final Button        widgetRevisionNext;
-  private final Text          widgetLineNumbers;
+  private final StyledText    widgetLineNumbers;
   private final StyledText    widgetText;
   private final ScrollBar     widgetHorizontalScrollBar,widgetVerticalScrollBar;
   private final Text          widgetFind;
@@ -218,7 +219,7 @@ class CommandView
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
-        widgetLineNumbers = Widgets.newText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbers = Widgets.newTextView(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI);
         widgetLineNumbers.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbers,0,0,TableLayoutData.NS,0,0,0,0,60,SWT.DEFAULT);
         Widgets.addModifyListener(new WidgetListener(widgetLineNumbers,data)
@@ -229,7 +230,7 @@ class CommandView
           }
         });
 
-        widgetText = Widgets.newStyledText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetText = Widgets.newTextView(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI);
         widgetText.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetText,0,1,TableLayoutData.NSWE);
         Widgets.addModifyListener(new WidgetListener(widgetText,data)
@@ -251,6 +252,7 @@ class CommandView
         Widgets.layout(label,0,0,TableLayoutData.W);
 
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_CANCEL);
+        widgetFind.setMessage("Enter text to find");
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
 
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
@@ -412,8 +414,8 @@ class CommandView
     {
       public void handleEvent(Event event)
       {
-        Text widget = (Text)event.widget;
-        int  topIndex = widget.getTopIndex();
+        StyledText widget   = (StyledText)event.widget;
+        int        topIndex = widget.getTopIndex();
 //Dprintf.dprintf("%d %d",widget.getTopPixel(),widgetText.getTopPixel());
 
         widgetText.setTopIndex(topIndex);
@@ -458,7 +460,7 @@ class CommandView
            int                   index = 0;
            while ((index = lineStyleEvent.lineText.toLowerCase().indexOf(findText,index)) >= 0)
            {
-             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_VIEW_SEARCH_TEXT,null));
+             styleRangeList.add(new StyleRange(lineStyleEvent.lineOffset+index,findTextLength,COLOR_VIEW_SEARCH_TEXT,COLOR_VIEW_SEARCH_BACKGROUND));
              index += findTextLength;
            }
            lineStyleEvent.styles = styleRangeList.toArray(new StyleRange[styleRangeList.size()]);
@@ -704,7 +706,7 @@ class CommandView
    * @param widgetVerticalScrollBar horizontal scrollbar widget
    */
   private void setText(String[]   lines,
-                       Text       widgetLineNumbers,
+                       StyledText widgetLineNumbers,
                        StyledText widgetText,
                        ScrollBar  widgetHorizontalScrollBar,
                        ScrollBar  widgetVerticalScrollBar
