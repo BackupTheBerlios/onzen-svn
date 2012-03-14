@@ -20,17 +20,15 @@ import java.util.HashSet;
 // graphics
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
-import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.dnd.Clipboard;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -40,25 +38,16 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.List;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.swt.widgets.ScrollBar;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Widget;
-import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.custom.StyleRange;
 
 /****************************** Classes ********************************/
 
@@ -84,10 +73,10 @@ class CommandChanges
 
     Data()
     {
-      this.changes                  = null;
-      this.view                     = new Rectangle(0,0,0,0);
-      this.size                     = new Point(0,0);
-      this.logDataComparator        = new LogDataComparator();
+      this.changes           = null;
+      this.view              = new Rectangle(0,0,0,0);
+      this.size              = new Point(0,0);
+      this.logDataComparator = new LogDataComparator();
     }
   };
 
@@ -126,10 +115,9 @@ class CommandChanges
   CommandChanges(final Shell shell, final RepositoryTab repositoryTab, ChangesTypes changesType)
   {
     TableColumn tableColumn;
-    Composite         composite;
-    ScrolledComposite scrolledComposite;
-    Label             label;
-    Button            button;
+    Composite   composite;
+    Label       label;
+    Button      button;
 
     // initialize variables
     this.repositoryTab = repositoryTab;
@@ -176,6 +164,7 @@ class CommandChanges
     tableColumn.addSelectionListener(selectionListener);
     Widgets.sortTableColumn(widgetChanges,0,data.logDataComparator);
     Widgets.setTableColumnWidth(widgetChanges,Settings.geometryChangesColumn.width);
+    widgetChanges.setToolTipText("Incoming/outging changes. Double click to show changes for revision.");
 
     // buttons
     composite = Widgets.newComposite(dialog);
@@ -296,7 +285,6 @@ class CommandChanges
       Point p = display.map(widgetChanges,widgetChangesToolTip,widgetChangesToolTipMousePosition);
       double d2 =  Math.pow(x-p.x,2)
                   +Math.pow(y-p.y,2);
-//Dprintf.dprintf("x=%d y=%d p=%s d2=%f bounds=%s",x,y,p,d2,bounds);
       return (d2 < 100) || bounds.contains(x,y);
     }
     else
@@ -305,6 +293,11 @@ class CommandChanges
     }
   }
 
+  /** open changes tool tip
+   * @param shell shell
+   * @param logData log data to show
+   * @param x,y positin of tool tip
+   */
   private void openChangesTooltip(Shell shell, LogData logData, int x, int y)
   {
     final Color COLOR_FORGROUND  = display.getSystemColor(SWT.COLOR_INFO_FOREGROUND);
