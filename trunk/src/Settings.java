@@ -605,6 +605,8 @@ public class Settings
   public static Point                    geometryRevisions              = new Point(800,400);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryChanges                = new Point(800,400);
+  @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryChangesLines           = new Point(800,400);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryChangesColumn          = new ColumnSizes(70,150,120);
   @SettingValue(type=SettingValueAdapterSize.class)

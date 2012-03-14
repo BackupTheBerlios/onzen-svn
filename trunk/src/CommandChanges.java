@@ -197,6 +197,15 @@ class CommandChanges
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
+        Table       table      = (Table)mouseEvent.widget;
+        TableItem[] tableItems = table.getSelection();
+
+        if (tableItems.length > 0)
+        {
+          LogData logData = (LogData)tableItems[0].getData();
+
+          showLines(logData.revision);
+        }
       }
       public void mouseDown(MouseEvent mouseEvent)
       {
@@ -240,8 +249,8 @@ class CommandChanges
     // show dialog
     Dialogs.show(dialog,Settings.geometryChanges);
 
-    // show
-    show(changesType);
+    // showChanges
+    showChanges(changesType);
   }
 
   /** run dialog
@@ -372,7 +381,7 @@ class CommandChanges
   /** show changes: set canvas size and draw changes list
    * @param changesType
    */
-  private void show(ChangesTypes changesType)
+  private void showChanges(ChangesTypes changesType)
   {
     Background.run(new BackgroundRunnable(changesType)
     {
@@ -448,6 +457,85 @@ class CommandChanges
         }
       }
     });
+  }
+
+  /** show changed lines
+   * @param revision revision to show changes for
+   */
+  private void showLines(String revision)
+  {
+    Text      widgetLines;
+    Composite composite;
+    Button    button;
+
+    // get changed lines
+    String[] lines;
+    try
+    {
+      lines = repositoryTab.repository.getChanges(revision);
+    }
+    catch (RepositoryException exception)
+    {
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(dialog,"Getting changes fail: %s",exceptionMessage);
+        }
+      });
+      return;
+    }
+    finally
+    {
+      repositoryTab.clearStatusText();
+    }
+
+    // show
+    if (lines != null)
+    {
+      if (!dialog.isDisposed())
+      {
+        final Shell subDialog = Dialogs.open(dialog,"Changes revision "+revision,new double[]{1.0,0.0},1.0);
+
+        widgetLines = Widgets.newTextView(subDialog);
+        Widgets.layout(widgetLines,0,0,TableLayoutData.NSWE,0,0,4);
+
+        // buttons
+        composite = Widgets.newComposite(subDialog);
+        composite.setLayout(new TableLayout(0.0,new double[]{1.0}));
+        Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+        {
+          button = Widgets.newButton(composite,"Close");
+          Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              Settings.geometryChangesLines = subDialog.getSize();
+
+              Dialogs.close(subDialog);
+            }
+          });
+        }
+
+        // show dialog
+        Dialogs.show(subDialog,Settings.geometryChangesLines);
+
+        // add text
+        StringBuilder buffer = new StringBuilder();
+        for (String line : lines)
+        {
+          buffer.append(line); buffer.append('\n');
+        }
+        widgetLines.setText(buffer.toString());
+
+        Dialogs.run(subDialog);
+      }
+    }
   }
 }
 
