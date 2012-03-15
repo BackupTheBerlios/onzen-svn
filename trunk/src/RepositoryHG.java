@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
 
 /** Mercurial (hg) repository
  */
-@XmlType(propOrder={"masterRepository"})
+@XmlType(propOrder={"masterRepository","outgoingRepository"})
 @XmlAccessorType(XmlAccessType.NONE)
 class RepositoryHG extends Repository
 {
@@ -140,6 +140,10 @@ class RepositoryHG extends Repository
   @XmlElement(name = "masterRepository")
   @RepositoryValue(title = "Master repository:", pathSelector=true, tooltip="Path to master repository.")
   public String masterRepository;
+
+  @XmlElement(name = "outgoingRepository")
+  @RepositoryValue(title = "Outgoing repository:", pathSelector=true, tooltip="Path to outgoing repository.")
+  public String outgoingRepository;
 
   private HashMap<Integer,ParentData> parentMap = null;
 
@@ -2401,6 +2405,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (reviewServerLogin != null) command.append("--username",reviewServerLogin);
       if (password != null) command.append("--password",command.hidden(password));
       if (reviewServerRepository != null) command.append("--repoid",reviewServerRepository);
+      if (outgoingRepository != null) command.append("--outgoingrepo",outgoingRepository);
       if (!reference.isEmpty()) command.append("--existing",reference);
       command.append("--publish");
       command.append("--summary",commitMessage.getSummary());
