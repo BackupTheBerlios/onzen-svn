@@ -4570,7 +4570,7 @@ Dprintf.dprintf("");
           });
         }
 
-        // additional values
+        // additional repository values
         int row = 3;
         for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
         {
@@ -5305,6 +5305,7 @@ exception.printStackTrace();
         {
           Button widget = (Button)selectionEvent.widget;
 
+          // get base data
           data.title                   = widgetTitle.getText().trim();
           data.rootPath                = widgetRootPath.getText().trim();
           data.patchTests              = widgetPatchTests.getItems();
@@ -5327,6 +5328,7 @@ exception.printStackTrace();
           data.reviewServerPersons     = widgetReviewServerPersons.getText().trim();
           data.reviewServerDescription = widgetReviewServerDescription.getText().trim();
 
+          // get additional data
           for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
           {
             for (Annotation annotation : field.getDeclaredAnnotations())
@@ -5383,7 +5385,6 @@ exception.printStackTrace();
               }
             }
           }
-
 
           Settings.geometryEditRepository = dialog.getSize();
 
