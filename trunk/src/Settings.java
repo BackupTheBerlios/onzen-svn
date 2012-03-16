@@ -428,7 +428,7 @@ public class Settings
       Editor editor = null;
 
       Object[] data = new Object[2];
-      if (StringParser.parse(string,"%s:% s",data))
+      if (StringParser.parse(string,"%s:%*s",data))
       {
         editor = new Editor(((String)data[0]).trim(),((String)data[1]).trim());
       }
@@ -442,7 +442,7 @@ public class Settings
 
     public String toString(Editor editor) throws Exception
     {
-      return editor.mimeTypePattern+":"+editor.command;
+      return editor.mimeTypePattern+":"+StringUtils.escape(editor.command,false);
     }
 
     public boolean equals(Editor editor0, Editor editor1)
@@ -502,7 +502,7 @@ public class Settings
       ShellCommand shellCommand = null;
 
       Object[] data = new Object[2];
-      if (StringParser.parse(string,"%S% s",data,StringParser.QUOTE_CHARS))
+      if (StringParser.parse(string,"%S %*s",data,StringParser.QUOTE_CHARS))
       {
         shellCommand = new ShellCommand(((String)data[0]).trim(),((String)data[1]).trim());
       }
@@ -516,7 +516,7 @@ public class Settings
 
     public String toString(ShellCommand shellCommand) throws Exception
     {
-      return StringUtils.escape(shellCommand.name)+" "+shellCommand.command;
+      return StringUtils.escape(shellCommand.name)+" "+StringUtils.escape(shellCommand.command,false);
     }
 
     public boolean equals(ShellCommand shellCommand0, ShellCommand shellCommand1)
