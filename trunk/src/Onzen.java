@@ -908,6 +908,7 @@ exception.printStackTrace();
   {
     // add known additional mime types
     MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-c c cpp c++");
+    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-h h hpp h++");
     MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-java java");
   }
 
@@ -2278,18 +2279,36 @@ exception.printStackTrace();
    */
   private void updateShellCommands()
   {
-    // remove old entries in shell command menu
-    MenuItem[] menuItems = menuShellCommands.getItems();
-    for (MenuItem menuItem : menuShellCommands.getItems())
+    if (!menuShellCommands.isDisposed())
     {
-      menuItem.dispose();
-    }
+      // remove old entries in shell command menu
+      MenuItem[] menuItems = menuShellCommands.getItems();
+      for (MenuItem menuItem : menuShellCommands.getItems())
+      {
+        menuItem.dispose();
+      }
 
-    // add new shell commands to menu
-    for (Settings.ShellCommand shellCommand : Settings.shellCommands)
-    {
-      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
-      menuItem.setData(shellCommand);
+      // add new shell commands to menu
+      for (Settings.ShellCommand shellCommand : Settings.shellCommands)
+      {
+        MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
+        menuItem.setData(shellCommand);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            MenuItem              widget       = (MenuItem)selectionEvent.widget;
+            Settings.ShellCommand shellCommand = (Settings.ShellCommand)widget.getData();
+
+            selectedRepositoryTab.executeShellCommand(shellCommand);
+          }
+        });
+      }
+      Widgets.addMenuSeparator(menuShellCommands);
+      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command...");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2297,25 +2316,10 @@ exception.printStackTrace();
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          MenuItem              widget       = (MenuItem)selectionEvent.widget;
-          Settings.ShellCommand shellCommand = (Settings.ShellCommand)widget.getData();
-
-          selectedRepositoryTab.executeShellCommand(shellCommand);
+          addShellCommand();
         }
       });
     }
-    Widgets.addMenuSeparator(menuShellCommands);
-    MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command...");
-    menuItem.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        addShellCommand();
-      }
-    });
 
     // update context menu in repository tabs
     for (RepositoryTab repositoryTab : repositoryTabMap.values())
