@@ -4193,10 +4193,25 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          // get data
           data.repositoryPath  = widgetRepository.getText();
           data.moduleName      = widgetModuleName.getText().trim();
           data.revision        = widgetRevision.getText().trim();
           data.destinationPath = widgetDestinationPath.getText();
+
+          // store repository path into checkout history
+          boolean flag = false;
+          for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
+          {
+            flag |= checkoutHistoryPath.equals(data.repositoryPath);
+          }
+          if (!flag)
+          {
+            String[] newCheckoutHistoryPaths = new String[Math.min(Settings.checkoutHistoryPaths.length+1,20)];
+            newCheckoutHistoryPaths[0] = data.repositoryPath;
+            System.arraycopy(Settings.checkoutHistoryPaths,0,newCheckoutHistoryPaths,1,Math.min(Settings.checkoutHistoryPaths.length,20-1));
+            Settings.checkoutHistoryPaths = newCheckoutHistoryPaths;
+          }
 
           Dialogs.close(dialog,true);
         }
@@ -4242,6 +4257,7 @@ Dprintf.dprintf("");
     Widgets.setNextFocus(widgetRevision,widgetDestinationPath);
     Widgets.setNextFocus(widgetDestinationPath,widgetCheckout);
 
+/*
     // add existing repository paths
     Background.run(new BackgroundRunnable()
     {
@@ -4272,6 +4288,13 @@ Dprintf.dprintf("");
         });
       }
     });
+*/
+
+    // add checkout history paths
+    for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
+    {
+      widgetRepository.add(checkoutHistoryPath);
+    }
 
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
