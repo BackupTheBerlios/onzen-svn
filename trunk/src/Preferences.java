@@ -298,8 +298,8 @@ class Preferences
       {
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,true);
-        Widgets.addTableColumn(widgetEditors,1,"Command",  SWT.LEFT,100,true);
+        Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,false);
+        Widgets.addTableColumn(widgetEditors,1,"Command",  SWT.LEFT,300,true );
         widgetEditors.setToolTipText("Colors list.");
         widgetEditors.addSelectionListener(new SelectionListener()
         {
@@ -332,7 +332,7 @@ class Preferences
         Widgets.layout(subComposite,1,0,TableLayoutData.E);
         {
           button = Widgets.newButton(subComposite,"Add");
-          Widgets.layout(button,0,0,TableLayoutData.E);
+          Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -349,7 +349,7 @@ class Preferences
             }
           });
           button = Widgets.newButton(subComposite,"Remove");
-          Widgets.layout(button,0,1,TableLayoutData.E);
+          Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -407,7 +407,7 @@ class Preferences
         Widgets.layout(subComposite,1,0,TableLayoutData.E);
         {
           button = Widgets.newButton(subComposite,"Add");
-          Widgets.layout(button,0,0,TableLayoutData.E);
+          Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -424,7 +424,7 @@ class Preferences
             }
           });
           button = Widgets.newButton(subComposite,"Remove");
-          Widgets.layout(button,0,1,TableLayoutData.E);
+          Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1068,7 +1068,7 @@ class Preferences
           Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
           {
             button = Widgets.newButton(subSubComposite,"Add");
-            Widgets.layout(button,0,0,TableLayoutData.E);
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
             button.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1084,7 +1084,7 @@ class Preferences
               }
             });
             button = Widgets.newButton(subSubComposite,"Remove");
-            Widgets.layout(button,0,1,TableLayoutData.E);
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
             button.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1140,7 +1140,7 @@ class Preferences
           Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
           {
             button = Widgets.newButton(subSubComposite,"Add");
-            Widgets.layout(button,0,0,TableLayoutData.E);
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
             button.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1156,7 +1156,7 @@ class Preferences
               }
             });
             button = Widgets.newButton(subSubComposite,"Remove");
-            Widgets.layout(button,0,1,TableLayoutData.E);
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
             button.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1212,7 +1212,7 @@ class Preferences
           Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
           {
             button = Widgets.newButton(subSubComposite,"Add");
-            Widgets.layout(button,0,0,TableLayoutData.E);
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
             button.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1228,7 +1228,7 @@ class Preferences
               }
             });
             button = Widgets.newButton(subSubComposite,"Remove");
-            Widgets.layout(button,0,1,TableLayoutData.E);
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
             button.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1857,7 +1857,7 @@ class Preferences
         Widgets.layout(widgetKey,0,0,TableLayoutData.WE);
 
         button = Widgets.newButton(subComposite,"Clear");
-        Widgets.layout(button,0,1,TableLayoutData.W);
+        Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2050,7 +2050,7 @@ class Preferences
    */
   private boolean editEditor(final Settings.Editor editor, String title, String buttonText)
   {
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Button    button;
 
@@ -2067,6 +2067,7 @@ class Preferences
     {
       label = Widgets.newLabel(composite,"Mime type:");
       Widgets.layout(label,0,0,TableLayoutData.W);
+
       widgetMimeTypePattern = Widgets.newText(composite);
       widgetMimeTypePattern.setText(editor.mimeTypePattern);
       Widgets.layout(widgetMimeTypePattern,0,1,TableLayoutData.WE);
@@ -2074,10 +2075,38 @@ class Preferences
 
       label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,1,0,TableLayoutData.W);
-      widgetCommand = Widgets.newText(composite);
-      widgetCommand.setText(editor.command);
-      Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.WE,0,0,4);
+      {
+        widgetCommand = Widgets.newText(subComposite);
+        widgetCommand.setText(editor.command);
+        Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
+        widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.E);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String fileName = Dialogs.fileOpen(shell,
+                                               "Select program",
+                                               widgetCommand.getText(),
+                                               new String[]{"All files","*",
+                                                           }
+                                              );
+            if (fileName != null)
+            {
+              widgetCommand.setText(fileName);
+            }
+          }
+        });
+      }
     }
 
     // buttons
