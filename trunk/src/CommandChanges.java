@@ -23,6 +23,8 @@ import org.eclipse.swt.custom.LineStyleListener;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -239,6 +241,17 @@ class CommandChanges
           widgetChangesToolTipMousePosition.x = mouseEvent.x;
           widgetChangesToolTipMousePosition.y = mouseEvent.y;
         }
+      }
+    });
+    widgetChanges.addFocusListener(new FocusListener()
+    {
+      public void focusGained(FocusEvent focusEvent)
+      {
+      }
+
+      public void focusLost(FocusEvent focusEvent) 
+      {
+        closeChangesTooltip();
       }
     });
 
