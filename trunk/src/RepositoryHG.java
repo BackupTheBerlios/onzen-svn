@@ -243,7 +243,7 @@ class RepositoryHG extends Repository
         if ((line != null) && line.startsWith("getting "))
         {
 //Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateText(line.substring(8));
+          if (busyDialog != null) busyDialog.updateText(line);
         }
 
         // discard stderr

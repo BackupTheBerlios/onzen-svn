@@ -129,7 +129,7 @@ class RepositorySVN extends Repository
         if (line != null)
         {
 //Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateText(line.substring(4+1+n+1));
+          if (busyDialog != null) busyDialog.updateText(line);
         }
 
         // discard stderr
