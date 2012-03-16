@@ -31,13 +31,13 @@ JAVAC_FLAGS        = -source 1.5
 
 JAR                = jar
 
-SWT_JAR_LINUX      = jars/linux/swt-3.6.1.jar
-SWT_JAR_LINUX_64   = jars/linux/swt-3.6.1_64.jar
-SWT_JAR_WINDOWS    = jars/windows/swt-3.6.1.jar
-SWT_JAR_WINDOWS_64 = jars/windows/swt-3.6.1_64.jar
-SWT_JAR_SOLARIS    = jars/solaris/swt-3.6.1.jar
-SWT_JAR_MACOSX     = jars/macosx/swt-3.6.1.jar
-SWT_JAR_MACOSX_64  = jars/macosx/swt-3.6.1_64.jar
+SWT_JAR_LINUX      = jars/linux/swt-3.7.2.jar
+SWT_JAR_LINUX_64   = jars/linux/swt-3.7.2_64.jar
+SWT_JAR_WINDOWS    = jars/windows/swt-3.7.2.jar
+SWT_JAR_WINDOWS_64 = jars/windows/swt-3.7.2_64.jar
+SWT_JAR_SOLARIS    = jars/solaris/swt-3.7.2.jar
+SWT_JAR_MACOSX     = jars/macosx/swt-3.7.2.jar
+SWT_JAR_MACOSX_64  = jars/macosx/swt-3.7.2_64.jar
 
 ifneq ($(SWT_DIR),)
 SWT_JAR          = $(SWT_DIR)/swt.jar
