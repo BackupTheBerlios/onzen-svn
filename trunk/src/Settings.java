@@ -576,232 +576,232 @@ public class Settings
   @SettingComment(text={"Onzen configuration",""})
 
   // program settings
-  public static HostSystems              hostSystem                     = HostSystems.LINUX;
+  public static HostSystems              hostSystem                             = HostSystems.LINUX;
 
   @SettingComment(text={"","Geometry: <width>x<height>"})
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryMain                   = new Point(900,600);
+  public static Point                    geometryMain                           = new Point(900,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryEditRepositoryList     = new Point(400,400);
+  public static Point                    geometryEditRepositoryList             = new Point(400,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryEditRepository         = new Point(800,600);
+  public static Point                    geometryEditRepository                 = new Point(800,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryCommit                 = new Point(500,500);
+  public static Point                    geometryCommit                         = new Point(500,500);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryAdd                    = new Point(500,400);
+  public static Point                    geometryAdd                            = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRename                 = new Point(500,400);
+  public static Point                    geometryRename                         = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRemove                 = new Point(500,400);
+  public static Point                    geometryRemove                         = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRevert                 = new Point(500,400);
+  public static Point                    geometryRevert                         = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometrySetFileMode            = new Point(500,400);
+  public static Point                    geometrySetFileMode                    = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryCreateBranch           = new Point(500,400);
+  public static Point                    geometryCreateBranch                   = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryDiff                   = new Point(800,600);
+  public static Point                    geometryDiff                           = new Point(800,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRevisions              = new Point(800,400);
+  public static Point                    geometryRevisions                      = new Point(800,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryChanges                = new Point(800,400);
+  public static Point                    geometryChanges                        = new Point(800,400);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryChangesLines           = new Point(800,400);
+  public static Point                    geometryChangesLines                   = new Point(800,400);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryChangesColumn          = new ColumnSizes(70,150,120);
+  public static ColumnSizes              geometryChangesColumn                  = new ColumnSizes(70,150,120);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRevisionBox            = new Point(200, 70);
+  public static Point                    geometryRevisionBox                    = new Point(200, 70);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRevisionInfo           = new Point(600,500);
+  public static Point                    geometryRevisionInfo                   = new Point(600,500);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryView                   = new Point(500,600);
+  public static Point                    geometryView                           = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryNewFile                = new Point(300,200);
+  public static Point                    geometryNewFile                        = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryNewDirectory           = new Point(300,200);
+  public static Point                    geometryNewDirectory                   = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryRenameLocalFile        = new Point(400,200);
+  public static Point                    geometryRenameLocalFile                = new Point(400,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryDeleteLocalFiles       = new Point(300,200);
+  public static Point                    geometryDeleteLocalFiles               = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryFindFiles              = new Point(800,400);
+  public static Point                    geometryFindFiles                      = new Point(800,400);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryFindFilesColumn        = new ColumnSizes(300,300,160,60);
+  public static ColumnSizes              geometryFindFilesColumn                = new ColumnSizes(300,300,160,60);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryConvertWhitespaces     = new Point(700,200);
+  public static Point                    geometryConvertWhitespaces             = new Point(700,200);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryChangedFiles           = new Point(850,500);
+  public static Point                    geometryChangedFiles                   = new Point(850,500);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryChangedFilesColumn     = new ColumnSizes(600,100);
+  public static ColumnSizes              geometryChangedFilesColumn             = new ColumnSizes(600,100);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryAnnotations            = new Point(800,500);
+  public static Point                    geometryAnnotations                    = new Point(800,500);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryAnnotationsColumn      = new ColumnSizes(60,60,80,60,100);
+  public static ColumnSizes              geometryAnnotationsColumn              = new ColumnSizes(60,60,80,60,100);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryPatches                = new Point(800,600);
+  public static Point                    geometryPatches                        = new Point(800,600);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryPatchesColumn          = new ColumnSizes(50,100,100,300);
+  public static ColumnSizes              geometryPatchesColumn                  = new ColumnSizes(50,100,100,300);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryCreatePatch            = new Point(500,600);
+  public static Point                    geometryCreatePatch                    = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryStorePatch             = new Point(500,600);
+  public static Point                    geometryStorePatch                     = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
-  public static Point                    geometryPatchReview            = new Point(500,600);
+  public static Point                    geometryPatchReview                    = new Point(500,600);
 
-  @SettingComment(text={"","Colors: <rgb foreground>:<rgb background> or  <rgb foreground>"})
+  @SettingComment(text={"","Colors: <rgb foreground>:<rgb background> or          <rgb foreground>"})
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorDiffAdded                  = new Color(null,new RGB(128,255,128));
+  public static Color                    colorDiffAdded                         = new Color(null,new RGB(128,255,128));
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorDiffDeleted                = new Color(null,new RGB(128,128,255));
+  public static Color                    colorDiffDeleted                       = new Color(null,new RGB(128,128,255));
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorDiffChanged                = new Color(null,new RGB(255,  0,  0));
+  public static Color                    colorDiffChanged                       = new Color(null,new RGB(255,  0,  0));
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorDiffChangedWhitespaces     = new Color(null,new RGB(255,128,128));
-
-  @SettingComment(text={""})
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusOK                   = new Color(null,new RGB(255,255,255));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusUnknown              = new Color(null,new RGB(196,196,196));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusUpdate               = new Color(null,new RGB(255, 255, 0));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusCheckout             = new Color(null,new RGB(  0,  0,255));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusModified             = new Color(null,new RGB(  0,255,  0));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusMerge                = new Color(null,new RGB(128,128,  0));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusConflict             = new Color(null,new RGB(255,128,128));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusAdded                = new Color(null,new RGB(255,160,160));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusRemoved              = new Color(null,new RGB( 64, 64,128));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusNotExists            = new Color(null,new RGB(192,192,192));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusWaiting              = new Color(null,new RGB(220,220,220));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusError                = new Color(null,new RGB(255,  0,  0));
-  @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorStatusUpdateStatus         = new Color(new RGB(128,128,128),null);
+  public static Color                    colorDiffChangedWhitespaces            = new Color(null,new RGB(255,128,128));
 
   @SettingComment(text={""})
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorInactive                   = new Color(null,new RGB(196,196,196));
+  public static Color                    colorStatusOK                          = new Color(null,new RGB(255,255,255));
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                   colorFindText                   = new Color(new RGB(  0,  0,255),null);
+  public static Color                    colorStatusUnknown                     = new Color(null,new RGB(196,196,196));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusUpdate                      = new Color(null,new RGB(255, 255, 0));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusCheckout                    = new Color(null,new RGB(  0,  0,255));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusModified                    = new Color(null,new RGB(  0,255,  0));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusMerge                       = new Color(null,new RGB(128,128,  0));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusConflict                    = new Color(null,new RGB(255,128,128));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusAdded                       = new Color(null,new RGB(255,160,160));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusRemoved                     = new Color(null,new RGB( 64, 64,128));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusNotExists                   = new Color(null,new RGB(192,192,192));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusWaiting                     = new Color(null,new RGB(220,220,220));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusError                       = new Color(null,new RGB(255,  0,  0));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusUpdateStatus                = new Color(new RGB(128,128,128),null);
+
+  @SettingComment(text={""})
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorInactive                          = new Color(null,new RGB(196,196,196));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorFindText                          = new Color(new RGB(  0,  0,255),null);
 
   @SettingComment(text={"","Fonts: <name>,<height>,normal|bold|italic|bold italic"})
   @SettingValue(type=SettingValueAdapterFontData.class)
-  public static FontData                fontChanges                     = new FontData("Courier",10,SWT.NORMAL);;
+  public static FontData                 fontChanges                            = new FontData("Courier",10,SWT.NORMAL);
   @SettingValue(type=SettingValueAdapterFontData.class)
-  public static FontData                fontDiff                        = new FontData("Courier",10,SWT.NORMAL);;
+  public static FontData                 fontDiff                               = new FontData("Courier",10,SWT.NORMAL);
   @SettingValue(type=SettingValueAdapterFontData.class)
-  public static FontData                fontDiffLine                    = new FontData("Courier",10,SWT.NORMAL);;
+  public static FontData                 fontDiffLine                           = new FontData("Courier",10,SWT.NORMAL);
 
   @SettingComment(text={"","Shown diff types"})
   @SettingValue(type=DiffData.Types.class)
-  public static EnumSet<DiffData.Types> diffShowTypes                   = EnumSet.allOf(DiffData.Types.class);
+  public static EnumSet<DiffData.Types> diffShowTypes                           = EnumSet.allOf(DiffData.Types.class);
 
   @SettingComment(text={"","Shown file states in changed file list"})
   @SettingValue(type=FileData.States.class)
-  public static EnumSet<FileData.States> changedFilesShowStates         = EnumSet.allOf(FileData.States.class);
+  public static EnumSet<FileData.States> changedFilesShowStates                 = EnumSet.allOf(FileData.States.class);
 
   @SettingComment(text={"","Shown patches in patch list"})
   @SettingValue
-  public static boolean                  patchShowAllRepositories       = false;
+  public static boolean                  patchShowAllRepositories               = false;
   @SettingValue(type=Patch.States.class)
-  public static EnumSet<Patch.States>    patchShowStates                = EnumSet.allOf(Patch.States.class);
+  public static EnumSet<Patch.States>    patchShowStates                        = EnumSet.allOf(Patch.States.class);
 
   @SettingComment(text={"","Accelerator keys"})
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyCheckoutRepository          = SWT.NONE;
+  public static int                      keyCheckoutRepository                  = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyOpenRepository              = SWT.CTRL+'O';
+  public static int                      keyOpenRepository                      = SWT.CTRL+'O';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyEditRepositoryList          = SWT.NONE;
+  public static int                      keyEditRepositoryList                  = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyEditRepository              = SWT.NONE;
+  public static int                      keyEditRepository                      = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyCloseRepository             = SWT.CTRL+'W';
+  public static int                      keyCloseRepository                     = SWT.CTRL+'W';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyStatus                      = SWT.F5;
+  public static int                      keyStatus                              = SWT.F5;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyUpdate                      = SWT.CTRL+'U';
+  public static int                      keyUpdate                              = SWT.CTRL+'U';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyUpdateAll                   = SWT.NONE;
+  public static int                      keyUpdateAll                           = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyCommit                      = SWT.CTRL+'X';
+  public static int                      keyCommit                              = SWT.CTRL+'X';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyCreatePatch                 = SWT.CTRL+'P';
+  public static int                      keyCreatePatch                         = SWT.CTRL+'P';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyPatches                     = SWT.CTRL+'E';
+  public static int                      keyPatches                             = SWT.CTRL+'E';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyAdd                         = '+';
+  public static int                      keyAdd                                 = '+';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRemove                      = SWT.NONE;
+  public static int                      keyRemove                              = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRename                      = SWT.NONE;
+  public static int                      keyRename                              = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keySetFileMode                 = SWT.NONE;
+  public static int                      keySetFileMode                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyNewBranch                   = SWT.NONE;
+  public static int                      keyNewBranch                           = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRevert                      = SWT.NONE;
+  public static int                      keyRevert                              = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyApplyPatches                = SWT.NONE;
+  public static int                      keyApplyPatches                        = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyUnapplyPatches              = SWT.NONE;
+  public static int                      keyUnapplyPatches                      = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyIncomingChanges             = SWT.NONE;
+  public static int                      keyIncomingChanges                     = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyOutgoingChanges             = SWT.NONE;
+  public static int                      keyOutgoingChanges                     = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyPullChanges                 = SWT.NONE;
+  public static int                      keyPullChanges                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyPushChanges                 = SWT.NONE;
+  public static int                      keyPushChanges                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyDiff                        = SWT.CTRL+'D';
+  public static int                      keyDiff                                = SWT.CTRL+'D';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRevisionInfo                = SWT.CTRL+'I';
+  public static int                      keyRevisionInfo                        = SWT.CTRL+'I';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRevisions                   = SWT.CTRL+'R';
+  public static int                      keyRevisions                           = SWT.CTRL+'R';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keySolve                       = SWT.NONE;
+  public static int                      keySolve                               = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyChangedFiles                = SWT.CTRL+'L';
+  public static int                      keyChangedFiles                        = SWT.CTRL+'L';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyAnnotations                 = SWT.CTRL+'A';
+  public static int                      keyAnnotations                         = SWT.CTRL+'A';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyReread                      = SWT.F5;
+  public static int                      keyReread                              = SWT.F5;
 
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyOpenFileWith                = SWT.NONE;
+  public static int                      keyOpenFileWith                        = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyNewFile                     = SWT.NONE;
+  public static int                      keyNewFile                             = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyNewDirectory                = SWT.NONE;
+  public static int                      keyNewDirectory                        = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRenameLocal                 = SWT.NONE;
+  public static int                      keyRenameLocal                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyDeleteLocal                 = SWT.NONE;
+  public static int                      keyDeleteLocal                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindFiles                   = SWT.CTRL+'F';
+  public static int                      keyFindFiles                           = SWT.CTRL+'F';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyConvertWhitespaces          = SWT.NONE;
+  public static int                      keyConvertWhitespaces                  = SWT.NONE;
 
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFind                        = SWT.CTRL+'F';
+  public static int                      keyFind                                = SWT.CTRL+'F';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindPrev                    = SWT.CTRL+SWT.SHIFT+'G';
+  public static int                      keyFindPrev                            = SWT.CTRL+SWT.SHIFT+'G';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindNext                    = SWT.CTRL+'G';
+  public static int                      keyFindNext                            = SWT.CTRL+'G';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindNextDiff                = ' ';
+  public static int                      keyFindNextDiff                        = ' ';
 
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyQuit                       = SWT.CTRL+'Q';
+  public static int                      keyQuit                                = SWT.CTRL+'Q';
 
 
 /*
@@ -834,151 +834,159 @@ public class Settings
 
   @SettingComment(text={"","Editors: <mime type>:<command>","Macros %file%:","  file - file name"})
   @SettingValue(type=SettingValueAdapterEditor.class)
-  public static Editor[]         editors                                = new Editor[0];
+  public static Editor[]         editors                                        = new Editor[0];
 
   @SettingComment(text={"","Shell: <name>:<command>","Macros %file%:","  file - file name"})
   @SettingValue(type=SettingValueAdapterShellCommand.class)
-  public static ShellCommand[]   shellCommands                          = new ShellCommand[0];
+  public static ShellCommand[]   shellCommands                                  = new ShellCommand[0];
 
   @SettingComment(text={"","Default mail settings"})
   @SettingValue
-  public static String           mailSMTPHost                           = "";
+  public static String                   mailSMTPHost                           = "";
   @SettingValue
-  public static int              mailSMTPPort                           = 25;
+  public static int                      mailSMTPPort                           = 25;
   @SettingValue
-  public static boolean          mailSMTPSSL                            = false;
+  public static boolean                  mailSMTPSSL                            = false;
   @SettingValue
-  public static String           mailLogin                              = "";
+  public static String                   mailLogin                              = "";
   @SettingValue
-  public static String           mailFrom                               = "";
+  public static String                   mailFrom                               = "";
 
   @SettingComment(text={"","Mail commands","Macros ${<name> [<format>]}:","  to - to mail address","  cc - CC mail address","  subject - subject text","  file - attachment file name"})
   @SettingValue
-  public static String           commandMail                            = "mail -s '${subject}' ${to} ${cc}";
+  public static String                   commandMail                            = "mail -s '${subject}' ${to} ${cc}";
   @SettingValue
-  public static String           commandMailAttachment                  = "mail -s '${subject}' -a ${file} ${to} ${cc}";
+  public static String                   commandMailAttachment                  = "mail -s '${subject}' -a ${file} ${to} ${cc}";
 
   @SettingComment(text={"","Default review server settings"})
   @SettingValue
-  public static String           reviewServerHost                       = "";
+  public static String                   reviewServerHost                       = "";
   @SettingValue
-  public static String           reviewServerLogin                      = "";
+  public static String                   reviewServerLogin                      = "";
   @SettingValue
-  public static String           reviewServerPassword                   = "";
+  public static String                   reviewServerPassword                   = "";
 
   @SettingComment(text={"","Review commands","Macros ${<name> [<format>]}:","  server - server name","  login - user login name","  password - user login password","  repository - repository id","  reference - review reference id","  summary - summary text","  description - description text","  tests - tests","  file - diff file name"})
   @SettingValue
-  public static String           commandPostReviewServer                = "post-review --server=${server} --username=${login} --password=${password} --repoid=${repository} --publish --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
+  public static String                   commandPostReviewServer                = "post-review --server=${server} --username=${login} --password=${password} --repoid=${repository} --publish --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
   @SettingValue
-  public static String           commandUpdateReviewServer              = "post-review --server=${server} --username=${login} --password=${password} --repoid=${repository} --publish --review-request-id ${reference} --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
+  public static String                   commandUpdateReviewServer              = "post-review --server=${server} --username=${login} --password=${password} --repoid=${repository} --publish --review-request-id ${reference} --summary='${summary}' --description='${description}' --testing-done='${tests}' --diff-filename=${file}";
 
   // general flags
   @SettingComment(text={"","Flags"})
   @SettingValue
-  public static boolean          immediateCommit                        = true;
+  public static boolean                  immediateCommit                        = true;
 
   // CVS
   @SettingComment(text={"","CVS specific settings"})
   @SettingValue
-  public static String           cvsCommand                             = "cvs";
+  public static String                   cvsCommand                             = "cvs";
   @SettingValue
-  public static boolean          cvsPruneEmtpyDirectories               = false;
+  public static boolean                  cvsPruneEmtpyDirectories               = false;
 
   // SVN
   @SettingComment(text={"","SVN specific settings"})
   @SettingValue
-  public static String           svnCommand                             = "svn";
+  public static String                   svnCommand                             = "svn";
   @SettingValue
-  public static String           svnDiffCommand                         = "";
+  public static String                   svnDiffCommand                         = "";
   @SettingValue
-  public static String           svnDiffCommandOptions                  = "-ur";
+  public static String                   svnDiffCommandOptions                  = "-ur";
   @SettingValue
-  public static String           svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdur";
+  public static String                   svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdur";
 
   // HG
   @SettingComment(text={"","HG specific settings"})
   @SettingValue
-  public static String           hgCommand                              = "hg";
+  public static String                   hgCommand                              = "hg";
   @SettingValue
-  public static String           hgDiffCommand                          = "";
+  public static String                   hgDiffCommand                          = "";
   @SettingValue
-  public static String           hgDiffCommandOptions                   = "-ur";
+  public static String                   hgDiffCommandOptions                   = "-ur";
   @SettingValue
-  public static String           hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdur";
+  public static String                   hgDiffCommandOptionsIgnoreWhitespaces  = "-wbBEdur";
   @SettingValue
-  public static boolean          hgImmediatePush                        = false;
+  public static boolean                  hgImmediatePush                        = false;
   @SettingValue
-  public static boolean          hgUseForestExtension                   = false;
+  public static boolean                  hgUseForestExtension                   = false;
   @SettingValue
-  public static boolean          hgUpdateWithFetch                      = false;
+  public static boolean                  hgUpdateWithFetch                      = false;
   @SettingValue
-  public static boolean          hgSafeUpdate                           = false;
+  public static boolean                  hgSafeUpdate                           = false;
   @SettingValue
-  public static boolean          hgSingleLineCommitMessages             = false;
+  public static boolean                  hgSingleLineCommitMessages             = false;
   @SettingValue
-  public static int              hgSingleLineMaxCommitMessageLength     = 80;
+  public static int                      hgSingleLineMaxCommitMessageLength     = 80;
   @SettingValue
-  public static boolean          hgRelativePatchPaths                   = false;
+  public static boolean                  hgRelativePatchPaths                   = false;
 
   // Git
   @SettingComment(text={"","Git specific settings"})
   @SettingValue
-  public static String           gitCommand                             = "git";
+  public static String                   gitCommand                             = "git";
 
   // miscelanous
   @SettingComment(text={"","temporary directory"})
   @SettingValue
-  public static String                   tmpDirectory                   = "/tmp";
+  public static String                   tmpDirectory                           = "/tmp";
 
   @SettingComment(text={"","date/time formats"})
   @SettingValue
-  public static String                   dateFormat                     = "yyyy-MM-dd";
+  public static String                   dateFormat                             = "yyyy-MM-dd";
   @SettingValue
-  public static String                   timeFormat                     = "HH:mm:ss";
+  public static String                   timeFormat                             = "HH:mm:ss";
   @SettingValue
-  public static String                   dateTimeFormat                 = "yyyy-MM-dd HH:mm:ss";
+  public static String                   dateTimeFormat                         = "yyyy-MM-dd HH:mm:ss";
 
   @SettingComment(text={"","max. number of concurrent background tasks"})
   @SettingValue
-  public static int                      maxBackgroundTasks             = 8;
+  public static int                      maxBackgroundTasks                     = 8;
 
   @SettingComment(text={"","max. lenght of commit message history"})
   @SettingValue
-  public static int                      maxMessageHistory              = 50;
+  public static int                      maxMessageHistory                      = 50;
+
+  @SettingComment(text={"","checkout repository path history"})
+  @SettingValue
+  public static String[]                 checkoutHistoryPaths                   = new String[]
+                                                                                  {
+                                                                                    "http://svn.berlios.de/svnroot/repos/onzen/trunk",
+                                                                                    "http://svn.berlios.de/svnroot/repos/bar/trunk"
+                                                                                  };
 
   @SettingComment(text={"","UDP commit message broadcasting"})
   @SettingValue
-  public static String                   messageBroadcastAddress        = "230.0.95.83";
+  public static String                   messageBroadcastAddress                = "230.0.95.83";
   @SettingValue
-  public static int                      messageBroadcastPort           = 9583;
+  public static int                      messageBroadcastPort                   = 9583;
 
   @SettingComment(text={"","miscellaneous flags"})
   @SettingValue
-  public static boolean                  checkTABs                      = true;
-  public static boolean                  checkTrailingWhitespaces       = true;
+  public static boolean                  checkTABs                              = true;
+  public static boolean                  checkTrailingWhitespaces               = true;
 
   @SettingComment(text={"","Files without whitespace checks: <pattern>"})
   @SettingValue(name="skipWhitespaceCheckFilePattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            skipWhitespaceCheckFilePatterns = new FilePattern[]{new FilePattern("Makefile"),new FilePattern("Makefile.in")};
+  public static FilePattern[]            skipWhitespaceCheckFilePatterns        = new FilePattern[]{new FilePattern("Makefile"),new FilePattern("Makefile.in")};
 
   @SettingComment(text={"","Hidden files in file tree: <pattern>"})
   @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenFilePatterns             = new FilePattern[]{new FilePattern(".*")};
+  public static FilePattern[]            hiddenFilePatterns                     = new FilePattern[]{new FilePattern(".*")};
   @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
   @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenDirectoryPatterns        = new FilePattern[]
-                                                                          {
-                                                                            new FilePattern("CVS"),
-                                                                            new FilePattern(".svn"),
-                                                                            new FilePattern(".hg"),
-                                                                            new FilePattern(".git")
-                                                                          };
+  public static FilePattern[]            hiddenDirectoryPatterns                = new FilePattern[]
+                                                                                  {
+                                                                                    new FilePattern("CVS"),
+                                                                                    new FilePattern(".svn"),
+                                                                                    new FilePattern(".hg"),
+                                                                                    new FilePattern(".git")
+                                                                                  };
 
   // debug
-  public static boolean          debugFlag                              = false;
+  public static boolean          debugFlag                                      = false;
 
   // help
-  public static boolean          helpFlag                               = false;
+  public static boolean          helpFlag                                       = false;
 
 
   // ------------------------ native functions ----------------------------
