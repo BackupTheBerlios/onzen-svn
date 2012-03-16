@@ -43,6 +43,8 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TreeEvent;
+import org.eclipse.swt.events.TreeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
@@ -756,31 +758,34 @@ Dprintf.dprintf("");
    */
   public void updateShellCommands()
   {
-    // remove old entries in shell command menu
-    MenuItem[] menuItems = menuShellCommands.getItems();
-    for (MenuItem menuItem : menuShellCommands.getItems())
+    if (!menuShellCommands.isDisposed())
     {
-      menuItem.dispose();
-    }
-
-    // add new shell commands to menu
-    for (Settings.ShellCommand shellCommand : Settings.shellCommands)
-    {
-      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
-      menuItem.setData(shellCommand);
-      menuItem.addSelectionListener(new SelectionListener()
+      // remove old entries in shell command menu
+      MenuItem[] menuItems = menuShellCommands.getItems();
+      for (MenuItem menuItem : menuShellCommands.getItems())
       {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          MenuItem              widget       = (MenuItem)selectionEvent.widget;
-          Settings.ShellCommand shellCommand = (Settings.ShellCommand)widget.getData();
+        menuItem.dispose();
+      }
 
-          executeShellCommand(shellCommand);
-        }
-      });
+      // add new shell commands to menu
+      for (Settings.ShellCommand shellCommand : Settings.shellCommands)
+      {
+        MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
+        menuItem.setData(shellCommand);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            MenuItem              widget       = (MenuItem)selectionEvent.widget;
+            Settings.ShellCommand shellCommand = (Settings.ShellCommand)widget.getData();
+
+            executeShellCommand(shellCommand);
+          }
+        });
+      }
     }
   }
 
@@ -2752,11 +2757,16 @@ Dprintf.dprintf("");
     TreeItem rootTreeItem = Widgets.addTreeItem(widgetFileTree,rootFileData,true);
     rootTreeItem.setText("/");
     rootTreeItem.setImage(Onzen.IMAGE_DIRECTORY);
-    widgetFileTree.addListener(SWT.Expand,new Listener()
+    widgetFileTree.addTreeListener(new TreeListener()
     {
-      public void handleEvent(Event event)
+      public void treeCollapsed(TreeEvent treeEvent)
       {
-        TreeItem treeItem = (TreeItem)event.item;
+        TreeItem treeItem = (TreeItem)treeEvent.item;
+        closeFileTreeItem(treeItem);
+      }
+      public void treeExpanded(TreeEvent treeEvent)
+      {
+        TreeItem treeItem = (TreeItem)treeEvent.item;
         FileData fileData = (FileData)treeItem.getData();
         if (fileData.type == FileData.Types.DIRECTORY)
         {
@@ -2764,19 +2774,10 @@ Dprintf.dprintf("");
         }
       }
     });
-    widgetFileTree.addListener(SWT.Collapse,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-        TreeItem treeItem = (TreeItem)event.item;
-        closeFileTreeItem(treeItem);
-      }
-    });
     widgetFileTree.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
-//Dprintf.dprintf("mouseEvent=%s",mouseEvent);
         TreeItem treeItem = widgetFileTree.getItem(new Point(mouseEvent.x,mouseEvent.y));
         if (treeItem != null)
         {
@@ -2784,15 +2785,21 @@ Dprintf.dprintf("");
           switch (fileData.type)
           {
             case DIRECTORY:
-              Event treeEvent = new Event();
-              treeEvent.item = treeItem;
-              if (treeItem.getExpanded())
+              /* On Linux a double-click does not open directory by default. Send a
+                 event to initiate this behavior on Linux.
+              */
+              if (System.getProperty("os.name").toLowerCase().matches("linux"))
               {
-                widgetFileTree.notifyListeners(SWT.Collapse,treeEvent);
-              }
-              else
-              {
-                widgetFileTree.notifyListeners(SWT.Expand,treeEvent);
+                Event treeEvent = new Event();
+                treeEvent.item = treeItem;
+                if (treeItem.getExpanded())
+                {
+                  widgetFileTree.notifyListeners(SWT.Collapse,treeEvent);
+                }
+                else
+                {
+                  widgetFileTree.notifyListeners(SWT.Expand,treeEvent);
+                }
               }
               break;
             case FILE:
