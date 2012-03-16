@@ -249,7 +249,7 @@ class CommandChanges
       {
       }
 
-      public void focusLost(FocusEvent focusEvent) 
+      public void focusLost(FocusEvent focusEvent)
       {
         closeChangesTooltip();
       }
