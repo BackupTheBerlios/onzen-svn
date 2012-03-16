@@ -25,6 +25,8 @@
   * Ctlr-C in tree list copy file naem to clipboard
   * implemented checkout
   * implemented create new repository
+  * add dialog to show outgoing changes (hg)
+  * update SWT to 3.7.2
 
 2011-09-06 0.02
   * support sending mails with JavaMail
