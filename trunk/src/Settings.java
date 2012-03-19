@@ -927,6 +927,29 @@ public class Settings
   @SettingValue
   public static String                   gitCommand                             = "git";
 
+  // files
+  @SettingComment(text={"","whitespace flags"})
+  @SettingValue
+  public static boolean                  checkTABs                              = true;
+  public static boolean                  checkTrailingWhitespaces               = true;
+
+  @SettingComment(text={"","Files without whitespace checks: <pattern>"})
+  @SettingValue(name="skipWhitespaceCheckFilePattern", type=SettingValueAdapterFilePattern.class)
+  public static FilePattern[]            skipWhitespaceCheckFilePatterns        = new FilePattern[]{new FilePattern("Makefile"),new FilePattern("Makefile.in")};
+
+  @SettingComment(text={"","Hidden files in file tree: <pattern>"})
+  @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
+  public static FilePattern[]            hiddenFilePatterns                     = new FilePattern[]{new FilePattern(".*")};
+  @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
+  @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
+  public static FilePattern[]            hiddenDirectoryPatterns                = new FilePattern[]
+                                                                                  {
+                                                                                    new FilePattern("CVS"),
+                                                                                    new FilePattern(".svn"),
+                                                                                    new FilePattern(".hg"),
+                                                                                    new FilePattern(".git")
+                                                                                  };
+
   // miscelanous
   @SettingComment(text={"","temporary directory"})
   @SettingValue
@@ -962,26 +985,11 @@ public class Settings
   @SettingValue
   public static int                      messageBroadcastPort                   = 9583;
 
-  @SettingComment(text={"","miscellaneous flags"})
+  @SettingComment(text={"","auto-summary patterns"})
   @SettingValue
-  public static boolean                  checkTABs                              = true;
-  public static boolean                  checkTrailingWhitespaces               = true;
-
-  @SettingComment(text={"","Files without whitespace checks: <pattern>"})
-  @SettingValue(name="skipWhitespaceCheckFilePattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            skipWhitespaceCheckFilePatterns        = new FilePattern[]{new FilePattern("Makefile"),new FilePattern("Makefile.in")};
-
-  @SettingComment(text={"","Hidden files in file tree: <pattern>"})
-  @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenFilePatterns                     = new FilePattern[]{new FilePattern(".*")};
-  @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
-  @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenDirectoryPatterns                = new FilePattern[]
+  public static String[]                 autoSummaryPatterns                    = new String[]
                                                                                   {
-                                                                                    new FilePattern("CVS"),
-                                                                                    new FilePattern(".svn"),
-                                                                                    new FilePattern(".hg"),
-                                                                                    new FilePattern(".git")
+                                                                                    "^-\\s*(.*?)\\s*:.*$"
                                                                                   };
 
   // debug

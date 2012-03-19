@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 // graphics
 import org.eclipse.swt.events.KeyEvent;
@@ -125,19 +127,21 @@ class Preferences
 
   private final Text          widgetGitCommand;
 
+  private final Button        widgetCheckTABs;
+  private final Button        widgetCheckTrailingWhitespaces;
+  private final List          widgetSkipWhitespaceCheckFilePatterns;
+  private final List          widgetHiddenFilePatterns;
+  private final List          widgetHiddenDirectoryPatterns;
+
   private final Text          widgetTmpDirectory;
   private final Text          widgetDateFormat;
   private final Text          widgetTimeFormat;
   private final Text          widgetDateTimeFormat;
   private final Spinner       widgetMaxBackgroundTasks;
   private final Spinner       widgetMaxMessageHistory;
-  private final Button        widgetCheckTABs;
-  private final Button        widgetCheckTrailingWhitespaces;
   private final Text          widgetMessageBroadcastAddress;
   private final Spinner       widgetMessageBroadcastPort;
-  private final List          widgetSkipWhitespaceCheckFilePatterns;
-  private final List          widgetHiddenFilePatterns;
-  private final List          widgetHiddenDirectoryPatterns;
+  private final List          widgetAutoSummaryPatterns;
 
   private final Button        widgetButtonSave;
 
@@ -922,9 +926,247 @@ class Preferences
         }
       }
 
-      composite = Widgets.addTab(tabFolder,"Misc");
-      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,1.0},new double[]{0.0,1.0},2));
+      composite = Widgets.addTab(tabFolder,"Files");
+      composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0,1.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,5,TableLayoutData.NSWE);
+      {
+        label = Widgets.newLabel(composite,"Whitespaces:");
+        Widgets.layout(label,0,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,1.0));
+        Widgets.layout(subComposite,0,1,TableLayoutData.WE);
+        {
+          widgetCheckTABs = Widgets.newCheckbox(subComposite,"auto TABs check");
+          widgetCheckTABs.setSelection(Settings.checkTABs);
+          Widgets.layout(widgetCheckTABs,0,0,TableLayoutData.W);
+          widgetCheckTABs.setToolTipText("Check if file contain TABs before file is added or a commit is done.");
+
+          widgetCheckTrailingWhitespaces = Widgets.newCheckbox(subComposite,"auto whitespaces check");
+          widgetCheckTrailingWhitespaces.setSelection(Settings.checkTrailingWhitespaces);
+          Widgets.layout(widgetCheckTrailingWhitespaces,1,0,TableLayoutData.W);
+          widgetCheckTrailingWhitespaces.setToolTipText("Check if a file contain trailing whitespaces before file is added or a commit is done.");
+        }
+
+        label = Widgets.newLabel(composite,"Skip whitespace-check files:");
+        Widgets.layout(label,1,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+        {
+          widgetSkipWhitespaceCheckFilePatterns = Widgets.newList(subComposite);
+          Widgets.layout(widgetSkipWhitespaceCheckFilePatterns,0,0,TableLayoutData.NSWE);
+          widgetSkipWhitespaceCheckFilePatterns.setToolTipText("Patterns for files where whitespace-check should be skipped.");
+          widgetSkipWhitespaceCheckFilePatterns.addMouseListener(new MouseListener()
+          {
+            public void mouseDoubleClick(MouseEvent mouseEvent)
+            {
+              Table widget = (Table)mouseEvent.widget;
+
+              int index = widget.getSelectionIndex();
+              if (index >= 0)
+              {
+  Dprintf.dprintf("");
+              }
+            }
+            public void mouseDown(MouseEvent mouseEvent)
+            {
+            }
+            public void mouseUp(MouseEvent mouseEvent)
+            {
+            }
+          });
+          for (Settings.FilePattern filePattern : Settings.skipWhitespaceCheckFilePatterns)
+          {
+            widgetSkipWhitespaceCheckFilePatterns.add(filePattern.string);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
+          {
+            button = Widgets.newButton(subSubComposite,"Add");
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
+                if (string != null)
+                {
+                  widgetSkipWhitespaceCheckFilePatterns.add(string);
+                }
+              }
+            });
+            button = Widgets.newButton(subSubComposite,"Remove");
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetSkipWhitespaceCheckFilePatterns.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetSkipWhitespaceCheckFilePatterns.remove(index);
+                }
+              }
+            });
+          }
+        }
+
+        label = Widgets.newLabel(composite,"Hidden files:");
+        Widgets.layout(label,2,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subComposite,2,1,TableLayoutData.NSWE);
+        {
+          widgetHiddenFilePatterns = Widgets.newList(subComposite);
+          Widgets.layout(widgetHiddenFilePatterns,0,0,TableLayoutData.NSWE);
+          widgetHiddenFilePatterns.setToolTipText("Patterns for hidden files in tree view.");
+          widgetHiddenFilePatterns.addMouseListener(new MouseListener()
+          {
+            public void mouseDoubleClick(MouseEvent mouseEvent)
+            {
+              Table widget = (Table)mouseEvent.widget;
+
+              int index = widget.getSelectionIndex();
+              if (index >= 0)
+              {
+  Dprintf.dprintf("");
+              }
+            }
+            public void mouseDown(MouseEvent mouseEvent)
+            {
+            }
+            public void mouseUp(MouseEvent mouseEvent)
+            {
+            }
+          });
+          for (Settings.FilePattern filePattern : Settings.hiddenFilePatterns)
+          {
+            widgetHiddenFilePatterns.add(filePattern.string);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
+          {
+            button = Widgets.newButton(subSubComposite,"Add");
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
+                if (string != null)
+                {
+                  widgetHiddenFilePatterns.add(string);
+                }
+              }
+            });
+            button = Widgets.newButton(subSubComposite,"Remove");
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetHiddenFilePatterns.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetHiddenFilePatterns.remove(index);
+                }
+              }
+            });
+          }
+        }
+
+        label = Widgets.newLabel(composite,"Hidden directories:");
+        Widgets.layout(label,3,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subComposite,3,1,TableLayoutData.NSWE);
+        {
+          widgetHiddenDirectoryPatterns = Widgets.newList(subComposite);
+          Widgets.layout(widgetHiddenDirectoryPatterns,0,0,TableLayoutData.NSWE);
+          widgetHiddenDirectoryPatterns.setToolTipText("Patterns for hidden directories in tree view.");
+          widgetHiddenDirectoryPatterns.addMouseListener(new MouseListener()
+          {
+            public void mouseDoubleClick(MouseEvent mouseEvent)
+            {
+              Table widget = (Table)mouseEvent.widget;
+
+              int index = widget.getSelectionIndex();
+              if (index >= 0)
+              {
+Dprintf.dprintf("");
+              }
+            }
+            public void mouseDown(MouseEvent mouseEvent)
+            {
+            }
+            public void mouseUp(MouseEvent mouseEvent)
+            {
+            }
+          });
+          for (Settings.FilePattern filePattern : Settings.hiddenDirectoryPatterns)
+          {
+            widgetHiddenDirectoryPatterns.add(filePattern.string);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
+          {
+            button = Widgets.newButton(subSubComposite,"Add");
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String string = Dialogs.string(dialog,"Add directory pattern","Pattern:","","Add","Cancel");
+                if (string != null)
+                {
+                  widgetHiddenDirectoryPatterns.add(string);
+                }
+              }
+            });
+            button = Widgets.newButton(subSubComposite,"Remove");
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetHiddenDirectoryPatterns.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetHiddenDirectoryPatterns.remove(index);
+                }
+              }
+            });
+          }
+        }
+      }
+
+      composite = Widgets.addTab(tabFolder,"Misc");
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
+      Widgets.layout(composite,0,6,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
         Widgets.layout(label,0,0,TableLayoutData.W);
@@ -1013,33 +1255,16 @@ class Preferences
           widgetMessageBroadcastPort.setToolTipText("Commit message broadcast port number.");
         }
 
-        label = Widgets.newLabel(composite,"Miscellaneous:");
+        label = Widgets.newLabel(composite,"Auto-summary patterns:");
         Widgets.layout(label,7,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(null,1.0));
-        Widgets.layout(subComposite,7,1,TableLayoutData.WE);
-        {
-          widgetCheckTABs = Widgets.newCheckbox(subComposite,"auto TABs check");
-          widgetCheckTABs.setSelection(Settings.checkTABs);
-          Widgets.layout(widgetCheckTABs,0,0,TableLayoutData.W);
-          widgetCheckTABs.setToolTipText("Check if file contain TABs before file is added or a commit is done.");
-
-          widgetCheckTrailingWhitespaces = Widgets.newCheckbox(subComposite,"auto whitespaces check");
-          widgetCheckTrailingWhitespaces.setSelection(Settings.checkTrailingWhitespaces);
-          Widgets.layout(widgetCheckTrailingWhitespaces,1,0,TableLayoutData.W);
-          widgetCheckTrailingWhitespaces.setToolTipText("Check if a file contain trailing whitespaces before file is added or a commit is done.");
-        }
-
-        label = Widgets.newLabel(composite,"Skip whitespace-check files:");
-        Widgets.layout(label,8,0,TableLayoutData.NW);
-        subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,8,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,7,1,TableLayoutData.NSWE);
         {
-          widgetSkipWhitespaceCheckFilePatterns = Widgets.newList(subComposite);
-          Widgets.layout(widgetSkipWhitespaceCheckFilePatterns,0,0,TableLayoutData.NSWE);
-          widgetSkipWhitespaceCheckFilePatterns.setToolTipText("Patterns for files where whitespace-check should be skipped.");
-          widgetSkipWhitespaceCheckFilePatterns.addMouseListener(new MouseListener()
+          widgetAutoSummaryPatterns = Widgets.newList(subComposite);
+          Widgets.layout(widgetAutoSummaryPatterns,0,0,TableLayoutData.NSWE);
+          widgetAutoSummaryPatterns.setToolTipText("Patterns for creating summary message line.");
+          widgetAutoSummaryPatterns.addMouseListener(new MouseListener()
           {
             public void mouseDoubleClick(MouseEvent mouseEvent)
             {
@@ -1048,7 +1273,7 @@ class Preferences
               int index = widget.getSelectionIndex();
               if (index >= 0)
               {
-  Dprintf.dprintf("");
+Dprintf.dprintf("");
               }
             }
             public void mouseDown(MouseEvent mouseEvent)
@@ -1058,9 +1283,9 @@ class Preferences
             {
             }
           });
-          for (Settings.FilePattern filePattern : Settings.skipWhitespaceCheckFilePatterns)
+          for (String pattern : Settings.autoSummaryPatterns)
           {
-            widgetSkipWhitespaceCheckFilePatterns.add(filePattern.string);
+            widgetAutoSummaryPatterns.add(pattern);
           }
 
           subSubComposite = Widgets.newComposite(subComposite);
@@ -1076,10 +1301,36 @@ class Preferences
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
+                String  string    = "(.*)";
+                boolean retryFlag = false;
+                do
+                {
+                  string = Dialogs.string(dialog,"Add auto-summary pattern","Pattern:",string,"Add","Cancel");
+                  if (string != null)
+                  {
+                    retryFlag = false;
+                    try
+                    {
+                      Pattern.compile(string);
+                    }
+                    catch (PatternSyntaxException exception)
+                    {
+                      if (Dialogs.confirm(dialog,"Confirm","Invalid pattern: '"+string+"' - re-edit?"))
+                      {
+                        retryFlag = true;
+                      }
+                      else
+                      {
+                        string = null;
+                      }
+                    }
+                  }
+                }
+                while (retryFlag);
+
                 if (string != null)
                 {
-                  widgetSkipWhitespaceCheckFilePatterns.add(string);
+                  widgetAutoSummaryPatterns.add(string);
                 }
               }
             });
@@ -1092,154 +1343,10 @@ class Preferences
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                int index = widgetSkipWhitespaceCheckFilePatterns.getSelectionIndex();
+                int index = widgetAutoSummaryPatterns.getSelectionIndex();
                 if (index >= 0)
                 {
-                  widgetSkipWhitespaceCheckFilePatterns.remove(index);
-                }
-              }
-            });
-          }
-        }
-
-        label = Widgets.newLabel(composite,"Hidden files:");
-        Widgets.layout(label,9,0,TableLayoutData.NW);
-        subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,9,1,TableLayoutData.NSWE);
-        {
-          widgetHiddenFilePatterns = Widgets.newList(subComposite);
-          Widgets.layout(widgetHiddenFilePatterns,0,0,TableLayoutData.NSWE);
-          widgetHiddenFilePatterns.setToolTipText("Patterns for hidden files in tree view.");
-          widgetHiddenFilePatterns.addMouseListener(new MouseListener()
-          {
-            public void mouseDoubleClick(MouseEvent mouseEvent)
-            {
-              Table widget = (Table)mouseEvent.widget;
-
-              int index = widget.getSelectionIndex();
-              if (index >= 0)
-              {
-  Dprintf.dprintf("");
-              }
-            }
-            public void mouseDown(MouseEvent mouseEvent)
-            {
-            }
-            public void mouseUp(MouseEvent mouseEvent)
-            {
-            }
-          });
-          for (Settings.FilePattern filePattern : Settings.hiddenFilePatterns)
-          {
-            widgetHiddenFilePatterns.add(filePattern.string);
-          }
-
-          subSubComposite = Widgets.newComposite(subComposite);
-          subSubComposite.setLayout(new TableLayout(null,null));
-          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
-          {
-            button = Widgets.newButton(subSubComposite,"Add");
-            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
-                if (string != null)
-                {
-                  widgetHiddenFilePatterns.add(string);
-                }
-              }
-            });
-            button = Widgets.newButton(subSubComposite,"Remove");
-            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetHiddenFilePatterns.getSelectionIndex();
-                if (index >= 0)
-                {
-                  widgetHiddenFilePatterns.remove(index);
-                }
-              }
-            });
-          }
-        }
-
-        label = Widgets.newLabel(composite,"Hidden directories:");
-        Widgets.layout(label,10,0,TableLayoutData.NW);
-        subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,10,1,TableLayoutData.NSWE);
-        {
-          widgetHiddenDirectoryPatterns = Widgets.newList(subComposite);
-          Widgets.layout(widgetHiddenDirectoryPatterns,0,0,TableLayoutData.NSWE);
-          widgetHiddenDirectoryPatterns.setToolTipText("Patterns for hidden directories in tree view.");
-          widgetHiddenDirectoryPatterns.addMouseListener(new MouseListener()
-          {
-            public void mouseDoubleClick(MouseEvent mouseEvent)
-            {
-              Table widget = (Table)mouseEvent.widget;
-
-              int index = widget.getSelectionIndex();
-              if (index >= 0)
-              {
-  Dprintf.dprintf("");
-              }
-            }
-            public void mouseDown(MouseEvent mouseEvent)
-            {
-            }
-            public void mouseUp(MouseEvent mouseEvent)
-            {
-            }
-          });
-          for (Settings.FilePattern filePattern : Settings.hiddenDirectoryPatterns)
-          {
-            widgetHiddenDirectoryPatterns.add(filePattern.string);
-          }
-
-          subSubComposite = Widgets.newComposite(subComposite);
-          subSubComposite.setLayout(new TableLayout(null,null));
-          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
-          {
-            button = Widgets.newButton(subSubComposite,"Add");
-            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                String string = Dialogs.string(dialog,"Add directory pattern","Pattern:","","Add","Cancel");
-                if (string != null)
-                {
-                  widgetHiddenDirectoryPatterns.add(string);
-                }
-              }
-            });
-            button = Widgets.newButton(subSubComposite,"Remove");
-            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            button.addSelectionListener(new SelectionListener()
-            {
-              public void widgetDefaultSelected(SelectionEvent selectionEvent)
-              {
-              }
-              public void widgetSelected(SelectionEvent selectionEvent)
-              {
-                int index = widgetHiddenDirectoryPatterns.getSelectionIndex();
-                if (index >= 0)
-                {
-                  widgetHiddenDirectoryPatterns.remove(index);
+                  widgetAutoSummaryPatterns.remove(index);
                 }
               }
             });
@@ -1322,6 +1429,7 @@ class Preferences
           Settings.skipWhitespaceCheckFilePatterns        = getSkipWhitespaceCheckFilePatterns();
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
+          Settings.autoSummaryPatterns                    = getAutoSummaryPatterns();
 
           Dialogs.close(dialog,true);
         }
@@ -1763,6 +1871,20 @@ class Preferences
     }
 
     return filePatterns;
+  }
+
+  /** get auto-summary pattern array from widget
+   * @return auto-summary pattern array
+   */
+  private String[] getAutoSummaryPatterns()
+  {
+    String[] autoSummaryPatterns = new String[widgetAutoSummaryPatterns.getItemCount()];
+    for (int z = 0; z < widgetAutoSummaryPatterns.getItemCount(); z++)
+    {
+      autoSummaryPatterns[z] = widgetAutoSummaryPatterns.getItem(z);
+    }
+
+    return autoSummaryPatterns;
   }
 
   /** get editors array from widget
