@@ -776,7 +776,7 @@ Dprintf.dprintf("");
   {
     if (!widgetText.isDisposed())
     {
-      String findText = widgetFind.getText();
+      String findText = widgetFind.getText().toLowerCase();;
       if (!findText.isEmpty())
       {
         // get cursor position, text before cursor
