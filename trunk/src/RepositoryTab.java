@@ -14,6 +14,8 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -233,8 +235,11 @@ class RepositoryTab
   // map file name -> tree item
   private WeakHashMap<String,TreeItem> fileNameMap = new WeakHashMap<String,TreeItem>();
 
+  // last copy destination directory
+  private static String       lastDirectory = "";
+
   // last convert whitespaces dialog location
-  private static Point convertWhiteDialogLocation = new Point(SWT.DEFAULT,SWT.DEFAULT);
+  private static Point        convertWhiteDialogLocation = new Point(SWT.DEFAULT,SWT.DEFAULT);
 
   // ------------------------ native functions ----------------------------
 
@@ -329,6 +334,17 @@ class RepositoryTab
       menu = Widgets.newPopupMenu(shell);
       {
         menuShellCommands = Widgets.addMenu(menu,"Shell");
+        menuItem = Widgets.addMenuItem(menu,"Copy to...",Settings.keyCopyFilesTo);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            copyFilesTo();
+          }
+        });
 
         menuItem = Widgets.addMenuSeparator(menu);
 
@@ -828,6 +844,46 @@ Dprintf.dprintf("");
 
     // start update file data
     asyncUpdateFileStates(fileDataSet);
+  }
+
+  /** copy selected entries to directory
+   */
+  public void copyFilesTo()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+
+    String directory = Dialogs.directory(shell,"Select destination directory",lastDirectory);
+    if (directory != null)
+    {
+      setStatusText("Copy files...");
+      try
+      {
+        for (FileData fileData : fileDataSet)
+        {
+          try
+          {
+            File fromFile = new File(fileData.getFileName(repository));
+            File toFile   = new File(directory,fileData.getBaseName());
+
+            if (fromFile.isFile())
+            {
+              copyFile(fromFile,toFile);
+            }
+          }
+          catch (IOException exception)
+          {
+            Dialogs.error(shell,"Copy file '"+fileData.getBaseName()+"' fail (error: %s)",exception.getMessage());
+            return;
+          }
+        }
+      }
+      finally
+      {
+        clearStatusText();
+      }
+
+      lastDirectory = directory;
+    }
   }
 
   /** update all open or selected entries
@@ -3413,6 +3469,30 @@ Dprintf.dprintf("");
         updateFileStates(fileData,fileData.getFileName(repository.rootPath));
       }
     });
+  }
+
+  /** copy file
+   * @param fromFile - from file
+   * @param toFile   - to file
+   */
+  private void copyFile(File fromFile, File toFile)
+    throws IOException
+  {
+    FileInputStream  input  = new FileInputStream(fromFile);
+    FileOutputStream output = new FileOutputStream(toFile);
+    byte[]           buffer = new byte[64*1024];
+
+    int n;
+    while ((n = input.read(buffer)) > 0)
+    {
+      output.write(buffer,0,n);
+    }
+
+    toFile.setExecutable(fromFile.canExecute());
+    toFile.setWritable(fromFile.canWrite());
+
+    output.close();
+    input.close();
   }
 
   /** delete directory tree

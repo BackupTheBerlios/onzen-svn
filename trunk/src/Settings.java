@@ -789,6 +789,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindFiles                           = SWT.CTRL+'F';
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyCopyFilesTo                         = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyConvertWhitespaces                  = SWT.NONE;
 
   @SettingValue(type=SettingValueAdapterKey.class)

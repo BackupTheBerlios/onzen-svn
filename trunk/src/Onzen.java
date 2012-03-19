@@ -1863,6 +1863,18 @@ Dprintf.dprintf("");
         }
       });
 
+      menuItem = Widgets.addMenuItem(menu,"Copy to...",Settings.keyCopyFilesTo);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          selectedRepositoryTab.copyFilesTo();
+        }
+      });
+
       Widgets.addMenuSeparator(menu);
 
       menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyConvertWhitespaces);
