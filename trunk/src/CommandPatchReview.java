@@ -22,10 +22,13 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Properties;
-import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.activation.CommandMap;
 import javax.activation.DataHandler;
@@ -96,6 +99,7 @@ class CommandPatchReview
     String[]              lines;                // patch lines
     String[]              linesNoWhitespaces;   // patch lines (without whitespaces)
     String                summary;              // summary for patch
+    boolean               autoSummaryFlag;      // automatic created summary
     String[]              message;              // message for patch (without mail prefix/postfix etc.)
     String[]              comment;              // comment for patch
     LinkedHashSet<String> testSet;              // tests done
@@ -108,6 +112,7 @@ class CommandPatchReview
       this.lines              = null;
       this.linesNoWhitespaces = null;
       this.summary            = null;
+      this.autoSummaryFlag    = false;
       this.message            = null;
       this.comment            = null;
       this.testSet            = new LinkedHashSet<String>();
@@ -202,6 +207,7 @@ class CommandPatchReview
 
     // get patch history
     data.history          = Patch.getPatches(repositoryTab.repository.rootPath,true,EnumSet.allOf(Patch.States.class),20);
+    data.autoSummaryFlag  = repositoryTab.repository.autoSummaryFlag;
     data.patchMailFlag    = repositoryTab.repository.patchMailFlag;
     data.reviewServerFlag = repositoryTab.repository.reviewServerFlag;
 
@@ -282,10 +288,39 @@ class CommandPatchReview
             label = Widgets.newLabel(subSubComposite,"Summary:");
             Widgets.layout(label,0,0,TableLayoutData.W);
 
-            widgetSummary = Widgets.newCombo(subSubComposite);
-            widgetSummary.setText(this.summary);
-            Widgets.layout(widgetSummary,0,1,TableLayoutData.WE);
-            widgetSummary.setToolTipText("Short summary line for patch.");
+            subSubSubComposite = Widgets.newComposite(subSubComposite);
+            subSubSubComposite.setLayout(new TableLayout(0.0,new double[]{1.0,0.0}));
+            Widgets.layout(subSubSubComposite,0,1,TableLayoutData.WE);
+            {
+              widgetSummary = Widgets.newCombo(subSubSubComposite);
+              widgetSummary.setText(this.summary);
+              Widgets.layout(widgetSummary,0,0,TableLayoutData.WE);
+              widgetSummary.setToolTipText("Short summary line for patch.");
+              Widgets.addModifyListener(new WidgetListener(widgetSummary,data)
+              {
+                public void modified(Control control)
+                {
+                  Widgets.setEnabled(control,!data.autoSummaryFlag);
+                }
+              });
+
+              button = Widgets.newCheckbox(subSubSubComposite,"auto");
+              button.setSelection(data.autoSummaryFlag);
+              Widgets.layout(button,0,1,TableLayoutData.NONE);
+              button.addSelectionListener(new SelectionListener()
+              {
+                public void widgetDefaultSelected(SelectionEvent selectionEvent)
+                {
+                }
+                public void widgetSelected(SelectionEvent selectionEvent)
+                {
+                  Button widget = (Button)selectionEvent.widget;
+
+                  data.autoSummaryFlag = widget.getSelection();
+                  Widgets.modified(data);
+                }
+              });
+            }
 
             label = Widgets.newLabel(subSubComposite,"Message:");
             Widgets.layout(label,1,0,TableLayoutData.NW);
@@ -893,6 +928,7 @@ class CommandPatchReview
              )
           {
             widgetMessage.setText(StringUtils.join(data.history[index].message,widgetMessage.DELIMITER));
+            updateSummary();
             updateText();
           }
         }
@@ -923,6 +959,7 @@ class CommandPatchReview
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
+        updateSummary();
         updateText();
       }
     });
@@ -1012,6 +1049,7 @@ class CommandPatchReview
         // store data
         repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+        repositoryTab.repository.autoSummaryFlag  = data.autoSummaryFlag;
         data.summary                              = widgetSummary.getText().trim();
         data.message                              = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
         data.comment                              = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
@@ -1084,6 +1122,7 @@ class CommandPatchReview
     }
 
     // update
+    updateSummary();
     updateSubject();
     updateText();
   }
@@ -1102,6 +1141,7 @@ class CommandPatchReview
           // get data values
           repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
           repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+          repositoryTab.repository.autoSummaryFlag  = data.autoSummaryFlag;
           summary                                   = widgetSummary.getText().trim();
           message                                   = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
           comment                                   = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
@@ -1128,6 +1168,7 @@ class CommandPatchReview
         // get data values
         repositoryTab.repository.patchMailFlag    = data.patchMailFlag;
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
+        repositoryTab.repository.autoSummaryFlag  = data.autoSummaryFlag;
         summary                                   = data.summary;
         message                                   = data.message;
         comment                                   = data.comment;
@@ -1266,6 +1307,41 @@ class CommandPatchReview
       {
         Widgets.flash(widgetFind);
       }
+    }
+  }
+
+  /** update summary
+   */
+  private void updateSummary()
+  {
+    if (data.autoSummaryFlag)
+    {
+      StringBuilder buffer = new StringBuilder();
+
+      for (String string : StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER))
+      {
+        for (String pattern : Settings.autoSummaryPatterns)
+        {
+          try
+          {
+            Matcher matcher = Pattern.compile(pattern).matcher(string);
+            if (matcher.matches())
+            {
+              if (buffer.length() > 0) buffer.append(", ");
+              buffer.append(matcher.group(1));
+              break;
+            }
+          }
+          catch (PatternSyntaxException exception)
+          {
+            // ignored
+          }
+        }
+      }
+
+      widgetSummary.setText(buffer.toString());
+
+      updateSubject();
     }
   }
 
