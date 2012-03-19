@@ -1741,7 +1741,9 @@ class StoredFiles
                     "reviewServerRepository",
                     "reviewServerGroups",
                     "reviewServerPersons",
-                    "reviewServerDescription"
+                    "reviewServerDescription",
+
+                    "autoSummaryFlag"
                    }
         )
 @XmlSeeAlso({RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
@@ -1877,6 +1879,9 @@ abstract class Repository implements Serializable
   public String  reviewServerPersons;
   @XmlElement(name = "reviewServerDescription", defaultValue = "${message}\n\n${tests - %s}\n\nComment: ${comment}")
   public String reviewServerDescription = "${message}\n\n${tests - %s}";
+
+  @XmlElement(name = "autoSummary")
+  public boolean autoSummaryFlag;
 
   // ------------------------ native functions ----------------------------
 
