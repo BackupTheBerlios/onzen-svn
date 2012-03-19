@@ -709,6 +709,7 @@ menuItem.setEnabled(false);
               repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
+            dialog.setActive();
           }
         }
       });
@@ -765,6 +766,7 @@ menuItem.setEnabled(false);
               repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
+            dialog.setActive();
           }
         }
       });
@@ -795,6 +797,7 @@ menuItem.setEnabled(false);
               repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
+            dialog.setActive();
           }
         }
       });
@@ -825,6 +828,7 @@ menuItem.setEnabled(false);
               repositoryTab.repository.updateStates(fileDataSet);
               Widgets.notify(dialog,USER_EVENT_FILTER);
             }
+            dialog.setActive();
           }
         }
       });
