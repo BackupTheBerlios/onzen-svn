@@ -1468,7 +1468,7 @@ class Dialogs
             // message
             label = new Label(subComposite,SWT.LEFT|SWT.WRAP);
             label.setText(message);
-            label.setLayoutData(new TableLayoutData(row,0,TableLayoutData.W,0,0,4)); row++;
+            label.setLayoutData(new TableLayoutData(row,0,TableLayoutData.NSWE,0,0,4)); row++;
           }
 
           // buttons
@@ -1696,7 +1696,7 @@ class Dialogs
         // message
         label = new Label(composite,SWT.LEFT|SWT.WRAP);
         label.setText(message);
-        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.WE,0,0,4));
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
 
         // checkboxes
         subComposite = new Composite(composite,SWT.NONE);
