@@ -960,7 +960,7 @@ class Preferences
           {
             public void mouseDoubleClick(MouseEvent mouseEvent)
             {
-              Table widget = (Table)mouseEvent.widget;
+              List widget = (List)mouseEvent.widget;
 
               int index = widget.getSelectionIndex();
               if (index >= 0)
@@ -1032,7 +1032,7 @@ class Preferences
           {
             public void mouseDoubleClick(MouseEvent mouseEvent)
             {
-              Table widget = (Table)mouseEvent.widget;
+              List widget = (List)mouseEvent.widget;
 
               int index = widget.getSelectionIndex();
               if (index >= 0)
@@ -1104,7 +1104,7 @@ class Preferences
           {
             public void mouseDoubleClick(MouseEvent mouseEvent)
             {
-              Table widget = (Table)mouseEvent.widget;
+              List widget = (List)mouseEvent.widget;
 
               int index = widget.getSelectionIndex();
               if (index >= 0)
@@ -1268,12 +1268,42 @@ Dprintf.dprintf("");
           {
             public void mouseDoubleClick(MouseEvent mouseEvent)
             {
-              Table widget = (Table)mouseEvent.widget;
+              List widget = (List)mouseEvent.widget;
 
               int index = widget.getSelectionIndex();
               if (index >= 0)
               {
-Dprintf.dprintf("");
+                String  string    = widget.getItem(index);
+                boolean retryFlag = false;
+                do
+                {
+                  string = Dialogs.string(dialog,"Add auto-summary pattern","Pattern:",string,"Add","Cancel");
+                  if (string != null)
+                  {
+                    retryFlag = false;
+                    try
+                    {
+                      Pattern.compile(string);
+                    }
+                    catch (PatternSyntaxException exception)
+                    {
+                      if (Dialogs.confirm(dialog,"Confirm","Invalid pattern: '"+string+"' - re-edit?"))
+                      {
+                        retryFlag = true;
+                      }
+                      else
+                      {
+                        string = null;
+                      }
+                    }
+                  }
+                }
+                while (retryFlag);
+
+                if (string != null)
+                {
+                  widget.setItem(index,string);
+                }
               }
             }
             public void mouseDown(MouseEvent mouseEvent)
