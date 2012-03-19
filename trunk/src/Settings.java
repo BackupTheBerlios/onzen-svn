@@ -989,7 +989,7 @@ public class Settings
   @SettingValue
   public static String[]                 autoSummaryPatterns                    = new String[]
                                                                                   {
-                                                                                    "^-\\s*(.*?)\\s*:.*$"
+                                                                                    "^-\\s*.*\\s*:\\s*(.*)\\s*$"
                                                                                   };
 
   // debug
