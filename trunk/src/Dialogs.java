@@ -375,7 +375,6 @@ Dprintf.dprintf("");
       {
         while (!data.animationQuit)
         {
-Dprintf.dprintf("");
           animate();
           try { Thread.sleep(timeInterval); } catch (InterruptedException exception) { /* ignore */ }
         }
