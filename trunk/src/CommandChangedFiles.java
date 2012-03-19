@@ -368,6 +368,7 @@ menuItem.setEnabled(false);
             if (fileData != null)
             {
               repositoryTab.renameLocalFile(fileData);
+              dialog.setActive();
             }
           }
         });
@@ -384,6 +385,7 @@ menuItem.setEnabled(false);
             if (fileDataSet != null)
             {
               repositoryTab.deleteLocalFiles(fileDataSet);
+              dialog.setActive();
             }
           }
         });
