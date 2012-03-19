@@ -359,7 +359,6 @@ class FileData
   public FileData(File file)
   {
     this(file.getPath(),States.UNKNOWN);
-Dprintf.dprintf("");
   }
 
   /** get absolute file name
