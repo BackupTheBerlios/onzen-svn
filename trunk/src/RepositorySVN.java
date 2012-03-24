@@ -1015,6 +1015,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         else
         {
           // use internal diff
+          if (ignoreWhitespaces)
+          {
+            command.append("-x","-ubw");
+          }
+          else
+          {
+            command.append("-x","-u");
+          }
         }
         command.append("--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
         command.append("--");
