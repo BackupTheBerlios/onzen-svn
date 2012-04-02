@@ -110,7 +110,7 @@ class RepositorySVN extends Repository
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand,"checkout");
+      command.append(Settings.svnCommand,"--non-interactive","checkout");
       command.append("--");
       command.append(repositoryPath,destinationPath);
 
