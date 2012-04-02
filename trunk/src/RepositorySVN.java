@@ -189,7 +189,7 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-        command.append(Settings.svnCommand,"status","-uvN");
+        command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
         command.append("--");
 //        if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,directory,command);
@@ -319,7 +319,7 @@ class RepositorySVN extends Repository
     try
     {
       command.clear();
-      command.append(Settings.svnCommand,"info");
+      command.append(Settings.svnCommand,"--non-interactive","info");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -373,7 +373,7 @@ class RepositorySVN extends Repository
     {
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -441,7 +441,7 @@ class RepositorySVN extends Repository
     {
       // get single log entry
       command.clear();
-      command.append(Settings.svnCommand,"log","-r",revision+":PREV","--verbose");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r",revision+":PREV","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -480,7 +480,7 @@ class RepositorySVN extends Repository
     {
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -527,7 +527,7 @@ class RepositorySVN extends Repository
 
       // get file
       command.clear();
-      command.append(Settings.svnCommand,"cat");
+      command.append(Settings.svnCommand,"--non-interactive","cat");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -568,7 +568,7 @@ class RepositorySVN extends Repository
 
       // get file data
       command.clear();
-      command.append(Settings.svnCommand,"cat");
+      command.append(Settings.svnCommand,"--non-interactive","cat");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -619,7 +619,7 @@ class RepositorySVN extends Repository
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(Settings.svnCommand,"status","-uv");
+      command.append(Settings.svnCommand,"--non-interactive","status","-uv");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -701,7 +701,7 @@ class RepositorySVN extends Repository
       {
         // check out new revision
         command.clear();
-        command.append(Settings.svnCommand,"cat","--revision",newRevision);
+        command.append(Settings.svnCommand,"--non-interactive","cat","--revision",newRevision);
         command.append("--");
         command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
@@ -747,7 +747,7 @@ class RepositorySVN extends Repository
 
       // diff file
       command.clear();
-      command.append(Settings.svnCommand,"diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
+      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -992,7 +992,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // get patch
         command.clear();
-        command.append(Settings.svnCommand,"diff");
+        command.append(Settings.svnCommand,"--non-interactive","diff");
         if (!Settings.svnDiffCommand.isEmpty())
         {
           // use external diff command
@@ -1149,7 +1149,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get patch
       command.clear();
-      command.append(Settings.svnCommand,"diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
+      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
@@ -1189,7 +1189,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     {
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -1245,7 +1245,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get annotations
       command.clear();
-      command.append(Settings.svnCommand,"blame","-v");
+      command.append(Settings.svnCommand,"--non-interactive","blame","-v");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -1300,7 +1300,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"update","-N","--non-interactive");
+      command.append(Settings.svnCommand,"--non-interactive","update","-N","--non-interactive");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1327,7 +1327,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"update","--non-interactive");
+      command.append(Settings.svnCommand,"--non-interactive","update","--non-interactive");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -1355,7 +1355,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // commit files
       command.clear();
-      command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
+      command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName());
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1385,7 +1385,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // add files
       command.clear();
-      command.append(Settings.svnCommand,"add");
+      command.append(Settings.svnCommand,"--non-interactive","add");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1427,7 +1427,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // remove files
       command.clear();
-      command.append(Settings.svnCommand,"remove");
+      command.append(Settings.svnCommand,"--non-interactive","remove");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1468,7 +1468,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // revert files
       command.clear();
-      command.append(Settings.svnCommand,"update","-r",revision);
+      command.append(Settings.svnCommand,"--non-interactive","update","-r",revision);
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1498,7 +1498,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"rename");
+      command.append(Settings.svnCommand,"--non-interactive","rename");
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
@@ -1513,7 +1513,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         // commit rename
         command.clear();
-        command.append(Settings.svnCommand,"commit","-F",commitMessage.getFileName());
+        command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName());
         command.append("--");
         command.append(getFileDataName(fileData));
         command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
@@ -1608,8 +1608,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand,"copy",repositoryPath,repositoryPath+File.separator+name);
-      command.append(Settings.svnCommand,"-F",commitMessage.getFileName());
+      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath,repositoryPath+File.separator+name);
+      command.append("-F",commitMessage.getFileName());
       Exec exec = new Exec(rootPath,command);
 
       // read output
