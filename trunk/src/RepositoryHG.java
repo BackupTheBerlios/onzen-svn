@@ -221,15 +221,17 @@ class RepositoryHG extends Repository
   public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
-    Command command = new Command();
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+
       // checkout
       command.clear();
       command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
       if (!revision.isEmpty()) command.append("-r",revision);
       command.append(repositoryPath+File.separator+moduleName,destinationPath);
-      Exec exec = new Exec(rootPath,command);
+      exec = new Exec(rootPath,command);
 
       // read output
       while (   ((busyDialog == null) || !busyDialog.isAborted())
@@ -261,17 +263,17 @@ class RepositoryHG extends Repository
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
-      else
-      {
-        exec.destroy();
-      }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1545,8 +1547,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
   /** update file from respository
    * @param fileDataSet file data set
+   * @param busyDialog busy dialog or null
    */
-  public void update(HashSet<FileData> fileDataSet)
+  public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
     throws RepositoryException
   {
     Exec exec = null;
@@ -1568,146 +1571,155 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // unapply patches for all trees in forest/single repository
-      for (String tree : trees)
+      if ((busyDialog == null) || !busyDialog.isAborted())
       {
-        command.clear();
-        command.append(Settings.hgCommand,"qpop","-a");
-        command.append("--");
-        exec = new Exec(tree,command);
-        exitCode = exec.waitFor();
-        if (exitCode != 0)
+        for (String tree : trees)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          command.clear();
+          command.append(Settings.hgCommand,"qpop","-a");
+          command.append("--");
+          exec = new Exec(tree,command);
+          exitCode = exec.waitFor();
+          if (exitCode != 0)
+          {
+            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          }
+          exec.done(); exec = null;
         }
-        exec.done(); exec = null;
       }
 
       // update files (Note: hg does not allow to update single files, thus update all files)
-      if      (Settings.hgUpdateWithFetch)
+      if ((busyDialog == null) || !busyDialog.isAborted())
       {
-        StoredFiles   storedFiles   = null;
-        StoredChanges storedChanges = null;
-        try
+        if      (Settings.hgUpdateWithFetch)
         {
-          // create files backup of all local changes (in case there occur some error)
-          storedFiles = new StoredFiles(rootPath,getChangedFiles());
-
-          if (Settings.hgSafeUpdate)
+          StoredFiles   storedFiles   = null;
+          StoredChanges storedChanges = null;
+          try
           {
-            // do 'safe' update when fetch is used: store local changes into patch
-            storedChanges = new StoredChanges();
-          }
+            // create files backup of all local changes (in case there occur some error)
+            storedFiles = new StoredFiles(rootPath,getChangedFiles());
 
-          // revert all local changes
+            if (Settings.hgSafeUpdate)
+            {
+              // do 'safe' update when fetch is used: store local changes into patch
+              storedChanges = new StoredChanges();
+            }
+
+            // revert all local changes
+            command.clear();
+            command.append(Settings.hgCommand,"revert","--no-backup","-a");
+            command.append("--");
+            exec = new Exec(rootPath,command);
+            exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+              {
+                storedFiles.restore(); storedFiles = null;
+              }
+              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            }
+            exec.done(); exec = null;
+
+            // fetch+fpush
+            command.clear();
+            command.append(Settings.hgCommand,"fetch");
+            command.append("--");
+            if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+            exec = new Exec(rootPath,command);
+            exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+              {
+                storedFiles.restore(); storedFiles = null;
+              }
+              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            }
+            exec.done(); exec = null;
+
+            command.clear();
+            command.append(Settings.hgCommand,"fpush");
+            command.append("--");
+            if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+            exec = new Exec(rootPath,command);
+            exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
+              {
+                storedFiles.restore(); storedFiles = null;
+              }
+              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            }
+            exec.done(); exec = null;
+
+            if (Settings.hgSafeUpdate)
+            {
+              // do 'safe' update when fetch is used: restore local changes and merge if needed
+              if (!storedChanges.restore())
+              {
+                throw new RepositoryException("restore local changes fail");
+              }
+
+              // discard changes patch
+              storedChanges.discard(); storedChanges = null;
+            }
+
+            // discard files backup
+            storedFiles.discard(); storedFiles = null;
+          }
+          finally
+          {
+            if (storedChanges != null) storedChanges.discard();
+            if (storedFiles != null) storedFiles.restore();
+          }
+        }
+        else if (Settings.hgUseForestExtension)
+        {
           command.clear();
-          command.append(Settings.hgCommand,"revert","--no-backup","-a");
+          command.append(Settings.hgCommand,"fupdate");
           command.append("--");
           exec = new Exec(rootPath,command);
           exitCode = exec.waitFor();
           if (exitCode != 0)
           {
-            if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
-            {
-              storedFiles.restore(); storedFiles = null;
-            }
             throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
           }
           exec.done(); exec = null;
-
-          // fetch+fpush
+        }
+        else
+        {
           command.clear();
-          command.append(Settings.hgCommand,"fetch");
+          command.append(Settings.hgCommand,"update");
           command.append("--");
-          if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
           exec = new Exec(rootPath,command);
           exitCode = exec.waitFor();
           if (exitCode != 0)
           {
-            if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
-            {
-              storedFiles.restore(); storedFiles = null;
-            }
             throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
           }
           exec.done(); exec = null;
-
-          command.clear();
-          command.append(Settings.hgCommand,"fpush");
-          command.append("--");
-          if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
-          exec = new Exec(rootPath,command);
-          exitCode = exec.waitFor();
-          if (exitCode != 0)
-          {
-            if (Settings.hgUpdateWithFetch && Settings.hgSafeUpdate)
-            {
-              storedFiles.restore(); storedFiles = null;
-            }
-            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-          }
-          exec.done(); exec = null;
-
-          if (Settings.hgSafeUpdate)
-          {
-            // do 'safe' update when fetch is used: restore local changes and merge if needed
-            if (!storedChanges.restore())
-            {
-              throw new RepositoryException("restore local changes fail");
-            }
-
-            // discard changes patch
-            storedChanges.discard(); storedChanges = null;
-          }
-
-          // discard files backup
-          storedFiles.discard(); storedFiles = null;
         }
-        finally
-        {
-          if (storedChanges != null) storedChanges.discard();
-          if (storedFiles != null) storedFiles.restore();
-        }
-      }
-      else if (Settings.hgUseForestExtension)
-      {
-        command.clear();
-        command.append(Settings.hgCommand,"fupdate");
-        command.append("--");
-        exec = new Exec(rootPath,command);
-        exitCode = exec.waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
-        exec.done(); exec = null;
-      }
-      else
-      {
-        command.clear();
-        command.append(Settings.hgCommand,"update");
-        command.append("--");
-        exec = new Exec(rootPath,command);
-        exitCode = exec.waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
-        exec.done(); exec = null;
       }
 
       // apply patches for all trees in forest/single repository
-      for (String tree : trees)
+      if ((busyDialog == null) || !busyDialog.isAborted())
       {
-        command.clear();
-        command.append(Settings.hgCommand,"qpush","-a");
-        command.append("--");
-        exec = new Exec(tree,command);
-        exitCode = exec.waitFor();
-        if (exitCode != 0)
+        for (String tree : trees)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          command.clear();
+          command.append(Settings.hgCommand,"qpush","-a");
+          command.append("--");
+          exec = new Exec(tree,command);
+          exitCode = exec.waitFor();
+          if (exitCode != 0)
+          {
+            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          }
+          exec.done(); exec = null;
         }
-        exec.done(); exec = null;
       }
     }
     catch (IOException exception)

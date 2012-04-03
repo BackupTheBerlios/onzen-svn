@@ -2773,16 +2773,35 @@ abstract class Repository implements Serializable
 
   /** update file from respository
    * @param fileDataSet file data set
+   * @param busyDialog busy dialog or null
    */
-  abstract public void update(HashSet<FileData> fileDataSet)
+  abstract public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
     throws RepositoryException;
+
+  /** update file from respository
+   * @param fileDataSet file data set
+   */
+  public void update(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    update(fileDataSet,null);
+  }
+
+  /** update all files from respository
+   * @param busyDialog busy dialog or null
+   */
+  public void updateAll(BusyDialog busyDialog)
+    throws RepositoryException
+  {
+    update(new HashSet<FileData>(),busyDialog);
+  }
 
   /** update all files from respository
    */
   public void updateAll()
     throws RepositoryException
   {
-    update(new HashSet<FileData>());
+    updateAll(null);
   }
 
   /** commit files

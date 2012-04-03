@@ -104,6 +104,7 @@ class RepositorySVN extends Repository
   public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -113,8 +114,7 @@ class RepositorySVN extends Repository
       command.append(Settings.svnCommand,"--non-interactive","checkout");
       command.append("--");
       command.append(repositoryPath,destinationPath);
-
-      Exec exec = new Exec(destinationPath,command);
+      exec = new Exec(destinationPath,command);
 
       // read output
       int n = destinationPath.length();
@@ -153,11 +153,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1289,29 +1293,64 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
   /** update file from respository
    * @param fileDataSet file data set
+   * @param busyDialog busy dialog or null
    */
-  public void update(HashSet<FileData> fileDataSet)
+  public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // update files
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","update","-N","--non-interactive");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
+      exec = new Exec(rootPath,command);
+
+      // read output
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && !exec.isTerminated()
+            )
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if ((line != null) && line.startsWith("getting "))
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateText(line);
+        }
+
+        // discard stderr
+        line = exec.pollStderr();
+        if (line != null)
+        {
+//Dprintf.dprintf("err1: %s",line);
+        }
       }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
