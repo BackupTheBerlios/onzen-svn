@@ -2233,7 +2233,7 @@ Dprintf.dprintf("");
       widgetSuffix = Widgets.newText(composite);
       widgetSuffix.setText(editor.suffix);
       Widgets.layout(widgetSuffix,1,1,TableLayoutData.WE);
-      widgetSuffix.setToolTipText("Suffix pattern.\n");
+      widgetSuffix.setToolTipText("Simple file suffix pattern, e. g. *.pdf.\n");
 
       label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,2,0,TableLayoutData.W);
