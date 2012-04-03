@@ -298,6 +298,15 @@ public class Macro
 
     return (values.length > 0) ? values[0] : "";
   }
+
+  /** convert data to string
+   * @return string
+   */
+  public String toString()
+  {
+    return "Macro {"+StringUtils.join(parameters)+"}";
+  }
+
 }
 
 /* end of file */
