@@ -3921,12 +3921,16 @@ Dprintf.dprintf("");
     Widgets.setFocus(widgetRepository);
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      final SimpleBusyDialog simpleBusyDialog = Dialogs.openSimpleBusy(shell,"Create new repository '" + data.repositoryPath + "'...");
-      simpleBusyDialog.autoAnimate(50);
+      BusyDialog busyDialog = new BusyDialog(shell,
+                                             "Create new repository",
+                                             "Create new repository '" + data.repositoryPath + "'...",
+                                             BusyDialog.TEXT0
+                                            );
+      busyDialog.autoAnimate();
 
-      Background.run(new BackgroundRunnable(this,simpleBusyDialog)
+      Background.run(new BackgroundRunnable(this,busyDialog)
       {
-        public void run(final Onzen onzen, final SimpleBusyDialog simpleBusyDialog)
+        public void run(final Onzen onzen, final BusyDialog busyDialog)
         {
           setStatusText("Create new repository '" + data.repositoryPath + "'...");
           try
@@ -3994,7 +3998,7 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                simpleBusyDialog.close();
+                busyDialog.close();
               }
             });
             clearStatusText();
