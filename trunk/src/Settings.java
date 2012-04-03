@@ -381,14 +381,14 @@ public class Settings
   static class Editor implements Cloneable
   {
     public String  mimeType;
-	public String  suffix;
+    public String  suffix;
     public String  command;
     public Pattern mimeTypePattern;
     public Pattern suffixPattern;
 
     /** create editor
      * @param mimeType glob mime pattern string
-	 * @param suffix glob suffix pattern
+     * @param suffix glob suffix pattern
      * @param command command
      */
     Editor(String mimeType, String suffix, String command)
