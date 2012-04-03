@@ -1329,7 +1329,7 @@ Dprintf.dprintf("");
 
           widgetSuffix = Widgets.newText(subComposite);
           Widgets.layout(widgetSuffix,1,1,TableLayoutData.WE);
-          widgetSuffix.setToolTipText("Suffix pattern.\n");
+          widgetSuffix.setToolTipText("Simple file suffix pattern, e. g. *.pdf.\n");
 
           label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,2,0,TableLayoutData.W);
