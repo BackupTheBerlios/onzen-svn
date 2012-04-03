@@ -1235,13 +1235,16 @@ Dprintf.dprintf("");
     String command = null;
 	if (command == null)
 	{
-      for (Settings.Editor editor : Settings.editors)
-      {
-        if (editor.mimeTypePattern.matcher(mimeType).matches())
+	  if ((mimeType != null) && !mimeType.isEmpty() && !mimeType.equals("application/octet-stream"))
+	  {
+        for (Settings.Editor editor : Settings.editors)
         {
-          command = editor.command;
-          break;
-        }
+          if (editor.mimeTypePattern.matcher(mimeType).matches())
+          {
+            command = editor.command;
+            break;
+          }
+		}
       }
 	}
 	if (command == null)
