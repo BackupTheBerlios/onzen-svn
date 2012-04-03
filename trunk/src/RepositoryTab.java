@@ -1226,20 +1226,35 @@ Dprintf.dprintf("");
   }
 
   /** open file (with external command)
-   * @param fileData file to open
+   * @param fileName file name
+   * @param mimeType mime type pattern
    */
   public void openFile(String fileName, String mimeType)
   {
     // find editor command with file mime-type
     String command = null;
-    for (Settings.Editor editor : Settings.editors)
-    {
-      if (editor.pattern.matcher(mimeType).matches())
+	if (command == null)
+	{
+      for (Settings.Editor editor : Settings.editors)
       {
-        command = editor.command;
-        break;
+        if (editor.mimeTypePattern.matcher(mimeType).matches())
+        {
+          command = editor.command;
+          break;
+        }
       }
-    }
+	}
+	if (command == null)
+	{
+      for (Settings.Editor editor : Settings.editors)
+      {
+        if (editor.suffixPattern.matcher(fileName).matches())
+        {
+          command = editor.command;
+          break;
+        }
+      }
+	}
 
     // if no editor command found -> ask for command
     if (command == null)
@@ -1249,12 +1264,14 @@ Dprintf.dprintf("");
       class Data
       {
         String  mimeType;
+		String  suffix;
         String  command;
         boolean addNewCommand;
 
         Data()
         {
           this.mimeType      = null;
+          this.suffix        = null;
           this.command       = null;
           this.addNewCommand = false;
         }
@@ -1274,6 +1291,7 @@ Dprintf.dprintf("");
       // create widgets
       final Table  widgetEditors;
       final Text   widgetMimeType;
+	  final Text   widgetSuffix;
       final Text   widgetCommand;
       final Button widgetAddNewCommand;
       final Button widgetOpen;
@@ -1284,7 +1302,8 @@ Dprintf.dprintf("");
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,1,"Command",  SWT.LEFT,250,true );
+        Widgets.addTableColumn(widgetEditors,1,"Suffix",   SWT.LEFT,100,false);
+        Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,250,true );
 
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -1296,13 +1315,21 @@ Dprintf.dprintf("");
           widgetMimeType = Widgets.newText(subComposite);
           widgetMimeType.setText(mimeType);
           Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
+          widgetMimeType.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
+
+          label = Widgets.newLabel(subComposite,"Suffix:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
+
+          widgetSuffix = Widgets.newText(subComposite);
+          Widgets.layout(widgetSuffix,1,1,TableLayoutData.WE);
+          widgetSuffix.setToolTipText("Suffix pattern.\n");
 
           label = Widgets.newLabel(subComposite,"Command:");
-          Widgets.layout(label,1,0,TableLayoutData.W);
+          Widgets.layout(label,2,0,TableLayoutData.W);
 
           subSubComposite = Widgets.newComposite(subComposite);
           subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-          Widgets.layout(subSubComposite,1,1,TableLayoutData.WE);
+          Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
           {
             widgetCommand = Widgets.newText(subSubComposite);
             Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
@@ -1332,7 +1359,7 @@ Dprintf.dprintf("");
           }
 
           widgetAddNewCommand = Widgets.newCheckbox(subComposite,"add as new command");
-          Widgets.layout(widgetAddNewCommand,2,1,TableLayoutData.W);
+          Widgets.layout(widgetAddNewCommand,3,1,TableLayoutData.W);
         }
       }
 
@@ -1352,6 +1379,7 @@ Dprintf.dprintf("");
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             data.mimeType      = widgetMimeType.getText();
+            data.suffix        = widgetSuffix.getText();
             data.command       = widgetCommand.getText();
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
@@ -1402,6 +1430,7 @@ Dprintf.dprintf("");
             Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
             data.mimeType      = null;
+            data.suffix        = null;
             data.command       = editor.command;
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
@@ -1409,7 +1438,8 @@ Dprintf.dprintf("");
           }
         }
       });
-      Widgets.setNextFocus(widgetMimeType,widgetCommand);
+      Widgets.setNextFocus(widgetMimeType,widgetSuffix);
+      Widgets.setNextFocus(widgetSuffix,widgetCommand);
       widgetCommand.addModifyListener(new ModifyListener()
       {
         public void modifyText(ModifyEvent modifyEvent)
@@ -1426,8 +1456,9 @@ Dprintf.dprintf("");
       {
         TableItem tableItem = new TableItem(widgetEditors,SWT.NONE);
         tableItem.setData(editor);
-        tableItem.setText(0,editor.mimeTypePattern);
-        tableItem.setText(1,editor.command);
+        tableItem.setText(0,editor.mimeType);
+        tableItem.setText(1,editor.suffix);
+        tableItem.setText(2,editor.command);
       }
 
       // run
@@ -1441,7 +1472,7 @@ Dprintf.dprintf("");
             if (data.addNewCommand)
             {
               // add editor
-              Settings.Editor editor = new Settings.Editor(data.mimeType,data.command);
+              Settings.Editor editor = new Settings.Editor(data.mimeType,data.suffix,data.command);
               Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
               Settings.editors[Settings.editors.length-1] = editor;
             }

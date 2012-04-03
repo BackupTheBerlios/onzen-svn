@@ -380,26 +380,31 @@ public class Settings
    */
   static class Editor implements Cloneable
   {
-    public String  mimeTypePattern;
+    public String  mimeType;
+	public String  suffix;
     public String  command;
-    public Pattern pattern;
+    public Pattern mimeTypePattern;
+    public Pattern suffixPattern;
 
     /** create editor
-     * @param mimeTypePattern glob pattern string
+     * @param mimeType glob mime pattern string
+	 * @param suffix glob suffix pattern
      * @param command command
      */
-    Editor(String mimeTypePattern, String command)
+    Editor(String mimeType, String suffix, String command)
     {
-      this.mimeTypePattern = mimeTypePattern;
+      this.mimeType        = mimeType;
+      this.suffix          = suffix;
       this.command         = command;
-      this.pattern         = Pattern.compile(StringUtils.globToRegex(mimeTypePattern));
+      this.mimeTypePattern = Pattern.compile(StringUtils.globToRegex(mimeType));
+      this.suffixPattern   = Pattern.compile(StringUtils.globToRegex(suffix));
     }
 
     /** create editor
      */
     Editor()
     {
-      this("","");
+      this("","","");
     }
 
     /** clone object
@@ -407,7 +412,7 @@ public class Settings
      */
     public Editor clone()
     {
-      return new Editor(mimeTypePattern,command);
+      return new Editor(mimeType,suffix,command);
     }
 
     /** convert data to string
@@ -415,7 +420,7 @@ public class Settings
      */
     public String toString()
     {
-      return "Editor {"+mimeTypePattern+", command: "+command+"}";
+      return "Editor {"+mimeType+", suffix: "+suffix+", command: "+command+"}";
     }
   }
 
@@ -427,10 +432,14 @@ public class Settings
     {
       Editor editor = null;
 
-      Object[] data = new Object[2];
-      if (StringParser.parse(string,"%s:%*s",data))
+      Object[] data = new Object[3];
+      if      (StringParser.parse(string,"%s,%s:%*s",data))
       {
-        editor = new Editor(((String)data[0]).trim(),((String)data[1]).trim());
+        editor = new Editor(((String)data[0]).trim(),((String)data[1]).trim(),((String)data[2]).trim());
+      }
+      else if (StringParser.parse(string,"%s:%*s",data))
+      {
+        editor = new Editor(((String)data[0]).trim(),"",((String)data[1]).trim());
       }
       else
       {
@@ -442,12 +451,13 @@ public class Settings
 
     public String toString(Editor editor) throws Exception
     {
-      return editor.mimeTypePattern+":"+StringUtils.escape(editor.command,false);
+      return editor.mimeType+(!editor.suffix.isEmpty()?","+editor.suffix:"")+":"+StringUtils.escape(editor.command,false);
     }
 
     public boolean equals(Editor editor0, Editor editor1)
     {
-      return    editor0.mimeTypePattern.equals(editor1.mimeTypePattern)
+      return    editor0.mimeType.equals(editor1.mimeType)
+             && editor0.suffix.equals(editor1.suffix)
              && editor0.command.equals(editor1.command);
     }
   }

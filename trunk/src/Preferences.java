@@ -303,8 +303,9 @@ class Preferences
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,false);
-        Widgets.addTableColumn(widgetEditors,1,"Command",  SWT.LEFT,300,true );
-        widgetEditors.setToolTipText("Colors list.");
+        Widgets.addTableColumn(widgetEditors,1,"Suffix",   SWT.LEFT,200,false);
+        Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,300,true );
+        widgetEditors.setToolTipText("Mime type list.");
         widgetEditors.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -318,7 +319,7 @@ class Preferences
 
               if (editEditor(editor,"Edit editor","Save"))
               {
-                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeTypePattern,editor.command);
+                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeType,editor.suffix,editor.command);
               }
             }
           }
@@ -328,7 +329,7 @@ class Preferences
         });
         for (Settings.Editor editor : Settings.editors)
         {
-          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeTypePattern,editor.command);
+          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.suffix,editor.command);
         }
 
         subComposite = Widgets.newComposite(composite);
@@ -348,7 +349,7 @@ class Preferences
 
               if (editEditor(editor,"Add editor","Add"))
               {
-                Widgets.addTableEntry(widgetEditors,editor,editor.mimeTypePattern,editor.command);
+                Widgets.addTableEntry(widgetEditors,editor,editor.mimeType,editor.suffix,editor.command);
               }
             }
           });
@@ -2209,7 +2210,8 @@ Dprintf.dprintf("");
     // add editor dialog
     final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Text   widgetMimeTypePattern;
+    final Text   widgetMimeType;
+    final Text   widgetSuffix;
     final Text   widgetCommand;
     final Button widgetAddSave;
 
@@ -2220,17 +2222,25 @@ Dprintf.dprintf("");
       label = Widgets.newLabel(composite,"Mime type:");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
-      widgetMimeTypePattern = Widgets.newText(composite);
-      widgetMimeTypePattern.setText(editor.mimeTypePattern);
-      Widgets.layout(widgetMimeTypePattern,0,1,TableLayoutData.WE);
-      widgetMimeTypePattern.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
+      widgetMimeType = Widgets.newText(composite);
+      widgetMimeType.setText(editor.mimeType);
+      Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
+      widgetMimeType.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
+
+      label = Widgets.newLabel(composite,"Suffix:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      widgetSuffix = Widgets.newText(composite);
+      widgetSuffix.setText(editor.suffix);
+      Widgets.layout(widgetSuffix,1,1,TableLayoutData.WE);
+      widgetSuffix.setToolTipText("Suffix pattern.\n");
 
       label = Widgets.newLabel(composite,"Command:");
-      Widgets.layout(label,1,0,TableLayoutData.W);
+      Widgets.layout(label,2,0,TableLayoutData.W);
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,1,1,TableLayoutData.WE,0,0,4);
+      Widgets.layout(subComposite,2,1,TableLayoutData.WE,0,0,4);
       {
         widgetCommand = Widgets.newText(subComposite);
         widgetCommand.setText(editor.command);
@@ -2275,8 +2285,9 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          editor.mimeTypePattern = widgetMimeTypePattern.getText();
-          editor.command         = widgetCommand.getText();
+          editor.mimeType = widgetMimeType.getText();
+          editor.suffix   = widgetSuffix.getText();
+          editor.command  = widgetCommand.getText();
 
           Dialogs.close(dialog,true);
         }
@@ -2297,29 +2308,12 @@ Dprintf.dprintf("");
     }
 
     // listeners
-    widgetMimeTypePattern.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        widgetCommand.setFocus();
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-    widgetCommand.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        widgetAddSave.setFocus();
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
+    Widgets.setNextFocus(widgetMimeType,widgetSuffix);
+    Widgets.setNextFocus(widgetSuffix,widgetCommand);
+    Widgets.setNextFocus(widgetCommand,widgetAddSave);
 
     // run dialog
-    Widgets.setFocus(widgetMimeTypePattern);
+    Widgets.setFocus(widgetMimeType);
     return (Boolean)Dialogs.run(dialog,false);
   }
 
