@@ -916,12 +916,16 @@ Dprintf.dprintf("");
   {
     final HashSet<FileData> fileDataSet = getAllFileDataSet();
 
-    final SimpleBusyDialog simpleBusyDialog = Dialogs.openSimpleBusy(shell,"Update all directories and files...");
-    simpleBusyDialog.autoAnimate(50);
+    BusyDialog busyDialog = new BusyDialog(shell,
+                                           "Update",
+                                           "Update all directories and files...",
+                                           BusyDialog.TEXT0
+                                          );
+    busyDialog.autoAnimate();
 
-    Background.run(new BackgroundRunnable(repository,fileDataSet,simpleBusyDialog)
+    Background.run(new BackgroundRunnable(repository,fileDataSet,busyDialog)
     {
-      public void run(Repository repository, HashSet<FileData> fileDataSet, final SimpleBusyDialog simpleBusyDialog)
+      public void run(Repository repository, HashSet<FileData> fileDataSet, final BusyDialog busyDialog)
       {
         setStatusText("Update all directories and files...");
         try
@@ -946,7 +950,7 @@ Dprintf.dprintf("");
           {
             public void run()
             {
-              simpleBusyDialog.close();
+              busyDialog.close();
             }
           });
           clearStatusText();
@@ -1233,10 +1237,10 @@ Dprintf.dprintf("");
   {
     // find editor command with file mime-type
     String command = null;
-	if (command == null)
-	{
-	  if ((mimeType != null) && !mimeType.isEmpty() && !mimeType.equals("application/octet-stream"))
-	  {
+    if (command == null)
+    {
+      if ((mimeType != null) && !mimeType.isEmpty() && !mimeType.equals("application/octet-stream"))
+      {
         for (Settings.Editor editor : Settings.editors)
         {
           if (editor.mimeTypePattern.matcher(mimeType).matches())
@@ -1244,20 +1248,20 @@ Dprintf.dprintf("");
             command = editor.command;
             break;
           }
-		}
+        }
       }
-	}
-	if (command == null)
-	{
+    }
+    if (command == null)
+    {
       for (Settings.Editor editor : Settings.editors)
       {
         if (editor.suffixPattern.matcher(fileName).matches())
         {
           command = editor.command;
-          break;
+         break;
         }
       }
-	}
+    }
 
     // if no editor command found -> ask for command
     if (command == null)
@@ -1267,7 +1271,7 @@ Dprintf.dprintf("");
       class Data
       {
         String  mimeType;
-		String  suffix;
+                String  suffix;
         String  command;
         boolean addNewCommand;
 
@@ -1294,7 +1298,7 @@ Dprintf.dprintf("");
       // create widgets
       final Table  widgetEditors;
       final Text   widgetMimeType;
-	  final Text   widgetSuffix;
+          final Text   widgetSuffix;
       final Text   widgetCommand;
       final Button widgetAddNewCommand;
       final Button widgetOpen;
