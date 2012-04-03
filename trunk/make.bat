@@ -1,5 +1,5 @@
 @set SWT_JAR_WINDOWS=jars\windows\swt-3.7.2.jar
-rem @set SWT_JAR_WINDOWS=jars\windows\swt-3.7.2_64.jar
+@set SWT_JAR_WINDOWS_64=jars\windows\swt-3.7.2_64.jar
 @set SQLITE_JAR=jars\sqlitejdbc.jar
 @set MAIL_JAR=jars\mail.jar
 
@@ -9,14 +9,24 @@ rem @set SWT_JAR_WINDOWS=jars\windows\swt-3.7.2_64.jar
 
 @set CLASSPATH=classes;%SWT_JAR_WINDOWS%;%SQLITE_JAR%;%MAIL_JAR%
 
-set UNZIP="C:\Program Files (x86)\7-Zip\7z.exe"
-set JAR=jar
+@set UNZIP="C:\Program Files (x86)\7-Zip\7z.exe" -y x
+@set JAR=jar
 
+@if "%1" == "help" goto help
 @if "%1" == "config" goto config
 @if "%1" == "compile" goto compile
 @if "%1" == "run" goto run
 @if "%1" == "jars" goto jars
 @goto compile
+
+:help
+@echo Targets:
+@echo.
+@echo   config  - create configuration file
+@echo   compile - compile sources
+@echo   run     - run
+@echo   jars    - create jars
+@goto end
 
 :config
 @del src\Config.java 2>NUL
@@ -31,36 +41,39 @@ set JAR=jar
 
 :compile
 @mkdir classes 2>NUL
-if exist src\Config.java goto skipConfig
-call make.bat config
+@if exist src\Config.java goto skipConfig
+@call make.bat config
 :skipConfig
 javac.exe -d classes -cp %CLASSPATH% src\*.java
 @goto end
 
 :run
-make.bat compile
+@call make.bat compile
 java -cp %CLASSPATH% Onzen 
 @goto end
 
 :jars
-rem make.bat compile
-mkdir tmp 2>NUL
-mkdir tmp\jar 2>NUL
+@call make.bat compile
+@mkdir tmp 2>NUL
+
+@rem onzen-windows.jar
+@mkdir tmp\jar 2>NUL
+
 rem add classes
 copy /Y classes\*.class tmp\jar 1>NUL
 rem add SWT JAR
 cd tmp\jar
-%UNZIP% -y x ..\..\%SWT_JAR_WINDOWS% 1>NUL
+%UNZIP% ..\..\%SWT_JAR_WINDOWS% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
 cd ..\..
 rem add SQLite JAR
 cd tmp\jar
-%UNZIP% -y x ..\..\%SQLITE_JAR% 1>NUL
+%UNZIP% ..\..\%SQLITE_JAR% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
 cd ..\..
 rem add mail JAR
 cd tmp\jar
-%UNZIP% -y x ..\..\%MAIL_JAR% 1>NUL
+%UNZIP% ..\..\%MAIL_JAR% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
 cd ..\..
 rem add images
@@ -71,6 +84,36 @@ cd tmp\jar
 %JAR% cmf ..\..\jar.txt ..\..\onzen-windows.jar *
 cd ..\..
 del /S /Q tmp\jar 1>NUL
+
+@rem onzen-windows_64.jar
+@mkdir tmp\jar 2>NUL
+
+rem add classes
+copy /Y classes\*.class tmp\jar 1>NUL
+rem add SWT JAR
+cd tmp\jar
+%UNZIP% ..\..\%SWT_JAR_WINDOWS_64% 1>NUL
+del /S /Q META-INF 1>NUL 2>NUL
+cd ..\..
+rem add SQLite JAR
+cd tmp\jar
+%UNZIP% ..\..\%SQLITE_JAR% 1>NUL
+del /S /Q META-INF 1>NUL 2>NUL
+cd ..\..
+rem add mail JAR
+cd tmp\jar
+%UNZIP% ..\..\%MAIL_JAR% 1>NUL
+del /S /Q META-INF 1>NUL 2>NUL
+cd ..\..
+rem add images
+mkdir tmp\jar\images 2>NUL
+copy /Y images\*.png tmp\jar\images 1>NUL
+rem create combined JAR
+cd tmp\jar
+%JAR% cmf ..\..\jar.txt ..\..\onzen-windows_64.jar *
+cd ..\..
+del /S /Q tmp\jar 1>NUL
+
 @goto end
 
 
