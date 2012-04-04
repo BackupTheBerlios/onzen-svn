@@ -5,11 +5,10 @@
 
 @set VERSION_MAJOR=0
 @set VERSION_MINOR=02
-@set VERSION_REVISION=unknown 
+@set VERSION_REVISION=unknown
 
 @set CLASSPATH=classes;%SWT_JAR_WINDOWS%;%SQLITE_JAR%;%MAIL_JAR%
 
-@set UNZIP="C:\Program Files (x86)\7-Zip\7z.exe" -y x
 @set JAR=jar
 
 @if "%1" == "help" goto help
@@ -49,7 +48,7 @@ javac.exe -d classes -cp %CLASSPATH% src\*.java
 
 :run
 @call make.bat compile
-java -cp %CLASSPATH% Onzen 
+java -cp %CLASSPATH% Onzen
 @goto end
 
 :jars
