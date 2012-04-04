@@ -54,6 +54,7 @@ public class Macro
 
   // --------------------------- variables --------------------------------
   private String[]                 parameters;
+  private String                   start,end;
   private Pattern                  patterVariable;
   private HashMap<String,Object[]> variableSet;
 
@@ -68,6 +69,8 @@ public class Macro
   Macro(String[] parameters, String start, String end)
   {
     this.parameters = parameters;
+    this.start      = start;
+    this.end        = end;
     patterVariable  = Pattern.compile("(.*?)"+start+"\\s*(\\w*)\\s*(.*?)"+end+"(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
     variableSet     = new HashMap<String,Object[]>();
   }
@@ -115,10 +118,38 @@ public class Macro
     this(string,PATTERN_DOLLAR);
   }
 
+  /** check if parameter <start>name<end> exists
+   * @param name name of parameter
+   * @return true if parameter <start>name<end> exists, false otherwise
+   */
+  public boolean contains(String name)
+  {
+    for (String parameter : parameters)
+    {
+      Matcher matcher = patterVariable.matcher(parameter);
+      if (matcher.matches() && matcher.group(2).equals(name))
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** add parameter
+   * @param name parameter to add as <start>name<end>
+   */
+  public void add(String name)
+  {
+    String[] newParameters = new String[parameters.length+1];
+    System.arraycopy(parameters,0,newParameters,0,parameters.length);
+    newParameters[parameters.length] = start+name+end;
+    parameters = newParameters;
+  }
+
   /** add expand variable
    * @param name variable name
    * @param value variable value
-   * @param seperator string or null
+   * @param separator string or null
    */
   public void expand(String name, Object value, String separator)
   {
