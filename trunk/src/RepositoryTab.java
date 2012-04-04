@@ -1392,7 +1392,7 @@ Dprintf.dprintf("");
             data.command       = widgetCommand.getText();
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
-	        Settings.geometryOpenFile       = dialog.getSize();
+                Settings.geometryOpenFile       = dialog.getSize();
             Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
 
             Dialogs.close(dialog,true);
@@ -1446,7 +1446,7 @@ Dprintf.dprintf("");
             data.command       = editor.command;
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
-	        Settings.geometryOpenFile       = dialog.getSize();
+                Settings.geometryOpenFile       = dialog.getSize();
             Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
 
             Dialogs.close(dialog,true);
@@ -1476,7 +1476,7 @@ Dprintf.dprintf("");
         tableItem.setText(2,editor.command);
       }
 
-	  // show dialog
+          // show dialog
       Dialogs.show(dialog,Settings.geometryOpenFile);
 
       // run
@@ -3748,7 +3748,7 @@ Dprintf.dprintf("");
           boolean isExecutable = file.canExecute();
           long lastModified = file.lastModified();
           File backupFile = new File(fileName+Settings.backupFileSuffix);
-		  backupFile.delete();
+                  backupFile.delete();
           if (!file.renameTo(backupFile))
           {
             throw new IOException("create backup file fail");
