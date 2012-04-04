@@ -577,13 +577,6 @@ exception.printStackTrace();
   {
     String password = null;
 
-    // get master password
-    if (masterPassword == null)
-    {
-      masterPassword = Dialogs.password(shell,"Master password","Master password:");
-      if (masterPassword == null) return null;
-    }
-
     // read password from password database
     Database database = null;
     try
@@ -607,17 +600,27 @@ exception.printStackTrace();
           // read and decode password
           do
           {
-            password = decodePassword(masterPassword,resultSet.getBytes("data"));
+            password = decodePassword((masterPassword != null)?masterPassword:"",resultSet.getBytes("data"));
             if (password == null)
             {
-              String reenteredMasterPassword = Dialogs.password(shell,"Master password","Cannot decrypt password. Wrong master password?","Re-enter master password:");
-              if (reenteredMasterPassword != null)
+              if (masterPassword == null)
               {
-                masterPassword = reenteredMasterPassword;
+                // get master password
+                masterPassword = Dialogs.password(shell,"Master password","Master password:");
+                if (masterPassword == null) return null;
               }
               else
               {
-                return null;
+                // re-enter master password
+                String reenteredMasterPassword = Dialogs.password(shell,"Master password","Cannot decrypt password. Wrong master password?","Re-enter master password:");
+                if (reenteredMasterPassword != null)
+                {
+                  masterPassword = reenteredMasterPassword;
+                }
+                else
+                {
+                  return null;
+                }
               }
             }
           }
@@ -2167,6 +2170,7 @@ exception.printStackTrace();
   }
 
   /** encode password with master password
+   * @param masterPassword master password
    * @param password password to encode
    * @return encoded password bytes or null
    */
@@ -2223,6 +2227,7 @@ exception.printStackTrace();
   }
 
   /** decode password with master password
+   * @param masterPassword master password
    * @param encodedPassword encoded password bytes
    * @return decoded password or null
    */
