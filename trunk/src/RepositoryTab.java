@@ -3747,6 +3747,12 @@ Dprintf.dprintf("");
           // rename (keep executable flag, last modified)
           boolean isExecutable = file.canExecute();
           long lastModified = file.lastModified();
+          File backupFile = new File(fileName+Settings.backupFileSuffix);
+		  backupFile.delete();
+          if (!file.renameTo(backupFile))
+          {
+            throw new IOException("create backup file fail");
+          }
           if (!tmpFile.renameTo(file))
           {
             throw new IOException("rename temporary file fail");
