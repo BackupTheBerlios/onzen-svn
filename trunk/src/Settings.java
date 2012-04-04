@@ -626,6 +626,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryView                           = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryOpenFile                       = new Point(600,400);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryOpenFileColumn                 = new ColumnSizes(100,100,400);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryNewFile                        = new Point(300,200);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryNewDirectory                   = new Point(300,200);

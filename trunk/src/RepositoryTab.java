@@ -1310,7 +1310,9 @@ Dprintf.dprintf("");
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,1,"Suffix",   SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,250,true );
+        Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,400,true );
+        Widgets.setTableColumnWidth(widgetEditors,Settings.geometryOpenFileColumn.width);
+        widgetEditors.setToolTipText("Changed files.");
 
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -1390,6 +1392,9 @@ Dprintf.dprintf("");
             data.command       = widgetCommand.getText();
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
+	        Settings.geometryOpenFile       = dialog.getSize();
+            Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
+
             Dialogs.close(dialog,true);
           }
         });
@@ -1441,6 +1446,9 @@ Dprintf.dprintf("");
             data.command       = editor.command;
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
+	        Settings.geometryOpenFile       = dialog.getSize();
+            Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
+
             Dialogs.close(dialog,true);
           }
         }
@@ -1467,6 +1475,9 @@ Dprintf.dprintf("");
         tableItem.setText(1,editor.suffix);
         tableItem.setText(2,editor.command);
       }
+
+	  // show dialog
+      Dialogs.show(dialog,Settings.geometryOpenFile);
 
       // run
       widgetCommand.setFocus();
