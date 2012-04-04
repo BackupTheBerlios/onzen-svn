@@ -134,6 +134,7 @@ class Preferences
   private final List          widgetHiddenDirectoryPatterns;
 
   private final Text          widgetTmpDirectory;
+  private final Text          widgetBackupFileSuffix;
   private final Text          widgetDateFormat;
   private final Text          widgetTimeFormat;
   private final Text          widgetDateTimeFormat;
@@ -1166,7 +1167,7 @@ Dprintf.dprintf("");
       }
 
       composite = Widgets.addTab(tabFolder,"Misc");
-      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,6,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
@@ -1201,46 +1202,53 @@ Dprintf.dprintf("");
           });
         }
 
-        label = Widgets.newLabel(composite,"Date format:");
+        label = Widgets.newLabel(composite,"Backup file suffix:");
         Widgets.layout(label,1,0,TableLayoutData.W);
+        widgetBackupFileSuffix = Widgets.newText(composite);
+        widgetBackupFileSuffix.setText(Settings.backupFileSuffix);
+        Widgets.layout(widgetBackupFileSuffix,1,1,TableLayoutData.WE);
+        widgetBackupFileSuffix.setToolTipText("Backup file name suffix.");
+
+        label = Widgets.newLabel(composite,"Date format:");
+        Widgets.layout(label,2,0,TableLayoutData.W);
         widgetDateFormat = Widgets.newText(composite);
         widgetDateFormat.setText(Settings.dateFormat);
-        Widgets.layout(widgetDateFormat,1,1,TableLayoutData.WE);
+        Widgets.layout(widgetDateFormat,2,1,TableLayoutData.WE);
         widgetDateFormat.setToolTipText("Date format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit");
 
         label = Widgets.newLabel(composite,"Time format:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
+        Widgets.layout(label,3,0,TableLayoutData.W);
         widgetTimeFormat = Widgets.newText(composite);
         widgetTimeFormat.setText(Settings.timeFormat);
-        Widgets.layout(widgetTimeFormat,2,1,TableLayoutData.WE);
+        Widgets.layout(widgetTimeFormat,3,1,TableLayoutData.WE);
         widgetTimeFormat.setToolTipText("Time format.\nPatterns:\n  H - hour digit\n  m - minute digit\n  s - second digit");
 
         label = Widgets.newLabel(composite,"Date/Time format:");
-        Widgets.layout(label,3,0,TableLayoutData.W);
+        Widgets.layout(label,4,0,TableLayoutData.W);
         widgetDateTimeFormat = Widgets.newText(composite);
         widgetDateTimeFormat.setText(Settings.dateTimeFormat);
-        Widgets.layout(widgetDateTimeFormat,3,1,TableLayoutData.WE);
+        Widgets.layout(widgetDateTimeFormat,4,1,TableLayoutData.WE);
         widgetDateTimeFormat.setToolTipText("Date/time format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit\n  H - hour digit\n  m - minute digit\n  s - second digit");
 
         label = Widgets.newLabel(composite,"Max. background tasks:");
-        Widgets.layout(label,4,0,TableLayoutData.W);
+        Widgets.layout(label,5,0,TableLayoutData.W);
         widgetMaxBackgroundTasks = Widgets.newSpinner(composite,1,256);
         widgetMaxBackgroundTasks.setSelection(Settings.maxBackgroundTasks);
-        Widgets.layout(widgetMaxBackgroundTasks,4,1,TableLayoutData.W);
+        Widgets.layout(widgetMaxBackgroundTasks,5,1,TableLayoutData.W);
         widgetMaxBackgroundTasks.setToolTipText("Max. number of background tasks.");
 
         label = Widgets.newLabel(composite,"Max. message history:");
-        Widgets.layout(label,5,0,TableLayoutData.W);
+        Widgets.layout(label,6,0,TableLayoutData.W);
         widgetMaxMessageHistory = Widgets.newSpinner(composite,0);
         widgetMaxMessageHistory.setSelection(Settings.maxMessageHistory);
-        Widgets.layout(widgetMaxMessageHistory,5,1,TableLayoutData.W);
+        Widgets.layout(widgetMaxMessageHistory,6,1,TableLayoutData.W);
         widgetMaxMessageHistory.setToolTipText("Max. length of commit message history.");
 
         label = Widgets.newLabel(composite,"Message broadcast:");
-        Widgets.layout(label,6,0,TableLayoutData.W);
+        Widgets.layout(label,7,0,TableLayoutData.W);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0,0.0}));
-        Widgets.layout(subComposite,6,1,TableLayoutData.WE);
+        Widgets.layout(subComposite,7,1,TableLayoutData.WE);
         {
           widgetMessageBroadcastAddress = Widgets.newText(subComposite);
           widgetMessageBroadcastAddress.setText(Settings.messageBroadcastAddress);
@@ -1257,10 +1265,10 @@ Dprintf.dprintf("");
         }
 
         label = Widgets.newLabel(composite,"Auto-summary patterns:");
-        Widgets.layout(label,7,0,TableLayoutData.NW);
+        Widgets.layout(label,8,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,7,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,8,1,TableLayoutData.NSWE);
         {
           widgetAutoSummaryPatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetAutoSummaryPatterns,0,0,TableLayoutData.NSWE);
@@ -1426,6 +1434,7 @@ Dprintf.dprintf("");
           Settings.gitCommand                             = widgetGitCommand.getText().trim();
 
           Settings.tmpDirectory                           = widgetTmpDirectory.getText().trim();
+          Settings.backupFileSuffix                       = widgetBackupFileSuffix.getText().trim();
           Settings.dateFormat                             = widgetDateFormat.getText().trim();
           Settings.timeFormat                             = widgetTimeFormat.getText().trim();
           Settings.dateTimeFormat                         = widgetDateTimeFormat.getText().trim();

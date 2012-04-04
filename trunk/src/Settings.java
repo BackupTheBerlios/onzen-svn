@@ -953,7 +953,9 @@ public class Settings
 
   @SettingComment(text={"","Hidden files in file tree: <pattern>"})
   @SettingValue(name="hiddenFilePattern", type=SettingValueAdapterFilePattern.class)
-  public static FilePattern[]            hiddenFilePatterns                     = new FilePattern[]{new FilePattern(".*")};
+  public static FilePattern[]            hiddenFilePatterns                     = new FilePattern[]{new FilePattern(".*"),
+                                                                                                    new FilePattern("*~")
+                                                                                                   };
   @SettingComment(text={"","Hidden directories in file tree: <pattern>"})
   @SettingValue(name="hiddenDirectoryPattern", type=SettingValueAdapterFilePattern.class)
   public static FilePattern[]            hiddenDirectoryPatterns                = new FilePattern[]
@@ -968,6 +970,10 @@ public class Settings
   @SettingComment(text={"","temporary directory"})
   @SettingValue
   public static String                   tmpDirectory                           = "/tmp";
+
+  @SettingComment(text={"","backup file name suffix"})
+  @SettingValue
+  public static String                   backupFileSuffix                       = "~";
 
   @SettingComment(text={"","date/time formats"})
   @SettingValue
@@ -1007,10 +1013,10 @@ public class Settings
                                                                                   };
 
   // debug
-  public static boolean          debugFlag                                      = false;
+  public static boolean                  debugFlag                              = false;
 
   // help
-  public static boolean          helpFlag                                       = false;
+  public static boolean                  helpFlag                               = false;
 
 
   // ------------------------ native functions ----------------------------
