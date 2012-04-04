@@ -62,28 +62,28 @@ java -cp %CLASSPATH% Onzen
 rem add classes
 copy /Y classes\*.class tmp\jar 1>NUL
 rem add SWT JAR
-cd tmp\jar
-%UNZIP% ..\..\%SWT_JAR_WINDOWS% 1>NUL
+@cd tmp\jar
+%JAR% xf ..\..\%SWT_JAR_WINDOWS% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
-cd ..\..
+@cd ..\..
 rem add SQLite JAR
-cd tmp\jar
-%UNZIP% ..\..\%SQLITE_JAR% 1>NUL
+@cd tmp\jar
+%JAR% xf ..\..\%SQLITE_JAR% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
-cd ..\..
+@cd ..\..
 rem add mail JAR
-cd tmp\jar
-%UNZIP% ..\..\%MAIL_JAR% 1>NUL
+@cd tmp\jar
+%JAR% xf ..\..\%MAIL_JAR% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
-cd ..\..
+@cd ..\..
 rem add images
 mkdir tmp\jar\images 2>NUL
 copy /Y images\*.png tmp\jar\images 1>NUL
 rem create combined JAR
-cd tmp\jar
+@cd tmp\jar
 %JAR% cmf ..\..\jar.txt ..\..\onzen-windows.jar *
-cd ..\..
-del /S /Q tmp\jar 1>NUL
+@cd ..\..
+rmdir /S /Q tmp\jar 1>NUL
 
 @rem onzen-windows_64.jar
 @mkdir tmp\jar 2>NUL
@@ -91,28 +91,28 @@ del /S /Q tmp\jar 1>NUL
 rem add classes
 copy /Y classes\*.class tmp\jar 1>NUL
 rem add SWT JAR
-cd tmp\jar
-%UNZIP% ..\..\%SWT_JAR_WINDOWS_64% 1>NUL
+@cd tmp\jar
+%JAR% xf ..\..\%SWT_JAR_WINDOWS_64% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
-cd ..\..
+@cd ..\..
 rem add SQLite JAR
-cd tmp\jar
-%UNZIP% ..\..\%SQLITE_JAR% 1>NUL
+@cd tmp\jar
+%JAR% xf ..\..\%SQLITE_JAR% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
-cd ..\..
+@cd ..\..
 rem add mail JAR
-cd tmp\jar
-%UNZIP% ..\..\%MAIL_JAR% 1>NUL
+@cd tmp\jar
+%JAR% xf ..\..\%MAIL_JAR% 1>NUL
 del /S /Q META-INF 1>NUL 2>NUL
-cd ..\..
+@cd ..\..
 rem add images
 mkdir tmp\jar\images 2>NUL
 copy /Y images\*.png tmp\jar\images 1>NUL
 rem create combined JAR
-cd tmp\jar
+@cd tmp\jar
 %JAR% cmf ..\..\jar.txt ..\..\onzen-windows_64.jar *
-cd ..\..
-del /S /Q tmp\jar 1>NUL
+@cd ..\..
+rmdir /S /Q tmp\jar 1>NUL
 
 @goto end
 
