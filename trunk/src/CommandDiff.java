@@ -214,7 +214,7 @@ class CommandDiff
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.NSWE);
       {
-        widgetLineNumbersLeft = Widgets.newStyledText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbersLeft = Widgets.newStyledText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.WRAP|SWT.READ_ONLY);
         widgetLineNumbersLeft.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersLeft,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
@@ -248,7 +248,7 @@ class CommandDiff
       subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,2,TableLayoutData.NSWE);
       {
-        widgetLineNumbersRight = Widgets.newStyledText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI|SWT.READ_ONLY);
+        widgetLineNumbersRight = Widgets.newStyledText(subComposite,SWT.RIGHT|SWT.BORDER|SWT.WRAP|SWT.READ_ONLY);
         widgetLineNumbersRight.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersRight,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
