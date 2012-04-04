@@ -1497,6 +1497,7 @@ Dprintf.dprintf("");
     {
       // expand command
       Macro macro = new Macro(StringUtils.split(command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+      if (!macro.contains("file")) macro.add("file");
       macro.expand("file",fileName);
       macro.expand("",    "%");
       String[] commandLine = macro.getValueArray();
@@ -1674,6 +1675,7 @@ Dprintf.dprintf("");
     {
       // expand command
       Macro macro = new Macro(StringUtils.split(data.command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+      if (!macro.contains("file")) macro.add("file");
       macro.expand("file",fileName);
       macro.expand("",    "%");
       String command = macro.getValue();
@@ -2794,6 +2796,7 @@ Dprintf.dprintf("");
       {
         // expand command
         Macro macro = new Macro(StringUtils.split(shellCommand.command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+        if (!macro.contains("file")) macro.add("file");
         macro.expand("file",fileData.getFileName(repository.rootPath));
         macro.expand("",    "%");
         final String commandLine = macro.getValue();
