@@ -208,7 +208,7 @@ Dprintf.dprintf("");
     // listeners
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryStorePatch);
+    Dialogs.show(dialog,Settings.geometryStorePatch,Settings.setWindowLocation);
 
     // update
     widgetPatch.setText(StringUtils.join(patch.getLines(),widgetPatch.DELIMITER));

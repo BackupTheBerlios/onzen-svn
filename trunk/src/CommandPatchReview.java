@@ -1102,7 +1102,7 @@ class CommandPatchReview
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryPatchReview);
+    Dialogs.show(dialog,Settings.geometryPatchReview,Settings.setWindowLocation);
 
     if (!dialog.isDisposed())
     {

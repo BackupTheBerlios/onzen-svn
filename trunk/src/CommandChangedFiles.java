@@ -1161,7 +1161,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryChangedFiles);
+    Dialogs.show(dialog,Settings.geometryChangedFiles,Settings.setWindowLocation);
 
     // start getting changed files
     Background.run(new BackgroundRunnable()

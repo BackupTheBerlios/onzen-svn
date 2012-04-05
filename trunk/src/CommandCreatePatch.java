@@ -621,7 +621,7 @@ Dprintf.dprintf("");
     widgetFindNext.addKeyListener(keyListener);
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryCreatePatch);
+    Dialogs.show(dialog,Settings.geometryCreatePatch,Settings.setWindowLocation);
 
     // add files
     if (!widgetFileNames.isDisposed())

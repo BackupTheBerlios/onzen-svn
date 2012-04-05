@@ -168,7 +168,7 @@ class CommandRevert
     // listeners
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryRevert);
+    Dialogs.show(dialog,Settings.geometryRevert,Settings.setWindowLocation);
 
     // add files
     if (!widgetFiles.isDisposed())

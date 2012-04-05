@@ -800,7 +800,7 @@ throw new RepositoryException("NYI");
     widgetFind.addKeyListener(keyListener);
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryRevisions);
+    Dialogs.show(dialog,Settings.geometryRevisions,Settings.setWindowLocation);
 
     // show
     show(revision);

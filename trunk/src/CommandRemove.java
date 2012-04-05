@@ -302,7 +302,7 @@ class CommandRemove
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryRemove);
+    Dialogs.show(dialog,Settings.geometryRemove,Settings.setWindowLocation);
 
     // add files
     if (!widgetFiles.isDisposed())

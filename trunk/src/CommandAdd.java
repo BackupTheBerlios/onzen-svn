@@ -313,7 +313,7 @@ class CommandAdd
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryAdd);
+    Dialogs.show(dialog,Settings.geometryAdd,Settings.setWindowLocation);
 
     // add files
     if (!widgetFiles.isDisposed())

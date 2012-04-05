@@ -713,7 +713,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryFindFiles);
+    Dialogs.show(dialog,Settings.geometryFindFiles,Settings.setWindowLocation);
 
     // start find files
     Background.run(new BackgroundRunnable()

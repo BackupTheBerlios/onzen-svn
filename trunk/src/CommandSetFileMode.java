@@ -314,7 +314,7 @@ class CommandSetFileMode
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometrySetFileMode);
+    Dialogs.show(dialog,Settings.geometrySetFileMode,Settings.setWindowLocation);
 
     // add history
     if (!widgetHistory.isDisposed())

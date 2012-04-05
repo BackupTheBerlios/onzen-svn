@@ -553,7 +553,7 @@ class CommandView
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryView);
+    Dialogs.show(dialog,Settings.geometryView,Settings.setWindowLocation);
 
     // start show file
     show(revision);

@@ -482,7 +482,7 @@ class CommandAnnotations
     widgetFindNext.addKeyListener(keyListener);
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryAnnotations);
+    Dialogs.show(dialog,Settings.geometryAnnotations,Settings.setWindowLocation);
 
     // start get annotations of revision
     show(revision);

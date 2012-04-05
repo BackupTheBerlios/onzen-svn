@@ -256,7 +256,7 @@ class CommandChanges
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryChanges);
+    Dialogs.show(dialog,Settings.geometryChanges,Settings.setWindowLocation);
 
     // showChanges
     showChanges(changesType);
@@ -740,7 +740,7 @@ class CommandChanges
         widgetFindNext.addKeyListener(keyListener);
 
         // show dialog
-        Dialogs.show(subDialog,Settings.geometryChangesLines);
+        Dialogs.show(subDialog,Settings.geometryChangesLines,Settings.setWindowLocation);
 
         // add text
         StringBuilder buffer = new StringBuilder();

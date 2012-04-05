@@ -249,7 +249,7 @@ class CommandRevisionInfo
     // listeners
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryRevisionInfo);
+    Dialogs.show(dialog,Settings.geometryRevisionInfo,Settings.setWindowLocation);
 
     if (revision != null)
     {

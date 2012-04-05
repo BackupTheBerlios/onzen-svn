@@ -315,7 +315,7 @@ class CommandCreateBranch
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryCreateBranch);
+    Dialogs.show(dialog,Settings.geometryCreateBranch,Settings.setWindowLocation);
 
     // add history
     if (!widgetHistory.isDisposed())

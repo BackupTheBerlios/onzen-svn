@@ -1446,7 +1446,7 @@ class CommandDiff
     display.addFilter(SWT.KeyDown,filterListener);
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryDiff);
+    Dialogs.show(dialog,Settings.geometryDiff,Settings.setWindowLocation);
 
     // start getting diff of last revision
     show(revisionLeft,revisionRight);

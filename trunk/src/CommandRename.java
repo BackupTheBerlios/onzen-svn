@@ -324,7 +324,7 @@ class CommandRename
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryRename);
+    Dialogs.show(dialog,Settings.geometryRename,Settings.setWindowLocation);
 
     // add history
     if (!widgetHistory.isDisposed())

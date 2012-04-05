@@ -1449,7 +1449,7 @@ class CommandPatches
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryPatches);
+    Dialogs.show(dialog,Settings.geometryPatches,Settings.setWindowLocation);
 
     // add patches
     Widgets.notify(dialog,USER_EVENT_FILTER_PATCHES);

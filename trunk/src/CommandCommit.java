@@ -343,7 +343,7 @@ class CommandCommit
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryCommit);
+    Dialogs.show(dialog,Settings.geometryCommit,Settings.setWindowLocation);
 
     // add files
     if (!widgetFiles.isDisposed())
