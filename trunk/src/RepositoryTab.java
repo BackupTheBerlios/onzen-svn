@@ -1477,7 +1477,7 @@ Dprintf.dprintf("");
       }
 
           // show dialog
-      Dialogs.show(dialog,Settings.geometryOpenFile);
+      Dialogs.show(dialog,Settings.geometryOpenFile,Settings.setWindowLocation);
 
       // run
       widgetCommand.setFocus();
@@ -1678,7 +1678,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.setWindowLocation);
 
     // run
     widgetCommand.setFocus();
@@ -1838,7 +1838,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.setWindowLocation);
 
     // run
     widgetFileName.setFocus();
@@ -1977,7 +1977,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.setWindowLocation);
 
     // run
     widgetPath.setFocus();
@@ -2109,7 +2109,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryRenameLocalFile.x,SWT.DEFAULT);
+    Dialogs.show(dialog,Settings.geometryRenameLocalFile.x,SWT.DEFAULT,Settings.setWindowLocation);
 
     // update
     data.newFileName = fileName;
@@ -2228,7 +2228,7 @@ Dprintf.dprintf("");
       // listeners
 
       // show dialog
-      Dialogs.show(dialog,Settings.geometryDeleteLocalFiles);
+      Dialogs.show(dialog,Settings.geometryDeleteLocalFiles,Settings.setWindowLocation);
 
       // add files
       for (FileData fileData : fileDataSet)
@@ -2456,7 +2456,7 @@ Dprintf.dprintf("");
       // listeners
 
       // show dialog
-      Dialogs.show(dialog,convertWhiteDialogLocation,Settings.geometryConvertWhitespaces);
+      Dialogs.show(dialog,convertWhiteDialogLocation,Settings.geometryConvertWhitespaces,Settings.setWindowLocation);
 
       // add files
       for (FileData fileData : fileDataSet)
@@ -2734,7 +2734,7 @@ Dprintf.dprintf("");
     // listeners
 
     // show dialog
-    Dialogs.show(dialog,convertWhiteDialogLocation,Settings.geometryConvertWhitespaces);
+    Dialogs.show(dialog,convertWhiteDialogLocation,Settings.geometryConvertWhitespaces,Settings.setWindowLocation);
 
     // run
     widgetAbort.setFocus();
