@@ -3008,7 +3008,7 @@ exception.printStackTrace();
     });
 
     // show dialog
-    Dialogs.show(dialog);
+    Dialogs.show(dialog,Settings.setWindowLocation);
 
     // add names
     for (String name : data.names)
@@ -3317,7 +3317,7 @@ exception.printStackTrace();
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryEditRepositoryList);
+    Dialogs.show(dialog,Settings.geometryEditRepositoryList,Settings.setWindowLocation);
 
     // add repositories
     for (Repository repository : repositoryList)
@@ -5486,7 +5486,7 @@ exception.printStackTrace();
     Widgets.setNextFocus(widgetPatchMailSubject,widgetPatchMailText);
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryEditRepository);
+    Dialogs.show(dialog,Settings.geometryEditRepository,Settings.setWindowLocation);
 
     // run
     Widgets.setFocus(widgetTitle);
