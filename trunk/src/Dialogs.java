@@ -2207,9 +2207,10 @@ class Dialogs
    * @param value value to edit
    * @param okText OK button text
    * @param CancelText cancel button text
+   * @param toolTipText tooltip text
    * @return string or null on cancel
    */
-  public static String string(Shell parentShell, String title, String text, String value, String okText, String cancelText)
+  public static String string(Shell parentShell, String title, String text, String value, String okText, String cancelText, String toolTipText)
   {
     int             row;
     Composite       composite;
@@ -2245,6 +2246,7 @@ class Dialogs
           widgetString.setSelection(value.length(),value.length());
         }
         widgetString.setLayoutData(new TableLayoutData(0,column,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
+        if (toolTipText != null) widgetString.setToolTipText(toolTipText);
         column++;
       }
 
@@ -2303,6 +2305,20 @@ class Dialogs
     {
       return null;
     }
+  }
+
+  /** simple string dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @param value value to edit
+   * @param okText OK button text
+   * @param CancelText cancel button text
+   * @return string or null on cancel
+   */
+  public static String string(Shell parentShell, String title, String text, String value, String okText, String cancelText)
+  {
+    return string(parentShell,title,text,value,okText,cancelText,null);
   }
 
   /** simple string dialog
