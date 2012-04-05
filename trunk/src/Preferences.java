@@ -996,7 +996,7 @@ class Preferences
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
+                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel","File pattern: * and ?");
                 if (string != null)
                 {
                   widgetSkipWhitespaceCheckFilePatterns.add(string);
@@ -1068,7 +1068,7 @@ class Preferences
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel");
+                String string = Dialogs.string(dialog,"Add file pattern","Pattern:","","Add","Cancel","File pattern: * and ?");
                 if (string != null)
                 {
                   widgetHiddenFilePatterns.add(string);
@@ -1140,7 +1140,7 @@ Dprintf.dprintf("");
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                String string = Dialogs.string(dialog,"Add directory pattern","Pattern:","","Add","Cancel");
+                String string = Dialogs.string(dialog,"Add directory pattern","Pattern:","","Add","Cancel","Directory pattern: * and ?");
                 if (string != null)
                 {
                   widgetHiddenDirectoryPatterns.add(string);
@@ -1287,7 +1287,7 @@ Dprintf.dprintf("");
                 boolean retryFlag = false;
                 do
                 {
-                  string = Dialogs.string(dialog,"Add auto-summary pattern","Pattern:",string,"Add","Cancel");
+                  string = Dialogs.string(dialog,"Add auto-summary pattern","Pattern:",string,"Add","Cancel","Regular expression pattern.");
                   if (string != null)
                   {
                     retryFlag = false;
@@ -1345,7 +1345,7 @@ Dprintf.dprintf("");
                 boolean retryFlag = false;
                 do
                 {
-                  string = Dialogs.string(dialog,"Add auto-summary pattern","Pattern:",string,"Add","Cancel");
+                  string = Dialogs.string(dialog,"Add auto-summary pattern","Pattern:",string,"Add","Cancel","Regular expression pattern.");
                   if (string != null)
                   {
                     retryFlag = false;
