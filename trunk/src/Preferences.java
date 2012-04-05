@@ -143,6 +143,7 @@ class Preferences
   private final Text          widgetMessageBroadcastAddress;
   private final Spinner       widgetMessageBroadcastPort;
   private final List          widgetAutoSummaryPatterns;
+  private final Button        widgetSetWindowLocation;
 
   private final Button        widgetButtonSave;
 
@@ -1167,7 +1168,7 @@ Dprintf.dprintf("");
       }
 
       composite = Widgets.addTab(tabFolder,"Misc");
-      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},2));
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,6,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
@@ -1391,6 +1392,18 @@ Dprintf.dprintf("");
             });
           }
         }
+
+        label = Widgets.newLabel(composite,"Miscellaneous:");
+        Widgets.layout(label,9,0,TableLayoutData.W);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(0.0,0.0));
+        Widgets.layout(subComposite,9,1,TableLayoutData.WE);
+        {
+          widgetSetWindowLocation = Widgets.newCheckbox(subComposite,"set window location");
+          widgetSetWindowLocation.setSelection(Settings.setWindowLocation);
+          Widgets.layout(widgetSetWindowLocation,0,1,TableLayoutData.W);
+          widgetSetWindowLocation.setToolTipText("Set window location relative to cursor location.");
+        }
       }
     }
 
@@ -1471,6 +1484,8 @@ Dprintf.dprintf("");
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
           Settings.autoSummaryPatterns                    = getAutoSummaryPatterns();
 
+          Settings.setWindowLocation                      = widgetSetWindowLocation.getSelection();
+
           Dialogs.close(dialog,true);
         }
       });
@@ -1519,7 +1534,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryView);
+    Dialogs.show(dialog,Settings.geometryView,Settings.setWindowLocation);
   }
 
   /** run dialog

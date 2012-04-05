@@ -967,6 +967,10 @@ public class Settings
                                                                                   };
 
   // miscelanous
+  @SettingComment(text={"","set location of windows relative to cursor location"})
+  @SettingValue
+  public static boolean                  setWindowLocation                      = true;
+
   @SettingComment(text={"","temporary directory"})
   @SettingValue
   public static String                   tmpDirectory                           = "/tmp";
