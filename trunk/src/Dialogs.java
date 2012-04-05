@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Monitor;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -824,30 +825,48 @@ class Dialogs
    * @param dialog dialog shell
    * @param location top/left location or null
    * @param size size of dialog or null
+   * @param setLocationFlag TRUE iff location of dialog should be set
    */
-  public static void show(Shell dialog, Point location, Point size)
+  public static void show(Shell dialog, Point location, Point size, boolean setLocationFlag)
   {
     int x,y;
 
     if (!dialog.isVisible())
     {
+      Display display = dialog.getDisplay();
+
       // layout
       dialog.pack();
 
-      // get location for dialog (keep 16/64 pixel away form right/bottom)
-      Display display = dialog.getDisplay();
-      Rectangle displayBounds = display.getBounds();
-      Point cursorPoint = display.getCursorLocation();
-      Rectangle bounds = dialog.getBounds();
-      x = ((location != null) && (location.x != SWT.DEFAULT))
-            ? location.x
-            : Math.max(cursorPoint.x-bounds.width /2,0);
-      y = ((location != null) && (location.y != SWT.DEFAULT))
-            ? location.y
-            : Math.max(cursorPoint.y-bounds.height/2,0);
-      dialog.setLocation(Math.min(x,displayBounds.width -bounds.width -16),
-                         Math.min(y,displayBounds.height-bounds.height-64)
+      if (setLocationFlag)
+      {
+        // set location of dialog
+        Point cursorPoint = display.getCursorLocation();
+        Rectangle dialogBounds = dialog.getBounds();
+        for (Monitor monitor : display.getMonitors())
+        {
+          if (monitor.getBounds().contains(cursorPoint))
+          {
+            Rectangle monitorBounds = monitor.getClientArea();
+            x = ((location != null) && (location.x != SWT.DEFAULT))
+              ? location.x
+              : Math.max(monitorBounds.x,
+                         Math.min(monitorBounds.x+monitorBounds.width-dialogBounds.width,
+                                  cursorPoint.x-dialogBounds.width/2
+                                 )
                         );
+            y = ((location != null) && (location.y != SWT.DEFAULT))
+              ? location.y
+              : Math.max(monitorBounds.y,
+                         Math.min(monitorBounds.y+monitorBounds.height-dialogBounds.height,
+                                  cursorPoint.y-dialogBounds.height/2
+                                 )
+                        );
+            dialog.setLocation(x,y);
+            break;
+          }
+        }
+      }
 
       // set size (if given)
       if (size != null)
@@ -866,6 +885,26 @@ class Dialogs
     }
   }
 
+    /** show dialog
+   * @param dialog dialog shell
+   * @param location top/left location or null
+   * @param size size of dialog or null
+   */
+  public static void show(Shell dialog, Point location, Point size)
+  {
+    show(dialog,location,size,true);
+  }
+
+  /** show dialog
+   * @param dialog dialog shell
+   * @param size size of dialog or null
+   * @param setLocationFlag TRUE iff location of dialog should be set
+   */
+  public static void show(Shell dialog, Point size, boolean setLocationFlag)
+  {
+    show(dialog,null,size,setLocationFlag);
+  }
+
   /** show dialog
    * @param dialog dialog shell
    * @param size size of dialog or null
@@ -878,10 +917,29 @@ class Dialogs
   /** show dialog
    * @param dialog dialog shell
    * @param width,height width/height of dialog
+   * @param setLocationFlag TRUE iff location of dialog should be set
+   */
+  public static void show(Shell dialog, int width, int height, boolean setLocationFlag)
+  {
+    show(dialog,new Point(width,height),setLocationFlag);
+  }
+
+  /** show dialog
+   * @param dialog dialog shell
+   * @param width,height width/height of dialog
    */
   public static void show(Shell dialog, int width, int height)
   {
-    show(dialog,new Point(width,height));
+    show(dialog,new Point(width,height),true);
+  }
+
+  /** show dialog
+   * @param dialog dialog shell
+   * @param setLocationFlag TRUE iff location of dialog should be set
+   */
+  public static void show(Shell dialog, boolean setLocationFlag)
+  {
+    show(dialog,null,setLocationFlag);
   }
 
   /** show dialog
@@ -889,7 +947,7 @@ class Dialogs
    */
   public static void show(Shell dialog)
   {
-    show(dialog,null);
+    show(dialog,true);
   }
 
   /** run dialog
