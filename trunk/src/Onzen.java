@@ -694,15 +694,9 @@ exception.printStackTrace();
    */
   public void setPassword(String name, String password)
   {
-    // get master password
-    if (masterPassword == null)
-    {
-      masterPassword = Dialogs.password(shell,"Master password","Master password:");
-      if (masterPassword == null) return;
-    }
 
     // get encoded password
-    byte[] encodedPassword = encodePassword(masterPassword,password);
+    byte[] encodedPassword = encodePassword((masterPassword != null)?masterPassword:"",password);
     if (encodedPassword == null) return;
 
     // store password into password database
