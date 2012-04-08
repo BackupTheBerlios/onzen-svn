@@ -305,7 +305,7 @@ class Preferences
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,false);
-        Widgets.addTableColumn(widgetEditors,1,"Suffix",   SWT.LEFT,200,false);
+        Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,300,true );
         widgetEditors.setToolTipText("Mime type list.");
         widgetEditors.addSelectionListener(new SelectionListener()
@@ -321,7 +321,7 @@ class Preferences
 
               if (editEditor(editor,"Edit editor","Save"))
               {
-                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeType,editor.suffix,editor.command);
+                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.command);
               }
             }
           }
@@ -331,7 +331,7 @@ class Preferences
         });
         for (Settings.Editor editor : Settings.editors)
         {
-          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.suffix,editor.command);
+          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.fileName,editor.command);
         }
 
         subComposite = Widgets.newComposite(composite);
@@ -351,7 +351,7 @@ class Preferences
 
               if (editEditor(editor,"Add editor","Add"))
               {
-                Widgets.addTableEntry(widgetEditors,editor,editor.mimeType,editor.suffix,editor.command);
+                Widgets.addTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.command);
               }
             }
           });
@@ -1486,6 +1486,8 @@ Dprintf.dprintf("");
 
           Settings.setWindowLocation                      = widgetSetWindowLocation.getSelection();
 
+          Settings.geometryPreferences = dialog.getSize();
+
           Dialogs.close(dialog,true);
         }
       });
@@ -1534,7 +1536,7 @@ Dprintf.dprintf("");
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.geometryView,Settings.setWindowLocation);
+    Dialogs.show(dialog,Settings.geometryPreferences,Settings.setWindowLocation);
   }
 
   /** run dialog
@@ -2235,7 +2237,7 @@ Dprintf.dprintf("");
     final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetMimeType;
-    final Text   widgetSuffix;
+    final Text   widgetFileName;
     final Text   widgetCommand;
     final Button widgetAddSave;
 
@@ -2251,13 +2253,13 @@ Dprintf.dprintf("");
       Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
       widgetMimeType.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
 
-      label = Widgets.newLabel(composite,"Suffix:");
+      label = Widgets.newLabel(composite,"File name:");
       Widgets.layout(label,1,0,TableLayoutData.W);
 
-      widgetSuffix = Widgets.newText(composite);
-      widgetSuffix.setText(editor.suffix);
-      Widgets.layout(widgetSuffix,1,1,TableLayoutData.WE);
-      widgetSuffix.setToolTipText("Simple file suffix pattern, e. g. *.pdf.\n");
+      widgetFileName = Widgets.newText(composite);
+      widgetFileName.setText(editor.fileName);
+      Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
+      widgetFileName.setToolTipText("Simple file file name pattern, e. g. *.pdf.\n");
 
       label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,2,0,TableLayoutData.W);
@@ -2310,7 +2312,7 @@ Dprintf.dprintf("");
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           editor.mimeType = widgetMimeType.getText();
-          editor.suffix   = widgetSuffix.getText();
+          editor.fileName = widgetFileName.getText();
           editor.command  = widgetCommand.getText();
 
           Dialogs.close(dialog,true);
@@ -2332,8 +2334,8 @@ Dprintf.dprintf("");
     }
 
     // listeners
-    Widgets.setNextFocus(widgetMimeType,widgetSuffix);
-    Widgets.setNextFocus(widgetSuffix,widgetCommand);
+    Widgets.setNextFocus(widgetMimeType,widgetFileName);
+    Widgets.setNextFocus(widgetFileName,widgetCommand);
     Widgets.setNextFocus(widgetCommand,widgetAddSave);
 
     // run dialog
