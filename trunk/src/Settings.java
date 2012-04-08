@@ -131,11 +131,19 @@ public class Settings
    */
   class SettingValueAdapterFilePattern extends SettingValueAdapter<String,FilePattern>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public FilePattern toValue(String string) throws Exception
     {
       return new FilePattern(StringUtils.unescape(string));
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(FilePattern filePattern) throws Exception
     {
       return StringUtils.escape(filePattern.string);
@@ -151,6 +159,10 @@ public class Settings
    */
   class SettingValueAdapterSize extends SettingValueAdapter<String,Point>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public Point toValue(String string) throws Exception
     {
       Point point = null;
@@ -163,6 +175,10 @@ public class Settings
       return point;
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(Point p) throws Exception
     {
       return String.format("%dx%d",p.x,p.y);
@@ -229,6 +245,10 @@ public class Settings
    */
   class SettingValueAdapterWidthArray extends SettingValueAdapter<String,ColumnSizes>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public ColumnSizes toValue(String string) throws Exception
     {
       StringTokenizer tokenizer = new StringTokenizer(string,",");
@@ -240,6 +260,10 @@ public class Settings
       return new ColumnSizes(widthList);
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(ColumnSizes columnSizes) throws Exception
     {
       StringBuilder buffer = new StringBuilder();
@@ -302,6 +326,10 @@ public class Settings
    */
   class SettingValueAdapterColor extends SettingValueAdapter<String,Color>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public Color toValue(String string) throws Exception
     {
       Color color = null;
@@ -325,6 +353,10 @@ public class Settings
       return color;
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(Color color) throws Exception
     {
       if      (color.foreground != null)
@@ -355,6 +387,10 @@ public class Settings
    */
   class SettingValueAdapterKey extends SettingValueAdapter<String,Integer>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public Integer toValue(String string) throws Exception
     {
       int accelerator = 0;
@@ -370,6 +406,10 @@ public class Settings
       return accelerator;
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(Integer accelerator) throws Exception
     {
       return Widgets.menuAcceleratorToText(accelerator);
@@ -428,6 +468,10 @@ public class Settings
    */
   class SettingValueAdapterEditor extends SettingValueAdapter<String,Editor>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public Editor toValue(String string) throws Exception
     {
       Editor editor = null;
@@ -449,6 +493,10 @@ public class Settings
       return editor;
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(Editor editor) throws Exception
     {
       return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.command,false);
@@ -507,6 +555,10 @@ public class Settings
    */
   class SettingValueAdapterShellCommand extends SettingValueAdapter<String,ShellCommand>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public ShellCommand toValue(String string) throws Exception
     {
       ShellCommand shellCommand = null;
@@ -524,6 +576,10 @@ public class Settings
       return shellCommand;
     }
 
+    /** convert to string
+     * @param value value
+     * @return string
+     */
     public String toString(ShellCommand shellCommand) throws Exception
     {
       return StringUtils.escape(shellCommand.name)+" "+StringUtils.escape(shellCommand.command,false);
@@ -540,6 +596,10 @@ public class Settings
    */
   class SettingValueAdapterFontData extends SettingValueAdapter<String,FontData>
   {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
     public FontData toValue(String string) throws Exception
     {
       return Widgets.textToFontData(string);
@@ -1474,16 +1534,11 @@ exception.printStackTrace();
     save(new File(fileName));
   }
 
-  /** save default program settings (only if not external modified)
+  /** save program settings with default name
    */
   public static void save()
   {
-    File file = new File(ONZEN_CONFIG_FILE_NAME);
-
-    if ((lastModified == 0L) || (file.lastModified() <= lastModified))
-    {
-      save(file);
-    }
+    save(ONZEN_CONFIG_FILE_NAME);
   }
 
   /** check if program settings file is modified
