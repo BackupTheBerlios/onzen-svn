@@ -381,23 +381,23 @@ public class Settings
   static class Editor implements Cloneable
   {
     public String  mimeType;
-    public String  suffix;
+    public String  fileName;
     public String  command;
     public Pattern mimeTypePattern;
-    public Pattern suffixPattern;
+    public Pattern fileNamePattern;
 
     /** create editor
      * @param mimeType glob mime pattern string
-     * @param suffix glob suffix pattern
+     * @param fileName glob fileName pattern string
      * @param command command
      */
-    Editor(String mimeType, String suffix, String command)
+    Editor(String mimeType, String fileName, String command)
     {
       this.mimeType        = mimeType;
-      this.suffix          = suffix;
+      this.fileName        = fileName;
       this.command         = command;
       this.mimeTypePattern = Pattern.compile(StringUtils.globToRegex(mimeType));
-      this.suffixPattern   = Pattern.compile(StringUtils.globToRegex(suffix));
+      this.fileNamePattern = Pattern.compile(StringUtils.globToRegex(fileName));
     }
 
     /** create editor
@@ -412,7 +412,7 @@ public class Settings
      */
     public Editor clone()
     {
-      return new Editor(mimeType,suffix,command);
+      return new Editor(mimeType,fileName,command);
     }
 
     /** convert data to string
@@ -420,7 +420,7 @@ public class Settings
      */
     public String toString()
     {
-      return "Editor {"+mimeType+", suffix: "+suffix+", command: "+command+"}";
+      return "Editor {"+mimeType+", file name: "+fileName+", command: "+command+"}";
     }
   }
 
@@ -451,13 +451,13 @@ public class Settings
 
     public String toString(Editor editor) throws Exception
     {
-      return editor.mimeType+(!editor.suffix.isEmpty()?","+editor.suffix:"")+":"+StringUtils.escape(editor.command,false);
+      return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.command,false);
     }
 
     public boolean equals(Editor editor0, Editor editor1)
     {
       return    editor0.mimeType.equals(editor1.mimeType)
-             && editor0.suffix.equals(editor1.suffix)
+             && editor0.fileName.equals(editor1.fileName)
              && editor0.command.equals(editor1.command);
     }
   }
@@ -661,6 +661,8 @@ public class Settings
   public static Point                    geometryStorePatch                     = new Point(500,600);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryPatchReview                    = new Point(500,600);
+  @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryPreferences                    = new Point(500,600);
 
   @SettingComment(text={"","Colors: <rgb foreground>:<rgb background> or          <rgb foreground>"})
   @SettingValue(type=SettingValueAdapterColor.class)
