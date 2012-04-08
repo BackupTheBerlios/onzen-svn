@@ -1550,7 +1550,7 @@ Dprintf.dprintf("");
         boolean saveSettings = true;
         if (Settings.isFileModified())
         {
-          saveSettings = Dialogs.confirm(shell,"Confirmation","Settings were modified externally.\nOverride settings?","Override","Cancel",false);
+          saveSettings = Dialogs.confirm(shell,"Confirmation","Settings were modified externally.\nOverwrite settings?","Overwrite","Cancel",false);
         }
         if (saveSettings)
         {
