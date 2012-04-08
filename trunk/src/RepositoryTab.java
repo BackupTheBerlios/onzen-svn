@@ -1235,7 +1235,7 @@ Dprintf.dprintf("");
    */
   public void openFile(String fileName, String mimeType)
   {
-    // find editor command with file mime-type
+    // find editor command with file mime-type or file name pattern
     String command = null;
     if (command == null)
     {
@@ -1253,12 +1253,15 @@ Dprintf.dprintf("");
     }
     if (command == null)
     {
+      String baseName = new File(fileName).getName();
       for (Settings.Editor editor : Settings.editors)
       {
-        if (editor.suffixPattern.matcher(fileName).matches())
+        if (   editor.fileNamePattern.matcher(fileName).matches()
+            || editor.fileNamePattern.matcher(baseName).matches()
+           )
         {
           command = editor.command;
-         break;
+          break;
         }
       }
     }
@@ -1271,14 +1274,14 @@ Dprintf.dprintf("");
       class Data
       {
         String  mimeType;
-                String  suffix;
+        String  fileName;
         String  command;
         boolean addNewCommand;
 
         Data()
         {
           this.mimeType      = null;
-          this.suffix        = null;
+          this.fileName      = null;
           this.command       = null;
           this.addNewCommand = false;
         }
@@ -1298,7 +1301,7 @@ Dprintf.dprintf("");
       // create widgets
       final Table  widgetEditors;
       final Text   widgetMimeType;
-          final Text   widgetSuffix;
+      final Text   widgetFileName;
       final Text   widgetCommand;
       final Button widgetAddNewCommand;
       final Button widgetOpen;
@@ -1309,7 +1312,7 @@ Dprintf.dprintf("");
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,1,"Suffix",   SWT.LEFT,100,false);
+        Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,400,true );
         Widgets.setTableColumnWidth(widgetEditors,Settings.geometryOpenFileColumn.width);
         widgetEditors.setToolTipText("Changed files.");
@@ -1326,12 +1329,12 @@ Dprintf.dprintf("");
           Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
           widgetMimeType.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
 
-          label = Widgets.newLabel(subComposite,"Suffix:");
+          label = Widgets.newLabel(subComposite,"File name:");
           Widgets.layout(label,1,0,TableLayoutData.W);
 
-          widgetSuffix = Widgets.newText(subComposite);
-          Widgets.layout(widgetSuffix,1,1,TableLayoutData.WE);
-          widgetSuffix.setToolTipText("Simple file suffix pattern, e. g. *.pdf.\n");
+          widgetFileName = Widgets.newText(subComposite);
+          Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
+          widgetFileName.setToolTipText("Simple file file name pattern, e. g. *.pdf.\n");
 
           label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,2,0,TableLayoutData.W);
@@ -1387,12 +1390,12 @@ Dprintf.dprintf("");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            data.mimeType      = widgetMimeType.getText();
-            data.suffix        = widgetSuffix.getText();
+            data.mimeType      = widgetMimeType.getText().trim();
+            data.fileName      = widgetFileName.getText().trim();
             data.command       = widgetCommand.getText();
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
-                Settings.geometryOpenFile       = dialog.getSize();
+            Settings.geometryOpenFile       = dialog.getSize();
             Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
 
             Dialogs.close(dialog,true);
@@ -1427,6 +1430,7 @@ Dprintf.dprintf("");
             TableItem       tableItem = widgetEditors.getItem(index);
             Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
+            widgetFileName.setText(editor.fileName);
             widgetCommand.setText(editor.command);
           }
         }
@@ -1442,19 +1446,19 @@ Dprintf.dprintf("");
             Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
             data.mimeType      = null;
-            data.suffix        = null;
+            data.fileName      = null;
             data.command       = editor.command;
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
-                Settings.geometryOpenFile       = dialog.getSize();
+            Settings.geometryOpenFile       = dialog.getSize();
             Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
 
             Dialogs.close(dialog,true);
           }
         }
       });
-      Widgets.setNextFocus(widgetMimeType,widgetSuffix);
-      Widgets.setNextFocus(widgetSuffix,widgetCommand);
+      Widgets.setNextFocus(widgetMimeType,widgetFileName);
+      Widgets.setNextFocus(widgetFileName,widgetCommand);
       widgetCommand.addModifyListener(new ModifyListener()
       {
         public void modifyText(ModifyEvent modifyEvent)
@@ -1472,7 +1476,7 @@ Dprintf.dprintf("");
         TableItem tableItem = new TableItem(widgetEditors,SWT.NONE);
         tableItem.setData(editor);
         tableItem.setText(0,editor.mimeType);
-        tableItem.setText(1,editor.suffix);
+        tableItem.setText(1,editor.fileName);
         tableItem.setText(2,editor.command);
       }
 
@@ -1490,7 +1494,7 @@ Dprintf.dprintf("");
             if (data.addNewCommand)
             {
               // add editor
-              Settings.Editor editor = new Settings.Editor(data.mimeType,data.suffix,data.command);
+              Settings.Editor editor = new Settings.Editor(data.mimeType,data.fileName,data.command);
               Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
               Settings.editors[Settings.editors.length-1] = editor;
             }
@@ -3748,7 +3752,7 @@ Dprintf.dprintf("");
           boolean isExecutable = file.canExecute();
           long lastModified = file.lastModified();
           File backupFile = new File(fileName+Settings.backupFileSuffix);
-                  backupFile.delete();
+          backupFile.delete();
           if (!file.renameTo(backupFile))
           {
             throw new IOException("create backup file fail");
