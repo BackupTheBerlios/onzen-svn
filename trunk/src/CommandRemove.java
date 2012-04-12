@@ -53,7 +53,7 @@ class CommandRemove
     Data()
     {
       this.message             = null;
-      this.immediateCommitFlag = false;
+      this.immediateCommitFlag = Settings.immediateCommit;
     }
   };
 
@@ -137,13 +137,14 @@ class CommandRemove
       Widgets.layout(label,4,0,TableLayoutData.W);
 
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.WRAP|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
-      widgetMessage.setEnabled(Settings.immediateCommit);
+      widgetMessage.setEnabled(data.immediateCommitFlag);
       Widgets.layout(widgetMessage,5,0,TableLayoutData.NSWE);
       Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
       {
         public void modified(Control control)
         {
           if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
+          if (data.immediateCommitFlag) control.setFocus();
         }
       });
       widgetMessage.setToolTipText("Commit message.\nCtrl-Up/Down/Home/End to select message from history.\nCtrl-Return to remove files.");
@@ -153,7 +154,7 @@ class CommandRemove
       Widgets.layout(subComposite,6,0,TableLayoutData.WE);
       {
         widgetImmediateCommit = Widgets.newCheckbox(subComposite,"immediate commit");
-        widgetImmediateCommit.setSelection(Settings.immediateCommit);
+        widgetImmediateCommit.setSelection(data.immediateCommitFlag);
         Widgets.layout(widgetImmediateCommit,0,0,TableLayoutData.E);
         widgetImmediateCommit.addSelectionListener(new SelectionListener()
         {
@@ -221,10 +222,13 @@ class CommandRemove
       {
         List widget = (List)selectionEvent.widget;
 
-        int i = widget.getSelectionIndex();
-        if (i >= 0)
+        if (data.immediateCommitFlag)
         {
-          widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
+          int i = widget.getSelectionIndex();
+          if (i >= 0)
+          {
+            widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
+          }
         }
       }
     });
@@ -234,11 +238,14 @@ class CommandRemove
       {
         List widget = (List)mouseEvent.widget;
 
-        int i = widget.getSelectionIndex();
-        if (i >= 0)
+        if (data.immediateCommitFlag)
         {
-          widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
-          widgetMessage.setFocus();
+          int i = widget.getSelectionIndex();
+          if (i >= 0)
+          {
+            widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
+            widgetMessage.setFocus();
+          }
         }
       }
       public void mouseDown(MouseEvent mouseEvent)
