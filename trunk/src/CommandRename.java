@@ -56,7 +56,7 @@ class CommandRename
     {
       this.newFileName         = null;
       this.message             = null;
-      this.immediateCommitFlag = false;
+      this.immediateCommitFlag = Settings.immediateCommit;;
     }
   };
 
