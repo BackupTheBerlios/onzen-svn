@@ -234,6 +234,22 @@ class CommandRename
       }
     });
     Widgets.setNextFocus(widgetNewFileName,widgetMessage);
+    widgetHistory.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        List widget = (List)selectionEvent.widget;
+
+        int i = widget.getSelectionIndex();
+        if (i >= 0)
+        {
+          widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
+        }
+      }
+    });
     widgetHistory.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
