@@ -10,7 +10,9 @@
 
 /****************************** Imports ********************************/
 // base
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 
 import java.util.ArrayList;
@@ -164,16 +166,20 @@ class CommandFindFiles
   class Data
   {
     String  findText;
-    boolean showAllFlag;
-    boolean showHiddenFlag;
+    boolean findNamesFlag;
+    boolean findContentFlag;
+    boolean showAllRepositoriesFlag;
+    boolean showHiddenFilesFlag;
     boolean quitFlag;
 
     Data()
     {
-      this.findText       = "";
-      this.showAllFlag    = false;
-      this.showHiddenFlag = false;
-      this.quitFlag       = false;
+      this.findText                = "";
+      this.findNamesFlag           = CommandFindFiles.findNamesFlag;
+      this.findContentFlag         = CommandFindFiles.findContentFlag;
+      this.showAllRepositoriesFlag = CommandFindFiles.showAllRepositoriesFlag;
+      this.showHiddenFilesFlag     = CommandFindFiles.showHiddenFilesFlag;
+      this.quitFlag                = false;
     }
   };
 
@@ -182,8 +188,10 @@ class CommandFindFiles
   // --------------------------- variables --------------------------------
 
   // stored settings
-  private static boolean                 showAllFlag    = false;
-  private static boolean                 showHiddenFlag = false;
+  private static boolean                 findNamesFlag           = true;
+  private static boolean                 findContentFlag         = false;
+  private static boolean                 showAllRepositoriesFlag = false;
+  private static boolean                 showHiddenFilesFlag     = false;
 
   // global variable references
   private final RepositoryTab            repositoryTab;
@@ -199,8 +207,10 @@ class CommandFindFiles
   // widgets
   private final Table                    widgetFiles;
   private final Text                     widgetFind;
-  private final Button                   widgetShowAll;
-  private final Button                   widgetShowHidden;
+  private final Button                   widgetFindNames;
+  private final Button                   widgetFindContent;
+  private final Button                   widgetShowAllRepositories;
+  private final Button                   widgetShowHiddenFiles;
 
   private final Button                   widgetButtonOpenDirectory;
   private final Button                   widgetButtonOpen;
@@ -245,10 +255,9 @@ class CommandFindFiles
     // get display
     display = shell.getDisplay();
 
-
     // add files dialog
     dialog = Dialogs.open(shell,
-                          showAllFlag
+                          showAllRepositoriesFlag
                             ? "Find files"
                             : "Find files in '"+repositoryTab.repository.rootPath+"'",
                           new double[]{1.0,0.0},
@@ -486,13 +495,10 @@ Dprintf.dprintf("");
       subComposite.setLayout(new TableLayout(null,0.0));
       Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Show:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
-
-        widgetShowAll = Widgets.newCheckbox(subComposite,"all repositories");
-        widgetShowAll.setSelection(showAllFlag);
-        Widgets.layout(widgetShowAll,0,1,TableLayoutData.W);
-        widgetShowAll.addSelectionListener(new SelectionListener()
+        widgetFindNames = Widgets.newCheckbox(subComposite,"find names");
+        widgetFindNames.setSelection(data.findNamesFlag);
+        Widgets.layout(widgetFindNames,0,0,TableLayoutData.W);
+        widgetFindNames.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
@@ -503,10 +509,38 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowHidden = Widgets.newCheckbox(subComposite,"show hidden");
-        widgetShowHidden.setSelection(showHiddenFlag);
-        Widgets.layout(widgetShowHidden,0,2,TableLayoutData.W);
-        widgetShowHidden.addSelectionListener(new SelectionListener()
+        widgetFindContent = Widgets.newCheckbox(subComposite,"find content");
+        widgetFindContent.setSelection(data.findContentFlag);
+        Widgets.layout(widgetFindContent,0,1,TableLayoutData.W);
+        widgetFindContent.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            restartFindFiles();
+          }
+        });
+
+        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories");
+        widgetShowAllRepositories.setSelection(data.showAllRepositoriesFlag);
+        Widgets.layout(widgetShowAllRepositories,0,2,TableLayoutData.W);
+        widgetShowAllRepositories.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            restartFindFiles();
+          }
+        });
+
+        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files");
+        widgetShowHiddenFiles.setSelection(data.showHiddenFilesFlag);
+        Widgets.layout(widgetShowHiddenFiles,0,3,TableLayoutData.W);
+        widgetShowHiddenFiles.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
@@ -635,6 +669,12 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          // store settings
+          findNamesFlag           = data.findNamesFlag;
+          findContentFlag         = data.findContentFlag;
+          showAllRepositoriesFlag = data.showAllRepositoriesFlag;
+          showHiddenFilesFlag     = data.showHiddenFilesFlag;
+
           Dialogs.close(dialog);
         }
       });
@@ -687,8 +727,10 @@ Dprintf.dprintf("");
     };
     widgetFiles.addKeyListener(keyListener);
     widgetFind.addKeyListener(keyListener);
-    widgetShowAll.addKeyListener(keyListener);
-    widgetShowHidden.addKeyListener(keyListener);
+    widgetFindNames.addKeyListener(keyListener);
+    widgetFindContent.addKeyListener(keyListener);
+    widgetShowAllRepositories.addKeyListener(keyListener);
+    widgetShowHiddenFiles.addKeyListener(keyListener);
     widgetFind.addKeyListener(new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
@@ -718,10 +760,12 @@ Dprintf.dprintf("");
     // start find files
     Background.run(new BackgroundRunnable()
     {
-      String  findText       = "";
-      Pattern findPattern    = null;
-      boolean showAllFlag    = false;
-      boolean showHiddenFlag = false;
+      String  findText                 = "";
+      Pattern findPattern              = null;
+      boolean findNamesFlag            = data.findNamesFlag;
+      boolean findContentFlag          = data.findContentFlag;
+      boolean showAllRepositoriesFlag  = data.showAllRepositoriesFlag;
+      boolean showHiddenFilesFlag      = data.showHiddenFilesFlag;
 
       /** check if data is modified
        * @return true iff data is modified
@@ -730,8 +774,10 @@ Dprintf.dprintf("");
       {
         return    data.quitFlag
                || ((data.findText != null) && !data.findText.equals(findText))
-               || (data.showAllFlag != showAllFlag)
-               || (data.showHiddenFlag != showHiddenFlag);
+               || (data.findNamesFlag != findNamesFlag)
+               || (data.findContentFlag != findContentFlag)
+               || (data.showAllRepositoriesFlag != showAllRepositoriesFlag)
+               || (data.showHiddenFilesFlag != showHiddenFilesFlag);
       }
 
       /** run method
@@ -751,7 +797,7 @@ Dprintf.dprintf("");
           if (!findText.isEmpty())
           {
 //Dprintf.dprintf("findPattern=%s",findPattern);
-            for (final RepositoryTab repositoryTab : (showAllFlag) ? allRepositoryTabs : thisRepositoryTabs)
+            for (final RepositoryTab repositoryTab : (showAllRepositoriesFlag) ? allRepositoryTabs : thisRepositoryTabs)
             {
               File directory = new File(repositoryTab.repository.rootPath);
 
@@ -772,31 +818,39 @@ Dprintf.dprintf("");
                     if (isDataModified()) break;
 
 //Dprintf.dprintf("fileName=%s %s",fileName,repositoryTab.repository.isHiddenFile(fileName));
-                    if (showHiddenFlag || !repositoryTab.repository.isHiddenFile(fileName))
+                    if (showHiddenFilesFlag || !repositoryTab.repository.isHiddenFile(fileName))
                     {
                       final File file = new File(directory,fileName);
                       if     (file.isFile())
                       {
-                        if (   fileName.toLowerCase().contains(findText)
-                            || findPattern.matcher(fileName).matches()
-                           )
-                        {
-                          display.syncExec(new Runnable()
-                          {
-                            public void run()
-                            {
-                              FindDataComparator findDataComparator = new FindDataComparator(widgetFiles);
-
-                              Widgets.insertTableEntry(widgetFiles,
-                                                       findDataComparator,
-                                                       new FindData(repositoryTab,file),
-                                                       file.getName(),
-                                                       file.getParent(),
-                                                       Onzen.DATETIME_FORMAT.format(file.lastModified()),
-                                                       Long.toString(file.length())
+                        boolean nameMatchFlag    =    findNamesFlag
+                                                   && (   fileName.toLowerCase().contains(findText)
+                                                       || findPattern.matcher(fileName).matches()
                                                       );
-                            }
-                          });
+                        boolean contentMatchFlag =    findContentFlag
+                                                   && fileContains(file, findText);
+
+                        if (nameMatchFlag || contentMatchFlag)
+                        {
+                          if (!dialog.isDisposed())
+                          {
+                            display.syncExec(new Runnable()
+                            {
+                              public void run()
+                              {
+                                FindDataComparator findDataComparator = new FindDataComparator(widgetFiles);
+
+                                Widgets.insertTableEntry(widgetFiles,
+                                                         findDataComparator,
+                                                         new FindData(repositoryTab,file),
+                                                         file.getName(),
+                                                         file.getParent(),
+                                                         Onzen.DATETIME_FORMAT.format(file.lastModified()),
+                                                         Long.toString(file.length())
+                                                        );
+                              }
+                            });
+                          }
                         }
                       }
                       else if (file.isDirectory())
@@ -838,8 +892,10 @@ Dprintf.dprintf("");
               // clear existing text
               data.findText = null;
             }
-            showAllFlag    = data.showAllFlag;
-            showHiddenFlag = data.showHiddenFlag;
+            findNamesFlag           = data.findNamesFlag;
+            findContentFlag         = data.findContentFlag;
+            showAllRepositoriesFlag = data.showAllRepositoriesFlag;
+            showHiddenFilesFlag     = data.showHiddenFilesFlag;
           }
         }
       }
@@ -858,8 +914,10 @@ Dprintf.dprintf("");
         public void done(Object result)
         {
           // store values
-          showAllFlag    = widgetShowAll.getSelection();
-          showHiddenFlag = widgetShowHidden.getSelection();
+          findNamesFlag           = widgetFindNames.getSelection();
+          findContentFlag         = widgetFindContent.getSelection();
+          showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
+          showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
 
           Settings.geometryFindFiles       = dialog.getSize();
           Settings.geometryFindFilesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
@@ -891,7 +949,7 @@ Dprintf.dprintf("");
   {
     if (!dialog.isDisposed())
     {
-      dialog.setText(widgetShowAll.getSelection()
+      dialog.setText(widgetShowAllRepositories.getSelection()
                        ? "Find files"
                        : "Find files in '"+repositoryTab.repository.rootPath+"'"
                     );
@@ -901,9 +959,11 @@ Dprintf.dprintf("");
       {
         synchronized(data)
         {
-          data.findText       = findText;
-          data.showAllFlag    = widgetShowAll.getSelection();
-          data.showHiddenFlag = widgetShowHidden.getSelection();
+          data.findText                = findText;
+          data.findNamesFlag           = widgetFindNames.getSelection();
+          data.findContentFlag         = widgetFindContent.getSelection();
+          data.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
+          data.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
           data.notifyAll();
 
           Widgets.modified(data);
@@ -941,6 +1001,51 @@ Dprintf.dprintf("");
     {
       return null;
     }
+  }
+
+  /** get selected find data
+   * @return find data or null
+   */
+  private boolean fileContains(File file, String text)
+  {
+    boolean containsFlag = false;
+
+    BufferedReader input = null;
+    try
+    {
+      // open file
+      input = new BufferedReader(new FileReader(file));
+
+      // read file and find text
+      text = text.toLowerCase();
+      String line;
+      while (   !containsFlag
+             && ((line = input.readLine()) != null)
+            )
+      {
+        containsFlag = line.toLowerCase().contains(text);
+      }
+
+      // close file
+      input.close(); input = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      try
+      {
+        if (input != null) input.close();
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+    }
+
+    return containsFlag;
   }
 }
 
