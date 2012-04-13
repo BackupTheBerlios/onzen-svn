@@ -14,7 +14,9 @@
 @if "%1" == "help" goto help
 @if "%1" == "config" goto config
 @if "%1" == "compile" goto compile
+@if "%1" == "c" goto compile
 @if "%1" == "run" goto run
+@if "%1" == "r" goto run
 @if "%1" == "jars" goto jars
 @goto compile
 
@@ -42,17 +44,20 @@
 @mkdir classes 2>NUL
 @if exist src\Config.java goto skipConfig
 @call make.bat config
+@if errorlevel 1 goto end
 :skipConfig
 javac.exe -d classes -cp %CLASSPATH% src\*.java
 @goto end
 
 :run
 @call make.bat compile
+@if errorlevel 1 goto end
 java -cp %CLASSPATH% Onzen
 @goto end
 
 :jars
 @call make.bat compile
+@if errorlevel 1 goto end
 @mkdir tmp 2>NUL
 
 @rem onzen-windows.jar
