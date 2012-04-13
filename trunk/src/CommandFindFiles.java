@@ -761,7 +761,8 @@ Dprintf.dprintf("");
     Background.run(new BackgroundRunnable()
     {
       String  findText                 = "";
-      Pattern findPattern              = null;
+      Pattern findNamePattern          = null;
+      Pattern findContentPattern       = null;
       boolean findNamesFlag            = data.findNamesFlag;
       boolean findContentFlag          = data.findContentFlag;
       boolean showAllRepositoriesFlag  = data.showAllRepositoriesFlag;
@@ -825,10 +826,10 @@ Dprintf.dprintf("");
                       {
                         boolean nameMatchFlag    =    findNamesFlag
                                                    && (   fileName.toLowerCase().contains(findText)
-                                                       || findPattern.matcher(fileName).matches()
+                                                       || findNamePattern.matcher(fileName).matches()
                                                       );
                         boolean contentMatchFlag =    findContentFlag
-                                                   && fileContains(file, findText);
+                                                   && fileContains(file, findText, findContentPattern);
 
                         if (nameMatchFlag || contentMatchFlag)
                         {
@@ -886,8 +887,9 @@ Dprintf.dprintf("");
             if (data.findText != null)
             {
               // get new find text/pattern
-              findText    = new String(data.findText);
-              findPattern = Pattern.compile(StringUtils.globToRegex(data.findText),Pattern.CASE_INSENSITIVE);
+              findText           = new String(data.findText);
+              findNamePattern    = Pattern.compile(StringUtils.globToRegex(data.findText),Pattern.CASE_INSENSITIVE);
+              findContentPattern = Pattern.compile(".*"+StringUtils.globToRegex(data.findText)+".*",Pattern.CASE_INSENSITIVE);
 
               // clear existing text
               data.findText = null;
@@ -1006,7 +1008,7 @@ Dprintf.dprintf("");
   /** get selected find data
    * @return find data or null
    */
-  private boolean fileContains(File file, String text)
+  private boolean fileContains(File file, String text, Pattern findPattern)
   {
     boolean containsFlag = false;
 
@@ -1023,7 +1025,8 @@ Dprintf.dprintf("");
              && ((line = input.readLine()) != null)
             )
       {
-        containsFlag = line.toLowerCase().contains(text);
+        containsFlag =    line.toLowerCase().contains(text)
+                       || findPattern.matcher(line).matches();
       }
 
       // close file
