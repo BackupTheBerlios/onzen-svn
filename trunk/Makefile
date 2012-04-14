@@ -96,6 +96,9 @@ TAR        = tar
 ZIP        = zip
 UNZIP      = unzip
 
+UNOCONV    = unoconv
+TXT2MAN    = txt2man
+
 #------------------------ specific variables/settings ------------------------
 
 VERSION_MAJOR := $(shell $(CAT) version|$(GREP) MAJOR|$(SED) 's/MAJOR=//g')
@@ -173,10 +176,15 @@ OTHER_JARS     = $(SQLITE_JAR) \
 TARGETS        = onzen \
                  $(if $(LAUNCH4J),onzen.exe,onzen.bat) \
 
+DOC            = doc/onzen.7 \
+                 doc/onzen.pdf \
+
 #------------------------------ dependencies ---------------------------------
 
 .PHONY: all clean distclean depend
-all: $(TARGETS)
+all: \
+  $(TARGETS) \
+  $(DOC)\
 
 clean: \
   clean_jars
@@ -189,6 +197,7 @@ clean: \
 distclean: \
   clean
 
+# ----------------------------------------------------------------------------
 # config
 src/Config.java: src/Config.java.in
 	$(CAT) src/Config.java.in | \
@@ -202,7 +211,9 @@ src/Config.java: src/Config.java.in
           done; \
         ) > $@       
 
+# ----------------------------------------------------------------------------
 # JARs
+
 .PHONY: jars clean_jars
 jars: $(JARS)
 
@@ -405,6 +416,7 @@ solaris: onzen onzen-solaris.jar onzen-solaris_64.jar
 .PHONY: macosx
 macosx: onzen onzen-macosx.jar onzen-macosx_64.jar
 
+# ----------------------------------------------------------------------------
 # run
 run: $(OBJECTS)
 ifneq ($(JAVA),)
@@ -445,7 +457,58 @@ install: onzen-linux.jar onzen
                    onzen \
                    $(HOME)/bin
 
-# --- distribution
+# ----------------------------------------------------------------------------
+# create documentation
+.PHONY: doc clean_doc man clean_man showman
+
+doc: \
+  doc/onzen.7 \
+  doc/onzen.pdf
+
+clean_doc:
+ifneq ($(TXT2MAN),)
+	$(RMF) doc/onzen.7
+endif
+ifneq ($(UNOCONV),)
+	$(RMF) doc/onzen.pdf
+endif
+
+# create man-page
+
+man: \
+  doc/onzen.7
+
+clean_man:
+	$(RMF) doc/onzen.7
+
+doc/onzen.7: \
+  doc/onzen.txt
+ifneq ($(TXT2MAN),)
+	$(CAT) doc/onzen.txt | $(TXT2MAN) -t onzen -r $(VERSION_MAJOR).$(VERSION_MINOR) -s 7 -v "Linux User's Manual" > $@
+else
+	@$(ECHO) "ERROR: no 'txt2man' tool available! Cannot create man page."
+endif
+
+showman:
+ifneq ($(TXT2MAN),)
+	$(CAT) doc/onzen.txt | $(TXT2MAN) -t onzen -r $(VERSION_MAJOR).$(VERSION_MINOR) -s 7 -v "Linux User's Manual" -T
+else
+	@$(ECHO) "ERROR: no 'txt2man' tool available! Cannot create man page."
+endif
+
+# create manual
+
+doc/onzen.pdf: \
+  doc/onzen.odt
+ifneq ($(UNOCONV),)
+	$(UNOCONV) -f pdf doc/onzen.odt
+else
+	@$(ECHO) "ERROR: no 'unoconv' tool available! Cannot create PDF manual."
+endif
+
+# ----------------------------------------------------------------------------
+# distribution
+
 .PHONY: dist clean_dist $(DISTRIBUTION_NAME).tar.bz2
 
 dist: \
@@ -478,7 +541,10 @@ $(DISTRIBUTION_NAME).tar.bz2: \
   \
   doc/README \
   doc/COPYING \
-  $(MAN)
+  doc/onzen.odt \
+  doc/*.txt \
+  doc/images/*.png \
+  $(DOC)
 	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)
 	$(INSTALL) -m 775 \
                    $(OTHER_SOURCES) \
@@ -532,7 +598,15 @@ $(DISTRIBUTION_NAME).tar.bz2: \
 	$(INSTALL) -m 664 \
                    doc/README \
                    doc/COPYING \
+                   doc/onzen.odt \
+                   doc/onzen.pdf \
+                   doc/*.txt \
+                   doc/onzen.7 \
                    tmp/$(DISTRIBUTION_NAME)/doc
+	$(INSTALL) -d tmp/$(DISTRIBUTION_NAME)/doc/images
+	$(INSTALL) -m 664 \
+                   doc/images/*.png \
+                   tmp/$(DISTRIBUTION_NAME)/doc/images
 	#
 	($(CD) tmp; $(TAR) cjf ../$@ $(DISTRIBUTION_NAME))
 	$(RMRF) tmp/$(DISTRIBUTION_NAME)
