@@ -1,0 +1,29 @@
+/***********************************************************************\
+*
+* $Revision$
+* $Date$
+* $Author$
+* $Source: /tmp/cvs/onzen/src/Config.java,v $
+* Systems: all
+*
+\***********************************************************************/
+
+/****************************** Imports ********************************/
+
+/****************************** Classes ********************************/
+
+public class Config
+{
+  // --------------------------- constants --------------------------------
+  public static final String VERSION_MAJOR    = "@VERSION_MAJOR@";
+  public static final String VERSION_MINOR    = "@VERSION_MINOR@";
+  public static final String VERSION_REVISION = "@VERSION_REVISION@";
+
+  // --------------------------- variables --------------------------------
+
+  // ------------------------ native functions ----------------------------
+
+  // ---------------------------- methods ---------------------------------
+}
+
+/* end of file */

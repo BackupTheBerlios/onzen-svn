@@ -1,0 +1,23 @@
+ToDo
+
+- page up/down in revision tree view
+- view/edit tag names
+- checkout module
+- create branch
+- use text widget separator instead of \n
+- use file watch service from Java 7 to detect files changes outside
+- menu entry to show/hidden hidden files
+- check-out functions
+- annotation dialog: buttons for prev/next release
+- pane in commit dialog between changes/history/message
+- use inotify-tools (inotifywait) to monitor external file changes (use new interface classes in Java 7)
+- support for launch4j
+- animated busy-cursor
+- make dialogs non-modal
+- add refresh shortcut key
+- change mime macro %file% to ${file}?
+- write manual
+- CVS: show sticky tag/date somewhere
+- function to replace tabs, remove trailing spaces
+- view log funciton
+- selection character set when double-clicking
