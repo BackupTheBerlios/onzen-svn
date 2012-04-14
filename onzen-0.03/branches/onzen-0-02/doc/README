@@ -1,0 +1,92 @@
+Onzen
+
+Onzen is a graphical front end for the revision control systems CVS,
+SVN, and HG. It represent the files managed by the RCS in a tree-view
+with detailed information and offers functions to e. g. update,
+commit, add, remove, rename, revert, diff, view files.
+
+Note:
+
+Onzen has a long history. The first (never published) version was
+written in TclTk and I used it for many years for my daily work. Now
+Onzen is reimplemented from scratch in Java SWT.
+
+--- Features
+
+* update, commit, add, remove, rename revert files managed in a RCS
+* support the RCS: Concurrent Version System (CVS), Apache Subversion (SVN),
+  Mercurial (HG), planned: also Git support
+* can show diff in two-columns, view file revisions tree, view files content
+* create patches, mail patches for review, store patches in internal database
+* can use internal/external diff commands
+* edit files with external program; select external program by MimeTypes
+* fast even with a slow remote connection: many operations are done
+  asynchronous in background
+* support multiple repositories in separated tabs
+* multiple repository lists
+* keep history with commit messages; broadcast commit messages to other
+  Onzen instances via UDP message
+* written in Java with SWT: available for Linux, Solaris, MacOS, Windows
+
+--- Requirements
+
+* Linux, Solaris, MacOS, or Windows system with CVS, SVN, and/or HG installed
+* Java Runtime environment 1.6 or newer
+* external tools to open files, e. g. a text editor
+
+--- Installation
+
+There are pre-compiled binary packages available for several
+systems. You can download them from
+
+  http://www.kigen.de/projects/onzen/index.html
+
+If there is no binary package available for your system, you
+can compile onzen also by yourself.
+
+Install Java, SWT, launch4j:
+
+* Download Java JRE V1.6 (JRE6) from http://java.com/en/download/index.jsp
+* Install Java
+
+Then do:
+
+  make
+  make install
+
+--- Start
+
+On Linux, Solaris, MacOSX:
+
+  onzen.sh
+ 
+On Windows:
+
+  onzen.bat
+
+--- License
+
+Onzen and all files are under the GPL version 2. The full GPL
+version 2 license text can be found here:
+
+  http://www.gnu.org/licenses/gpl-2.0.html
+
+Onzen is using SWT. SWT is under the "Eclipse Public License"
+which can be found here:
+
+  http://www.eclipse.org/org/documents/epl-v10.php
+
+Onzen is SQLite and SQLiteJDBC. SQLite is public domain. The copyright
+information can be found here:
+
+  http://www.sqlite.org/copyright.html
+
+SQLiteJDBC is under the "BSD License" which can be found here:
+
+  http://zentus.com/sqlitejdbc/license.html
+
+--- Contact
+
+Send an email to
+
+torsten.rupp@gmx.net
