@@ -27,6 +27,9 @@
   * implemented create new repository
   * add dialog to show outgoing changes (hg)
   * update SWT to 3.7.2
+  * improved file type detection: use Mime and file
+    name extension if no Mime type can be detected
+  * fix message widget in rename/remove dialogs
 
 2011-09-06 0.02
   * support sending mails with JavaMail
