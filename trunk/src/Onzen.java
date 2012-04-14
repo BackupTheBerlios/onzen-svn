@@ -1252,7 +1252,7 @@ Dprintf.dprintf("");
 
     menu = Widgets.addMenu(menuBar,"Program");
     {
-      menuItem = Widgets.addMenuItem(menu,"New repository...");
+      menuItem = Widgets.addMenuItem(menu,"New repository\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1264,7 +1264,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Check-out repository...",Settings.keyCheckoutRepository);
+      menuItem = Widgets.addMenuItem(menu,"Check-out repository\u2026",Settings.keyCheckoutRepository);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1276,7 +1276,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Open repository...",Settings.keyOpenRepository);
+      menuItem = Widgets.addMenuItem(menu,"Open repository\u2026",Settings.keyOpenRepository);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1292,7 +1292,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Edit repository list...",Settings.keyEditRepositoryList);
+      menuItem = Widgets.addMenuItem(menu,"Edit repository list\u2026",Settings.keyEditRepositoryList);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1304,7 +1304,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Edit repository...",Settings.keyEditRepository);
+      menuItem = Widgets.addMenuItem(menu,"Edit repository\u2026",Settings.keyEditRepository);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1319,7 +1319,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Close repository...",Settings.keyCloseRepository);
+      menuItem = Widgets.addMenuItem(menu,"Close repository\u2026",Settings.keyCloseRepository);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1338,7 +1338,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"New repository list...");
+      menuItem = Widgets.addMenuItem(menu,"New repository list\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1350,7 +1350,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Load repository list...");
+      menuItem = Widgets.addMenuItem(menu,"Load repository list\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1435,7 +1435,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Commit...",Settings.keyCommit);
+      menuItem = Widgets.addMenuItem(menu,"Commit\u2026",Settings.keyCommit);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1447,7 +1447,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Create patch...",Settings.keyCreatePatch);
+      menuItem = Widgets.addMenuItem(menu,"Create patch\u2026",Settings.keyCreatePatch);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1462,7 +1462,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Patches...",Settings.keyPatches);
+      menuItem = Widgets.addMenuItem(menu,"Patches\u2026",Settings.keyPatches);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1477,7 +1477,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Revert...",Settings.keyRevert);
+      menuItem = Widgets.addMenuItem(menu,"Revert\u2026",Settings.keyRevert);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1589,7 +1589,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Add...",Settings.keyAdd);
+      menuItem = Widgets.addMenuItem(menu,"Add\u2026",Settings.keyAdd);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1601,7 +1601,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Remove...",Settings.keyRemove);
+      menuItem = Widgets.addMenuItem(menu,"Remove\u2026",Settings.keyRemove);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1613,7 +1613,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Rename...",Settings.keyRename);
+      menuItem = Widgets.addMenuItem(menu,"Rename\u2026",Settings.keyRename);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1628,7 +1628,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuSetFileMode = Widgets.addMenuItem(menu,"Set file mode...",Settings.keySetFileMode);
+      menuSetFileMode = Widgets.addMenuItem(menu,"Set file mode\u2026",Settings.keySetFileMode);
       menuSetFileMode.setEnabled(false);
       menuSetFileMode.addSelectionListener(new SelectionListener()
       {
@@ -1646,7 +1646,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"New branch...",Settings.keyNewBranch);
+      menuItem = Widgets.addMenuItem(menu,"New branch\u2026",Settings.keyNewBranch);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1664,7 +1664,7 @@ Dprintf.dprintf("");
 
     menu = Widgets.addMenu(menuBar,"View");
     {
-      menuItem = Widgets.addMenuItem(menu,"Revision info...",Settings.keyRevisionInfo);
+      menuItem = Widgets.addMenuItem(menu,"Revision info\u2026",Settings.keyRevisionInfo);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1679,7 +1679,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Revisions...",Settings.keyRevisions);
+      menuItem = Widgets.addMenuItem(menu,"Revisions\u2026",Settings.keyRevisions);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1691,7 +1691,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Diff...",Settings.keyDiff);
+      menuItem = Widgets.addMenuItem(menu,"Diff\u2026",Settings.keyDiff);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1703,7 +1703,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Changed files...",Settings.keyChangedFiles);
+      menuItem = Widgets.addMenuItem(menu,"Changed files\u2026",Settings.keyChangedFiles);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1718,7 +1718,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Annotations...",Settings.keyAnnotations);
+      menuItem = Widgets.addMenuItem(menu,"Annotations\u2026",Settings.keyAnnotations);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1733,7 +1733,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Solve conflict...",Settings.keySolve);
+      menuItem = Widgets.addMenuItem(menu,"Solve conflict\u2026",Settings.keySolve);
 menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1749,7 +1749,7 @@ menuItem.setEnabled(false);
 
     menu = Widgets.addMenu(menuBar,"File/Directory");
     {
-      menuItem = Widgets.addMenuItem(menu,"Open file...");
+      menuItem = Widgets.addMenuItem(menu,"Open file\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1764,7 +1764,7 @@ menuItem.setEnabled(false);
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
+      menuItem = Widgets.addMenuItem(menu,"Open file with\u2026",Settings.keyOpenFileWith);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1781,7 +1781,7 @@ menuItem.setEnabled(false);
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"New file...",Settings.keyNewFile);
+      menuItem = Widgets.addMenuItem(menu,"New file\u2026",Settings.keyNewFile);
 menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1798,7 +1798,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"New directory...",Settings.keyNewDirectory);
+      menuItem = Widgets.addMenuItem(menu,"New directory\u2026",Settings.keyNewDirectory);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1813,7 +1813,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Rename local file/directory...",Settings.keyRenameLocal);
+      menuItem = Widgets.addMenuItem(menu,"Rename local file/directory\u2026",Settings.keyRenameLocal);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1828,7 +1828,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Delete local files/directories...",Settings.keyDeleteLocal);
+      menuItem = Widgets.addMenuItem(menu,"Delete local files/directories\u2026",Settings.keyDeleteLocal);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1845,7 +1845,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Find files...",Settings.keyFindFiles);
+      menuItem = Widgets.addMenuItem(menu,"Find files\u2026",Settings.keyFindFiles);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1860,7 +1860,7 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Copy to...",Settings.keyCopyFilesTo);
+      menuItem = Widgets.addMenuItem(menu,"Copy to\u2026",Settings.keyCopyFilesTo);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1874,7 +1874,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyConvertWhitespaces);
+      menuItem = Widgets.addMenuItem(menu,"Convert whitespaces\u2026",Settings.keyConvertWhitespaces);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1900,7 +1900,7 @@ Dprintf.dprintf("");
 
     menu = Widgets.addMenu(menuBar,"Options");
     {
-      menuItem = Widgets.addMenuItem(menu,"Preferences...");
+      menuItem = Widgets.addMenuItem(menu,"Preferences\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1914,7 +1914,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"New master password...");
+      menuItem = Widgets.addMenuItem(menu,"New master password\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2319,7 +2319,7 @@ exception.printStackTrace();
         });
       }
       Widgets.addMenuSeparator(menuShellCommands);
-      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command...");
+      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -4805,7 +4805,7 @@ exception.printStackTrace();
           });
           button.setToolTipText("Remove selected test description.");
 
-          button = Widgets.newButton(subSubComposite,"Sort...");
+          button = Widgets.newButton(subSubComposite,"Sort\u2026");
           Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
@@ -4876,7 +4876,7 @@ exception.printStackTrace();
         subComposite.setToolTipText("Test description settings.\nRight-click to open context menu.");
 
         {
-          subMenu = Widgets.addMenu(menu,"Copy from...");
+          subMenu = Widgets.addMenu(menu,"Copy from\u2026");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -4984,7 +4984,7 @@ exception.printStackTrace();
         subSubComposite.setToolTipText("Mail server settings.\nRight-click to open context menu.");
 
         {
-          subMenu = Widgets.addMenu(menu,"Copy from...");
+          subMenu = Widgets.addMenu(menu,"Copy from\u2026");
           menuItem = Widgets.addMenuItem(subMenu,"default");
           menuItem.addSelectionListener(new SelectionListener()
           {
@@ -5080,7 +5080,7 @@ exception.printStackTrace();
         subSubComposite.setToolTipText("Patch mail settings.\nRight-click to open context menu.");
 
         {
-          subMenu = Widgets.addMenu(menu1,"Copy from...");
+          subMenu = Widgets.addMenu(menu1,"Copy from\u2026");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -5106,7 +5106,7 @@ exception.printStackTrace();
           }
         }
         {
-          subMenu = Widgets.addMenu(menu2,"Copy from...");
+          subMenu = Widgets.addMenu(menu2,"Copy from\u2026");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -5178,7 +5178,7 @@ exception.printStackTrace();
         subSubComposite.setToolTipText("Review server settings.\nRight-click to open context menu.");
 
         {
-          subMenu = Widgets.addMenu(menu,"Copy from...");
+          subMenu = Widgets.addMenu(menu,"Copy from\u2026");
           menuItem = Widgets.addMenuItem(subMenu,"default");
           menuItem.addSelectionListener(new SelectionListener()
           {
@@ -5275,7 +5275,7 @@ exception.printStackTrace();
         subSubComposite.setMenu(menu1);
 
         {
-          subMenu = Widgets.addMenu(menu1,"Copy from...");
+          subMenu = Widgets.addMenu(menu1,"Copy from\u2026");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
@@ -5303,7 +5303,7 @@ exception.printStackTrace();
         }
 
         {
-          subMenu = Widgets.addMenu(menu2,"Copy from...");
+          subMenu = Widgets.addMenu(menu2,"Copy from\u2026");
           for (Repository repository : repositoryList)
           {
             if (repository != repositoryTab.repository)
