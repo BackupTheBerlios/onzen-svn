@@ -517,6 +517,9 @@ dist: \
   $(DISTRIBUTION_NAME)-solaris.tar.bz2 \
   $(DISTRIBUTION_NAME)-macosx.tar.bz2 \
   $(DISTRIBUTION_NAME)-windows.zip
+ifneq ($(MD5SUM),)
+	$(MD5SUM) $^
+endif
 
 clean_dist:
 	$(RMF) $(DISTRIBUTION_NAME).tar.bz2
