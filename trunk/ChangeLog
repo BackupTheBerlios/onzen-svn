@@ -30,6 +30,7 @@
   * improved file type detection: use Mime and file
     name extension if no Mime type can be detected
   * fix message widget in rename/remove dialogs
+  * improved documentation, create PDF file
 
 2011-09-06 0.02
   * support sending mails with JavaMail
