@@ -512,7 +512,7 @@ class CommandPatches
             }
           }
         });
-        menuItem = Widgets.addMenuItem(menu,"Delete...");
+        menuItem = Widgets.addMenuItem(menu,"Delete\u2026");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -536,7 +536,7 @@ class CommandPatches
             }
           }
         });
-        menuItem = Widgets.addMenuItem(menu,"Edit reference...");
+        menuItem = Widgets.addMenuItem(menu,"Edit reference\u2026");
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -660,7 +660,7 @@ class CommandPatches
 
           menu = Widgets.newPopupMenu(dialog);
           {
-            menuItem = Widgets.addMenuItem(menu,"Add file...");
+            menuItem = Widgets.addMenuItem(menu,"Add file\u2026");
             menuItem.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -685,7 +685,7 @@ class CommandPatches
                 }
               }
             });
-            menuItem = Widgets.addMenuItem(menu,"Remove files...");
+            menuItem = Widgets.addMenuItem(menu,"Remove files\u2026");
             menuItem.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -756,7 +756,7 @@ class CommandPatches
 
           menu = Widgets.newPopupMenu(dialog);
           {
-            menuItem = Widgets.addMenuItem(menu,"Edit...");
+            menuItem = Widgets.addMenuItem(menu,"Edit\u2026");
             menuItem.addSelectionListener(new SelectionListener()
             {
               public void widgetDefaultSelected(SelectionEvent selectionEvent)

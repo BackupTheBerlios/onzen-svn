@@ -359,7 +359,7 @@ class CommandPatchReview
 
             menu = Widgets.newPopupMenu(dialog);
             {
-              menuItem = Widgets.addMenuItem(menu,"Edit...");
+              menuItem = Widgets.addMenuItem(menu,"Edit\u2026");
               menuItem.addSelectionListener(new SelectionListener()
               {
                 public void widgetDefaultSelected(SelectionEvent selectionEvent)

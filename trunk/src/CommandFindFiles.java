@@ -321,7 +321,7 @@ class CommandFindFiles
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Revisions...");
+        menuItem = Widgets.addMenuItem(menu,"Revisions\u2026");
         menuItem.setEnabled(false);
         Widgets.addModifyListener(new WidgetListener(menuItem,data)
         {
@@ -343,7 +343,7 @@ class CommandFindFiles
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Open file...");
+        menuItem = Widgets.addMenuItem(menu,"Open file\u2026");
         menuItem.setEnabled(false);
         Widgets.addModifyListener(new WidgetListener(menuItem,data)
         {
@@ -363,7 +363,7 @@ class CommandFindFiles
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Open file with...",Settings.keyOpenFileWith);
+        menuItem = Widgets.addMenuItem(menu,"Open file with\u2026",Settings.keyOpenFileWith);
         menuItem.setEnabled(false);
         Widgets.addModifyListener(new WidgetListener(menuItem,data)
         {
@@ -383,7 +383,7 @@ class CommandFindFiles
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Rename local file/directory...",Settings.keyRenameLocal);
+        menuItem = Widgets.addMenuItem(menu,"Rename local file/directory\u2026",Settings.keyRenameLocal);
         menuItem.setEnabled(false);
         Widgets.addModifyListener(new WidgetListener(menuItem,data)
         {
@@ -408,7 +408,7 @@ class CommandFindFiles
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Delete local files/directories...",Settings.keyDeleteLocal);
+        menuItem = Widgets.addMenuItem(menu,"Delete local files/directories\u2026",Settings.keyDeleteLocal);
         menuItem.setEnabled(false);
         Widgets.addModifyListener(new WidgetListener(menuItem,data)
         {
@@ -435,7 +435,7 @@ class CommandFindFiles
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Convert whitespaces...",Settings.keyDeleteLocal);
+        menuItem = Widgets.addMenuItem(menu,"Convert whitespaces\u2026",Settings.keyDeleteLocal);
         menuItem.setEnabled(false);
         Widgets.addModifyListener(new WidgetListener(menuItem,data)
         {
