@@ -456,6 +456,8 @@ class RepositoryHG extends Repository
    */
   public String getRepositoryPath()
   {
+    final Pattern PATTERN_DEFAULT = Pattern.compile("^default\\s+=\\s*(.+)",Pattern.CASE_INSENSITIVE);
+
     String repositoryPath = "";
 
     Exec exec = null;
@@ -463,13 +465,31 @@ class RepositoryHG extends Repository
     {
       Command command = new Command();
       String  line;
+      Matcher matcher;
 
       command.clear();
-      command.append(Settings.hgCommand,"root");
+      command.append(Settings.hgCommand,"paths");
       command.append("--");
       exec = new Exec(rootPath,command);
 
-      repositoryPath = exec.getStdout();
+      // parse info output
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match name, state
+        if      ((matcher = PATTERN_DEFAULT.matcher(line)).matches())
+        {
+          // first parent directory which does not have a .hg directory is repository directory
+          File file = new File(matcher.group(1));
+          while (   !file.getPath().isEmpty()
+                 && new File(file,".hg").exists()
+                )
+          {
+            file = file.getParentFile();
+          }
+          repositoryPath = file.getPath();
+        }
+      }
 
       // done
       exec.done(); exec = null;
@@ -2412,7 +2432,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    */
   public String getDefaultBranchName()
   {
-    return DEFAULT_BRANCHES_NAME+File.separator;
+    return DEFAULT_BRANCHES_NAME;
   }
 
   /** get names of existing branches
@@ -2421,7 +2441,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public String[] getBranchNames()
     throws RepositoryException
   {
-    return null;
+    return new String[0];
   }
 
   /** create new branch
@@ -2433,7 +2453,51 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
-Dprintf.dprintf("NYI");
+    String repositoryPath = getRepositoryPath();
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // create branch
+      command.clear();
+      command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
+      command.append((!rootName.isEmpty()) ? repositoryPath+File.separator+rootName : repositoryPath,repositoryPath+File.separator+branchName);
+      exec = new Exec(rootPath,command);
+
+      // read output
+      String line;
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && ((line = exec.getStdout()) != null)
+            )
+      {
+//Dprintf.dprintf("line=%s",line);
+        if (busyDialog != null) busyDialog.updateText(line);
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        exec.destroy();
+      }
+
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** post to review server/update review server
