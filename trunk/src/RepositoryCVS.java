@@ -98,7 +98,8 @@ class RepositoryCVS extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME = "HEAD";
+  private final String LAST_REVISION_NAME    = "HEAD";
+  private final String DEFAULT_BRANCHES_NAME = "";
 
   // --------------------------- variables --------------------------------
 
@@ -511,22 +512,6 @@ class RepositoryCVS extends Repository
   public String getLastRevision()
   {
     return LAST_REVISION_NAME;
-  }
-
-  /** get default name of root
-   * @return default root name
-   */
-  public String getDefaultRootName()
-  {
-    return "";
-  }
-
-  /** get default branch name
-   * @return default branch name
-   */
-  public String getDefaultBranchName()
-  {
-    return "";
   }
 
   /** get revision names of file
@@ -1849,6 +1834,32 @@ Dprintf.dprintf("unknown %s",line);
     }
   }
 
+  /** get default name of root
+   * @return always null (no root name)
+   */
+  public String getDefaultRootName()
+  {
+    return null;
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return DEFAULT_BRANCHES_NAME;
+  }
+
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  public String[] getBranchNames()
+    throws RepositoryException
+  {
+Dprintf.dprintf("");
+    return new String[0];
+  }
+
   /** create new branch
    * @param rootName root name (source)
    * @param branchName branch name
@@ -1864,9 +1875,7 @@ Dprintf.dprintf("unknown %s",line);
 
       // create branch
       command.clear();
-      command.append(Settings.cvsCommand,"rtag");
-      if (!rootName.isEmpty()) command.append("-r",rootName);
-      command.append("-b",branchName);
+      command.append(Settings.cvsCommand,"tag","-b",branchName);
       Exec exec = new Exec(rootPath,command);
 
       // read output

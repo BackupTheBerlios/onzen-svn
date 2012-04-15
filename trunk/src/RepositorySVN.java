@@ -71,7 +71,9 @@ class RepositorySVN extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME = "HEAD";
+  private final String LAST_REVISION_NAME    = "HEAD";
+  private final String DEFAULT_ROOT_NAME     = "trunk";
+  private final String DEFAULT_BRANCHES_NAME = "branches";
 
   // --------------------------- variables --------------------------------
 
@@ -177,7 +179,6 @@ class RepositorySVN extends Repository
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
     Command         command            = new Command();
-    Exec            exec;
     String          line;
     Matcher         matcher;
     FileData        fileData;
@@ -189,6 +190,7 @@ class RepositorySVN extends Repository
     String          author             = "";
     for (String directory : fileDirectorySet)
     {
+      Exec exec = null;
       try
       {
         // get status
@@ -289,11 +291,15 @@ class RepositorySVN extends Repository
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
         // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
   }
@@ -315,13 +321,14 @@ class RepositorySVN extends Repository
 
     String repositoryPath = "";
 
-    // get info
-    Command command = new Command();
-    Exec    exec;
-    String  line;
-    Matcher matcher;
+    Exec exec = null;
     try
     {
+      // get info
+      Command command = new Command();
+      String  line;
+      Matcher matcher;
+
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","info");
       command.append("--");
@@ -339,11 +346,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return repositoryPath;
@@ -357,22 +368,6 @@ class RepositorySVN extends Repository
     return LAST_REVISION_NAME;
   }
 
-  /** get default name of root
-   * @return default root name
-   */
-  public String getDefaultRootName()
-  {
-    return "trunk";
-  }
-
-  /** get default branch name
-   * @return default branch name
-   */
-  public String getDefaultBranchName()
-  {
-    return "branches"+File.separator;
-  }
-
   /** get revision names of file
    * @param fileData file data
    * @return array with revision names
@@ -384,13 +379,14 @@ class RepositorySVN extends Repository
 
     ArrayList<String> revisionList = new ArrayList<String>();
 
-    // get revision info list
-    Command command = new Command();
-    Exec    exec;
-    String  line;
-    Matcher matcher;
+    Exec exec = null;
     try
     {
+      // get revision info list
+      Command command = new Command();
+      String  line;
+      Matcher matcher;
+
       // get log
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
@@ -411,11 +407,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert to array and sort
@@ -454,11 +454,12 @@ class RepositorySVN extends Repository
   {
     RevisionData revisionData = null;
 
-    // get revision data
-    Command command = new Command();
-    Exec    exec;
+    Exec exec = null;
     try
     {
+      // get revision data
+      Command command = new Command();
+
       // get single log entry
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","log","-r",revision+":PREV","--verbose");
@@ -474,11 +475,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return revisionData;
@@ -493,11 +498,12 @@ class RepositorySVN extends Repository
   {
     LinkedList<RevisionDataSVN> revisionDataList = new LinkedList<RevisionDataSVN>();
 
-    // get revision info list
-    Command command = new Command();
-    Exec    exec;
+    Exec exec = null;
     try
     {
+      // get revision info list
+      Command command = new Command();
+
       // get log
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
@@ -518,13 +524,17 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 //for (RevisionDataSVN revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+    finally
+    {
+      if (exec != null) exec.done();
+    }
 
     // create revision data tree (=list of revisions)
     return revisionDataList.toArray(new RevisionData[revisionDataList.size()]);
@@ -539,10 +549,11 @@ class RepositorySVN extends Repository
     throws RepositoryException
   {
     ArrayList<String> lineList = new ArrayList<String>();
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
 
       // get file
@@ -560,11 +571,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return lineList.toArray(new String[lineList.size()]);
@@ -579,10 +594,10 @@ class RepositorySVN extends Repository
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
@@ -601,11 +616,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert byte array stream into array
@@ -625,10 +644,10 @@ class RepositorySVN extends Repository
 
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
 
+    Exec exec = null;
     try
     {
       Command         command            = new Command();
-      Exec            exec;
       String          line;
       Matcher         matcher;
       String          name               = null;
@@ -686,11 +705,15 @@ class RepositorySVN extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return fileDataSet;
@@ -709,10 +732,10 @@ class RepositorySVN extends Repository
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       Matcher matcher;
       String  line;
 
@@ -945,11 +968,15 @@ class RepositorySVN extends Repository
 //Dprintf.dprintf("diffData=%s",diffData);
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 /*
 int lineNb=1;
@@ -1004,10 +1031,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     // get patch for existing files
     if ((fileDataSet == null) || (existFileDataSet.size() > 0))
     {
+      Exec exec = null;
       try
       {
         Command command = new Command();
-        Exec    exec;
         String  line;
 
         // get patch
@@ -1092,11 +1119,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
         throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
 
@@ -1160,10 +1191,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
@@ -1181,11 +1213,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert byte array stream into array
@@ -1201,12 +1237,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
-    // get revision info list
-    HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
-    Command                command = new Command();
-    Exec                   exec;
+    Exec exec = null;
     try
     {
+      // get revision info list
+      HashMap<String,String> symbolicNamesMap = new HashMap<String,String>();
+      Command                command = new Command();
+
       // get log
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
@@ -1232,13 +1269,17 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (Exception exception)
     {
       throw new RepositoryException(exception);
     }
-//for (LogData logData : logDataList) Dprintf.dprintf("logData=%s",logData);
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+  //for (LogData logData : logDataList) Dprintf.dprintf("logData=%s",logData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
   }
@@ -1256,10 +1297,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     ArrayList<AnnotationData> annotationDataList = new ArrayList<AnnotationData>();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       Matcher matcher;
       String  line;
 
@@ -1297,11 +1338,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
@@ -1647,6 +1692,69 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
   }
 
+  /** get default name of root
+   * @return default root name
+   */
+  public String getDefaultRootName()
+  {
+    return DEFAULT_ROOT_NAME;
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return DEFAULT_BRANCHES_NAME+File.separator;
+  }
+
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  public String[] getBranchNames()
+    throws RepositoryException
+  {
+    ArrayList<String> branchNameList = new ArrayList<String>();
+
+    String repositoryPath = getRepositoryPath();
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+
+      // checkout
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive","list",repositoryPath+File.separator+DEFAULT_BRANCHES_NAME);
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // read output
+      while ((line = exec.getStdout()) != null)
+      {
+        branchNameList.add(DEFAULT_BRANCHES_NAME+File.separator+StringUtils.trimEnd(line,File.separator));
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    // convert to array and sort
+    String[] branchNames = branchNameList.toArray(new String[branchNameList.size()]);
+    Arrays.sort(branchNames);
+
+    return branchNames;
+  }
+
   /** create new branch
    * @param rootName root name (source)
    * @param branchName branch name
@@ -1658,6 +1766,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     String repositoryPath = getRepositoryPath();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1666,7 +1775,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath+File.separator+rootName,repositoryPath+File.separator+branchName);
       command.append("-F",commitMessage.getFileName());
-      Exec exec = new Exec(rootPath,command);
+      exec = new Exec(rootPath,command);
 
       // read output
       String line;
@@ -1689,10 +1798,16 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         exec.destroy();
       }
+
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 

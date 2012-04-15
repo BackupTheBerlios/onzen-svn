@@ -2363,16 +2363,6 @@ abstract class Repository implements Serializable
    */
   abstract public String getLastRevision();
 
-  /** get default name of root
-   * @return default root name
-   */
-  abstract public String getDefaultRootName();
-
-  /** get default branch name
-   * @return default branch name
-   */
-  abstract public String getDefaultBranchName();
-
   /** get revision names of file
    * @param fileData file data
    * @return array with revision names
@@ -3008,6 +2998,22 @@ Dprintf.dprintf("fileName=%s",fileName);
     setFileMode(fileDataSet,mode,commitMessage);
   }
 
+  /** get default name of root
+   * @return default root name or null if there are not root names
+   */
+  abstract public String getDefaultRootName();
+
+  /** get default branch name
+   * @return default branch name
+   */
+  abstract public String getDefaultBranchName();
+
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  abstract public String[] getBranchNames()
+    throws RepositoryException;
+
   /** create new branch
    * @param rootName root name (source)
    * @param branchName branch name
@@ -3018,6 +3024,11 @@ Dprintf.dprintf("fileName=%s",fileName);
     throws RepositoryException;
 
   /** post to review server
+   * @param password review server password
+   * @param reference reference string
+   * @param fileDataSet file data set
+   * @param commitMessage commit message
+   * @param testSet test set
    */
   protected String postReview(String password, String reference, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
     throws RepositoryException
@@ -3160,6 +3171,10 @@ Dprintf.dprintf("stderr %s",line);
   }
 
   /** post to review server
+   * @param password review server password
+   * @param fileDataSet file data set
+   * @param commitMessage commit message
+   * @param testSet test set
    */
   public String postReview(String password, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
     throws RepositoryException
@@ -3168,6 +3183,11 @@ Dprintf.dprintf("stderr %s",line);
   }
 
   /** update review server
+   * @param password review server password
+   * @param reference reference string
+   * @param fileDataSet file data set
+   * @param commitMessage commit message
+   * @param testSet test set
    */
   public String updateReview(String password, String reference, HashSet<FileData> fileDataSet, CommitMessage commitMessage, LinkedHashSet<String> testSet)
     throws RepositoryException

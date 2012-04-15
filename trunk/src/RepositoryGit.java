@@ -37,7 +37,9 @@ import java.util.LinkedList;
 class RepositoryGit extends Repository
 {
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME = "HEAD";
+  private final String LAST_REVISION_NAME    = "HEAD";
+  private final String DEFAULT_ROOT_NAME     = "trunk";
+  private final String DEFAULT_BRANCHES_NAME = "branches";
 
   // --------------------------- variables --------------------------------
 
@@ -260,22 +262,6 @@ class RepositoryGit extends Repository
   public String getLastRevision()
   {
     return LAST_REVISION_NAME;
-  }
-
-  /** get default name of root
-   * @return default root name
-   */
-  public String getDefaultRootName()
-  {
-    return "";
-  }
-
-  /** get default branch name
-   * @return default branch name
-   */
-  public String getDefaultBranchName()
-  {
-    return "";
   }
 
   /** get revision names of file
@@ -1423,6 +1409,31 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+  }
+
+  /** get default name of root
+   * @return default root name
+   */
+  public String getDefaultRootName()
+  {
+    return DEFAULT_ROOT_NAME;
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return DEFAULT_BRANCHES_NAME;
+  }
+
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  public String[] getBranchNames()
+    throws RepositoryException
+  {
+    return null;
   }
 
   /** create new branch

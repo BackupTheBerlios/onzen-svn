@@ -123,7 +123,9 @@ class RepositoryHG extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME = "tip";
+  private final String LAST_REVISION_NAME    = "tip";
+  private final String DEFAULT_ROOT_NAME     = "trunk";
+  private final String DEFAULT_BRANCHES_NAME = "branches";
 
   /* log format template:
     <rev> <changeset> <date> <time> <timezone> <author>
@@ -478,22 +480,6 @@ class RepositoryHG extends Repository
   public String getLastRevision()
   {
     return LAST_REVISION_NAME;
-  }
-
-  /** get default name of root
-   * @return default root name
-   */
-  public String getDefaultRootName()
-  {
-    return "trunk";
-  }
-
-  /** get default branch name
-   * @return default branch name
-   */
-  public String getDefaultBranchName()
-  {
-    return "branches"+File.separator;
   }
 
   /** get revision names of file
@@ -2399,6 +2385,31 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
+  }
+
+  /** get default name of root
+   * @return default root name
+   */
+  public String getDefaultRootName()
+  {
+    return DEFAULT_ROOT_NAME;
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return DEFAULT_BRANCHES_NAME+File.separator;
+  }
+
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  public String[] getBranchNames()
+    throws RepositoryException
+  {
+    return null;
   }
 
   /** create new branch

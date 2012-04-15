@@ -10,6 +10,7 @@
 
 /****************************** Imports ********************************/
 // base
+import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 
@@ -24,6 +25,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -44,6 +46,7 @@ class CommandCreateBranch
    */
   class Data
   {
+    String[] branchNames;
     String   rootName;
     String   branchName;
     String[] message;
@@ -51,6 +54,7 @@ class CommandCreateBranch
 
     Data()
     {
+      this.branchNames         = null;
       this.rootName            = null;
       this.branchName          = null;
       this.message             = null;
@@ -74,7 +78,7 @@ class CommandCreateBranch
 
   // widgets
   private final Text          widgetRootName;
-  private final Text          widgetBranchName;
+  private final Combo         widgetBranchName;
   private final List          widgetHistory;
   private final Text          widgetMessage;
   private final Button        widgetImmediateCommit;
@@ -93,6 +97,10 @@ class CommandCreateBranch
     Composite composite,subComposite;
     Label     label;
     Button    button;
+
+    // get default root/branch name
+    String defaultRootName   = repositoryTab.repository.getDefaultRootName();
+    String defaultBranchName = repositoryTab.repository.getDefaultBranchName();
 
     // initialize variables
     this.repositoryTab = repositoryTab;
@@ -115,19 +123,33 @@ class CommandCreateBranch
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Root name:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
+        if (defaultRootName != null)
+        {
+          label = Widgets.newLabel(subComposite,"Root:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetRootName = Widgets.newText(subComposite);
-        widgetRootName.setText(repositoryTab.repository.getDefaultRootName());
-        Widgets.layout(widgetRootName,0,1,TableLayoutData.WE);
+          widgetRootName = Widgets.newText(subComposite);
+          widgetRootName.setText(defaultRootName);
+          Widgets.layout(widgetRootName,0,1,TableLayoutData.WE);
 
-        label = Widgets.newLabel(subComposite,"Branch name:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+          label = Widgets.newLabel(subComposite,"Branch name:");
+          Widgets.layout(label,1,0,TableLayoutData.W);
 
-        widgetBranchName = Widgets.newText(subComposite);
-        widgetBranchName.setText(repositoryTab.repository.getDefaultBranchName());
-        Widgets.layout(widgetBranchName,1,1,TableLayoutData.WE);
+          widgetBranchName = Widgets.newCombo(subComposite);
+          widgetBranchName.setText(defaultBranchName);
+          Widgets.layout(widgetBranchName,1,1,TableLayoutData.WE);
+        }
+        else
+        {
+          widgetRootName = null;
+
+          label = Widgets.newLabel(subComposite,"Branch name:");
+          Widgets.layout(label,0,0,TableLayoutData.W);
+
+          widgetBranchName = Widgets.newCombo(subComposite);
+          widgetBranchName.setText(defaultBranchName);
+          Widgets.layout(widgetBranchName,0,1,TableLayoutData.WE);
+        }
       }
 
       label = Widgets.newLabel(composite,"History:");
@@ -185,7 +207,7 @@ class CommandCreateBranch
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.rootName            = widgetRootName.getText().trim();
+          data.rootName            = (widgetRootName != null) ? widgetRootName.getText().trim() : null;
           data.branchName          = widgetBranchName.getText().trim();
           data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
@@ -217,12 +239,12 @@ class CommandCreateBranch
     }
 
     // listeners
-    Widgets.setNextFocus(widgetRootName,widgetBranchName);
+    if (widgetRootName != null) Widgets.setNextFocus(widgetRootName,widgetBranchName);
     widgetBranchName.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        Text widget = (Text)modifyEvent.widget;
+        Combo widget = (Combo)modifyEvent.widget;
 
         widgetCreateBranch.setEnabled(!widget.getText().trim().isEmpty());
       }
@@ -333,6 +355,45 @@ class CommandCreateBranch
       widgetHistory.deselectAll();
     }
 
+    // add existing branch names
+    Background.run(new BackgroundRunnable()
+    {
+      public void run()
+      {
+        // get branch names
+        repositoryTab.setStatusText("Get branch names...");
+        try
+        {
+          data.branchNames = repositoryTab.repository.getBranchNames();
+        }
+        catch (RepositoryException exception)
+        {
+          final String exceptionMessage = exception.getMessage();
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              Dialogs.error(dialog,String.format("Getting branch names fail: %s",exceptionMessage));
+            }
+          });
+          return;
+        }
+        repositoryTab.clearStatusText();
+
+        // add to widget
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            for (String branchName : data.branchNames)
+            {
+              widgetBranchName.add(branchName);
+            }
+          }
+        });
+      }
+    });
+
     // update
   }
 
@@ -381,7 +442,7 @@ class CommandCreateBranch
         }
 
         // create new branch
-        repositoryTab.repository.newBranch(data.rootName.trim(),data.branchName.trim(),commitMessage,busyDialog);
+        repositoryTab.repository.newBranch(data.rootName,data.branchName,commitMessage,busyDialog);
 
         // free resources
         commitMessage.done(); commitMessage = null;
