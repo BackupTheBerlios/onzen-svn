@@ -46,12 +46,12 @@ clean:
 .PHONY: create
 create:
 	# create test repository
-	$(INSTALL) -d repository
-	$(HG) init $(HGROOT)
-	$(CP) hgrc $(HGROOT)/.hg/hgrc
+	$(INSTALL) -d repository/trunk
+	HGRCPATH=hgrc $(HG) init $(HGROOT)/trunk
+	$(CP) hgrc $(HGROOT)/trunk/.hg/hgrc
 	#
 	(\
-          $(CD) $(HGROOT); \
+          $(CD) $(HGROOT)/trunk; \
           \
           $(ECHO) "Hello World" > modified; \
           ($(ECHO) "Hello World"; $(ECHO) ""; $(ECHO) "";) > merge; \
@@ -64,52 +64,59 @@ create:
           $(ECHO) "Hello Underworld" > subdirectory/sub-file; \
         )
 	(\
-          $(CD) $(HGROOT); \
+          $(CD) $(HGROOT)/trunk; \
           \
-          $(HG) add *; \
-          $(HG) commit -m "test"; \
-         )
-	ls -la $(HGROOT)
+          HGRCPATH=../hgrc $(HG) add *; \
+          HGRCPATH=../hgrc $(HG) commit -m "test"; \
+        )
 	#
 	# create test check-out
-	$(HG) clone file://$(HGROOT) test
+	HGRCPATH=hgrc $(HG) clone file://$(HGROOT)/trunk test
 	( \
           $(CD) test; \
           \
-          $(HG) pull; \
-          HGMERGE=merge $(HG) -y update; \
+          HGRCPATH=../hgrc $(HG) pull; \
+          HGRCPATH=../hgrc HGMERGE=merge $(HG) -y update; \
           \
           $(ECHO) "more text" >> modified; \
           ($(ECHO) "Hello World"; $(ECHO) ""; $(ECHO) "The end";) > merge; \
           $(ECHO) "more text" >> conflict; \
           $(ECHO) "unknown" > unknown; \
         )
+	# create branch
+	$(INSTALL) -d repository/branches
+	HGRCPATH=../hgrc $(HG) clone file://$(HGROOT)/trunk file://$(HGROOT)/branches/b1 ; \
+	( \
+          $(CD) test; \
+          hg branch; \
+        )
 	#
-	$(HG) clone file://$(HGROOT) tmp
+	# modify files
+	HGRCPATH=hgrc $(HG) clone file://$(HGROOT)/trunk tmp
 	( \
           $(CD) tmp; \
           \
-          $(HG) pull; \
-          HGMERGE=merge $(HG) -y update; \
+          HGRCPATH=../hgrc $(HG) pull; \
+          HGRCPATH=../hgrc HGMERGE=merge $(HG) -y update; \
           \
           ($(ECHO) "Hello World"; $(ECHO) "The middle"; $(ECHO) "";) > merge; \
-          $(HG) commit -m "merge test" merge; \
+          HGRCPATH=../hgrc $(HG) commit -m "merge test" merge; \
           \
           $(RMF) removed; \
-          $(HG) remove removed; \
-          $(HG) commit -m "removed test" removed; \
+          HGRCPATH=../hgrc $(HG) remove removed; \
+          HGRCPATH=../hgrc $(HG) commit -m "removed test" removed; \
           \
           $(ECHO) "conflict" >> conflict; \
-          $(HG) commit -m "conflict test" conflict; \
+          HGRCPATH=../hgrc $(HG) commit -m "conflict test" conflict; \
           \
-          $(HG) push; \
+          HGRCPATH=../hgrc $(HG) push; \
         )
 	$(RMRF) tmp
 	#
 	( \
           $(CD) test; \
           \
-          $(HG) pull; \
+          HGRCPATH=../hgrc $(HG) pull; \
           (HGMERGE=merge $(HG) -y update; true;) \
         )
 

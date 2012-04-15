@@ -38,8 +38,8 @@ TARGETS = repository \
 #------------------------------ dependencies ---------------------------------
 
 all:
-	@$(ECHO) create - create test data
-	@$(ECHO) clean  - clean test data
+	@$(ECHO) create - create test repository
+	@$(ECHO) clean  - clean test repository
 
 clean:
 	$(RMRF) $(TARGETS)
@@ -47,7 +47,6 @@ clean:
 .PHONY: create
 create:
 	# create test repository
-	$(INSTALL) -d repository
 	$(SVNADMIN) create $(SVNROOT)
 	#
 	$(INSTALL) -d tmp
@@ -64,12 +63,28 @@ create:
           $(INSTALL) -d subdirectory; \
           $(ECHO) "Hello Underworld" > subdirectory/sub-file; \
         )
-	($(CD) tmp; $(SVN) import . file://$(SVNROOT)/test -m "test")
+	($(CD) tmp; $(SVN) import . file://$(SVNROOT)/trunk -m "test")
+	$(RMRF) tmp
+	$(INSTALL) -d tmp
+	(\
+          $(CD) tmp; \
+          \
+          $(INSTALL) -d branches; \
+        )
+	($(CD) tmp; $(SVN) import . file://$(SVNROOT) -m "test")
+	$(RMRF) tmp
+	$(INSTALL) -d tmp
+	(\
+          $(CD) tmp; \
+          \
+          $(INSTALL) -d tags; \
+        )
+	($(CD) tmp; $(SVN) import . file://$(SVNROOT) -m "test")
 	$(RMRF) tmp
 	#
-	# create test check-out
+	# create trunk check-out
 	$(INSTALL) -d test
-	$(SVN) checkout file://$(SVNROOT)/test test
+	$(SVN) checkout file://$(SVNROOT)/trunk test
 	( \
           $(CD) test; \
           \
@@ -80,7 +95,11 @@ create:
           $(ECHO) "unknown" > unknown; \
         )
 	#
-	$(SVN) checkout file://$(SVNROOT)/test tmp
+	# create branch
+	$(SVN) copy file://$(SVNROOT)/trunk file://$(SVNROOT)/branches/b1 --force-log -m "test"
+	#
+	# modify files
+	$(SVN) checkout file://$(SVNROOT)/trunk tmp
 	( \
           $(CD) tmp; \
           \

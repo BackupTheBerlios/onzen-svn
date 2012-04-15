@@ -72,9 +72,9 @@ create:
           $(GIT) commit -m "test"; \
         )
 	#
-	# create test check-out
+	# create trunk check-out
 	$(INSTALL) -d test
-	$(GIT) clone $(GITROOT) test
+	$(GIT) clone file://$(GITROOT) test
 	( \
           $(CD) test; \
           \
@@ -86,6 +86,10 @@ create:
           $(ECHO) "unknown" > unknown; \
         )
 	#
+	# create branch
+	($(CD) test; $(GIT) branch branches/b1)
+	#
+	# modify files
 	$(GIT) clone file://$(GITROOT) tmp
 	( \
           $(CD) tmp; \

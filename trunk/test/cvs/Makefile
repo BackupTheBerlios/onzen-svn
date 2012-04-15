@@ -78,7 +78,10 @@ create:
           $(ECHO) "more text" >> conflict; \
           $(ECHO) "unknown" > unknown; \
         )
+	# create branch
+	($(CD) test; $(CVS) tag -b b1)
 	#
+	# modify files
 	$(CVS) -d $(CVSROOT) get -d tmp test
 	( \
           $(CD) tmp; \
