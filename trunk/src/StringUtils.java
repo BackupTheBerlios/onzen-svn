@@ -1,7 +1,7 @@
 /***********************************************************************\
 *
+* $Source: /tmp/cvs/onzen/src/StringUtils.java,v $
 * $Revision$
-* $Date$
 * $Author$
 * Contents: String utility functions
 * Systems: all
@@ -35,9 +35,96 @@ public class StringUtils
 
   // ---------------------------- methods ---------------------------------
 
+  /** trim characters from string at string beginning
+   * @param string string
+   * @param chars characters to trim
+   * @return trimmed string
+   */
+  public static String trimBegin(String string, String chars)
+  {
+    int i = 0;
+    while (   (i < string.length())
+           && (chars.indexOf(string.charAt(i)) >= 0)
+          )
+    {
+      i++;
+    }
+
+    return string.substring(i);
+  }
+
+  /** trim characters from string at string beginning
+   * @param string string
+   * @return trimmed string
+   */
+  public static String trimBegin(String string)
+  {
+    return trimBegin(string,WHITE_SPACES);
+  }
+
+  /** trim characters from string at string end
+   * @param string string
+   * @param chars characters to trim
+   * @return trimmed string
+   */
+  public static String trimEnd(String string, String chars)
+  {
+    int i = string.length()-1;
+    while (   (i > 0)
+           && (chars.indexOf(string.charAt(i)) >= 0)
+          )
+    {
+      i--;
+    }
+
+    return string.substring(0,i+1);
+  }
+
+  /** trim characters from string at string beginning
+   * @param string string
+   * @return trimmed string
+   */
+  public static String trimEnd(String string)
+  {
+    return trimEnd(string,WHITE_SPACES);
+  }
+
+  /** trim characters from string
+   * @param string string
+   * @param chars characters to trim
+   */
+  public static String trim(String string, String chars)
+  {
+    int i0 = 0;
+    while (   (i0 < string.length())
+           && (chars.indexOf(string.charAt(i0)) >= 0)
+          )
+    {
+      i0++;
+    }
+    int i1 = string.length()-1;
+    while (   (i1 >= i0)
+           && (chars.indexOf(string.charAt(i1)) >= 0)
+          )
+    {
+      i1--;
+    }
+
+    return string.substring(i0,i1-i0+1);
+  }
+
+  /** trim characters from string at string beginning
+   * @param string string
+   * @return trimmed string
+   */
+  public static String trim(String string)
+  {
+    return trim(string,WHITE_SPACES);
+  }
+
   /** escape quote character and \ in string, enclose in quote character
    * @param string string to escape
-   * @param enclosingQuotes true to add enclosing quotes character
+   * @param enclosingQuotes true to add enclosing quotes "
    * @param quoteChar quote character
    * @return escaped string
    */
@@ -68,7 +155,7 @@ public class StringUtils
     return buffer.toString();
   }
 
-  /** escape " and \ in string, enclose in "
+  /** escape ' and \ in string, enclose in "
    * @param string string to escape
    * @param enclosingQuotes true to add enclosing quotes "
    * @return escaped string
@@ -78,7 +165,7 @@ public class StringUtils
     return escape(string,enclosingQuotes,'"');
   }
 
-  /** escape " and \ in string, enclose in "
+  /** escape ' and \ in string, enclose in "
    * @param string string to escape
    * @param quoteChar quote character
    * @return escaped string
@@ -88,7 +175,7 @@ public class StringUtils
     return escape(string,true,quoteChar);
   }
 
-  /** escape " and \ in string, enclose in "
+  /** escape ' and \ in string, enclose in "
    * @param string string to escape
    * @return escaped string
    */
