@@ -237,22 +237,23 @@ class RepositoryCVS extends Repository
     final Pattern PATTERN_STICKY_OPTIONS      = Pattern.compile("^.*Sticky Options:\\s*(.*)\\s*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_EXISTING_TAGS       = Pattern.compile("^.*Existing Tags:.*",Pattern.CASE_INSENSITIVE);
 
-    Command         command            = new Command();
-    Exec            exec;
-    String          line;
-    Matcher         matcher;
-    FileData        fileData;
-    String          baseName           = null;
-    FileData.States state              = FileData.States.UNKNOWN;
-    FileData.Modes  mode               = FileData.Modes.UNKNOWN;
-    String          workingRevision    = "";
-    String          repositoryRevision = "";
-    String          branch             = "";
-    HashSet<String> tags               = new HashSet<String>();
     for (String directory : fileDirectorySet)
     {
+      Exec exec = null;
       try
       {
+        Command         command            = new Command();
+        String          line;
+        Matcher         matcher;
+        FileData        fileData;
+        String          baseName           = null;
+        FileData.States state              = FileData.States.UNKNOWN;
+        FileData.Modes  mode               = FileData.Modes.UNKNOWN;
+        String          workingRevision    = "";
+        String          repositoryRevision = "";
+        String          branch             = "";
+        HashSet<String> tags               = new HashSet<String>();
+
         // get status
         command.clear();
         command.append(Settings.cvsCommand,"status","-l");
@@ -400,7 +401,7 @@ class RepositoryCVS extends Repository
 //while ((line = exec.getStderr()) != null) Dprintf.dprintf("err %s",line);
 
         // done
-        exec.done();
+        exec.done(); exec = null;
 
         if (baseName != null)
         {
@@ -457,6 +458,10 @@ class RepositoryCVS extends Repository
       catch (IOException exception)
       {
         // ignored
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
   }
@@ -523,12 +528,12 @@ class RepositoryCVS extends Repository
   {
     ArrayList<String> revisionList = new ArrayList<String>();
 
-    // get revision info list
-    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command();
-    Exec                   exec;
+    Exec exec = null;
     try
     {
+      HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+      Command                command        = new Command();
+
       // get log
       command.clear();
       command.append(Settings.cvsCommand,"log");
@@ -549,13 +554,17 @@ class RepositoryCVS extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
     }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+    finally
+    {
+      if (exec != null) exec.done();
+    }
 
     // convert to array and sort
     String[] revisions = revisionList.toArray(new String[revisionList.size()]);
@@ -604,12 +613,12 @@ class RepositoryCVS extends Repository
   {
     RevisionDataCVS revisionDataCVS = null;
 
-    // get revision data
-    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command();
-    Exec                   exec;
+    Exec exec = null;
     try
     {
+      HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+      Command                command        = new Command();
+
       // get single log entry
       command.clear();
       command.append(Settings.cvsCommand,"log","-r",revision);
@@ -625,11 +634,15 @@ class RepositoryCVS extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return revisionDataCVS;
@@ -643,13 +656,13 @@ class RepositoryCVS extends Repository
     throws RepositoryException
   {
     LinkedList<RevisionDataCVS> revisionDataList = new LinkedList<RevisionDataCVS>();
+    HashMap<String,String>      branchNamesMap   = new HashMap<String,String>();
 
-    // get revision info list
-    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command();
-    Exec                   exec;
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+
       // get log
       command.clear();
       command.append(Settings.cvsCommand,"log");
@@ -670,11 +683,15 @@ class RepositoryCVS extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
@@ -691,10 +708,11 @@ class RepositoryCVS extends Repository
     throws RepositoryException
   {
     ArrayList<String> lineList = new ArrayList<String>();
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
 
       // get file
@@ -712,11 +730,15 @@ class RepositoryCVS extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return lineList.toArray(new String[lineList.size()]);
@@ -731,10 +753,11 @@ class RepositoryCVS extends Repository
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
@@ -753,11 +776,15 @@ class RepositoryCVS extends Repository
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert byte array stream into array
@@ -782,10 +809,10 @@ class RepositoryCVS extends Repository
 
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
       Matcher matcher;
 
@@ -873,11 +900,15 @@ Dprintf.dprintf("unknown %s",line);
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return fileDataSet;
@@ -898,10 +929,10 @@ Dprintf.dprintf("unknown %s",line);
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
       Matcher matcher;
 
@@ -1120,11 +1151,15 @@ else {
 //Dprintf.dprintf("diffData=%s",diffData);
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return diffDataList.toArray(new DiffData[diffDataList.size()]);
@@ -1161,10 +1196,10 @@ else {
     // get patch for existing files
     if ((fileDataSet == null) || (existFileDataSet.size() > 0))
     {
+      Exec exec = null;
       try
       {
         Command command = new Command();
-        Exec    exec;
         String  line;
 
         // get patch
@@ -1191,11 +1226,15 @@ else {
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
         throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
 
@@ -1263,10 +1302,11 @@ else {
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
@@ -1286,11 +1326,15 @@ else {
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     // convert byte array stream into array
@@ -1307,11 +1351,12 @@ else {
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
     // get revision info list
-    HashMap<String,String> branchNamesMap = new HashMap<String,String>();
-    Command                command        = new Command();
-    Exec                   exec;
+    Exec exec = null;
     try
     {
+      HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+      Command                command        = new Command();
+
       // get log
       command.clear();
       command.append(Settings.cvsCommand,"log");
@@ -1343,6 +1388,10 @@ else {
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
     }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
 //for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
 
     return logDataList.toArray(new LogData[logDataList.size()]);
@@ -1361,10 +1410,10 @@ else {
 
     ArrayList<AnnotationData> annotationDataList = new ArrayList<AnnotationData>();
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      Exec    exec;
       String  line;
       Matcher matcher;
 
@@ -1402,11 +1451,15 @@ Dprintf.dprintf("unknown %s",line);
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return annotationDataList.toArray(new AnnotationData[annotationDataList.size()]);
@@ -1856,8 +1909,48 @@ Dprintf.dprintf("unknown %s",line);
   public String[] getBranchNames()
     throws RepositoryException
   {
-Dprintf.dprintf("");
-    return new String[0];
+    HashSet<String> branchNameSet = new HashSet<String>();
+
+    Exec exec = null;
+    try
+    {
+      HashMap<String,String> branchNamesMap = new HashMap<String,String>();
+      Command                command        = new Command();
+
+      // get log
+      command.clear();
+      command.append(Settings.cvsCommand,"log");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // parse header
+      if (parseLogHeader(exec,branchNamesMap))
+      {
+        // add branch names
+        for (String branchName : branchNamesMap.values())
+        {
+          branchNameSet.add(branchName);
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+//for (RevisionDataCVS revisionData : revisionDataList) Dprintf.dprintf("revisionData=%s",revisionData);
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    // convert to array and sort
+    String[] branchNames = branchNameSet.toArray(new String[branchNameSet.size()]);
+    Arrays.sort(branchNames);
+
+    return branchNames;
   }
 
   /** create new branch
@@ -1869,6 +1962,7 @@ Dprintf.dprintf("");
   public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1876,7 +1970,7 @@ Dprintf.dprintf("");
       // create branch
       command.clear();
       command.append(Settings.cvsCommand,"tag","-b",branchName);
-      Exec exec = new Exec(rootPath,command);
+      exec = new Exec(rootPath,command);
 
       // read output
       String line;
@@ -1899,10 +1993,17 @@ Dprintf.dprintf("");
       {
         exec.destroy();
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
