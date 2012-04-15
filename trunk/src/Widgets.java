@@ -1408,6 +1408,21 @@ class Widgets
         String     text   = widget.getText();
         widget.setSelection(text.length(),text.length());
       }
+      else if (control instanceof Combo)
+      {
+        Combo  widget = (Combo)control;
+
+/* do not work correct?
+        // no setSelection(n,m)-method, thus send key "end" event
+        Event event   = new Event();
+        event.type    = SWT.KeyDown;
+        event.widget  = widget;
+        event.keyCode = SWT.END;
+        Display display = widget.getDisplay();
+        display.post(event);
+        display.update();
+*/
+      }
     }
   }
 
