@@ -357,6 +357,22 @@ class RepositorySVN extends Repository
     return LAST_REVISION_NAME;
   }
 
+  /** get default name of root
+   * @return default root name
+   */
+  public String getDefaultRootName()
+  {
+    return "trunk";
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return "branches"+File.separator;
+  }
+
   /** get revision names of file
    * @param fileData file data
    * @return array with revision names

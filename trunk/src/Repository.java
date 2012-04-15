@@ -201,6 +201,8 @@ class FileData
     }
   };
 
+  /** state sets
+   */
   final static EnumSet<States> STATES_ALL   = EnumSet.allOf(States.class);
   final static EnumSet<States> STATES_KNOWN = EnumSet.of(States.OK,
                                                          States.MODIFIED,
@@ -240,11 +242,11 @@ class FileData
   };
 
   // --------------------------- variables --------------------------------
-  public       String name;
-  public final Types  type;
-  public       long   size;
+  public       String name;                  // file name (from root path)
+  public final Types  type;                  // file type
+  public       long   size;                  // size [bytes]
   public       Date   date;
-  public       States state;
+  public       States state;                 // current state
   public       Modes  mode;
   public       String workingRevision;
   public       String repositoryRevision;
@@ -1338,8 +1340,8 @@ class LogData
   // --------------------------- variables --------------------------------
   public final String   revision;
   public final Date     date;
-  public final String   author;
-  public final String[] commitMessage;
+  public final String   author;              // name of author
+  public final String[] commitMessage;       // commit message lines
 
   // ------------------------ native functions ----------------------------
 
@@ -2360,6 +2362,16 @@ abstract class Repository implements Serializable
    * @return last revision name
    */
   abstract public String getLastRevision();
+
+  /** get default name of root
+   * @return default root name
+   */
+  abstract public String getDefaultRootName();
+
+  /** get default branch name
+   * @return default branch name
+   */
+  abstract public String getDefaultBranchName();
 
   /** get revision names of file
    * @param fileData file data

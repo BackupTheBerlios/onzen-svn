@@ -513,6 +513,22 @@ class RepositoryCVS extends Repository
     return LAST_REVISION_NAME;
   }
 
+  /** get default name of root
+   * @return default root name
+   */
+  public String getDefaultRootName()
+  {
+    return "";
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return "";
+  }
+
   /** get revision names of file
    * @param fileData file data
    * @return array with revision names

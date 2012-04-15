@@ -44,13 +44,15 @@ class CommandCreateBranch
    */
   class Data
   {
-    String   name;
+    String   rootName;
+    String   branchName;
     String[] message;
     boolean  immediateCommitFlag;
 
     Data()
     {
-      this.name                = null;
+      this.rootName            = null;
+      this.branchName          = null;
       this.message             = null;
       this.immediateCommitFlag = Settings.immediateCommit;
     }
@@ -71,7 +73,8 @@ class CommandCreateBranch
   private final String[][]    history;
 
   // widgets
-  private final Text          widgetName;
+  private final Text          widgetRootName;
+  private final Text          widgetBranchName;
   private final List          widgetHistory;
   private final Text          widgetMessage;
   private final Button        widgetImmediateCommit;
@@ -112,11 +115,19 @@ class CommandCreateBranch
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Name:");
+        label = Widgets.newLabel(subComposite,"Root name:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetName = Widgets.newText(subComposite);
-        Widgets.layout(widgetName,0,1,TableLayoutData.WE);
+        widgetRootName = Widgets.newText(subComposite);
+        widgetRootName.setText(repositoryTab.repository.getDefaultRootName());
+        Widgets.layout(widgetRootName,0,1,TableLayoutData.WE);
+
+        label = Widgets.newLabel(subComposite,"Branch name:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
+
+        widgetBranchName = Widgets.newText(subComposite);
+        widgetBranchName.setText(repositoryTab.repository.getDefaultBranchName());
+        Widgets.layout(widgetBranchName,1,1,TableLayoutData.WE);
       }
 
       label = Widgets.newLabel(composite,"History:");
@@ -174,7 +185,8 @@ class CommandCreateBranch
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.name                = widgetName.getText().trim();
+          data.rootName            = widgetRootName.getText().trim();
+          data.branchName          = widgetBranchName.getText().trim();
           data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
@@ -205,17 +217,8 @@ class CommandCreateBranch
     }
 
     // listeners
-    widgetName.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-        Widgets.setFocus(widgetMessage);
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-      }
-    });
-    widgetName.addModifyListener(new ModifyListener()
+    Widgets.setNextFocus(widgetRootName,widgetBranchName);
+    widgetBranchName.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
@@ -224,7 +227,7 @@ class CommandCreateBranch
         widgetCreateBranch.setEnabled(!widget.getText().trim().isEmpty());
       }
     });
-    Widgets.setNextFocus(widgetName,widgetMessage);
+    Widgets.setNextFocus(widgetBranchName,widgetMessage);
     widgetHistory.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -337,7 +340,7 @@ class CommandCreateBranch
    */
   public void run()
   {
-    widgetName.setFocus();
+    Widgets.setFocus(widgetBranchName);
     Dialogs.run(dialog);
   }
 
@@ -355,18 +358,18 @@ class CommandCreateBranch
    */
   private void createBranch()
   {
-    if (!data.name.isEmpty())
+    if (!data.branchName.trim().isEmpty())
     {
       final BusyDialog busyDialog = new BusyDialog(dialog,
                                                    "Create new branch",
                                                    "Create new branch '"+
-                                                   data.name+
+                                                   data.branchName.trim()+
                                                    "':",
                                                    BusyDialog.TEXT0
                                                   );
       busyDialog.autoAnimate();
 
-      repositoryTab.setStatusText("Create branch '"+data.name+"'...");
+      repositoryTab.setStatusText("Create branch '"+data.branchName.trim()+"'...");
       CommitMessage commitMessage = null;
       try
       {
@@ -378,7 +381,7 @@ class CommandCreateBranch
         }
 
         // create new branch
-        repositoryTab.repository.newBranch(data.name,commitMessage,busyDialog);
+        repositoryTab.repository.newBranch(data.branchName.trim(),commitMessage,busyDialog);
 
         // free resources
         commitMessage.done(); commitMessage = null;
