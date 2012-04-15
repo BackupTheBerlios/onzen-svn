@@ -246,7 +246,7 @@ class RepositoryGit extends Repository
       repositoryPath = exec.getStdout();
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {

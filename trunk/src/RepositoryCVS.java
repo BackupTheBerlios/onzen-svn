@@ -954,7 +954,7 @@ Dprintf.dprintf("unknown %s",line);
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
 
         // convert to lines array
         newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
@@ -1382,7 +1382,7 @@ else {
       }
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
