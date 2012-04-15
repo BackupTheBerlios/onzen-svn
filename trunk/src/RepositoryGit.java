@@ -1316,7 +1316,6 @@ Dprintf.dprintf("");
   public void revert(HashSet<FileData> fileDataSet, String revision)
     throws RepositoryException
   {
-Dprintf.dprintf("");
     try
     {
       Command command = new Command();
@@ -1353,7 +1352,7 @@ Dprintf.dprintf("");
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   /** get incoming changes list
@@ -1361,7 +1360,7 @@ Dprintf.dprintf("");
   public LogData[] getIncomingChanges()
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
     return null;
   }
 
@@ -1370,7 +1369,7 @@ Dprintf.dprintf("");
   public LogData[] getOutgoingChanges()
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
     return null;
   }
 
@@ -1388,7 +1387,7 @@ Dprintf.dprintf("");
   public void pullChanges()
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   /** push changes
@@ -1396,7 +1395,7 @@ Dprintf.dprintf("");
   public void pushChanges()
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   /** apply patches
@@ -1404,7 +1403,7 @@ Dprintf.dprintf("");
   public void applyPatches()
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   /** unapply patches
@@ -1412,7 +1411,7 @@ Dprintf.dprintf("");
   public void unapplyPatches()
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   /** set files mode
@@ -1423,18 +1422,19 @@ Dprintf.dprintf("");
   public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   /** create new branch
-   * @param name branch name
+   * @param rootName root name (source)
+   * @param branchName branch name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
   }
 
   //-----------------------------------------------------------------------

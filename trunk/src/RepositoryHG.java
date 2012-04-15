@@ -2402,13 +2402,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** create new branch
-   * @param name branch name
+   * @param rootName root name (source)
+   * @param branchName branch name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
+Dprintf.dprintf("NYI");
   }
 
   /** post to review server/update review server

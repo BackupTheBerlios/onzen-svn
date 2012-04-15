@@ -381,7 +381,7 @@ class CommandCreateBranch
         }
 
         // create new branch
-        repositoryTab.repository.newBranch(data.branchName.trim(),commitMessage,busyDialog);
+        repositoryTab.repository.newBranch(data.rootName.trim(),data.branchName.trim(),commitMessage,busyDialog);
 
         // free resources
         commitMessage.done(); commitMessage = null;

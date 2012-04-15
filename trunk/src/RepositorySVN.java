@@ -1648,11 +1648,12 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** create new branch
-   * @param name branch name
+   * @param rootName root name (source)
+   * @param branchName branch name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
     String repositoryPath = getRepositoryPath();
@@ -1663,7 +1664,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath,repositoryPath+File.separator+name);
+      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath+File.separator+rootName,repositoryPath+File.separator+branchName);
       command.append("-F",commitMessage.getFileName());
       Exec exec = new Exec(rootPath,command);
 

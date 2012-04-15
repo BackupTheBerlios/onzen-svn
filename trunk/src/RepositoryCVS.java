@@ -1850,11 +1850,12 @@ Dprintf.dprintf("unknown %s",line);
   }
 
   /** create new branch
-   * @param name branch name
+   * @param rootName root name (source)
+   * @param branchName branch name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
     try
@@ -1863,7 +1864,9 @@ Dprintf.dprintf("unknown %s",line);
 
       // create branch
       command.clear();
-      command.append(Settings.cvsCommand,"tag","-b",name);
+      command.append(Settings.cvsCommand,"rtag");
+      if (!rootName.isEmpty()) command.append("-r",rootName);
+      command.append("-b",branchName);
       Exec exec = new Exec(rootPath,command);
 
       // read output

@@ -3009,11 +3009,12 @@ Dprintf.dprintf("fileName=%s",fileName);
   }
 
   /** create new branch
-   * @param name branch name
+   * @param rootName root name (source)
+   * @param branchName branch name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  abstract public void newBranch(String name, CommitMessage commitMessage, BusyDialog busyDialog)
+  abstract public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException;
 
   /** post to review server
