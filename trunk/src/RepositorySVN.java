@@ -757,7 +757,7 @@ class RepositorySVN extends Repository
         }
 
         // done
-        exec.done();
+        exec.done(); exec = null;
 
         // convert to lines array
         newFileLines = newFileLineList.toArray(new String[newFileLineList.size()]);
