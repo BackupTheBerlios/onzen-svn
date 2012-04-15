@@ -287,20 +287,22 @@ class RepositoryHG extends Repository
   {
     final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(.)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
 
-    Command         command            = new Command();
-    Exec            exec;
-    String          line;
-    Matcher         matcher;
-    String          name               = null;
-    FileData.States state              = FileData.States.UNKNOWN;
-    FileData.Modes  mode               = FileData.Modes.UNKNOWN;
-    String          workingRevision    = "";
-    String          repositoryRevision = "";
     for (String directory : fileDirectorySet)
     {
+      Exec exec = null;
+
       exec = null;
       try
       {
+        Command         command            = new Command();
+        String          line;
+        Matcher         matcher;
+        String          name               = null;
+        FileData.States state              = FileData.States.UNKNOWN;
+        FileData.Modes  mode               = FileData.Modes.UNKNOWN;
+        String          workingRevision    = "";
+        String          repositoryRevision = "";
+
         // get status
         command.clear();
         command.append(Settings.hgCommand,"-y","status","-mardcu");
@@ -380,6 +382,9 @@ class RepositoryHG extends Repository
       exec = null;
       try
       {
+        Command command = new Command();
+        String  line;
+
         // get revision (identity)
         command.clear();
         command.append(Settings.hgCommand,"identify","-t");
@@ -408,6 +413,9 @@ class RepositoryHG extends Repository
       exec = null;
       try
       {
+        Command command = new Command();
+        String  line;
+
         // get branch
         command.clear();
         command.append(Settings.hgCommand,"branch");
@@ -450,12 +458,12 @@ class RepositoryHG extends Repository
   {
     String repositoryPath = "";
 
-    // get root
-    Command command = new Command();
-    Exec    exec;
-    String  line;
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+      String  line;
+
       command.clear();
       command.append(Settings.hgCommand,"root");
       command.append("--");
@@ -464,11 +472,15 @@ class RepositoryHG extends Repository
       repositoryPath = exec.getStdout();
 
       // done
-      exec.done();
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return repositoryPath;
