@@ -1433,7 +1433,47 @@ Dprintf.dprintf("NYI");
   public String[] getBranchNames()
     throws RepositoryException
   {
-    return null;
+    ArrayList<String> branchNameList = new ArrayList<String>();
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+
+      // add files
+      command.clear();
+      command.append(Settings.gitCommand,"branch","-a");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // discard first line: HEAD -> ...
+      exec.getStdout();
+
+      // read output
+      while ((line = exec.getStdout()) != null)
+      {
+        String[] words = StringUtils.split(line.substring(2));
+        if (words != null) branchNameList.add(words[0]);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    // convert to array and sort
+    String[] branchNames = branchNameList.toArray(new String[branchNameList.size()]);
+    Arrays.sort(branchNames);
+
+    return branchNames;
   }
 
   /** create new branch
@@ -1445,7 +1485,31 @@ Dprintf.dprintf("NYI");
   public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
-Dprintf.dprintf("NYI");
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+      int     exitCode;
+
+      // add files
+      command.clear();
+      command.append(Settings.gitCommand,"branch",branchName);
+      command.append("--");
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   //-----------------------------------------------------------------------
