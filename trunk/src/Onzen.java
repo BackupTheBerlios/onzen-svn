@@ -291,6 +291,8 @@ public class Onzen
 
   public static MimetypesFileTypeMap MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
 
+  public static String               EXECUTABLE_FILE_EXTENSION = isWindowsSystem() ? "*.exe" : "*";
+
   // command line options
   private static final Option[] options =
   {
@@ -961,6 +963,17 @@ exception.printStackTrace();
 
     // check arguments
   }
+
+  /** check if system is Windows system
+   * @return TRUE iff Windows, FALSE otherwise
+   */
+  public static boolean isWindowsSystem()
+  {
+                 String osName = System.getProperty("os.name").toLowerCase();
+
+                return (osName.indexOf("win") >= 0);
+
+        }
 
   /** init display variables
    */
