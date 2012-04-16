@@ -143,7 +143,7 @@ class RepositoryGit extends Repository
                  )
               {
                 // get file type, size, date/time
-                File file = new File(rootPath,name);
+                File file               = new File(rootPath,name);
                 FileData.Types type     = getFileType(file);
                 long           size     = file.length();
                 Date           datetime = new Date(file.lastModified());
