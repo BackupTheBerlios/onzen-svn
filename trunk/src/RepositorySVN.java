@@ -674,7 +674,8 @@ class RepositorySVN extends Repository
           author             = matcher.group(5);
           name               = matcher.group(6);
 
-          if (stateSet.contains(state))
+          if (   new File(name).isFile()
+              && stateSet.contains(state))
           {
             fileDataSet.add(new FileData(name,
                                          state,
@@ -687,14 +688,16 @@ class RepositorySVN extends Repository
         {
           name = matcher.group(1);
 
-          if (stateSet.contains(FileData.States.UNKNOWN))
+          if (   new File(name).isFile()
+              && stateSet.contains(FileData.States.UNKNOWN)
+             )
           {
             fileDataSet.add(new FileData(name,FileData.States.UNKNOWN));
           }
         }
         else if (PATTERN_STATUS_AGAINST.matcher(line).matches())
         {
-          // ignore "Pattern status agaist:..."
+          // ignore "Pattern status against:..."
         }
         else
         {
