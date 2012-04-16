@@ -23,6 +23,7 @@ import java.io.OutputStreamWriter;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Stack;
 
 /****************************** Classes ********************************/
@@ -217,8 +218,12 @@ class Exec
     else if (path != null)                             workingDirectory = new File(path);
     else                                               workingDirectory = null;
 
-    // start process
-    process = Runtime.getRuntime().exec(commandArray,null,workingDirectory);
+    // start process. Note: set LANG=en_US to force English output
+    ProcessBuilder processBuilder = new ProcessBuilder(commandArray);
+    Map<String, String> environment = processBuilder.environment();
+    environment.put("LANG","en_US");
+    processBuilder.directory(workingDirectory);
+    process = processBuilder.start();
     processHash.add(process);
 
     // get stdin, stdout, stderr
