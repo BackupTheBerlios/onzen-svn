@@ -17,16 +17,19 @@
 @if "%1" == "c" goto compile
 @if "%1" == "run" goto run
 @if "%1" == "r" goto run
+@if "%1" == "rundebug" goto rundebug
+@if "%1" == "rd" goto rundebug
 @if "%1" == "jars" goto jars
 @goto compile
 
 :help
 @echo Targets:
 @echo.
-@echo   config  - create configuration file
-@echo   compile - compile sources
-@echo   run     - run
-@echo   jars    - create jars
+@echo   config   - create configuration file
+@echo   compile  - compile sources
+@echo   run      - run
+@echo   rundebug - run in debug mode
+@echo   jars     - create jars
 @goto end
 
 :config
@@ -53,6 +56,12 @@ javac.exe -d classes -cp %CLASSPATH% src\*.java
 @call make.bat compile
 @if errorlevel 1 goto end
 java -cp %CLASSPATH% Onzen
+@goto end
+
+:rundebug
+@call make.bat compile
+@if errorlevel 1 goto end
+java -cp %CLASSPATH% Onzen --debug
 @goto end
 
 :jars
