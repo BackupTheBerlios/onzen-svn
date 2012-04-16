@@ -197,7 +197,6 @@ class RepositorySVN extends Repository
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
         command.append("--");
-//        if (!directory.isEmpty()) command.append(directory);
         exec = new Exec(rootPath,directory,command);
 
         // parse status data
@@ -222,7 +221,7 @@ class RepositorySVN extends Repository
                     )
             {
               // get file type, size, date/time
-              File file = new File(rootPath,fileName);
+              File file               = new File(rootPath,fileName);
               FileData.Types type     = getFileType(file);
               long           size     = file.length();
               Date           datetime = new Date(file.lastModified());
@@ -230,7 +229,7 @@ class RepositorySVN extends Repository
               // create file data
               newFileDataSet.add(new FileData(fileName,
                                               FileData.Types.FILE,
-                                              state,
+                                              FileData.States.UNKNOWN,
                                               FileData.Modes.BINARY,
                                               size,
                                               datetime
