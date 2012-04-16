@@ -2061,9 +2061,10 @@ class Dialogs
    * @param title title text
    * @param fileName fileName or null
    * @param fileExtensions array with {name,pattern} or null
+   * @param defaultFileExtension default file extension pattern or null
    * @return file name or null
    */
-  private static String file(Shell parentShell, int type, String title, String oldFileName, String[] fileExtensions)
+  private static String file(Shell parentShell, int type, String title, String oldFileName, String[] fileExtensions, String defaultFileExtension)
   {
     File oldFile = (oldFileName != null)?new File(oldFileName):null;
 
@@ -2085,12 +2086,15 @@ class Dialogs
         fileExtensionNames[z] = fileExtensions[z*2+0]+" ("+fileExtensions[z*2+1]+")";
       }
       String[] fileExtensionPatterns = new String[(fileExtensions.length+1)/2];
+      int fileExtensionIndex = 0;
       for (int z = 0; z < fileExtensions.length/2; z++)
       {
         fileExtensionPatterns[z] = fileExtensions[z*2+1];
+        if ((defaultFileExtension != null) && defaultFileExtension.equalsIgnoreCase(fileExtensions[z*2+1])) fileExtensionIndex = z;
       }
       dialog.setFilterNames(fileExtensionNames);
       dialog.setFilterExtensions(fileExtensionPatterns);
+      dialog.setFilterIndex(fileExtensionIndex);
     }
 
     String fileName = dialog.open();
@@ -2121,11 +2125,24 @@ class Dialogs
    * @param title title text
    * @param fileName fileName or null
    * @param fileExtensions array with {name,pattern} or null
+   * @param defaultFileExtension default file extension pattern or null
+   * @return file name or null
+   */
+  public static String fileOpen(Shell parentShell, String title, String fileName, String[] fileExtensions, String defaultFileExtension)
+  {
+    return file(parentShell,SWT.OPEN,title,fileName,fileExtensions,defaultFileExtension);
+  }
+
+  /** file dialog for open file
+   * @param parentShell parent shell
+   * @param title title text
+   * @param fileName fileName or null
+   * @param fileExtensions array with {name,pattern} or null
    * @return file name or null
    */
   public static String fileOpen(Shell parentShell, String title, String fileName, String[] fileExtensions)
   {
-    return file(parentShell,SWT.OPEN,title,fileName,fileExtensions);
+    return fileOpen(parentShell,title,fileName,fileExtensions,null);
   }
 
   /** file dialog for open file
@@ -2154,11 +2171,36 @@ class Dialogs
    * @param title title text
    * @param fileName fileName or null
    * @param fileExtensions array with {name,pattern} or null
+   * @param defaultFileExtension default file extension pattern or null
+   * @return file name or null
+   */
+  public static String fileSave(Shell parentShell, String title, String fileName, String[] fileExtensions, String defaultFileExtension)
+  {
+    return file(parentShell,SWT.SAVE,title,fileName,fileExtensions,defaultFileExtension);
+  }
+
+  /** file dialog for save file
+   * @param parentShell parent shell
+   * @param title title text
+   * @param fileName fileName or null
+   * @param fileExtensions array with {name,pattern} or null
    * @return file name or null
    */
   public static String fileSave(Shell parentShell, String title, String fileName, String[] fileExtensions)
   {
-    return file(parentShell,SWT.SAVE,title,fileName,fileExtensions);
+    return fileSave(parentShell,title,fileName,fileExtensions,null);
+  }
+
+  /** file dialog for save file
+   * @param parentShell parent shell
+   * @param title title text
+   * @param fileName fileName or null
+   * @param defaultFileExtension default file extension pattern or null
+   * @return file name or null
+   */
+  public static String fileSave(Shell parentShell, String title, String fileName, String defaultFileExtension)
+  {
+    return fileSave(parentShell,title,fileName,null,defaultFileExtension);
   }
 
   /** file dialog for save file
@@ -2169,7 +2211,7 @@ class Dialogs
    */
   public static String fileSave(Shell parentShell, String title, String fileName)
   {
-    return fileSave(parentShell,title,fileName,null);
+    return fileSave(parentShell,title,fileName,(String)null);
   }
 
   /** file dialog for save file
