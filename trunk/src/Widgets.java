@@ -35,6 +35,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -1466,6 +1467,32 @@ class Widgets
         throw new Error("Internal error: unknown control");
       }
     }
+  }
+
+  /** set cursor for control
+   * @param control control
+   * @param cursor cursor to set or null
+   */
+  public static void setCursor(final Control control, final Cursor cursor)
+  {
+    if (!control.isDisposed())
+    {
+      control.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          control.setCursor(cursor);
+        }
+      });
+    }
+  }
+
+    /** resset cursor for control to default cursor
+   * @param control control
+   */
+  public static void resetCursor(Control control)
+  {
+    setCursor(control,null);
   }
 
   /** set field in data structure

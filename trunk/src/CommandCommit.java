@@ -388,7 +388,7 @@ class CommandCommit
     {
       public void run(HashSet<FileData> fileDataSet)
       {
-        dialog.setCursor(Onzen.CURSOR_WAIT);
+        Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get patch...");
         try
         {
@@ -463,7 +463,7 @@ class CommandCommit
         finally
         {
           repositoryTab.clearStatusText();
-          dialog.setCursor(null);
+          Widgets.resetCursor(dialog);
         }
       }
     });

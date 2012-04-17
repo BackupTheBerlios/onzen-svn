@@ -897,7 +897,7 @@ Dprintf.dprintf("");
     {
       public void run(HashSet<FileData> fileDataSet, String revision1, String revision2)
       {
-        dialog.setCursor(Onzen.CURSOR_WAIT);
+        Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get patch...");
         try
         {
@@ -978,7 +978,7 @@ Dprintf.dprintf("");
         finally
         {
           repositoryTab.clearStatusText();
-          dialog.setCursor(null);
+          Widgets.resetCursor(dialog);
         }
       }
     });
