@@ -1346,7 +1346,7 @@ Dprintf.dprintf("");
           {
             widgetCommand = Widgets.newText(subSubComposite);
             Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
-            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%file% - file name");
+            widgetCommand.setToolTipText("Command to open file with.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
 
             button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
             Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -1634,7 +1634,7 @@ Dprintf.dprintf("");
 
       widgetCommand = Widgets.newText(composite);
       Widgets.layout(widgetCommand,0,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to open file with.\nMacros:\n%file% - file name");
+      widgetCommand.setToolTipText("Command to open file with.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
 
       button = Widgets.newButton(composite,Onzen.IMAGE_DIRECTORY);
       Widgets.layout(button,0,2,TableLayoutData.DEFAULT);

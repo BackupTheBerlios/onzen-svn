@@ -2271,7 +2271,7 @@ Dprintf.dprintf("");
         widgetCommand = Widgets.newText(subComposite);
         widgetCommand.setText(editor.command);
         Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
-        widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+        widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.E);
@@ -2376,7 +2376,7 @@ Dprintf.dprintf("");
       widgetCommand = Widgets.newText(composite);
       widgetCommand.setText(shellCommand.command);
       Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
     }
 
     // buttons
