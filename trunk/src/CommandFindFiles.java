@@ -831,7 +831,7 @@ Dprintf.dprintf("");
               {
                 public void run()
                 {
-                  dialog.setCursor(Onzen.CURSOR_WAIT);
+                  Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
                   widgetFiles.setForeground(Onzen.COLOR_DARK_GRAY);
                 }
               });
@@ -920,7 +920,7 @@ Dprintf.dprintf("");
                 public void run()
                 {
                   widgetFiles.setForeground(Onzen.COLOR_BLACK);
-                  dialog.setCursor(null);
+                  Widgets.resetCursor(dialog);
                 }
               });
             }
