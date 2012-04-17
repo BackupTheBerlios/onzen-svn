@@ -498,7 +498,7 @@ Dprintf.dprintf("");
       subComposite.setLayout(new TableLayout(null,0.0));
       Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
-        widgetFindNames = Widgets.newCheckbox(subComposite,"find names");
+        widgetFindNames = Widgets.newCheckbox(subComposite,"find names",SWT.F5);
         widgetFindNames.setSelection(data.findNamesFlag);
         Widgets.layout(widgetFindNames,0,0,TableLayoutData.W);
         widgetFindNames.addSelectionListener(new SelectionListener()
@@ -512,7 +512,7 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetFindContent = Widgets.newCheckbox(subComposite,"find content");
+        widgetFindContent = Widgets.newCheckbox(subComposite,"find content",SWT.F6);
         widgetFindContent.setSelection(data.findContentFlag);
         Widgets.layout(widgetFindContent,0,1,TableLayoutData.W);
         widgetFindContent.addSelectionListener(new SelectionListener()
@@ -526,7 +526,7 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories");
+        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories",SWT.F7);
         widgetShowAllRepositories.setSelection(data.showAllRepositoriesFlag);
         Widgets.layout(widgetShowAllRepositories,0,2,TableLayoutData.W);
         widgetShowAllRepositories.addSelectionListener(new SelectionListener()
@@ -540,7 +540,7 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files");
+        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files",SWT.F8);
         widgetShowHiddenFiles.setSelection(data.showHiddenFilesFlag);
         Widgets.layout(widgetShowHiddenFiles,0,3,TableLayoutData.W);
         widgetShowHiddenFiles.addSelectionListener(new SelectionListener()
@@ -727,6 +727,22 @@ Dprintf.dprintf("");
         {
           Widgets.invoke(widgetButtonRevisions);
         }
+        else if (Widgets.isAccelerator(keyEvent,SWT.F5))
+        {
+          Widgets.invoke(widgetFindNames);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.F6))
+        {
+          Widgets.invoke(widgetFindContent);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.F7))
+        {
+          Widgets.invoke(widgetShowAllRepositories);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.F8))
+        {
+          Widgets.invoke(widgetShowHiddenFiles);
+        }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
@@ -810,6 +826,7 @@ Dprintf.dprintf("");
             {
               public void run()
               {
+                dialog.setCursor(Onzen.CURSOR_WAIT);
                 widgetFiles.setForeground(Onzen.COLOR_DARK_GRAY);
               }
             });
@@ -895,6 +912,7 @@ Dprintf.dprintf("");
               public void run()
               {
                 widgetFiles.setForeground(Onzen.COLOR_BLACK);
+                dialog.setCursor(null);
               }
             });
           }
