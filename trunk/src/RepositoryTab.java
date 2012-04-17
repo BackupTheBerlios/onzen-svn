@@ -1232,8 +1232,9 @@ Dprintf.dprintf("");
   /** open file (with external command)
    * @param fileName file name
    * @param mimeType mime type pattern
+   * @param lineNumber line number
    */
-  public void openFile(String fileName, String mimeType)
+  public void openFile(String fileName, String mimeType, int lineNumber)
   {
     // find editor command with file mime-type or file name pattern
     String command = null;
@@ -1516,8 +1517,11 @@ Dprintf.dprintf("");
       // expand command
       Macro macro = new Macro(StringUtils.split(command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
       if (!macro.contains("file")) macro.add("file");
-      macro.expand("file",fileName);
-      macro.expand("",    "%");
+      macro.expand("file",      fileName);
+      macro.expand("f",         fileName);
+      macro.expand("lineNumber",lineNumber);
+      macro.expand("n",         lineNumber);
+      macro.expand("",          "%");
       String[] commandLine = macro.getValueArray();
 
       // run command
@@ -1531,6 +1535,34 @@ Dprintf.dprintf("");
         return;
       }
     }
+  }
+
+  /** open file (with external command)
+   * @param file file to open
+   * @param mimeType mime type pattern
+   * @param lineNumber line number
+   */
+  public void openFile(File file, String mimeType, int lineNumber)
+  {
+    openFile(file.getPath(),mimeType,lineNumber);
+  }
+
+  /** open file (with external command)
+   * @param fileName file name
+   * @param mimeType mime type pattern
+   */
+  public void openFile(String fileName, String mimeType)
+  {
+    openFile(fileName,mimeType,0);
+  }
+
+  /** open file (with external command)
+   * @param file file to open
+   * @param mimeType mime type pattern
+   */
+  public void openFile(File file, String mimeType)
+  {
+    openFile(file.getPath(),mimeType);
   }
 
   /** open file (with external command)
@@ -1548,9 +1580,8 @@ Dprintf.dprintf("");
    */
   public void openFile(File file)
   {
-    String fileName = file.getPath();
-    openFile(fileName,
-             Onzen.getMimeType(fileName)
+    openFile(file,
+             Onzen.getMimeType(file)
             );
   }
 
@@ -1567,8 +1598,9 @@ Dprintf.dprintf("");
 
   /** open file with external program
    * @param fileName file name
+   * @param lineNumber line number
    */
-  public void openFileWith(String fileName)
+  public void openFileWith(String fileName, int lineNumber)
   {
     /** dialog data
      */
@@ -1694,8 +1726,11 @@ Dprintf.dprintf("");
       // expand command
       Macro macro = new Macro(StringUtils.split(data.command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
       if (!macro.contains("file")) macro.add("file");
-      macro.expand("file",fileName);
-      macro.expand("",    "%");
+      macro.expand("file",      fileName);
+      macro.expand("f",         fileName);
+      macro.expand("lineNumber",lineNumber);
+      macro.expand("n",         lineNumber);
+      macro.expand("",          "%");
       String command = macro.getValue();
 
       // run command
@@ -1711,6 +1746,14 @@ Dprintf.dprintf("");
     }
   }
 
+  /** open file with external prog  /** open file with external program
+   * @param fileName file name
+   */
+  public void openFileWith(String fileName)
+  {
+    openFileWith(fileName,0);
+  }
+
   /** open file with external program
    * @param fileData file data
    */
@@ -1721,10 +1764,19 @@ Dprintf.dprintf("");
 
   /** open file with external program
    * @param file file
+   * @param lineNumber line number
+   */
+  public void openFileWith(File file, int lineNumber)
+  {
+    openFileWith(file.getPath(),lineNumber);
+  }
+
+  /** open file with external program
+   * @param file file
    */
   public void openFileWith(File file)
   {
-    openFileWith(file.getPath());
+    openFileWith(file,0);
   }
 
   /** open file with external program
