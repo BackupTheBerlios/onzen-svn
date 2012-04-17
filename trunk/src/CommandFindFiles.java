@@ -805,6 +805,16 @@ Dprintf.dprintf("");
           if (!findText.isEmpty())
           {
 //Dprintf.dprintf("findPattern=%s",findPattern);
+            // start find files
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                widgetFiles.setForeground(Onzen.COLOR_DARK_GRAY);
+              }
+            });
+
+            // find files
             for (final RepositoryTab repositoryTab : (showAllRepositoriesFlag) ? allRepositoryTabs : thisRepositoryTabs)
             {
               File directory = new File(repositoryTab.repository.rootPath);
@@ -878,6 +888,15 @@ Dprintf.dprintf("");
               }
               while ((directory = directoryList.pollFirst()) != null);
             }
+
+            // stop find files
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                widgetFiles.setForeground(Onzen.COLOR_BLACK);
+              }
+            });
           }
 
           // wait for new filter pattern/quit
