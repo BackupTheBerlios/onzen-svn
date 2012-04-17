@@ -455,8 +455,15 @@ Dprintf.dprintf("e=%s",e);
 Dprintf.dprintf("d=%s",d);
 */
 
-      // run
-      exitcode = run();
+      if (repositoryListName != null)
+      {
+        // run
+        exitcode = run();
+      }
+      else
+      {
+        exitcode = 0;
+      }
 
       // done
       doneAll();
@@ -3044,7 +3051,7 @@ exception.printStackTrace();
     }
   }
 
-  /** get repository list name
+  /** get new repository list name
    * @return repository list name or null
    */
   private String getNewRepositoryListName()
