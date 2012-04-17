@@ -1529,10 +1529,17 @@ class Widgets
   {
     if (!button.isDisposed() && button.isEnabled())
     {
-      Event event = new Event();
-      event.widget = button;
+      if ((button.getStyle() & SWT.CHECK) != 0)
+      {
+        button.setSelection(!button.getSelection());
+      }
+      else
+      {
+        Event event = new Event();
+        event.widget = button;
 
-      button.notifyListeners(SWT.Selection,event);
+        button.notifyListeners(SWT.Selection,event);
+      }
     }
   }
 
