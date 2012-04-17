@@ -56,11 +56,13 @@ class CommandFindFiles
   {
     RepositoryTab repositoryTab;
     File          file;
+    int           lineNumber;
 
-    FindData(RepositoryTab repositoryTab, File file)
+    FindData(RepositoryTab repositoryTab, File file, int lineNumber)
     {
       this.repositoryTab = repositoryTab;
       this.file          = file;
+      this.lineNumber    = lineNumber;
     }
   }
 
@@ -480,9 +482,10 @@ Dprintf.dprintf("");
               TableItem tableItem = widgetFiles.getItem(index);
               FindData  findData  = (FindData)tableItem.getData();
 
-              String fileName = findData.file.getPath();
-              String mimeType = Onzen.getMimeType(fileName);
-              repositoryTab.openFile(fileName,mimeType);
+              repositoryTab.openFile(findData.file,
+                                     Onzen.getMimeType(findData.file),
+                                     findData.lineNumber
+                                    );
             }
           }
           public void widgetSelected(SelectionEvent selectionEvent)
@@ -604,7 +607,10 @@ Dprintf.dprintf("");
           FindData findData = getSelectedFile();
           if (findData != null)
           {
-            findData.repositoryTab.openFile(findData.file);
+            findData.repositoryTab.openFile(findData.file,
+                                            Onzen.getMimeType(findData.file),
+                                            findData.lineNumber
+                                           );
           }
         }
       });
@@ -629,7 +635,7 @@ Dprintf.dprintf("");
           FindData findData = getSelectedFile();
           if (findData != null)
           {
-            findData.repositoryTab.openFileWith(findData.file);
+            findData.repositoryTab.openFileWith(findData.file,findData.lineNumber);
           }
         }
       });
@@ -693,9 +699,10 @@ Dprintf.dprintf("");
           TableItem tableItem = widget.getItem(index);
           FindData  findData  = (FindData)tableItem.getData();
 
-          String fileName = findData.file.getPath();
-          String mimeType = Onzen.getMimeType(fileName);
-          repositoryTab.openFile(fileName,mimeType);
+          repositoryTab.openFile(findData.file,
+                                 Onzen.getMimeType(findData.file),
+                                 findData.lineNumber
+                                );
         }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
@@ -824,17 +831,23 @@ Dprintf.dprintf("");
                       final File file = new File(directory,fileName);
                       if     (file.isFile())
                       {
-                        boolean nameMatchFlag    =    findNamesFlag
-                                                   && (   fileName.toLowerCase().contains(findText)
-                                                       || findNamePattern.matcher(fileName).matches()
-                                                      );
-                        boolean contentMatchFlag =    findContentFlag
-                                                   && fileContains(file, findText, findContentPattern);
+                        boolean nameMatchFlag = false;
+                        int     lineNumber    = 0;
+                        if (findNamesFlag)
+                        {
+                          nameMatchFlag =    fileName.toLowerCase().contains(findText)
+                                          || findNamePattern.matcher(fileName).matches();
+                        }
+                        if (findContentFlag)
+                        {
+                          lineNumber = fileContains(file,findText,findContentPattern);
+                        }
 
-                        if (nameMatchFlag || contentMatchFlag)
+                        if (nameMatchFlag || (lineNumber > 0))
                         {
                           if (!dialog.isDisposed())
                           {
+                            final FindData findData = new FindData(repositoryTab,file,lineNumber);
                             display.syncExec(new Runnable()
                             {
                               public void run()
@@ -843,7 +856,7 @@ Dprintf.dprintf("");
 
                                 Widgets.insertTableEntry(widgetFiles,
                                                          findDataComparator,
-                                                         new FindData(repositoryTab,file),
+                                                         findData,
                                                          file.getName(),
                                                          file.getParent(),
                                                          Onzen.DATETIME_FORMAT.format(file.lastModified()),
@@ -1006,11 +1019,11 @@ Dprintf.dprintf("");
   }
 
   /** get selected find data
-   * @return find data or null
+   * @return line number or -1 if not found
    */
-  private boolean fileContains(File file, String text, Pattern findPattern)
+  private int fileContains(File file, String text, Pattern findPattern)
   {
-    boolean containsFlag = false;
+    int lineNumber = -1;
 
     BufferedReader input = null;
     try
@@ -1021,12 +1034,17 @@ Dprintf.dprintf("");
       // read file and find text
       text = text.toLowerCase();
       String line;
-      while (   !containsFlag
-             && ((line = input.readLine()) != null)
-            )
+      int    n = 0;
+      while ((line = input.readLine()) != null)
       {
-        containsFlag =    line.toLowerCase().contains(text)
-                       || findPattern.matcher(line).matches();
+        n++;
+        if (   line.toLowerCase().contains(text)
+            || findPattern.matcher(line).matches()
+           )
+        {
+          lineNumber = n;
+          break;
+        }
       }
 
       // close file
@@ -1048,7 +1066,7 @@ Dprintf.dprintf("");
       }
     }
 
-    return containsFlag;
+    return lineNumber;
   }
 }
 
