@@ -471,22 +471,13 @@ Dprintf.dprintf("");
         widgetFind = Widgets.newText(subComposite,SWT.SEARCH|SWT.ICON_SEARCH|SWT.ICON_CANCEL);
         widgetFind.setMessage("Enter find file pattern");
         Widgets.layout(widgetFind,0,1,TableLayoutData.WE);
-        widgetFind.setToolTipText("Find file pattern. Use * and ? as wildcards.");
+        widgetFind.setToolTipText("Find file by name/content patterns. Use * and ? as wildcards. Use space as separator.");
         widgetFind.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
-            int index = widgetFiles.getSelectionIndex();
-            if (index >= 0)
-            {
-              TableItem tableItem = widgetFiles.getItem(index);
-              FindData  findData  = (FindData)tableItem.getData();
-
-              repositoryTab.openFile(findData.file,
-                                     Onzen.getMimeType(findData.file),
-                                     findData.lineNumber
-                                    );
-            }
+Dprintf.dprintf("");
+            restartFindFiles();
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
@@ -783,13 +774,13 @@ Dprintf.dprintf("");
     // start find files
     Background.run(new BackgroundRunnable()
     {
-      String  findText                 = "";
-      Pattern findNamePattern          = null;
-      Pattern findContentPattern       = null;
-      boolean findNamesFlag            = data.findNamesFlag;
-      boolean findContentFlag          = data.findContentFlag;
-      boolean showAllRepositoriesFlag  = data.showAllRepositoriesFlag;
-      boolean showHiddenFilesFlag      = data.showHiddenFilesFlag;
+      String    findText                 = "";
+      Pattern[] findNamePatterns         = null;
+      Pattern[] findContentPatterns      = null;
+      boolean   findNamesFlag            = data.findNamesFlag;
+      boolean   findContentFlag          = data.findContentFlag;
+      boolean   showAllRepositoriesFlag  = data.showAllRepositoriesFlag;
+      boolean   showHiddenFilesFlag      = data.showHiddenFilesFlag;
 
       /** check if data is modified
        * @return true iff data is modified
@@ -823,7 +814,7 @@ Dprintf.dprintf("");
           }
           if (!findText.isEmpty())
           {
-//Dprintf.dprintf("findNamePattern=%s findContentPattern=%s",findNamePattern,findContentPattern);
+//Dprintf.dprintf("findNamePatterns=%s findContentPatterns=%s",findNamePatterns,findContentPatterns);
             // start find files
             if (!dialog.isDisposed())
             {
@@ -869,14 +860,19 @@ Dprintf.dprintf("");
                         if (findNamesFlag)
                         {
                           nameMatchFlag =    fileName.toLowerCase().contains(findText)
-                                          || findNamePattern.matcher(fileName).matches();
+                                          || matchPatterns(findNamePatterns,fileName);
                         }
-                        if (findContentFlag)
+                        if (   (!findNamesFlag || nameMatchFlag)
+                            && findContentFlag
+                           )
                         {
-                          lineNumber = fileContains(file,findText,findContentPattern);
+                          lineNumber = fileContains(file,findText,findContentPatterns);
                         }
+//Dprintf.dprintf("fileName=%s findNamesFlag=%s nameMatchFlag=%s findContentFlag=%s %d == %s",fileName,findNamesFlag,nameMatchFlag,findContentFlag,lineNumber);
 
-                        if (nameMatchFlag || (lineNumber > 0))
+                        if (   (!findNamesFlag   || nameMatchFlag)
+                            && (!findContentFlag || (lineNumber > 0))
+                           )
                         {
                           if (!dialog.isDisposed())
                           {
@@ -946,9 +942,9 @@ Dprintf.dprintf("");
             if (data.findText != null)
             {
               // get new find text/pattern
-              findText           = new String(data.findText);
-              findNamePattern    = Pattern.compile(StringUtils.globToRegex(data.findText),Pattern.CASE_INSENSITIVE);
-              findContentPattern = Pattern.compile(".*"+StringUtils.globToRegex(data.findText)+".*",Pattern.CASE_INSENSITIVE);
+              findText            = new String(data.findText);
+              findNamePatterns    = compileFileNamePatterns(data.findText);
+              findContentPatterns = compileContentPatterns(data.findText);
 
               // clear existing text
               data.findText = null;
@@ -1064,10 +1060,58 @@ Dprintf.dprintf("");
     }
   }
 
+  /** compile file patterns
+   * @param findText find text string
+   * @return file name pattern array
+   */
+  private Pattern[] compileFileNamePatterns(String findText)
+  {
+    ArrayList<Pattern> patternList = new ArrayList<Pattern>();
+    for (String pattern : StringUtils.split(findText))
+    {
+      patternList.add(Pattern.compile(StringUtils.globToRegex(pattern),Pattern.CASE_INSENSITIVE));
+    }
+
+    return patternList.toArray(new Pattern[patternList.size()]);
+  }
+
+  /** compile content patterns
+   * @param findText find text string
+   * @return file content pattern array
+   */
+  private Pattern[] compileContentPatterns(String findText)
+  {
+    ArrayList<Pattern> patternList = new ArrayList<Pattern>();
+    for (String pattern : StringUtils.split(findText))
+    {
+      patternList.add(Pattern.compile(".*"+StringUtils.globToRegex(pattern)+".*",Pattern.CASE_INSENSITIVE));
+    }
+
+    return patternList.toArray(new Pattern[patternList.size()]);
+  }
+
+  /** match patterns
+   * @param patterns patterns to match
+   * @param string string to match
+   * @return true iff one pattern match with string
+   */
+  private boolean matchPatterns(Pattern[] patterns, String string)
+  {
+    for (Pattern pattern : patterns)
+    {
+      if (pattern.matcher(string).matches()) return true;
+    }
+
+    return false;
+  }
+
   /** get selected find data
+   * @param file file to check
+   * @param string text to find
+   * @param findContentPatterns content patterns
    * @return line number or -1 if not found
    */
-  private int fileContains(File file, String text, Pattern findPattern)
+  private int fileContains(File file, String string, Pattern[] findContentPatterns)
   {
     int lineNumber = -1;
 
@@ -1078,14 +1122,14 @@ Dprintf.dprintf("");
       input = new BufferedReader(new FileReader(file));
 
       // read file and find text
-      text = text.toLowerCase();
+      string = string.toLowerCase();
       String line;
       int    n = 0;
       while ((line = input.readLine()) != null)
       {
         n++;
-        if (   line.toLowerCase().contains(text)
-            || findPattern.matcher(line).matches()
+        if (   line.toLowerCase().contains(string)
+            || matchPatterns(findContentPatterns,line)
            )
         {
           lineNumber = n;
