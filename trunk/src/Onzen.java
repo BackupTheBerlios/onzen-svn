@@ -900,6 +900,15 @@ exception.printStackTrace();
     return MIMETYPES_FILE_TYPE_MAP.getContentType(fileName);
   }
 
+  /** get mime type of file
+   * @param file file
+   * @return mime type or null
+   */
+  public static String getMimeType(File file)
+  {
+    return MIMETYPES_FILE_TYPE_MAP.getContentType(file);
+  }
+
   //-----------------------------------------------------------------------
 
   /** static initializer
