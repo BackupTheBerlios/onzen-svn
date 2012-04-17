@@ -811,25 +811,31 @@ Dprintf.dprintf("");
         while (!data.quitFlag)
         {
           // find files
-          display.syncExec(new Runnable()
+          if (!dialog.isDisposed())
           {
-            public void run()
-            {
-              Widgets.removeAllTableEntries(widgetFiles);
-            }
-          });
-          if (!findText.isEmpty())
-          {
-//Dprintf.dprintf("findPattern=%s",findPattern);
-            // start find files
             display.syncExec(new Runnable()
             {
               public void run()
               {
-                dialog.setCursor(Onzen.CURSOR_WAIT);
-                widgetFiles.setForeground(Onzen.COLOR_DARK_GRAY);
+                Widgets.removeAllTableEntries(widgetFiles);
               }
             });
+          }
+          if (!findText.isEmpty())
+          {
+//Dprintf.dprintf("findNamePattern=%s findContentPattern=%s",findNamePattern,findContentPattern);
+            // start find files
+            if (!dialog.isDisposed())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  dialog.setCursor(Onzen.CURSOR_WAIT);
+                  widgetFiles.setForeground(Onzen.COLOR_DARK_GRAY);
+                }
+              });
+            }
 
             // find files
             for (final RepositoryTab repositoryTab : (showAllRepositoriesFlag) ? allRepositoryTabs : thisRepositoryTabs)
@@ -907,14 +913,17 @@ Dprintf.dprintf("");
             }
 
             // stop find files
-            display.syncExec(new Runnable()
+            if (!dialog.isDisposed())
             {
-              public void run()
+              display.syncExec(new Runnable()
               {
-                widgetFiles.setForeground(Onzen.COLOR_BLACK);
-                dialog.setCursor(null);
-              }
-            });
+                public void run()
+                {
+                  widgetFiles.setForeground(Onzen.COLOR_BLACK);
+                  dialog.setCursor(null);
+                }
+              });
+            }
           }
 
           // wait for new filter pattern/quit
