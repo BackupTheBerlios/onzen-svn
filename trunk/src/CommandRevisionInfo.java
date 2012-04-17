@@ -259,6 +259,7 @@ class CommandRevisionInfo
         public void run(FileData fileData, final String revision)
         {
           // get revision info
+          dialog.setCursor(Onzen.CURSOR_WAIT);
           repositoryTab.setStatusText("Get revision '%s' for '%s'...",revision,fileData.getFileName());
           try
           {
@@ -279,6 +280,7 @@ class CommandRevisionInfo
           finally
           {
             repositoryTab.clearStatusText();
+            dialog.setCursor(null);
           }
 
           // show
@@ -297,6 +299,7 @@ class CommandRevisionInfo
         final FileData      fileData      = (FileData)     userData[2];
 
         // get log
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get log for '%s'...",fileData.getFileName());
         try
         {
@@ -324,6 +327,7 @@ for (String s : l.commitMessage) Dprintf.dprintf("s=#%s#",s);
         finally
         {
           repositoryTab.clearStatusText();
+          dialog.setCursor(null);
         }
 
         // show

@@ -1463,6 +1463,7 @@ class CommandDiff
           final FileData      fileData      = (FileData)     userData[2];
 
           // get revisions
+          dialog.setCursor(Onzen.CURSOR_WAIT);
           repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
           try
           {
@@ -1483,6 +1484,7 @@ class CommandDiff
           finally
           {
             repositoryTab.clearStatusText();
+            dialog.setCursor(null);
           }
 
           if (data.revisionNames.length > 0)
@@ -2334,6 +2336,7 @@ Dprintf.dprintf("maxWidth=%d widgetTextLeft=%s %d",maxWidth,widgetTextLeft.getBo
       public void run(FileData fileData, final String revisionLeft, final String revisionRight, final Integer topIndexLeft, final Integer topIndexRight)
       {
         // get diff data
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get differences for '%s'...",fileData.getFileName());
         try
         {
@@ -2365,6 +2368,7 @@ Dprintf.dprintf("maxWidth=%d widgetTextLeft=%s %d",maxWidth,widgetTextLeft.getBo
         finally
         {
           repositoryTab.clearStatusText();
+          dialog.setCursor(null);
         }
 
         // show

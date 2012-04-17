@@ -401,6 +401,7 @@ class CommandChanges
       public void run(final ChangesTypes changesType)
       {
         // get revision tree
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         switch (changesType)
         {
           case INCOMING: repositoryTab.setStatusText("Get incoming changes..."); break;
@@ -429,6 +430,7 @@ class CommandChanges
         finally
         {
           repositoryTab.clearStatusText();
+          dialog.setCursor(null);
         }
 
         // show

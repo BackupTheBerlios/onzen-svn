@@ -363,6 +363,7 @@ class CommandCreateBranch
       public void run()
       {
         // get branch names
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get branch names...");
         try
         {
@@ -380,7 +381,11 @@ class CommandCreateBranch
           });
           return;
         }
-        repositoryTab.clearStatusText();
+        finally
+        {
+          repositoryTab.clearStatusText();
+          dialog.setCursor(null);
+        }
 
         // add to widget
         display.syncExec(new Runnable()

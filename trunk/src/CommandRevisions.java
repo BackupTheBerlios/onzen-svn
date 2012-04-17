@@ -1348,6 +1348,7 @@ static int xxx = 0;
       public void run(FileData fileData, final String revision)
       {
         // get revision tree
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get revision data for '%s'...",fileData.getFileName());
         try
         {
@@ -1368,6 +1369,7 @@ static int xxx = 0;
         finally
         {
           repositoryTab.clearStatusText();
+          dialog.setCursor(null);
         }
 //Dprintf.dprintf(""); printRevisionDataTree(data.revisionDataTree);
 

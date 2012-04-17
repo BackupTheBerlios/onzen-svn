@@ -493,6 +493,7 @@ class CommandAnnotations
       public void run(final FileData fileData, final String revision)
       {
         // get revisions
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
         try
         {
@@ -510,7 +511,11 @@ class CommandAnnotations
           });
           return;
         }
-        repositoryTab.clearStatusText();
+        finally
+        {
+          repositoryTab.clearStatusText();
+          dialog.setCursor(null);
+        }
 
         if (data.revisionNames.length > 0)
         {
@@ -870,6 +875,7 @@ class CommandAnnotations
       public void run(FileData fileData, final String revision)
       {
         // get annotations
+        dialog.setCursor(Onzen.CURSOR_WAIT);
         repositoryTab.setStatusText("Get annotations for '%s'...",fileData.getFileName());
         try
         {
@@ -890,6 +896,7 @@ class CommandAnnotations
         finally
         {
           repositoryTab.clearStatusText();
+          dialog.setCursor(null);
         }
 
         // show
