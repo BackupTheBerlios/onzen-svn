@@ -211,7 +211,7 @@ class CommandCreateBranch
         {
           data.rootName            = (widgetRootName != null) ? widgetRootName.getText().trim() : null;
           data.branchName          = widgetBranchName.getText().trim();
-          data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.message             = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
           createBranch();

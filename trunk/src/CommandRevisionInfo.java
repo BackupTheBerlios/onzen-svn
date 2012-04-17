@@ -301,7 +301,14 @@ class CommandRevisionInfo
         try
         {
           data.logData = repositoryTab.repository.getLog(fileData);
-        }
+for (LogData l : data.logData)
+{
+Dprintf.dprintf("-----");
+for (String s : l.commitMessage) Dprintf.dprintf("s=#%s#",s);
+
+ }
+
+          }
         catch (RepositoryException exception)
         {
           final String exceptionMessage = exception.getMessage();

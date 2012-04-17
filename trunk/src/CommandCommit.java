@@ -215,7 +215,7 @@ class CommandCommit
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           // get message
-          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.message = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
 
           // check commit messaage
           CommitMessage commitMessage = new CommitMessage(data.message);
@@ -244,7 +244,7 @@ class CommandCommit
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           // get message
-          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.message = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
 
           // close dialog
           Dialogs.close(dialog,false);

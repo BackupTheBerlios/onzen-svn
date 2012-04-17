@@ -968,8 +968,8 @@ class CommandPatches
 
               // save patch
               data.patch.summary     = summary;
-              data.patch.message     = StringUtils.split(message,widgetMessage.DELIMITER);
-              data.patch.comment     = StringUtils.split(comment,widgetComment.DELIMITER);
+              data.patch.message     = message.trim().split(widgetMessage.DELIMITER);
+              data.patch.comment     = comment.trim().split(widgetComment.DELIMITER);
               data.patch.fileNameSet = (HashSet)fileNameSet.clone();
               data.patch.testSet     = (LinkedHashSet)testSet.clone();
               data.patch.save();

@@ -193,7 +193,7 @@ class CommandSetFileMode
         {
           Button widget = (Button)selectionEvent.widget;
 
-          data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.message             = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
           if      (widgetFileModeText.getSelection()  ) data.mode = FileData.Modes.TEXT;
           else if (widgetFileModeBinary.getSelection()) data.mode = FileData.Modes.BINARY;

@@ -695,8 +695,8 @@ class CommandPatchReview
         {
           // store data
           data.summary = widgetSummary.getText().trim();
-          data.message = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
-          data.comment = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          data.message = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+          data.comment = widgetComment.getText().trim().split(widgetComment.DELIMITER);
           data.testSet.clear();
           for (TableItem tableItem : widgetTests.getItems())
           {
@@ -753,8 +753,8 @@ class CommandPatchReview
         {
           // store data
           data.summary = widgetSummary.getText().trim();
-          data.message = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
-          data.comment = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          data.message = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+          data.comment = widgetComment.getText().trim().split(widgetComment.DELIMITER);
           data.testSet.clear();
           for (TableItem tableItem : widgetTests.getItems())
           {
@@ -817,8 +817,8 @@ class CommandPatchReview
         {
           // store data
           data.summary = widgetSummary.getText().trim();
-          data.message = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
-          data.comment = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          data.message = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+          data.comment = widgetComment.getText().trim().split(widgetComment.DELIMITER);
           data.testSet.clear();
           for (TableItem tableItem : widgetTests.getItems())
           {
@@ -1051,8 +1051,8 @@ class CommandPatchReview
         repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
         repositoryTab.repository.autoSummaryFlag  = data.autoSummaryFlag;
         data.summary                              = widgetSummary.getText().trim();
-        data.message                              = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
-        data.comment                              = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+        data.message                              = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+        data.comment                              = widgetComment.getText().trim().split(widgetComment.DELIMITER);
         data.testSet.clear();
         for (TableItem tableItem : widgetTests.getItems())
         {
@@ -1143,8 +1143,8 @@ class CommandPatchReview
           repositoryTab.repository.reviewServerFlag = data.reviewServerFlag;
           repositoryTab.repository.autoSummaryFlag  = data.autoSummaryFlag;
           summary                                   = widgetSummary.getText().trim();
-          message                                   = StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER);
-          comment                                   = StringUtils.split(widgetComment.getText().trim(),widgetComment.DELIMITER);
+          message                                   = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+          comment                                   = widgetComment.getText().trim().split(widgetComment.DELIMITER);
           testSet                                   = data.testSet;
           testSet.clear();
           for (TableItem tableItem : widgetTests.getItems())
@@ -1318,7 +1318,7 @@ class CommandPatchReview
     {
       StringBuilder buffer = new StringBuilder();
 
-      for (String string : StringUtils.split(widgetMessage.getText().trim(),widgetMessage.DELIMITER))
+      for (String string : widgetMessage.getText().trim().split(widgetMessage.DELIMITER))
       {
         for (String pattern : Settings.autoSummaryPatterns)
         {
@@ -1537,7 +1537,7 @@ class CommandPatchReview
         // execute and add text
         Process process = Runtime.getRuntime().exec(commandArray);
         PrintWriter processOutput = new PrintWriter(process.getOutputStream());
-        for (String line : StringUtils.split(widgetPatchMailText.getText().trim(),widgetPatchMailText.DELIMITER))
+        for (String line : widgetPatchMailText.getText().trim().split(widgetPatchMailText.DELIMITER))
         {
           processOutput.println(line);
         }
@@ -1604,7 +1604,7 @@ class CommandPatchReview
 
           // get commit message
           commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
-                                            StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
+                                            widgetReviewServerDescription.getText().trim().split(widgetMessage.DELIMITER)
                                            );
 
           // post review to server/update review on server
@@ -1660,7 +1660,7 @@ class CommandPatchReview
 
           // get commit message
           commitMessage = new CommitMessage(widgetReviewServerSummary.getText().trim(),
-                                            StringUtils.split(widgetReviewServerDescription.getText().trim(),widgetMessage.DELIMITER)
+                                            widgetReviewServerDescription.getText().trim().split(widgetMessage.DELIMITER)
                                            );
 
           // post review to server/update review on server

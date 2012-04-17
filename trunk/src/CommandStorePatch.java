@@ -178,7 +178,7 @@ class CommandStorePatch
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.summary = widgetSummary.getText();
-          data.message = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.message = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
 //???
 Dprintf.dprintf("");
 //          data.testSet = widgetSummary.getText();

@@ -197,7 +197,7 @@ class CommandRename
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.newFileName         = widgetNewFileName.getText();
-          data.message             = StringUtils.split(widgetMessage.getText(),widgetMessage.DELIMITER);
+          data.message             = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
           Settings.geometryRename  = dialog.getSize();
