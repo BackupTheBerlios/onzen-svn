@@ -249,49 +249,50 @@ public class Onzen
   // --------------------------- constants --------------------------------
 
   // exit codes
-  public static int                  EXITCODE_OK             =   0;
-  public static int                  EXITCODE_INTERNAL_ERROR = 127;
+  public static int                    EXITCODE_OK             =   0;
+  public static int                    EXITCODE_INTERNAL_ERROR = 127;
 
   // colors
-  public static Color                COLOR_BLACK;
-  public static Color                COLOR_WHITE;
-  public static Color                COLOR_GREEN;
-  public static Color                COLOR_DARK_RED;
-  public static Color                COLOR_RED;
-  public static Color                COLOR_DARK_BLUE;
-  public static Color                COLOR_BLUE;
-  public static Color                COLOR_DARK_YELLOW;
-  public static Color                COLOR_YELLOW;
-  public static Color                COLOR_DARK_GRAY;
-  public static Color                COLOR_GRAY;
-  public static Color                COLOR_MAGENTA;
-  public static Color                COLOR_BACKGROUND;
+  public static Color                  COLOR_BLACK;
+  public static Color                  COLOR_WHITE;
+  public static Color                  COLOR_GREEN;
+  public static Color                  COLOR_DARK_RED;
+  public static Color                  COLOR_RED;
+  public static Color                  COLOR_DARK_BLUE;
+  public static Color                  COLOR_BLUE;
+  public static Color                  COLOR_DARK_YELLOW;
+  public static Color                  COLOR_YELLOW;
+  public static Color                  COLOR_DARK_GRAY;
+  public static Color                  COLOR_GRAY;
+  public static Color                  COLOR_MAGENTA;
+  public static Color                  COLOR_BACKGROUND;
 
   // images
-  public static Image                IMAGE_DIRECTORY;
-  public static Image                IMAGE_FILE;
-  public static Image                IMAGE_LINK;
-  public static Image                IMAGE_ARROW_UP;
-  public static Image                IMAGE_ARROW_DOWN;
-  public static Image                IMAGE_ARROW_LEFT;
-  public static Image                IMAGE_ARROW_RIGHT;
+  public static Image                  IMAGE_DIRECTORY;
+  public static Image                  IMAGE_FILE;
+  public static Image                  IMAGE_LINK;
+  public static Image                  IMAGE_ARROW_UP;
+  public static Image                  IMAGE_ARROW_DOWN;
+  public static Image                  IMAGE_ARROW_LEFT;
+  public static Image                  IMAGE_ARROW_RIGHT;
 
   // fonts
-  public static Font                 FONT_DIFF;
-  public static Font                 FONT_DIFF_LINE;
-  public static Font                 FONT_CHANGES;
+  public static Font                   FONT_DIFF;
+  public static Font                   FONT_DIFF_LINE;
+  public static Font                   FONT_CHANGES;
 
   // cursors
-  public static Cursor               CURSOR_WAIT;
+  public static Cursor                 CURSOR_WAIT;
 
   // date/time format
-  public static SimpleDateFormat     DATE_FORMAT     = new SimpleDateFormat(Settings.dateFormat);
-  public static SimpleDateFormat     TIME_FORMAT     = new SimpleDateFormat(Settings.timeFormat);
-  public static SimpleDateFormat     DATETIME_FORMAT = new SimpleDateFormat(Settings.dateTimeFormat);
+  public static SimpleDateFormat       DATE_FORMAT     = new SimpleDateFormat(Settings.dateFormat);
+  public static SimpleDateFormat       TIME_FORMAT     = new SimpleDateFormat(Settings.timeFormat);
+  public static SimpleDateFormat       DATETIME_FORMAT = new SimpleDateFormat(Settings.dateTimeFormat);
 
-  public static MimetypesFileTypeMap MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
+  public static MimetypesFileTypeMap   MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
+  public static HashMap<String,String> FILE_ASSOCIATION_MAP = new HashMap<String,String>();
 
-  public static String               EXECUTABLE_FILE_EXTENSION = isWindowsSystem() ? "*.exe" : "*";
+  public static String                 EXECUTABLE_FILE_EXTENSION = isWindowsSystem() ? "*.exe" : "*";
 
   // command line options
   private static final Option[] options =
@@ -916,6 +917,15 @@ exception.printStackTrace();
     return MIMETYPES_FILE_TYPE_MAP.getContentType(file);
   }
 
+  /** get file suffix association
+   * @param suffix file suffix (Format: .xxx)
+   * @return file suffix association or null
+   */
+  public static String getFileAssociation(String suffix)
+  {
+    return FILE_ASSOCIATION_MAP.get(suffix);
+  }
+
   //-----------------------------------------------------------------------
 
   /** static initializer
@@ -925,6 +935,63 @@ exception.printStackTrace();
     MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-c c cpp c++");
     MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-h h hpp h++");
     MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-java java");
+
+    // initialize file associations (Windows only)
+    if (isWindowsSystem())
+    {
+      final Pattern PATTERN_ASSOC = Pattern.compile("^(.*)=(.*)",Pattern.CASE_INSENSITIVE);
+      final Pattern PATTERN_FTYPE = Pattern.compile("^(.*)=(.*)",Pattern.CASE_INSENSITIVE);
+
+      Exec exec = null;
+      try
+      {
+        Command command;
+        String  line;
+        Matcher matcher;
+
+        // run Windows "assoc" command and collect file suffixes
+        HashMap<String,String> fileSuffixMap = new HashMap<String,String>();
+        command = new Command("cmd.exe","/C","assoc");
+        exec = new Exec(command);
+        while ((line = exec.getStdout()) != null)
+        {
+          if ((matcher = PATTERN_ASSOC.matcher(line)).matches())
+          {
+            String suffix = matcher.group(1).toLowerCase();
+            String name   = matcher.group(2);
+            fileSuffixMap.put(name,suffix);
+          }
+        }
+        exec.done(); exec = null;
+//for (String s : fileSuffixMap.keySet()) Dprintf.dprintf("%s -> %s",s,fileSuffixMap.get(s));
+
+        // run Windows "ftype" command and collect associated programs
+        command = new Command("cmd.exe","/C","ftype");
+        exec = new Exec(command);
+        while ((line = exec.getStdout()) != null)
+        {
+          if ((matcher = PATTERN_FTYPE.matcher(line)).matches())
+          {
+            String name        = matcher.group(1);
+            String commandLine = matcher.group(2);
+            if (fileSuffixMap.containsKey(name))
+            {
+              FILE_ASSOCIATION_MAP.put(fileSuffixMap.get(name),commandLine);
+            }
+          }
+        }
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+Dprintf.dprintf("ex=%s",exception);
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
+//for (String s : FILE_ASSOCIATION_MAP.keySet()) Dprintf.dprintf("s=%s -> %s",s,FILE_ASSOCIATION_MAP.get(s));
+    }
   }
 
   /** print program usage
@@ -985,11 +1052,11 @@ exception.printStackTrace();
    */
   public static boolean isWindowsSystem()
   {
-                 String osName = System.getProperty("os.name").toLowerCase();
+    String osName = System.getProperty("os.name").toLowerCase();
 
-                return (osName.indexOf("win") >= 0);
+    return (osName.indexOf("win") >= 0);
 
-        }
+  }
 
   /** init display variables
    */
