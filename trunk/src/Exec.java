@@ -74,6 +74,22 @@ class Command
   }
 
   /** create external command
+   * @param command command to execute
+   * @param arguments arguments for command
+   */
+  Command(String command, String... arguments)
+  {
+    this();
+
+    append(command);
+    for (String argument : arguments)
+    {
+      append(argument);
+    }
+  }
+
+  /** create external command
+   * @param macro macro with command
    */
   Command(Macro macro)
   {
