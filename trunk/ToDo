@@ -4,7 +4,6 @@ ToDo
 - view/edit tag names
 - use file watch service from Java 7 to detect files changes outside
 - menu entry to show/hidden hidden files
-- annotation dialog: buttons for prev/next release
 - pane in commit dialog between changes/history/message
 - use inotify-tools (inotifywait) to monitor external file changes (use new interface classes in Java 7)
 - support for launch4j
