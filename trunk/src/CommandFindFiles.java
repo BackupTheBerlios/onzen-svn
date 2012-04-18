@@ -297,7 +297,7 @@ class CommandFindFiles
       tableColumn.addSelectionListener(selectionListener);
       tableColumn = Widgets.addTableColumn(widgetFiles,3,"Size [bytes]",SWT.RIGHT,false);
       tableColumn.addSelectionListener(selectionListener);
-      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumn.width);
+      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumns.width);
 
       menu = Widgets.newPopupMenu(dialog);
       {
@@ -976,8 +976,8 @@ Dprintf.dprintf("");
           showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
           showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
 
-          Settings.geometryFindFiles       = dialog.getSize();
-          Settings.geometryFindFilesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
+          Settings.geometryFindFiles        = dialog.getSize();
+          Settings.geometryFindFilesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
 
           // signal quit to find thread
           synchronized(data)

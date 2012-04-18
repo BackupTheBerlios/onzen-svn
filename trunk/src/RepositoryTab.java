@@ -1335,7 +1335,7 @@ Dprintf.dprintf("");
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,400,true );
-        Widgets.setTableColumnWidth(widgetEditors,Settings.geometryOpenFileColumn.width);
+        Widgets.setTableColumnWidth(widgetEditors,Settings.geometryOpenFileColumns.width);
         widgetEditors.setToolTipText("Changed files.");
 
         subComposite = Widgets.newComposite(composite);
@@ -1421,8 +1421,8 @@ Dprintf.dprintf("");
             data.command       = widgetCommand.getText();
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
-            Settings.geometryOpenFile       = dialog.getSize();
-            Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
+            Settings.geometryOpenFile        = dialog.getSize();
+            Settings.geometryOpenFileColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
 
             Dialogs.close(dialog,true);
           }
@@ -1476,8 +1476,8 @@ Dprintf.dprintf("");
             data.command       = editor.command;
             data.addNewCommand = widgetAddNewCommand.getSelection();
 
-            Settings.geometryOpenFile       = dialog.getSize();
-            Settings.geometryOpenFileColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
+            Settings.geometryOpenFile        = dialog.getSize();
+            Settings.geometryOpenFileColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetEditors));
 
             Dialogs.close(dialog,true);
           }

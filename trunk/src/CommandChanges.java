@@ -165,7 +165,7 @@ class CommandChanges
     tableColumn = Widgets.addTableColumn(widgetChanges,3,"Message",SWT.LEFT);
     tableColumn.addSelectionListener(selectionListener);
     Widgets.sortTableColumn(widgetChanges,0,data.logDataComparator);
-    Widgets.setTableColumnWidth(widgetChanges,Settings.geometryChangesColumn.width);
+    Widgets.setTableColumnWidth(widgetChanges,Settings.geometryChangesColumns.width);
     widgetChanges.setToolTipText("Incoming/outging changes. Double click to show changes for revision.");
 
     // buttons
@@ -182,8 +182,8 @@ class CommandChanges
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Settings.geometryChanges       = dialog.getSize();
-          Settings.geometryChangesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetChanges));
+          Settings.geometryChanges        = dialog.getSize();
+          Settings.geometryChangesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetChanges));
 
           Dialogs.close(dialog);
         }

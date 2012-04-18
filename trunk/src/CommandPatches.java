@@ -292,7 +292,7 @@ class CommandPatches
       Widgets.addTableColumn(widgetPatches,1,"State",     SWT.LEFT );
       Widgets.addTableColumn(widgetPatches,2,"Repository",SWT.LEFT );
       Widgets.addTableColumn(widgetPatches,3,"Summary",   SWT.LEFT );
-      Widgets.setTableColumnWidth(widgetPatches,Settings.geometryPatchesColumn.width);
+      Widgets.setTableColumnWidth(widgetPatches,Settings.geometryPatchesColumns.width);
       menu = Widgets.newPopupMenu(dialog);
       {
         menuItem = Widgets.addMenuItem(menu,"Set state 'none'");
@@ -1187,7 +1187,7 @@ class CommandPatches
           Button widget = (Button)selectionEvent.widget;
 
           Settings.geometryPatches          = dialog.getSize();
-          Settings.geometryPatchesColumn    = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetPatches));
+          Settings.geometryPatchesColumns   = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetPatches));
           Settings.patchShowAllRepositories = data.showAllRepositories;
           Settings.patchShowStates          = data.showStates;
 

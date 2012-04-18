@@ -175,7 +175,7 @@ class CommandChangedFiles
       tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT);
       tableColumn.addSelectionListener(selectionListener);
       Widgets.sortTableColumn(widgetFiles,0,data.fileDataComparator);
-      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryChangedFilesColumn.width);
+      Widgets.setTableColumnWidth(widgetFiles,Settings.geometryChangedFilesColumns.width);
       widgetFiles.setToolTipText("Changed files.");
 
       menu = Widgets.newPopupMenu(dialog);
@@ -939,9 +939,9 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Settings.geometryChangedFiles       = dialog.getSize();
-          Settings.geometryChangedFilesColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
-          Settings.changedFilesShowStates     = data.showStates;
+          Settings.geometryChangedFiles        = dialog.getSize();
+          Settings.geometryChangedFilesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
+          Settings.changedFilesShowStates      = data.showStates;
 
           Dialogs.close(dialog);
         }

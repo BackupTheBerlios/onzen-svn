@@ -183,7 +183,7 @@ class CommandAnnotations
       Widgets.addTableColumn(widgetAnnotations,2,"Date",    SWT.LEFT );
       Widgets.addTableColumn(widgetAnnotations,3,"Line Nb.",SWT.RIGHT);
       widgetAnnotationLineColumn = Widgets.addTableColumn(widgetAnnotations,4,"Line",SWT.LEFT);
-      Widgets.setTableColumnWidth(widgetAnnotations,Settings.geometryAnnotationsColumn.width);
+      Widgets.setTableColumnWidth(widgetAnnotations,Settings.geometryAnnotationsColumns.width);
       menu = Widgets.newPopupMenu(dialog);
       {
         menuItemGotoRevision = Widgets.addMenuItem(menu,"Goto revision");
@@ -291,8 +291,8 @@ class CommandAnnotations
         {
           Button widget = (Button)selectionEvent.widget;
 
-          Settings.geometryAnnotations       = dialog.getSize();
-          Settings.geometryAnnotationsColumn = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetAnnotations));
+          Settings.geometryAnnotations        = dialog.getSize();
+          Settings.geometryAnnotationsColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetAnnotations));
 
           Dialogs.close(dialog,false);
         }
