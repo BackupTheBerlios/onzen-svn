@@ -2108,17 +2108,13 @@ menuItem.addSelectionListener(new SelectionListener()
     shell.open();
 
     // listener
-    shell.addListener(SWT.Resize,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-        Settings.geometryMain = shell.getSize();
-      }
-    });
     shell.addListener(SWT.Close,new Listener()
     {
       public void handleEvent(Event event)
       {
+        // store geometry
+        Settings.geometryMain = shell.getSize();
+
         // save repository list
         saveRepositoryList();
 

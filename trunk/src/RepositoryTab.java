@@ -318,18 +318,30 @@ class RepositoryTab
         {
         }
       };
+      Listener fileTreeColumnResizeListener = new Listener()
+      {
+        public void handleEvent(Event event)
+        {
+          Settings.geometryMainColumns = new Settings.ColumnSizes(Widgets.getTreeColumnWidth(widgetFileTree));
+        }
+      };
       treeColumn = Widgets.addTreeColumn(widgetFileTree,"Name",    SWT.LEFT,390,true);
       treeColumn.addSelectionListener(fileTreeColumnSelectionListener);
+      treeColumn.addListener(SWT.Resize,fileTreeColumnResizeListener);
       treeColumn.setToolTipText("Click to sort for name.");
       treeColumn = Widgets.addTreeColumn(widgetFileTree,"Status",  SWT.LEFT,160,true);
       treeColumn.addSelectionListener(fileTreeColumnSelectionListener);
+      treeColumn.addListener(SWT.Resize,fileTreeColumnResizeListener);
       treeColumn.setToolTipText("Click to sort for status.");
       treeColumn = Widgets.addTreeColumn(widgetFileTree,"Revision",SWT.LEFT,100,true);
       treeColumn.addSelectionListener(fileTreeColumnSelectionListener);
+      treeColumn.addListener(SWT.Resize,fileTreeColumnResizeListener);
       treeColumn.setToolTipText("Click to sort for revision.");
       treeColumn = Widgets.addTreeColumn(widgetFileTree,"Branch",  SWT.LEFT,100,true);
       treeColumn.addSelectionListener(fileTreeColumnSelectionListener);
+      treeColumn.addListener(SWT.Resize,fileTreeColumnResizeListener);
       treeColumn.setToolTipText("Click to sort for branch.");
+      Widgets.setTreeColumnWidth(widgetFileTree,Settings.geometryMainColumns.width);
 
       menu = Widgets.newPopupMenu(shell);
       {

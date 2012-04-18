@@ -3905,6 +3905,35 @@ private static void printTree(Tree tree)
     }
   }
 
+    /** get width of tree columns
+   * @param tree tree
+   * @return tree columns width array
+   */
+  public static int[] getTreeColumnWidth(Tree tree)
+  {
+    TreeColumn[] treeColumns = tree.getColumns();
+    int[] width = new int[treeColumns.length];
+    for (int z = 0; z < treeColumns.length; z++)
+    {
+      width[z] = treeColumns[z].getWidth();
+    }
+
+    return width;
+  }
+
+  /** set width of tree columns
+   * @param tree tree
+   * @param width column width array
+   */
+  public static void setTreeColumnWidth(Tree tree, int[] width)
+  {
+    TreeColumn[] treeColumns = tree.getColumns();
+    for (int z = 0; z < Math.min(treeColumns.length,width.length); z++)
+    {
+      treeColumns[z].setWidth(width[z]);
+    }
+  }
+
   //-----------------------------------------------------------------------
 
   /** create new sash widget (pane)

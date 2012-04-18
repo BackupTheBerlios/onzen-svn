@@ -676,6 +676,8 @@ public class Settings
   @SettingComment(text={"","Geometry: <width>x<height>"})
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryMain                           = new Point(900,600);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryMainColumns                    = new ColumnSizes(600,90,900,100);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepositoryList             = new Point(400,400);
   @SettingValue(type=SettingValueAdapterSize.class)
