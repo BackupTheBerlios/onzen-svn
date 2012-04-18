@@ -3740,6 +3740,8 @@ Dprintf.dprintf("");
         || (spacesPerTAB > 0)
        )
     {
+      final String EOL = Settings.eolType.get();
+
       for (String fileName : fileNames)
       {
         File           tmpFile = null;
@@ -3800,12 +3802,13 @@ Dprintf.dprintf("");
               // output previous collected empty lines
               while (trailingEmptyLineCount > 0)
               {
-                output.println();
+                output.write(EOL);
                 trailingEmptyLineCount--;
               }
 
               // output line
-              output.println(buffer.toString());
+              output.write(buffer.toString());
+              output.write(EOL);
             }
           }
 
