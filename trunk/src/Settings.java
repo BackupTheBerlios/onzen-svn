@@ -673,7 +673,7 @@ public class Settings
   // program settings
   public static HostSystems              hostSystem                             = HostSystems.LINUX;
 
-  @SettingComment(text={"","Geometry: <width>x<height>"})
+  @SettingComment(text={"","Geometry: <width>x<height>","Geometry columns: <width>,..."})
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryMain                           = new Point(900,600);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
