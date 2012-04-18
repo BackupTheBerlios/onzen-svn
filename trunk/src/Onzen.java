@@ -2884,20 +2884,27 @@ exception.printStackTrace();
           {
             if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",data.names[index])))
             {
-              // delete repository list
-              RepositoryList.delete(data.names[index]);
+              try
+              {
+                // delete repository list
+                RepositoryList.delete(data.names[index]);
 
-              // remove name from array
-              String[] newNames = new String[data.names.length-1];
-              System.arraycopy(data.names,0,newNames,0,index);
-              System.arraycopy(data.names,index+1,newNames,0,data.names.length-1-index);
-              data.names = newNames;
+                // remove name from array
+                String[] newNames = new String[data.names.length-1];
+                System.arraycopy(data.names,0,newNames,0,index);
+                System.arraycopy(data.names,index+1,newNames,0,data.names.length-1-index);
+                data.names = newNames;
 
-              // update widgets
-              widgetNames.remove(index);
-              if (openButton) widgetOpen.setEnabled(false);
-              widgetNew.setEnabled(false);
-              widgetDelete.setEnabled(false);
+                // update widgets
+                widgetNames.remove(index);
+                if (openButton) widgetOpen.setEnabled(false);
+                widgetNew.setEnabled(false);
+                widgetDelete.setEnabled(false);
+              }
+              catch (IOException exception)
+              {
+                Dialogs.error(shell,"Cannot delete repository list (error: "+exception.getMessage()+")");
+              }
             }
           }
         }

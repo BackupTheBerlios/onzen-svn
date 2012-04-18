@@ -106,13 +106,14 @@ public class RepositoryList implements Iterable<Repository>
    * @param name name of repository list
    */
   public static void delete(String name)
+    throws IOException
   {
     String fileName = Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+name;
 
     File file = new File(fileName);
     if (!file.delete())
     {
-Dprintf.dprintf("");
+      throw new IOException("delete file fail");
     }
   }
 
@@ -126,14 +127,15 @@ Dprintf.dprintf("");
     {
       String fileName = Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+name;
 
-      if (new File(fileName).exists())
+      File file = new File(fileName);
+      if (file.exists())
       {
         // create JAXB context and instantiate unmarshaller
         JAXBContext jaxbContext = JAXBContext.newInstance(RepositoryList.class);
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 
         // read xml file
-        RepositoryList tmpRepositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(fileName));
+        RepositoryList tmpRepositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(file));
         synchronized(repositoryList)
         {
           repositoryList.clear();
