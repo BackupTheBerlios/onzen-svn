@@ -1,0 +1,485 @@
+/***********************************************************************\
+*
+* $Revision: 1040 $
+* $Date: 2012-04-16 11:28:09 +0200 (Mo, 16. Apr 2012) $
+* $Author: trupp $
+* Contents: repository functions for "none"
+* Systems: all
+*
+\***********************************************************************/
+
+/****************************** Imports ********************************/
+// base
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
+import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlList;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+/****************************** Classes ********************************/
+
+/** none repository
+ */
+class RepositoryNone extends Repository
+{
+  // --------------------------- constants --------------------------------
+
+  // --------------------------- variables --------------------------------
+
+  // ------------------------ native functions ----------------------------
+
+  // ---------------------------- methods ---------------------------------
+
+  /** create repository
+   * @param rootPath root path
+   */
+  RepositoryNone(String rootPath)
+  {
+    super(rootPath);
+  }
+
+  /** create repository
+   */
+  RepositoryNone()
+  {
+    this(null);
+  }
+
+  /** check if repository support setting file mode
+   * @return true iff file modes are supported
+   */
+  public boolean supportSetFileMode()
+  {
+    return true;
+  }
+
+  /** checkout repository from server
+   * @param repositoryPath repository server
+   * @param moduleName module name
+   * @param revision revision to checkout
+   * @param destinationPath destination path
+   * @param busyDialog busy dialog or null
+   */
+  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
+    throws RepositoryException
+  {
+  }
+
+  /** update file states
+   * @param fileDataSet file data set to update
+   * @param fileDirectorySet directory set to check for new/missing files
+   * @param newFileDataSet new file data set or null
+   */
+  public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
+  {
+  }
+
+  /** get repository type
+   * @return repository type
+   */
+  public Types getType()
+  {
+    return Types.NONE;
+  }
+
+  /** get repository path
+   * @return repository path
+   */
+  public String getRepositoryPath()
+  {
+    return "";
+  }
+
+  /** get last revision name
+   * @return last revision name
+   */
+  public String getLastRevision()
+  {
+    return "";
+  }
+
+  /** get revision names of file
+   * @param fileData file data
+   * @return array with revision names
+   */
+  public String[] getRevisionNames(FileData fileData)
+    throws RepositoryException
+  {
+    return new String[0];
+  }
+
+  /** get revision data
+   * @param fileData file data
+   * @param revision revision
+   * @return revision data
+   */
+  public RevisionData getRevisionData(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get revision data tree
+   * @param fileData file data
+   * @return revision data tree
+   */
+  public RevisionData[] getRevisionDataTree(FileData fileData)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get file data (text lines)
+   * @param fileData file data
+   * @param revision revision to get
+   * @return file data (array of lines)
+   */
+  public String[] getFileLines(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return new String[0];
+  }
+
+  /** get file data (byte array)
+   * @param fileData file data
+   * @param revision revision to get
+   * @return file data (array of lines)
+   */
+  public byte[] getFileBytes(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return new byte[0];
+  }
+
+  /** get all changed/unknown files
+   * @param stateSet state set
+   * @return fileDataSet file data set with modified files
+   */
+  public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
+    throws RepositoryException
+  {
+    return new HashSet<FileData>();
+  }
+
+  /** get diff of file
+   * @param fileData file data
+   * @param revision1,revision2 revisions to get diff for
+   * @return diff data
+   */
+  public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
+    throws RepositoryException
+  {
+    return new DiffData[0];
+  }
+
+  /** get unified patch lines for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @param ignoreWhitespaces true to ignore white spaces
+   * @param output patch output or null
+   * @param lineList patch data lines or null
+   */
+  public void getPatch(HashSet<FileData> fileDataSet, String revision1, String revision2, boolean ignoreWhitespaces, PrintWriter output, ArrayList<String> lineList)
+    throws RepositoryException
+  {
+  }
+
+  /** get patch data for file
+   * @param fileDataSet file data set
+   * @param revision1,revision2 revisions to get patch for
+   * @return patch data bytes
+   */
+  public byte[] getPatchBytes(HashSet<FileData> fileDataSet, String revision1, String revision2)
+    throws RepositoryException
+  {
+    return new byte[0];
+  }
+
+  /** get log to file
+   * @param fileData file data
+   * @return log array
+   */
+  public LogData[] getLog(FileData fileData)
+    throws RepositoryException
+  {
+    return new LogData[0];
+  }
+
+  /** get annotations to file
+   * @param fileData file data
+   * @param revision revision
+   * @return annotation array
+   */
+  public AnnotationData[] getAnnotations(FileData fileData, String revision)
+    throws RepositoryException
+  {
+    return new AnnotationData[0];
+  }
+
+  /** update file from respository
+   * @param fileDataSet file data set
+   * @param busyDialog busy dialog or null
+   */
+  public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
+    throws RepositoryException
+  {
+  }
+
+  /** commit files
+   * @param fileDataSet file data set
+   * @param commitMessage commit message
+   */
+  public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** add files
+   * @param fileDataSet file data set
+   * @param commitMessage commit message
+   * @param binaryFlag true to add file as binary files, false otherwise
+   */
+  public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
+    throws RepositoryException
+  {
+  }
+
+  /** remove files
+   * @param fileDataSet file data set
+   * @param commitMessage commit message
+   */
+  public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** revert files
+   * @param fileDataSet file data set or null for all files
+   * @param revision revision to revert to
+   */
+  public void revert(HashSet<FileData> fileDataSet, String revision)
+    throws RepositoryException
+  {
+  }
+
+  /** rename file
+   * @param fileData file data to rename
+   * @param newName new name
+   * @param commitMessage commit message
+   */
+  public void rename(FileData fileData, String newName, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // rename local file
+      File oldFile = new File(rootPath,fileData.getFileName());
+      File newFile = new File(rootPath,newName);
+      if (!newFile.exists())
+      {
+        if (!oldFile.renameTo(newFile))
+        {
+          throw new RepositoryException("Rename file '%s' to '%s' fail",oldFile.getName(),newFile.getName());
+        }
+      }
+      else
+      {
+        throw new RepositoryException("File '%s' already exists",newFile.getName());
+      }
+
+      // add new file
+      command.clear();
+      command.append(Settings.cvsCommand,"add");
+      switch (fileData.mode)
+      {
+        case TEXT:
+          break;
+        case BINARY:
+          command.append("-k","b");
+          break;
+        default:
+          break;
+      }
+      command.append("--");
+      command.append(newFile.getName());
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        newFile.renameTo(oldFile);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+
+      // remove old file
+      command.clear();
+      command.append(Settings.cvsCommand,"remove");
+      command.append("--");
+      command.append(oldFile.getName());
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        newFile.renameTo(oldFile);
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+
+      // commit
+      if (commitMessage != null)
+      {
+        // commit remove/add (=rename) file
+        command.clear();
+        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
+        command.append("--");
+        command.append(oldFile.getName());
+        command.append(newFile.getName());
+        command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
+        exitCode = new Exec(rootPath,command).waitFor();
+        if (exitCode != 0)
+        {
+          newFile.renameTo(oldFile);
+          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        }
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+  }
+
+  /** get incoming changes list
+   */
+  public LogData[] getIncomingChanges()
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get outgoing changes list
+   */
+  public LogData[] getOutgoingChanges()
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** get incoming/outgoing changes lines
+   * @param revision revision to get changes lines for
+   */
+  public String[] getChanges(String revision)
+    throws RepositoryException
+  {
+    return null;
+  }
+
+  /** pull changes
+   */
+  public void pullChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+    throws RepositoryException
+  {
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
+    throws RepositoryException
+  {
+  }
+
+  /** set files mode
+   * @param fileDataSet file data set
+   * @param mode file mode
+   * @param commitMessage commit message
+   */
+  public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+  }
+
+  /** get default name of root
+   * @return always null (no root name)
+   */
+  public String getDefaultRootName()
+  {
+    return null;
+  }
+
+  /** get default branch name
+   * @return default branch name
+   */
+  public String getDefaultBranchName()
+  {
+    return "";
+  }
+
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  public String[] getBranchNames()
+    throws RepositoryException
+  {
+    return new String[0];
+  }
+
+  /** create new branch
+   * @param rootName root name (source)
+   * @param branchName branch name
+   * @param commitMessage commit message
+   * @param buysDialog busy dialog or null
+   */
+  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
+    throws RepositoryException
+  {
+  }
+
+  //-----------------------------------------------------------------------
+
+}
+
+/* end of file */
