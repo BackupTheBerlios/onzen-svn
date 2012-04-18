@@ -1296,6 +1296,14 @@ Dprintf.dprintf("");
 
       data.mimeType = mimeType;
 
+      // get file name pattern and command from file associations if possible
+      String suffix = (fileName.lastIndexOf('.') >= 0) ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase() : null;
+      if (suffix != null)
+      {
+        data.fileName = "*"+suffix;
+        data.command  = Onzen.getFileAssociation(suffix);
+      }
+
       // command selection dialog
       final Shell dialog = Dialogs.openModal(shell,"Select command to open file",300,200,new double[]{1.0,0.0},1.0);
 
@@ -1334,6 +1342,7 @@ Dprintf.dprintf("");
           Widgets.layout(label,1,0,TableLayoutData.W);
 
           widgetFileName = Widgets.newText(subComposite);
+          if (data.fileName != null) widgetFileName.setText(data.fileName);
           Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
           widgetFileName.setToolTipText("Simple file file name pattern, e. g. *.pdf.\n");
 
@@ -1345,6 +1354,7 @@ Dprintf.dprintf("");
           Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
           {
             widgetCommand = Widgets.newText(subSubComposite);
+            if (data.command != null) widgetCommand.setText(data.command);
             Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
             widgetCommand.setToolTipText("Command to open file with.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
 
@@ -1385,7 +1395,7 @@ Dprintf.dprintf("");
       Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
       {
         widgetOpen = Widgets.newButton(composite,"Open");
-        widgetOpen.setEnabled(false);
+        widgetOpen.setEnabled(!widgetCommand.getText().trim().isEmpty());
         Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
         widgetOpen.addSelectionListener(new SelectionListener()
         {
