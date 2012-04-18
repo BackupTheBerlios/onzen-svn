@@ -157,7 +157,7 @@ class RepositoryNone extends Repository
   public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException
   {
-    return null;
+    return new RevisionData[0];
   }
 
   /** get file data (text lines)
@@ -301,81 +301,19 @@ class RepositoryNone extends Repository
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
-    try
+    // rename local file
+    File oldFile = new File(rootPath,fileData.getFileName());
+    File newFile = new File(rootPath,newName);
+    if (!newFile.exists())
     {
-      Command command = new Command();
-      int     exitCode;
-
-      // rename local file
-      File oldFile = new File(rootPath,fileData.getFileName());
-      File newFile = new File(rootPath,newName);
-      if (!newFile.exists())
+      if (!oldFile.renameTo(newFile))
       {
-        if (!oldFile.renameTo(newFile))
-        {
-          throw new RepositoryException("Rename file '%s' to '%s' fail",oldFile.getName(),newFile.getName());
-        }
-      }
-      else
-      {
-        throw new RepositoryException("File '%s' already exists",newFile.getName());
-      }
-
-      // add new file
-      command.clear();
-      command.append(Settings.cvsCommand,"add");
-      switch (fileData.mode)
-      {
-        case TEXT:
-          break;
-        case BINARY:
-          command.append("-k","b");
-          break;
-        default:
-          break;
-      }
-      command.append("--");
-      command.append(newFile.getName());
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        newFile.renameTo(oldFile);
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-      }
-
-      // remove old file
-      command.clear();
-      command.append(Settings.cvsCommand,"remove");
-      command.append("--");
-      command.append(oldFile.getName());
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        newFile.renameTo(oldFile);
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-      }
-
-      // commit
-      if (commitMessage != null)
-      {
-        // commit remove/add (=rename) file
-        command.clear();
-        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(oldFile.getName());
-        command.append(newFile.getName());
-        command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          newFile.renameTo(oldFile);
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-        }
+        throw new RepositoryException("Rename file '%s' to '%s' fail",oldFile.getName(),newFile.getName());
       }
     }
-    catch (IOException exception)
+    else
     {
-      throw new RepositoryException(Onzen.reniceIOException(exception));
+      throw new RepositoryException("File '%s' already exists",newFile.getName());
     }
   }
 
