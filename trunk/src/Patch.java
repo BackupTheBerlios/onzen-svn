@@ -1124,11 +1124,14 @@ Dprintf.dprintf("");
     }
     else
     {
+      final String EOL = Settings.eolType.get();
+
       // create file
       PrintWriter output = new PrintWriter(new FileWriter(file,true));
       for (String line : lines)
       {
-        output.println(line);
+        output.print(line);
+        output.write(EOL);
       }
       output.close();
     }
@@ -1863,6 +1866,8 @@ Dprintf.dprintf("exception=%s",exception);
     public void appendToFile(File file)
       throws IOException
     {
+      final String EOL = Settings.eolType.get();
+
       PrintWriter output = null;
       try
       {
@@ -1882,7 +1887,8 @@ Dprintf.dprintf("exception=%s",exception);
 
           for (String line : patchLines.lines)
           {
-            output.println(prefix+line);
+            output.print(prefix+line);
+            output.write(EOL);
           }
         }
         output.close(); output = null;

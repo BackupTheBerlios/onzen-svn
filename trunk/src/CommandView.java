@@ -257,6 +257,8 @@ class CommandView
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          final String EOL = Settings.eolType.get();
+
           // get file name
           String fileName = Dialogs.fileSave(dialog,"Save file","",new String[]{"*"});
           if (fileName == null)
@@ -292,7 +294,8 @@ class CommandView
             // write/append file
             for (String line : data.lines)
             {
-              output.println(line);
+              output.print(line);
+              output.write(EOL);
             }
 
             // close file

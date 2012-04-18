@@ -11,19 +11,15 @@
 /****************************** Imports ********************************/
 // base
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import java.sql.SQLException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.StringTokenizer;
 
 // graphics
 import org.eclipse.swt.custom.LineStyleEvent;

@@ -10,17 +10,9 @@
 
 /****************************** Imports ********************************/
 // base
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Properties;
 
 // graphics
 import org.eclipse.swt.custom.ScrolledComposite;
