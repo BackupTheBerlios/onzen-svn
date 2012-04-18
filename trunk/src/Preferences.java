@@ -127,6 +127,10 @@ class Preferences
 
   private final Text          widgetGitCommand;
 
+  private final Button        widgetEOLAuto;
+  private final Button        widgetEOLUnix;
+  private final Button        widgetEOLMac;
+  private final Button        widgetEOLWindows;
   private final Button        widgetCheckTABs;
   private final Button        widgetCheckTrailingWhitespaces;
   private final List          widgetSkipWhitespaceCheckFilePatterns;
@@ -930,14 +934,41 @@ class Preferences
       }
 
       composite = Widgets.addTab(tabFolder,"Files");
-      composite.setLayout(new TableLayout(new double[]{0.0,1.0,1.0,1.0},new double[]{0.0,1.0},2));
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,1.0,1.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,5,TableLayoutData.NSWE);
       {
-        label = Widgets.newLabel(composite,"Whitespaces:");
+        label = Widgets.newLabel(composite,"End-Of-Line type:");
         Widgets.layout(label,0,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(null,1.0));
+        subComposite.setLayout(new TableLayout(null,0.0));
         Widgets.layout(subComposite,0,1,TableLayoutData.WE);
+        {
+          widgetEOLAuto = Widgets.newRadio(subComposite,"auto");
+          widgetEOLAuto.setSelection(Settings.eolType == Settings.EOLTypes.AUTO);
+          Widgets.layout(widgetEOLAuto,0,0,TableLayoutData.W);
+          widgetEOLAuto.setToolTipText("Set system dependent end-of-line type.");
+
+          widgetEOLUnix = Widgets.newRadio(subComposite,"Unix (LF)");
+          widgetEOLUnix.setSelection(Settings.eolType == Settings.EOLTypes.UNIX);
+          Widgets.layout(widgetEOLUnix,0,1,TableLayoutData.W);
+          widgetEOLUnix.setToolTipText("Set system dependent end-of-line type.");
+
+          widgetEOLMac = Widgets.newRadio(subComposite,"Mac (CR)");
+          widgetEOLMac.setSelection(Settings.eolType == Settings.EOLTypes.MAC);
+          Widgets.layout(widgetEOLMac,0,2,TableLayoutData.W);
+          widgetEOLMac.setToolTipText("Set system dependent end-of-line type.");
+
+          widgetEOLWindows = Widgets.newRadio(subComposite,"Windows (CR+LF)");
+          widgetEOLWindows.setSelection(Settings.eolType == Settings.EOLTypes.WINDOWS);
+          Widgets.layout(widgetEOLWindows,0,3,TableLayoutData.W);
+          widgetEOLWindows.setToolTipText("Set system dependent end-of-line type.");
+        }
+
+        label = Widgets.newLabel(composite,"Whitespaces:");
+        Widgets.layout(label,1,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,1.0));
+        Widgets.layout(subComposite,1,1,TableLayoutData.WE);
         {
           widgetCheckTABs = Widgets.newCheckbox(subComposite,"auto TABs check");
           widgetCheckTABs.setSelection(Settings.checkTABs);
@@ -951,10 +982,10 @@ class Preferences
         }
 
         label = Widgets.newLabel(composite,"Skip whitespace-check files:");
-        Widgets.layout(label,1,0,TableLayoutData.NW);
+        Widgets.layout(label,2,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,2,1,TableLayoutData.NSWE);
         {
           widgetSkipWhitespaceCheckFilePatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetSkipWhitespaceCheckFilePatterns,0,0,TableLayoutData.NSWE);
@@ -1023,10 +1054,10 @@ class Preferences
         }
 
         label = Widgets.newLabel(composite,"Hidden files:");
-        Widgets.layout(label,2,0,TableLayoutData.NW);
+        Widgets.layout(label,3,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,2,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,3,1,TableLayoutData.NSWE);
         {
           widgetHiddenFilePatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenFilePatterns,0,0,TableLayoutData.NSWE);
@@ -1095,10 +1126,10 @@ class Preferences
         }
 
         label = Widgets.newLabel(composite,"Hidden directories:");
-        Widgets.layout(label,3,0,TableLayoutData.NW);
+        Widgets.layout(label,4,0,TableLayoutData.NW);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subComposite,3,1,TableLayoutData.NSWE);
+        Widgets.layout(subComposite,4,1,TableLayoutData.NSWE);
         {
           widgetHiddenDirectoryPatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenDirectoryPatterns,0,0,TableLayoutData.NSWE);
@@ -1454,6 +1485,11 @@ Dprintf.dprintf("");
           Settings.maxBackgroundTasks                     = Integer.parseInt(widgetMaxBackgroundTasks.getText());
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
+          if      (widgetEOLAuto.getSelection()   ) Settings.eolType = Settings.EOLTypes.AUTO;
+          else if (widgetEOLUnix.getSelection()   ) Settings.eolType = Settings.EOLTypes.UNIX;
+          else if (widgetEOLMac.getSelection()    ) Settings.eolType = Settings.EOLTypes.MAC;
+          else if (widgetEOLWindows.getSelection()) Settings.eolType = Settings.EOLTypes.WINDOWS;
+          else                                      Settings.eolType = Settings.EOLTypes.AUTO;
           Settings.checkTABs                              = widgetCheckTABs.getSelection();
           Settings.checkTrailingWhitespaces               = widgetCheckTrailingWhitespaces.getSelection();
 

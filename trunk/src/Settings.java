@@ -637,6 +637,31 @@ public class Settings
     QNX
   };
 
+  /** end-of-line types
+   */
+  public enum EOLTypes
+  {
+    AUTO,
+    UNIX,
+    MAC,
+    WINDOWS;
+
+    /** get EOL string
+     * @return EOL string (LF, CR, CRLF)
+     */
+    String get()
+    {
+      switch (this)
+      {
+        case UNIX:    return "\n";
+        case MAC:     return "\r";
+        case WINDOWS: return "\r\n";
+        case AUTO:
+        default:      return System.getProperty("line.separator");
+      }
+    }
+  };
+
   private static final String ONZEN_CONFIG_FILE_NAME = ONZEN_DIRECTORY+File.separator+"onzen.cfg";
 
   // --------------------------- variables --------------------------------
@@ -1004,6 +1029,10 @@ public class Settings
   public static String                   gitCommand                             = "git";
 
   // files
+  @SettingComment(text={"","EOL convention"})
+  @SettingValue(type=Settings.EOLTypes.class)
+  public static Settings.EOLTypes        eolType                                = Settings.EOLTypes.AUTO;
+
   @SettingComment(text={"","whitespace flags"})
   @SettingValue
   public static boolean                  checkTABs                              = true;
