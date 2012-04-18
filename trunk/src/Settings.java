@@ -937,11 +937,11 @@ public class Settings
   }
 */
 
-  @SettingComment(text={"","Editors: <mime type>:<command>","Macros %file%:","  file - file name"})
+  @SettingComment(text={"","Editors: <mime type>:<command>","Macros:","  %file% - file name","  %n% - line number"})
   @SettingValue(type=SettingValueAdapterEditor.class)
   public static Editor[]         editors                                        = new Editor[0];
 
-  @SettingComment(text={"","Shell: <name>:<command>","Macros %file%:","  file - file name"})
+  @SettingComment(text={"","Shell: <name>:<command>","Macros:","  %file% - file name"})
   @SettingValue(type=SettingValueAdapterShellCommand.class)
   public static ShellCommand[]   shellCommands                                  = new ShellCommand[0];
 
