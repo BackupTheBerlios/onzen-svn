@@ -4062,19 +4062,15 @@ Dprintf.dprintf("");
             }
 
             final Repository repository = Repository.newInstance(data.rootPath,data.type);;
-Dprintf.dprintf("");
+Dprintf.dprintf("NYI");
 //            repository.checkout(data.repositoryPath,data.rootPath);
 
             display.syncExec(new Runnable()
             {
               public void run()
               {
-                // add repository tab
-                RepositoryTab repositoryTab = new RepositoryTab(onzen,widgetTabFolder,repository);
-                repositoryTabMap.put(repository,repositoryTab);
-
-                // select repository tab
-                selectRepositoryTab(repositoryTab);
+                // add and select new repository
+                selectRepositoryTab(addRepositoryTab(repository));
               }
             });
           }
@@ -4103,7 +4099,6 @@ Dprintf.dprintf("");
           }
         }
       });
-
     }
   }
 
