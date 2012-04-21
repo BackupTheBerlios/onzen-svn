@@ -1944,6 +1944,7 @@ abstract class Repository implements Serializable
       case HG:  return new RepositoryHG(rootPath);
       case GIT: return new RepositoryGit(rootPath);
       default:
+// ???
 //        throw new RepositoryException("no repository CVS/SVN/HG/Git found");
 //        Dialogs.warning(dialog,"No repository CVS/SVN/HG/Git found");
         return new RepositoryNone(rootPath);
