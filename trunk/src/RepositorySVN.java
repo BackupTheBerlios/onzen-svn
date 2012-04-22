@@ -106,10 +106,6 @@ class RepositorySVN extends Repository
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
 
-Dprintf.dprintf("NYI");
-Dprintf.dprintf("repositoryPath=%s",repositoryPath);
-Dprintf.dprintf("moduleName=%s",moduleName);
-Dprintf.dprintf("importPath=%s",importPath);
     try
     {
       Command command = new Command();
@@ -137,7 +133,7 @@ Dprintf.dprintf("importPath=%s",importPath);
     }
   }
 
-  /** checkout repository from server
+  /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
@@ -147,16 +143,25 @@ Dprintf.dprintf("importPath=%s",importPath);
   public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
+    final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+
     Exec exec = null;
     try
     {
       Command command = new Command();
 
+      // get full repository path
+      String path = (PATTERN_URI.matcher(repositoryPath).matches()
+                       ? repositoryPath
+                       : "file://"+repositoryPath
+                    )+"/"+moduleName;
+
       // checkout
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","checkout");
+      if (revision != null) command.append("--revision",revision);
       command.append("--");
-      command.append(repositoryPath,destinationPath);
+      command.append(path,destinationPath);
       exec = new Exec(destinationPath,command);
 
       // read output
