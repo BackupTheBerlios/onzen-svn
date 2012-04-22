@@ -130,6 +130,17 @@ class RepositoryCVS extends Repository
     return true;
   }
 
+  /** create new repository module
+   * @param repositoryPath repository server
+   * @param moduleName module name
+   * @param importPath import directory
+   */
+  public void create(String repositoryPath, String moduleName, String importPath)
+    throws RepositoryException
+  {
+Dprintf.dprintf("NYI");
+  }
+
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param moduleName module name

@@ -96,6 +96,47 @@ class RepositorySVN extends Repository
     this(null);
   }
 
+  /** create new repository module
+   * @param repositoryPath repository server
+   * @param moduleName module name
+   * @param importPath import directory
+   */
+  public void create(String repositoryPath, String moduleName, String importPath)
+    throws RepositoryException
+  {
+    final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+
+Dprintf.dprintf("NYI");
+Dprintf.dprintf("repositoryPath=%s",repositoryPath);
+Dprintf.dprintf("moduleName=%s",moduleName);
+Dprintf.dprintf("importPath=%s",importPath);
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // get full repository path
+      String path = (PATTERN_URI.matcher(repositoryPath).matches()
+                       ? repositoryPath
+                       : "file://"+repositoryPath
+                    )+"/"+moduleName;
+
+      // create repository
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive","import",importPath,path,"-m","initial");
+      command.append("--");
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+  }
+
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param moduleName module name
@@ -1368,7 +1409,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","-N","--non-interactive");
+      command.append(Settings.svnCommand,"--non-interactive","update","-N");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
@@ -1429,7 +1470,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","--non-interactive");
+      command.append(Settings.svnCommand,"--non-interactive","update");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)

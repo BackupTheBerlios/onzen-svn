@@ -2269,6 +2269,14 @@ abstract class Repository implements Serializable
     return fileDataSet;
   }
 
+  /** create new repository module
+   * @param repositoryPath repository server
+   * @param moduleName module name
+   * @param importPath import directory
+   */
+  abstract public void create(String repositoryPath, String moduleName, String importPath)
+    throws RepositoryException;
+
   /** checkout repository from server
    * @param repositoryPath repository server
    * @param moduleName module name
