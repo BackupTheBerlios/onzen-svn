@@ -71,9 +71,10 @@ class RepositoryGit extends Repository
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
-  /** checkout repository from server
+  /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
@@ -1350,6 +1351,7 @@ Dprintf.dprintf("");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** get incoming changes list
@@ -1358,6 +1360,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
     return null;
   }
 
@@ -1367,6 +1370,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
     return null;
   }
 
@@ -1385,6 +1389,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** push changes
@@ -1393,6 +1398,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** apply patches
@@ -1401,6 +1407,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** unapply patches
@@ -1409,6 +1416,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** set files mode
@@ -1420,6 +1428,7 @@ Dprintf.dprintf("NYI");
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** get default name of root

@@ -139,9 +139,10 @@ class RepositoryCVS extends Repository
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
-  /** checkout repository from server
+  /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
