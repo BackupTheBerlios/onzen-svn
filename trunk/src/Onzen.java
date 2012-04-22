@@ -1050,12 +1050,11 @@ Dprintf.dprintf("ex=%s",exception);
   /** check if system is Windows system
    * @return TRUE iff Windows, FALSE otherwise
    */
-  public static boolean isWindowsSystem()
+  private static boolean isWindowsSystem()
   {
     String osName = System.getProperty("os.name").toLowerCase();
 
     return (osName.indexOf("win") >= 0);
-
   }
 
   /** init display variables
