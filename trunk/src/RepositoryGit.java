@@ -1361,7 +1361,7 @@ throw new RepositoryException("NYI");
   {
 Dprintf.dprintf("NYI");
 throw new RepositoryException("NYI");
-    return null;
+//    return null;
   }
 
   /** get outgoing changes list
@@ -1371,7 +1371,7 @@ throw new RepositoryException("NYI");
   {
 Dprintf.dprintf("NYI");
 throw new RepositoryException("NYI");
-    return null;
+//    return null;
   }
 
   /** get incoming/outgoing changes lines
