@@ -2277,7 +2277,7 @@ abstract class Repository implements Serializable
   abstract public void create(String repositoryPath, String moduleName, String importPath)
     throws RepositoryException;
 
-  /** checkout repository from server
+  /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
@@ -2287,7 +2287,7 @@ abstract class Repository implements Serializable
   abstract public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException;
 
-  /** checkout repository from server
+  /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
