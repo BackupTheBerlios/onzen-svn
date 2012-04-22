@@ -1,3 +1,6 @@
+2012-xx-xx 0.04
+  * added default root and branch name in new branch dialog
+
 2012-04-14 0.03
   * add sort buttons to tests list
   * added previous/next revision buttons to view
@@ -22,8 +25,7 @@
   * added shell menu
   * implemented check-out repository
   * start GIT support
-  * Ctlr-C in tree list copy file naem to clipboard
-  * implemented checkout
+  * Ctlr-C in tree list copy file name to clipboard
   * implemented create new repository
   * add dialog to show outgoing changes (hg)
   * update SWT to 3.7.2
