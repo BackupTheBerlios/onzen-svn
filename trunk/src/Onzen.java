@@ -3562,7 +3562,8 @@ exception.printStackTrace();
     {
       Repository.Types type;
       String           repositoryPath;
-      String           rootPath;
+      String           moduleName;
+      String           destinationPath;
       boolean          quitFlag;
       String           importPath;
       String           excludePatterns;
@@ -3571,7 +3572,8 @@ exception.printStackTrace();
       {
         this.type            = Repository.Types.CVS;
         this.repositoryPath  = null;
-        this.rootPath        = null;
+        this.moduleName      = null;
+        this.destinationPath = null;
         this.quitFlag        = false;
         this.importPath      = null;
         this.excludePatterns = null;
@@ -3587,14 +3589,15 @@ exception.printStackTrace();
     final Shell  dialog = Dialogs.openModal(shell,"Create new repository",500,500,new double[]{1.0,0.0},1.0);
 
     final Combo  widgetRepository;
-    final Text   widgetRootPath;
+    final Text   widgetModuleName;
+    final Text   widgetDestinationPath;
     final Text   widgetImportPath;
     final Tree   widgetFileTree;
     final Text   widgetExcludePatterns;
     final Button widgetCreate;
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,1.0},new double[]{0.0,1.0},4));
+    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Type:");
@@ -3672,20 +3675,53 @@ exception.printStackTrace();
       label = Widgets.newLabel(composite,"Repository:");
       Widgets.layout(label,1,0,TableLayoutData.W);
 
-      widgetRepository = Widgets.newCombo(composite);
-      Widgets.layout(widgetRepository,1,1,TableLayoutData.WE);
-      widgetRepository.setToolTipText("Respository path URI.");
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+      {
+        widgetRepository = Widgets.newCombo(subComposite);
+        widgetRepository.setText("file://");
+        Widgets.layout(widgetRepository,0,0,TableLayoutData.WE);
+        widgetRepository.setToolTipText("Respository path URI.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select repository path",
+                                            widgetRepository.getText()
+                                           );
+            if (path != null)
+            {
+              widgetRepository.setText(path);
+            }
+          }
+        });
+      }
+
+      label = Widgets.newLabel(composite,"Module:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+
+      widgetModuleName = Widgets.newText(composite);
+      Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
+      widgetModuleName.setToolTipText("Module name in repository.");
 
       label = Widgets.newLabel(composite,"Destination:");
-      Widgets.layout(label,2,0,TableLayoutData.W);
+      Widgets.layout(label,3,0,TableLayoutData.W);
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,2,1,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,3,1,TableLayoutData.NSWE);
       {
-        widgetRootPath = Widgets.newText(subComposite);
-        Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
-        widgetRootPath.setToolTipText("Destination check-out directory path.");
+        widgetDestinationPath = Widgets.newText(subComposite);
+        Widgets.layout(widgetDestinationPath,0,0,TableLayoutData.WE);
+        widgetDestinationPath.setToolTipText("Destination check-out directory path.");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -3698,22 +3734,22 @@ exception.printStackTrace();
           {
             String path = Dialogs.directory(shell,
                                            "Select destination directory path",
-                                            widgetRootPath.getText()
+                                            widgetDestinationPath.getText()
                                            );
             if (path != null)
             {
-              widgetRootPath.setText(path);
+              widgetDestinationPath.setText(path);
             }
           }
         });
       }
 
       label = Widgets.newLabel(composite,"Import from:");
-      Widgets.layout(label,3,0,TableLayoutData.NW);
+      Widgets.layout(label,4,0,TableLayoutData.NW);
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0},1.0));
-      Widgets.layout(subComposite,3,1,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,4,1,TableLayoutData.NSWE);
       {
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
@@ -3734,7 +3770,7 @@ exception.printStackTrace();
             {
               String path = Dialogs.directory(shell,
                                              "Select import directory path",
-                                              widgetRootPath.getText()
+                                              widgetImportPath.getText()
                                              );
               if (path != null)
               {
@@ -3781,7 +3817,7 @@ exception.printStackTrace();
           label = Widgets.newLabel(subSubComposite,"Exclude:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
-          widgetExcludePatterns = Widgets.newText(subSubComposite);
+          widgetExcludePatterns = Widgets.newText(subSubComposite,SWT.SEARCH|SWT.ICON_CANCEL);
           Widgets.layout(widgetExcludePatterns,0,1,TableLayoutData.WE);
           widgetExcludePatterns.setToolTipText("Import exclude patterns. Separate patterns by space and use * and ? for wildcards.");
         }
@@ -3804,7 +3840,8 @@ exception.printStackTrace();
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.repositoryPath  = widgetRepository.getText();
-          data.rootPath        = widgetRootPath.getText();
+          data.moduleName      = widgetModuleName.getText().trim();
+          data.destinationPath = widgetDestinationPath.getText();
           data.importPath      = widgetImportPath.getText();
           data.excludePatterns = widgetExcludePatterns.getText().trim();
 
@@ -3834,21 +3871,22 @@ exception.printStackTrace();
       public void modifyText(ModifyEvent modifyEvent)
       {
         widgetCreate.setEnabled(   !widgetRepository.getText().trim().isEmpty()
-                                && !widgetRootPath.getText().trim().isEmpty()
+                                && !widgetModuleName.getText().trim().isEmpty()
                                );
       }
     });
-    widgetRootPath.addModifyListener(new ModifyListener()
+    widgetModuleName.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
         widgetCreate.setEnabled(   !widgetRepository.getText().trim().isEmpty()
-                                && !widgetRootPath.getText().trim().isEmpty()
+                                && !widgetModuleName.getText().trim().isEmpty()
                                );
       }
     });
-    Widgets.setNextFocus(widgetRepository,widgetRootPath);
-    Widgets.setNextFocus(widgetRootPath,widgetCreate);
+    Widgets.setNextFocus(widgetRepository,widgetModuleName);
+    Widgets.setNextFocus(widgetModuleName,widgetDestinationPath);
+    Widgets.setNextFocus(widgetDestinationPath,widgetCreate);
 
     // add existing repository paths
     Background.run(new BackgroundRunnable()
@@ -4034,7 +4072,7 @@ Dprintf.dprintf("");
           try
           {
             // create directory
-            File file = new File(data.rootPath);
+            File file = new File(data.destinationPath);
             if      (!file.exists())
             {
               if (!file.mkdirs())
@@ -4043,7 +4081,7 @@ Dprintf.dprintf("");
                 {
                   public void run()
                   {
-                    Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryPath);
+                    Dialogs.error(shell,"Cannot create new directory '%s'",data.destinationPath);
                     }
                 });
                 return;
@@ -4055,15 +4093,16 @@ Dprintf.dprintf("");
               {
                 public void run()
                 {
-                  Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
+                  Dialogs.error(shell,"'" + data.destinationPath +"' is not a directory");
                   }
               });
               return;
             }
 
-            final Repository repository = Repository.newInstance(data.rootPath,data.type);;
+            final Repository repository = Repository.newInstance(data.destinationPath,data.type);;
+// ???
 Dprintf.dprintf("NYI");
-//            repository.checkout(data.repositoryPath,data.rootPath);
+            repository.create(data.repositoryPath,data.moduleName,data.importPath);
 
             display.syncExec(new Runnable()
             {
@@ -4081,7 +4120,7 @@ Dprintf.dprintf("NYI");
             {
               public void run()
               {
-                Dialogs.error(shell,"Cannot create new repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,message);
+                Dialogs.error(shell,"Cannot create new repository '%s' in:\n\n'%s'\n\n(error: %s).",data.moduleName,data.repositoryPath,message);
               }
             });
             return;
@@ -4234,8 +4273,34 @@ Dprintf.dprintf("NYI");
       label = Widgets.newLabel(composite,"Repository:");
       Widgets.layout(label,1,0,TableLayoutData.W);
 
-      widgetRepository = Widgets.newCombo(composite);
-      Widgets.layout(widgetRepository,1,1,TableLayoutData.WE);
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+      {
+        widgetRepository = Widgets.newCombo(subComposite);
+        Widgets.layout(widgetRepository,0,0,TableLayoutData.WE);
+        widgetRepository.setToolTipText("Respository path URI.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select repository path",
+                                            widgetRepository.getText()
+                                           );
+            if (path != null)
+            {
+              widgetRepository.setText(path);
+            }
+          }
+        });
+      }
 
       label = Widgets.newLabel(composite,"Module:");
       Widgets.layout(label,2,0,TableLayoutData.W);
