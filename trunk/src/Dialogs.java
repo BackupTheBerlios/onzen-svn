@@ -1135,17 +1135,21 @@ class Dialogs
 
   /** error dialog
    * @param parentShell parent shell
-   * @param message error message
    * @param extendedMessage extended message
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param message error message
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
    */
-  public static void error(Shell parentShell, String[] extendedMessage, String message)
+  public static boolean error(Shell parentShell, String[] extendedMessage, boolean showAgainCheckbox, String message)
   {
     final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"error.png");
 
-    Composite composite;
-    Label     label;
-    Button    button;
-    Text      text;
+    final boolean[] result = new boolean[]{true};
+    Composite       composite;
+    Label           label;
+    Button          button;
+    Text            text;
+    final Button    widgetShowAgain;
 
     if (!parentShell.isDisposed())
     {
@@ -1165,15 +1169,29 @@ class Dialogs
         label.setText(message);
         label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
 
+        int row = 1;
+
         if (extendedMessage != null)
         {
           label = new Label(composite,SWT.LEFT);
           label.setText("Extended error:");
-          label.setLayoutData(new TableLayoutData(1,1,TableLayoutData.NSWE,0,0,4));
+          label.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,4)); row++;
 
           text = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.V_SCROLL|SWT.READ_ONLY);
-          text.setLayoutData(new TableLayoutData(2,1,TableLayoutData.NSWE,0,0,0,0,SWT.DEFAULT,100));
+          text.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,0,0,SWT.DEFAULT,100)); row++;
           text.setText(StringUtils.join(extendedMessage,text.DELIMITER));
+        }
+
+        if (showAgainCheckbox)
+        {
+          widgetShowAgain = new Button(composite,SWT.CHECK);
+          widgetShowAgain.setText("show again");
+          widgetShowAgain.setSelection(true);
+          widgetShowAgain.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,4)); row++;
+        }
+        else
+        {
+          widgetShowAgain = null;
         }
       }
 
@@ -1198,8 +1216,27 @@ class Dialogs
         });
       }
 
-      run(dialog);
+      run(dialog,new DialogRunnable()
+      {
+        public void done(Object object)
+        {
+          result[0] = (widgetShowAgain != null) ? widgetShowAgain.getSelection() : true;
+        }
+      });
     }
+
+    return result[0];
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param message error message
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  public static boolean error(Shell parentShell, boolean showAgainCheckbox, String message)
+  {
+    return error(parentShell,null,showAgainCheckbox,message);
   }
 
   /** error dialog
@@ -1208,18 +1245,43 @@ class Dialogs
    */
   public static void error(Shell parentShell, String message)
   {
-    error(parentShell,null,message);
+    error(parentShell,false,message);
   }
 
   /** error dialog
    * @param parentShell parent shell
-   * @param format format string
    * @param extendedMessage extended message
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param format format string
+   * @param arguments optional arguments
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  public static boolean error(Shell parentShell, String[] extendedMessage, boolean showAgainCheckbox, String format, Object... arguments)
+  {
+    return error(parentShell,extendedMessage,showAgainCheckbox,String.format(format,arguments));
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
+   * @param extendedMessage extended message
+   * @param format format string
    * @param arguments optional arguments
    */
   public static void error(Shell parentShell, String[] extendedMessage, String format, Object... arguments)
   {
-    error(parentShell,extendedMessage,String.format(format,arguments));
+    error(parentShell,extendedMessage,false,String.format(format,arguments));
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param format format string
+   * @param arguments optional arguments
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  public static boolean error(Shell parentShell, boolean showAgainCheckbox, String format, Object... arguments)
+  {
+    return error(parentShell,null,showAgainCheckbox,format,arguments);
   }
 
   /** error dialog
@@ -1229,7 +1291,92 @@ class Dialogs
    */
   public static void error(Shell parentShell, String format, Object... arguments)
   {
-    error(parentShell,null,format,arguments);
+    error(parentShell,false,format,arguments);
+  }
+
+  /** warning dialog
+   * @param parentShell parent shell
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param message error message
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  static boolean warning(Shell parentShell, boolean showAgainCheckbox, String message)
+  {
+    final boolean[] result = new boolean[]{true};
+    TableLayoutData tableLayoutData;
+    Composite       composite;
+    Label           label;
+    Button          button;
+    final Button    widgetShowAgain;
+
+    if (!parentShell.isDisposed())
+    {
+      final Shell dialog = open(parentShell,"Warning",200,70);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+      Image image = Widgets.loadImage(parentShell.getDisplay(),"warning.png");
+
+      // message
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
+      {
+        label = new Label(composite,SWT.LEFT);
+        label.setImage(image);
+        label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
+
+        label = new Label(composite,SWT.LEFT|SWT.WRAP);
+        label.setText(message);
+        label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+      }
+
+      int row = 1;
+
+      if (showAgainCheckbox)
+      {
+        widgetShowAgain = new Button(composite,SWT.CHECK);
+        widgetShowAgain.setText("show again");
+        widgetShowAgain.setSelection(true);
+        widgetShowAgain.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,4)); row++;
+      }
+      else
+      {
+        widgetShowAgain = null;
+      }
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(row,0,TableLayoutData.WE,0,0,4)); row++;
+      {
+        button = new Button(composite,SWT.CENTER);
+        button.setText("Close");
+        button.setFocus();
+        button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            close(dialog);
+          }
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+      }
+
+      run(dialog,new DialogRunnable()
+      {
+        public void done(Object object)
+        {
+          result[0] = (widgetShowAgain != null) ? widgetShowAgain.getSelection() : true;
+        }
+      });
+    }
+
+    return result[0];
   }
 
   /** warning dialog
@@ -1238,54 +1385,19 @@ class Dialogs
    */
   static void warning(Shell parentShell, String message)
   {
-    TableLayoutData tableLayoutData;
-    Composite       composite;
-    Label           label;
-    Button          button;
+    warning(parentShell,false,message);
+  }
 
-    final Shell dialog = open(parentShell,"Warning",200,70);
-    dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-
-    Image image = Widgets.loadImage(parentShell.getDisplay(),"warning.png");
-
-    // message
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
-    {
-      label = new Label(composite,SWT.LEFT);
-      label.setImage(image);
-      label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
-
-      label = new Label(composite,SWT.LEFT|SWT.WRAP);
-      label.setText(message);
-      label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
-    }
-
-    // buttons
-    composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,1.0));
-    composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
-    {
-      button = new Button(composite,SWT.CENTER);
-      button.setText("Close");
-      button.setFocus();
-      button.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,60,SWT.DEFAULT));
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetSelected(SelectionEvent selectionEvent)
-        {
-          Button widget = (Button)selectionEvent.widget;
-
-          close(dialog);
-        }
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
-        {
-        }
-      });
-    }
-
-    run(dialog);
+  /** warning dialog
+   * @param parentShell parent shell
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param format format string
+   * @param arguments optional arguments
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  static boolean warning(Shell parentShell, boolean showAgainCheckbox, String format, Object... arguments)
+  {
+    return warning(parentShell,showAgainCheckbox,String.format(format,arguments));
   }
 
   /** warning dialog
@@ -1295,7 +1407,7 @@ class Dialogs
    */
   static void warning(Shell parentShell, String format, Object... arguments)
   {
-    warning(parentShell,String.format(format,arguments));
+    warning(parentShell,false,format,arguments);
   }
 
   /** confirmation dialog
