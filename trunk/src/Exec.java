@@ -606,7 +606,6 @@ class Exec
   {
     ArrayList<String> extendedErrorMessageList = new ArrayList<String>();
 
-    extendedErrorMessageList.add("Stderr:");
     for (String line : stderrList)
     {
       extendedErrorMessageList.add(line);
