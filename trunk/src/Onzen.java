@@ -4307,13 +4307,6 @@ Dprintf.dprintf("NYI");
       widgetModuleName = Widgets.newText(composite);
       Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
       widgetModuleName.setToolTipText("Module name in repository.");
-      Widgets.addModifyListener(new WidgetListener(widgetModuleName,data)
-      {
-        public void modified(Control control)
-        {
-          widgetModuleName.setEnabled(data.type == Repository.Types.CVS);
-        }
-      });
 
       label = Widgets.newLabel(composite,"Revision:");
       Widgets.layout(label,3,0,TableLayoutData.W);
@@ -4468,6 +4461,10 @@ Dprintf.dprintf("NYI");
 */
 
     // add checkout history paths
+    widgetRepository.add("file://");
+    widgetRepository.add("ssh://");
+    widgetRepository.add("http://");
+    widgetRepository.add("https://");
     for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
     {
       widgetRepository.add(checkoutHistoryPath);
@@ -4553,14 +4550,13 @@ Dprintf.dprintf("NYI");
               });
             }
           }
-          catch (RepositoryException exception)
+          catch (final RepositoryException exception)
           {
-            final String message = exception.getMessage();
             display.syncExec(new Runnable()
             {
               public void run()
               {
-                Dialogs.error(shell,"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,message);
+                Dialogs.error(shell,exception.getExtendedErrorMessage(),"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,exception.getMessage());
               }
             });
             return;
