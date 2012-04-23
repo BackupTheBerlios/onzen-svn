@@ -148,6 +148,7 @@ class Preferences
   private final Spinner       widgetMessageBroadcastPort;
   private final List          widgetAutoSummaryPatterns;
   private final Button        widgetSetWindowLocation;
+  private final Table         widgetShowFlags;
 
   private final Button        widgetButtonSave;
 
@@ -166,6 +167,7 @@ class Preferences
     Label     label;
     Button    button;
     Listener  listener;
+    TableItem tableItem;
 
     // initialize variables
     this.shell = shell;
@@ -999,7 +1001,7 @@ class Preferences
               int index = widget.getSelectionIndex();
               if (index >= 0)
               {
-  Dprintf.dprintf("");
+Dprintf.dprintf("");
               }
             }
             public void mouseDown(MouseEvent mouseEvent)
@@ -1071,7 +1073,7 @@ class Preferences
               int index = widget.getSelectionIndex();
               if (index >= 0)
               {
-  Dprintf.dprintf("");
+Dprintf.dprintf("");
               }
             }
             public void mouseDown(MouseEvent mouseEvent)
@@ -1199,7 +1201,7 @@ Dprintf.dprintf("");
       }
 
       composite = Widgets.addTab(tabFolder,"Misc");
-      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0},new double[]{0.0,1.0},2));
+      composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0},new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,6,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
@@ -1424,11 +1426,37 @@ Dprintf.dprintf("");
           }
         }
 
+        label = Widgets.newLabel(composite,"Show flags:");
+        Widgets.layout(label,9,0,TableLayoutData.NW);
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(1.0,1.0));
+        Widgets.layout(subComposite,9,1,TableLayoutData.NSWE);
+        {
+          widgetShowFlags = Widgets.newTable(subComposite,SWT.CHECK);
+          Widgets.layout(widgetShowFlags,0,0,TableLayoutData.NSWE);
+          Widgets.addTableColumn(widgetShowFlags,0,"",SWT.LEFT,500,true);
+          widgetShowFlags.setLinesVisible(false);
+          widgetShowFlags.setHeaderVisible(false);
+          widgetShowFlags.addListener(SWT.Resize, new Listener()
+          {
+            public void handleEvent(Event event)
+            {
+              Table       table = (Table)event.widget;
+              TableColumn tableColumn = table.getColumn(0);
+
+              tableColumn.setWidth(table.getClientArea().width);
+            }
+          });
+          widgetShowFlags.setToolTipText("Show dialogs flags.");
+
+          Widgets.addTableEntry(widgetShowFlags,Settings.showUpdateStatusErrors,"update status errors").setChecked(Settings.showUpdateStatusErrors);
+        }
+
         label = Widgets.newLabel(composite,"Miscellaneous:");
-        Widgets.layout(label,9,0,TableLayoutData.W);
+        Widgets.layout(label,10,0,TableLayoutData.W);
         subComposite = Widgets.newComposite(composite);
         subComposite.setLayout(new TableLayout(0.0,0.0));
-        Widgets.layout(subComposite,9,1,TableLayoutData.WE);
+        Widgets.layout(subComposite,10,1,TableLayoutData.WE);
         {
           widgetSetWindowLocation = Widgets.newCheckbox(subComposite,"set window location");
           widgetSetWindowLocation.setSelection(Settings.setWindowLocation);
@@ -1519,6 +1547,11 @@ Dprintf.dprintf("");
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
           Settings.hiddenDirectoryPatterns                = getHiddenDirectoryPatterns();
           Settings.autoSummaryPatterns                    = getAutoSummaryPatterns();
+          for (TableItem tableItem : widgetShowFlags.getItems())
+          {
+            Object data = tableItem.getData();
+            if (data == Settings.showUpdateStatusErrors) Settings.showUpdateStatusErrors = tableItem.getChecked();
+          }
 
           Settings.setWindowLocation                      = widgetSetWindowLocation.getSelection();
 
