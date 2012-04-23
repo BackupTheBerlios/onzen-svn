@@ -1112,7 +1112,7 @@ public class Settings
   // show flags
   @SettingComment(text={"","show dialog flags"})
   @SettingValue
-  public static Boolean                  showStatusErrors                       = new Boolean(true);
+  public static Boolean                  showUpdateStatusErrors                 = new Boolean(true);
 
   // debug
   public static boolean                  debugFlag                              = false;
