@@ -261,21 +261,20 @@ throw new RepositoryException("NYI");
 //Dprintf.dprintf("out: %s",line);
           if (busyDialog != null) busyDialog.updateText(line);
         }
-
-        // discard stderr
-        line = exec.pollStderr();
-        if (line != null)
-        {
-//Dprintf.dprintf("err1: %s",line);
-        }
       }
       if ((busyDialog == null) || !busyDialog.isAborted())
       {
+        // wait for termination
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
+      }
+      else
+      {
+        // abort
+        exec.destroy();
       }
 
       // done
@@ -380,6 +379,13 @@ throw new RepositoryException("NYI");
           }
         }
 
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+
         // done
         exec.done(); exec = null;
       }
@@ -411,6 +417,13 @@ throw new RepositoryException("NYI");
           }
         }
 
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+
         // done
         exec.done(); exec = null;
       }
@@ -440,6 +453,13 @@ throw new RepositoryException("NYI");
           {
             fileData.branch = line;
           }
+        }
+
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done

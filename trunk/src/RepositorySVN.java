@@ -159,8 +159,7 @@ class RepositorySVN extends Repository
       // checkout
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","checkout");
-      if (revision != null) command.append("--revision",revision);
-      command.append("--");
+      if ((revision != null) && !revision.isEmpty()) command.append("--revision",revision);
       command.append(path,destinationPath);
       exec = new Exec(destinationPath,command);
 
@@ -179,24 +178,19 @@ class RepositorySVN extends Repository
 //Dprintf.dprintf("out: %s",line);
           if (busyDialog != null) busyDialog.updateText(line);
         }
-
-        // discard stderr
-        line = exec.pollStderr();
-        if (line != null)
-        {
-//Dprintf.dprintf("err1: %s",line);
-        }
       }
       if ((busyDialog == null) || !busyDialog.isAborted())
       {
+        // wait for termination
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
       {
+        // abort
         exec.destroy();
       }
 

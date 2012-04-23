@@ -182,6 +182,13 @@ throw new RepositoryException("NYI");
           }
         }
 
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+
         // done
         exec.done(); exec = null;
       }
@@ -214,6 +221,13 @@ throw new RepositoryException("NYI");
               fileData.branch = name;
             }
           }
+        }
+
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
