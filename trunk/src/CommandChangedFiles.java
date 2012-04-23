@@ -706,8 +706,15 @@ menuItem.setEnabled(false);
             CommandCommit commandCommit = new CommandCommit(shell,repositoryTab,fileDataSet);
             if (commandCommit.execute())
             {
-              repositoryTab.repository.updateStates(fileDataSet);
-              Widgets.notify(dialog,USER_EVENT_FILTER);
+              try
+              {
+                repositoryTab.repository.updateStates(fileDataSet);
+                Widgets.notify(dialog,USER_EVENT_FILTER);
+              }
+              catch (RepositoryException exception)
+              {
+                // ignored
+              }
             }
             dialog.setActive();
           }
@@ -763,8 +770,15 @@ menuItem.setEnabled(false);
             CommandAdd commandAdd = new CommandAdd(shell,repositoryTab,fileDataSet);
             if (commandAdd.execute())
             {
-              repositoryTab.repository.updateStates(fileDataSet);
-              Widgets.notify(dialog,USER_EVENT_FILTER);
+              try
+              {
+                repositoryTab.repository.updateStates(fileDataSet);
+                Widgets.notify(dialog,USER_EVENT_FILTER);
+              }
+              catch (RepositoryException exception)
+              {
+                // ignored
+              }
             }
             dialog.setActive();
           }
@@ -794,8 +808,15 @@ menuItem.setEnabled(false);
             CommandRemove commandRemove = new CommandRemove(shell,repositoryTab,fileDataSet);
             if (commandRemove.execute())
             {
-              repositoryTab.repository.updateStates(fileDataSet);
-              Widgets.notify(dialog,USER_EVENT_FILTER);
+              try
+              {
+                repositoryTab.repository.updateStates(fileDataSet);
+                Widgets.notify(dialog,USER_EVENT_FILTER);
+              }
+              catch (RepositoryException exception)
+              {
+                // ignored
+              }
             }
             dialog.setActive();
           }
@@ -825,8 +846,15 @@ menuItem.setEnabled(false);
             CommandRevert commandRevert = new CommandRevert(shell,repositoryTab,fileDataSet);
             if (commandRevert.execute())
             {
-              repositoryTab.repository.updateStates(fileDataSet);
-              Widgets.notify(dialog,USER_EVENT_FILTER);
+              try
+              {
+                repositoryTab.repository.updateStates(fileDataSet);
+                Widgets.notify(dialog,USER_EVENT_FILTER);
+              }
+              catch (RepositoryException exception)
+              {
+                // ignored
+              }
             }
             dialog.setActive();
           }
