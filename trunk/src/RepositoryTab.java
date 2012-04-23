@@ -3445,15 +3445,15 @@ Dprintf.dprintf("");
       }
       catch (final RepositoryException exception)
       {
-        synchronized(Settings.showStatusErrors)
+        synchronized(Settings.showUpdateStatusErrors)
         {
-          if (Settings.showStatusErrors)
+          if (Settings.showUpdateStatusErrors)
           {
             display.syncExec(new Runnable()
             {
               public void run()
               {
-                Settings.showStatusErrors = Dialogs.error(shell,exception.getExtendedErrorMessage(),true,"Get states fail");
+                Settings.showUpdateStatusErrors = Dialogs.error(shell,exception.getExtendedErrorMessage(),true,"Get states fail");
               }
             });
           }
