@@ -1109,12 +1109,16 @@ public class Settings
                                                                                     "^-\\s*.*\\s*:\\s*(.*)\\s*$"
                                                                                   };
 
+  // show flags
+  @SettingComment(text={"","show dialog flags"})
+  @SettingValue
+  public static Boolean                  showStatusErrors                       = new Boolean(true);
+
   // debug
   public static boolean                  debugFlag                              = false;
 
   // help
   public static boolean                  helpFlag                               = false;
-
 
   // ------------------------ native functions ----------------------------
 
@@ -1199,15 +1203,30 @@ public class Settings
                             int value = Integer.parseInt(string);
                             field.set(null,addArrayUniq((int[])field.get(null),value));
                           }
+                          else if (type == Integer.class)
+                          {
+                            int value = Integer.parseInt(string);
+                            field.set(null,addArrayUniq((Integer[])field.get(null),value));
+                          }
                           else if (type == long.class)
                           {
                             long value = Long.parseLong(string);
                             field.set(null,addArrayUniq((long[])field.get(null),value));
                           }
+                          else if (type == Long.class)
+                          {
+                            long value = Long.parseLong(string);
+                            field.set(null,addArrayUniq((Long[])field.get(null),value));
+                          }
                           else if (type == boolean.class)
                           {
                             boolean value = StringUtils.parseBoolean(string);
                             field.set(null,addArrayUniq((boolean[])field.get(null),value));
+                          }
+                          else if (type == Boolean.class)
+                          {
+                            boolean value = StringUtils.parseBoolean(string);
+                            field.set(null,addArrayUniq((Boolean[])field.get(null),value));
                           }
                           else if (type == String.class)
                           {
@@ -1252,15 +1271,30 @@ Dprintf.dprintf("field.getType()=%s",type);
                             int value = Integer.parseInt(string);
                             field.setInt(null,value);
                           }
+                          else if (type == Integer.class)
+                          {
+                            int value = Integer.parseInt(string);
+                            field.set(null,new Integer(value));
+                          }
                           else if (type == long.class)
                           {
                             long value = Long.parseLong(string);
                             field.setLong(null,value);
                           }
+                          else if (type == Long.class)
+                          {
+                            long value = Long.parseLong(string);
+                            field.set(null,new Long(value));
+                          }
                           else if (type == boolean.class)
                           {
                             boolean value = StringUtils.parseBoolean(string);
                             field.setBoolean(null,value);
+                          }
+                          else if (type == Boolean.class)
+                          {
+                            boolean value = StringUtils.parseBoolean(string);
+                            field.set(null,new Boolean(value));
                           }
                           else if (type == String.class)
                           {
@@ -1418,6 +1452,13 @@ exception.printStackTrace();
                       output.printf("%s = %d\n",name,value);
                     }
                   }
+                  else if (type == Integer.class)
+                  {
+                    for (int value : (Integer[])field.get(null))
+                    {
+                      output.printf("%s = %d\n",name,value);
+                    }
+                  }
                   else if (type == long.class)
                   {
                     for (long value : (long[])field.get(null))
@@ -1425,9 +1466,23 @@ exception.printStackTrace();
                       output.printf("%s = %ld\n",name,value);
                     }
                   }
+                  else if (type == Long.class)
+                  {
+                    for (long value : (Long[])field.get(null))
+                    {
+                      output.printf("%s = %ld\n",name,value);
+                    }
+                  }
                   else if (type == boolean.class)
                   {
                     for (boolean value : (boolean[])field.get(null))
+                    {
+                      output.printf("%s = %s\n",name,value ? "yes" : "no");
+                    }
+                  }
+                  else if (type == Boolean.class)
+                  {
+                    for (boolean value : (Boolean[])field.get(null))
                     {
                       output.printf("%s = %s\n",name,value ? "yes" : "no");
                     }
@@ -1484,14 +1539,29 @@ Dprintf.dprintf("field.getType()=%s",type);
                     int value = field.getInt(null);
                     output.printf("%s = %d\n",name,value);
                   }
+                  else if (type == Integer.class)
+                  {
+                    int value = (Integer)field.get(null);
+                    output.printf("%s = %d\n",name,value);
+                  }
                   else if (type == long.class)
                   {
                     long value = field.getLong(null);
                     output.printf("%s = %ld\n",name,value);
                   }
+                  else if (type == Long.class)
+                  {
+                    long value = (Long)field.get(null);
+                    output.printf("%s = %ld\n",name,value);
+                  }
                   else if (type == boolean.class)
                   {
                     boolean value = field.getBoolean(null);
+                    output.printf("%s = %s\n",name,value ? "yes" : "no");
+                  }
+                  else if (type == Boolean.class)
+                  {
+                    boolean value = (Boolean)field.get(null);
                     output.printf("%s = %s\n",name,value ? "yes" : "no");
                   }
                   else if (type == String.class)
@@ -1621,6 +1691,27 @@ exception.printStackTrace();
     return array;
   }
 
+  /** unique add element to int array
+   * @param array array
+   * @param n element
+   * @return extended array or array
+   */
+  private static Integer[] addArrayUniq(Integer[] array, int n)
+  {
+    int z = 0;
+    while ((z < array.length) && (array[z] != n))
+    {
+      z++;
+    }
+    if (z >= array.length)
+    {
+      array = Arrays.copyOf(array,array.length+1);
+      array[array.length-1] = n;
+    }
+
+    return array;
+  }
+
   /** unique add element to long array
    * @param array array
    * @param n element
@@ -1647,7 +1738,49 @@ exception.printStackTrace();
    * @param n element
    * @return extended array or array
    */
+  private static Long[] addArrayUniq(Long[] array, long n)
+  {
+    int z = 0;
+    while ((z < array.length) && (array[z] != n))
+    {
+      z++;
+    }
+    if (z >= array.length)
+    {
+      array = Arrays.copyOf(array,array.length+1);
+      array[array.length-1] = n;
+    }
+
+    return array;
+  }
+
+  /** unique add element to long array
+   * @param array array
+   * @param n element
+   * @return extended array or array
+   */
   private static boolean[] addArrayUniq(boolean[] array, boolean n)
+  {
+    int z = 0;
+    while ((z < array.length) && (array[z] != n))
+    {
+      z++;
+    }
+    if (z >= array.length)
+    {
+      array = Arrays.copyOf(array,array.length+1);
+      array[array.length-1] = n;
+    }
+
+    return array;
+  }
+
+  /** unique add element to long array
+   * @param array array
+   * @param n element
+   * @return extended array or array
+   */
+  private static Boolean[] addArrayUniq(Boolean[] array, boolean n)
   {
     int z = 0;
     while ((z < array.length) && (array[z] != n))
