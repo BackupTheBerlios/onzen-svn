@@ -219,6 +219,7 @@ class RepositorySVN extends Repository
    * @param newFileDataSet new file data set or null
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
+    throws RepositoryException
   {
     final Pattern PATTERN_STATUS         = Pattern.compile("^(.)......\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
@@ -333,6 +334,13 @@ class RepositorySVN extends Repository
             // unknown line
             Onzen.printWarning("No match for line '%s'",line);
           }
+        }
+
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done

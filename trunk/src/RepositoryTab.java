@@ -3439,7 +3439,26 @@ Dprintf.dprintf("");
 
       // update states
       HashSet<FileData> newFileDataSet = new HashSet<FileData>();
-      repository.updateStates(fileDataSet,newFileDataSet);
+      try
+      {
+        repository.updateStates(fileDataSet,newFileDataSet);
+      }
+      catch (final RepositoryException exception)
+      {
+        synchronized(Settings.showStatusErrors)
+        {
+          if (Settings.showStatusErrors)
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Settings.showStatusErrors = Dialogs.error(shell,exception.getExtendedErrorMessage(),true,"Get states fail");
+              }
+            });
+          }
+        }
+      }
 
       // update tree items: set status color, remove not existing entries
       FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);

@@ -234,6 +234,7 @@ throw new RepositoryException("NYI");
    * @param newFileDataSet new file data set or null
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
+    throws RepositoryException
   {
     final Pattern PATTERN_UNKNOWN             = Pattern.compile("^\\?\\s+.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_COMPLETE            = Pattern.compile("^\\s*File:.*",Pattern.CASE_INSENSITIVE);

@@ -112,6 +112,7 @@ class RepositoryNone extends Repository
    * @param newFileDataSet new file data set or null
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
+    throws RepositoryException
   {
   }
 

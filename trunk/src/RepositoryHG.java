@@ -296,6 +296,7 @@ throw new RepositoryException("NYI");
    * @param fileDirectorySet directory set to check for new/missing files
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
+    throws RepositoryException
   {
     final Pattern PATTERN_STATUS = Pattern.compile("^\\s*(.)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
 

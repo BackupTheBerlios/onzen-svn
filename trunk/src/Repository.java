@@ -1512,6 +1512,7 @@ class RepositoryException extends Exception
   /** create repository exception
    * @param message message
    * @param cause exception cause
+   * @param extendedErrorMessage extended error message lines
    * @param arguments optional format arguments for message
    */
   RepositoryException(String message, Exception cause, String[] extendedErrorMessage, Object... arguments)
@@ -2304,13 +2305,15 @@ abstract class Repository implements Serializable
    * @param fileDirectorySet directory set to check for new/missing files
    * @param newFileDataSet new file data set or null
    */
-  abstract public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet);
+  abstract public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
+    throws RepositoryException;
 
   /** update file states
    * @param fileDataSet file data set to update
    * @param newFileDataSet new file data set or null
    */
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<FileData> newFileDataSet)
+    throws RepositoryException
   {
     // get directories
     HashSet<String> fileDirectoryHashSet = new HashSet<String>();
@@ -2328,6 +2331,7 @@ abstract class Repository implements Serializable
    * @param fileDataSet file data set to update
    */
   public void updateStates(HashSet<FileData> fileDataSet)
+    throws RepositoryException
   {
     updateStates(fileDataSet,(HashSet<FileData>)null);
   }
@@ -2336,6 +2340,7 @@ abstract class Repository implements Serializable
    * @param fileDataSet file data to update
    */
   public void updateStates(FileData fileData)
+    throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     fileDataSet.add(fileData);
@@ -2347,6 +2352,7 @@ abstract class Repository implements Serializable
    * @param fileNames files to update
    */
   public void updateStates(String[] fileNames)
+    throws RepositoryException
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     for (String fileName : fileNames)
