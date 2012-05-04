@@ -3605,7 +3605,7 @@ exception.printStackTrace();
     final Shell  dialog = Dialogs.openModal(shell,"Create new repository",500,500,new double[]{1.0,0.0},1.0);
 
     final Combo  widgetRepository;
-    final Text   widgetModuleName;
+    final Combo  widgetModuleName;
     final Text   widgetDestinationPath;
     final Text   widgetImportPath;
     final Tree   widgetFileTree;
@@ -3724,7 +3724,7 @@ exception.printStackTrace();
       label = Widgets.newLabel(composite,"Module:");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
-      widgetModuleName = Widgets.newText(composite);
+      widgetModuleName = Widgets.newCombo(composite);
       Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
       widgetModuleName.setToolTipText("Module name in repository.");
 
@@ -4188,9 +4188,13 @@ Dprintf.dprintf("NYI");
     final Data  data   = new Data();
     final Shell dialog = Dialogs.openModal(shell,"Checkout repository",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
+    final Button widgetCVS;
+    final Button widgetSVN;
+    final Button widgetHG;
+    final Button widgetGIT;
     final Combo  widgetRepository;
-    final Text   widgetModuleName;
-    final Text   widgetRevision;
+    final Combo  widgetModuleName;
+    final Combo  widgetRevision;
     final Text   widgetDestinationPath;
     final Button widgetCheckout;
 
@@ -4205,85 +4209,21 @@ Dprintf.dprintf("NYI");
       subComposite.setLayout(new TableLayout(null,null));
       Widgets.layout(subComposite,0,1,TableLayoutData.W);
       {
-        button = Widgets.newRadio(subComposite,"CVS");
-        button.setSelection(true);
-        Widgets.layout(button,0,0,TableLayoutData.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
+        widgetCVS = Widgets.newRadio(subComposite,"CVS");
+        widgetCVS.setSelection(true);
+        Widgets.layout(widgetCVS,0,0,TableLayoutData.DEFAULT);
 
-            if (widget.getSelection())
-            {
-              data.type = Repository.Types.CVS;
-              Widgets.modified(data);
-            }
-          }
-        });
+        widgetSVN = Widgets.newRadio(subComposite,"SVN");
+        widgetSVN.setSelection(false);
+        Widgets.layout(widgetSVN,0,1,TableLayoutData.DEFAULT);
 
-        button = Widgets.newRadio(subComposite,"SVN");
-        button.setSelection(false);
-        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
+        widgetHG = Widgets.newRadio(subComposite,"HG");
+        widgetHG.setSelection(false);
+        Widgets.layout(widgetHG,0,2,TableLayoutData.DEFAULT);
 
-            if (widget.getSelection())
-            {
-              data.type = Repository.Types.SVN;
-              Widgets.modified(data);
-            }
-          }
-        });
-
-        button = Widgets.newRadio(subComposite,"HG");
-        button.setSelection(false);
-        Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-
-            if (widget.getSelection())
-            {
-              data.type = Repository.Types.HG;
-              Widgets.modified(data);
-            }
-          }
-        });
-
-        button = Widgets.newRadio(subComposite,"GIT");
-        button.setSelection(false);
-        Widgets.layout(button,0,3,TableLayoutData.DEFAULT);
-        button.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            Button widget = (Button)selectionEvent.widget;
-
-            if (widget.getSelection())
-            {
-              data.type = Repository.Types.GIT;
-              Widgets.modified(data);
-            }
-          }
-        });
+        widgetGIT = Widgets.newRadio(subComposite,"GIT");
+        widgetGIT.setSelection(false);
+        Widgets.layout(widgetGIT,0,3,TableLayoutData.DEFAULT);
       }
 
       label = Widgets.newLabel(composite,"Repository:");
@@ -4321,14 +4261,14 @@ Dprintf.dprintf("NYI");
       label = Widgets.newLabel(composite,"Module:");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
-      widgetModuleName = Widgets.newText(composite);
+      widgetModuleName = Widgets.newCombo(composite);
       Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
       widgetModuleName.setToolTipText("Module name in repository.");
 
       label = Widgets.newLabel(composite,"Revision:");
       Widgets.layout(label,3,0,TableLayoutData.W);
 
-      widgetRevision = Widgets.newText(composite);
+      widgetRevision = Widgets.newCombo(composite);
       Widgets.layout(widgetRevision,3,1,TableLayoutData.WE);
       widgetRevision.setToolTipText("Revision to check-out.");
 
@@ -4421,6 +4361,111 @@ Dprintf.dprintf("NYI");
     }
 
     // listeners
+    widgetCVS.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Button widget = (Button)selectionEvent.widget;
+
+        if (widget.getSelection())
+        {
+          data.type = Repository.Types.CVS;
+
+          // add default module names
+          widgetModuleName.removeAll();
+
+          // add default revision names
+          widgetRevision.removeAll();
+          widgetRevision.add("HEAD");
+
+          Widgets.modified(data);
+        }
+      }
+    });
+    widgetSVN.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Button widget = (Button)selectionEvent.widget;
+
+        if (widget.getSelection())
+        {
+          data.type = Repository.Types.SVN;
+
+          // add default module names
+          widgetModuleName.removeAll();
+          widgetModuleName.add("trunk");
+          widgetModuleName.add("tags");
+          widgetModuleName.add("branches");
+
+          // add default revision names
+          widgetRevision.removeAll();
+          widgetRevision.add("HEAD");
+
+          Widgets.modified(data);
+        }
+      }
+    });
+    widgetHG.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Button widget = (Button)selectionEvent.widget;
+
+        if (widget.getSelection())
+        {
+          data.type = Repository.Types.HG;
+
+          // add default module names
+          widgetModuleName.removeAll();
+          widgetModuleName.add("trunk");
+          widgetModuleName.add("tags");
+          widgetModuleName.add("branches");
+
+          // add default revision names
+          widgetRevision.removeAll();
+          widgetRevision.add("tip");
+
+          Widgets.modified(data);
+        }
+      }
+    });
+    widgetGIT.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Button widget = (Button)selectionEvent.widget;
+
+        if (widget.getSelection())
+        {
+          data.type = Repository.Types.GIT;
+
+          // add default module names
+          widgetModuleName.removeAll();
+          widgetModuleName.add("trunk");
+          widgetModuleName.add("tags");
+          widgetModuleName.add("branches");
+
+          // add default revision names
+          widgetRevision.removeAll();
+          widgetRevision.add("tip");
+
+          Widgets.modified(data);
+        }
+      }
+    });
     widgetRepository.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
