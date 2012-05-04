@@ -1749,7 +1749,7 @@ class StoredFiles
                     "autoSummaryFlag"
                    }
         )
-@XmlSeeAlso({RepositoryNone.class,RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
+@XmlSeeAlso({RepositoryNone.class,RepositoryDirectory.class,RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
 {
@@ -1821,6 +1821,7 @@ abstract class Repository implements Serializable
   {
     NONE,
 
+    DIRECTORY,
     CVS,
     SVN,
     HG,
@@ -1940,16 +1941,16 @@ abstract class Repository implements Serializable
   {
     switch (type)
     {
-      case CVS: return new RepositoryCVS(rootPath);
-      case SVN: return new RepositorySVN(rootPath);
-      case HG:  return new RepositoryHG(rootPath);
-      case GIT: return new RepositoryGit(rootPath);
+      case DIRECTORY: return new RepositoryDirectory(rootPath);
+      case CVS:       return new RepositoryCVS(rootPath);
+      case SVN:       return new RepositorySVN(rootPath);
+      case HG:        return new RepositoryHG(rootPath);
+      case GIT:       return new RepositoryGit(rootPath);
       default:
 // ???
 //        throw new RepositoryException("no repository CVS/SVN/HG/Git found");
 //        Dialogs.warning(dialog,"No repository CVS/SVN/HG/Git found");
         return new RepositoryNone(rootPath);
-//        break;
     }
   }
 
