@@ -7,9 +7,23 @@
 @set VERSION_MINOR=02
 @set VERSION_REVISION=unknown
 
-@set CLASSPATH=classes;%SWT_JAR_WINDOWS%;%SQLITE_JAR%;%MAIL_JAR%
-
 @set JAR=jar
+
+@wmic os get osarchitecture|findstr 64-bit
+@if errorlevel 1 goto 64bit
+@if errorlevel 0 goto 32bit
+@echo Cannot detect 32/64bit - please check output of 'wmic os get osarchitecture'
+@goto end
+
+:64bit
+@set CLASSPATH=classes;%SWT_JAR_WINDOWS_64%;%SQLITE_JAR%;%MAIL_JAR%
+@goto start
+
+:32bit
+@set CLASSPATH=classes;%SWT_JAR_WINDOWS_64%;%SQLITE_JAR%;%MAIL_JAR%
+@goto start
+
+:start
 
 @if "%1" == "help" goto help
 @if "%1" == "config" goto config
