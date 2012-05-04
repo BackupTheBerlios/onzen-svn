@@ -3009,18 +3009,18 @@ exception.printStackTrace();
             if (openButton) widgetOpen.setEnabled(true);
             if (data.names[index] != null) widgetNewName.setText(data.names[index]);
             Widgets.setFocus(widgetNewName);
+
+            String  newName = widgetNewName.getText().trim();
+            boolean newNameEmptyFlag = newName.isEmpty();
+            boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+            widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
+            widgetDelete.setEnabled(newNameExistsFlag);
           }
         }
         else
         {
           if (openButton) widgetOpen.setEnabled(false);
         }
-
-        String  newName = widgetNewName.getText().trim();
-        boolean newNameEmptyFlag = newName.isEmpty();
-        boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
-        widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
-        widgetDelete.setEnabled(newNameExistsFlag);
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
@@ -3032,17 +3032,17 @@ exception.printStackTrace();
           if (openButton) widgetOpen.setEnabled(true);
           if (data.names[index] != null) widgetNewName.setText(data.names[index]);
           Widgets.setFocus(widgetNewName);
+
+          String  newName = widgetNewName.getText().trim();
+          boolean newNameEmptyFlag = newName.isEmpty();
+          boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+          widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
+          widgetDelete.setEnabled(newNameExistsFlag);
         }
         else
         {
           if (openButton) widgetOpen.setEnabled(false);
         }
-
-        String  newName = widgetNewName.getText().trim();
-        boolean newNameEmptyFlag = newName.isEmpty();
-        boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
-        widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
-        widgetDelete.setEnabled(newNameExistsFlag);
       }
     });
     widgetNewName.addSelectionListener(new SelectionListener()
