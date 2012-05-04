@@ -3006,10 +3006,19 @@ exception.printStackTrace();
           }
           else
           {
+            if (openButton) widgetOpen.setEnabled(true);
             if (data.names[index] != null) widgetNewName.setText(data.names[index]);
-            widgetNewName.setFocus();
+            Widgets.setFocus(widgetNewName);
           }
         }
+        else
+        {
+          if (openButton) widgetOpen.setEnabled(false);
+        }
+
+        boolean newNameEmptyFlag = widgetNewName.getText().trim().isEmpty();
+        widgetNew.setEnabled(!newNameEmptyFlag);
+        widgetDelete.setEnabled(!newNameEmptyFlag);
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
@@ -3019,16 +3028,17 @@ exception.printStackTrace();
         if (index >= 0)
         {
           if (openButton) widgetOpen.setEnabled(true);
-          widgetNew.setEnabled(true);
-          widgetDelete.setEnabled(true);
           if (data.names[index] != null) widgetNewName.setText(data.names[index]);
+          Widgets.setFocus(widgetNewName);
         }
         else
         {
           if (openButton) widgetOpen.setEnabled(false);
-          widgetNew.setEnabled(false);
-          widgetDelete.setEnabled(false);
         }
+
+        boolean newNameEmptyFlag = widgetNewName.getText().trim().isEmpty();
+        widgetNew.setEnabled(!newNameEmptyFlag);
+        widgetDelete.setEnabled(!newNameEmptyFlag);
       }
     });
     widgetNewName.addSelectionListener(new SelectionListener()
@@ -3093,9 +3103,9 @@ exception.printStackTrace();
       {
         Text widget = (Text)keyEvent.widget;
 
-        boolean emptyFlag = widget.getText().trim().isEmpty();
-        widgetOpen.setEnabled(emptyFlag);
-        widgetNew.setEnabled(!emptyFlag);
+        boolean newNameEmptyFlag = widget.getText().trim().isEmpty();
+        widgetOpen.setEnabled(newNameEmptyFlag);
+        widgetNew.setEnabled(!newNameEmptyFlag);
       }
     });
 
