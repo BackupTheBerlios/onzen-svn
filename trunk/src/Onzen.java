@@ -3018,7 +3018,7 @@ exception.printStackTrace();
 
         String  newName = widgetNewName.getText().trim();
         boolean newNameEmptyFlag = newName.isEmpty();
-                boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+        boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
         widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
         widgetDelete.setEnabled(newNameExistsFlag);
       }
@@ -3040,7 +3040,7 @@ exception.printStackTrace();
 
         String  newName = widgetNewName.getText().trim();
         boolean newNameEmptyFlag = newName.isEmpty();
-                boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+        boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
         widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
         widgetDelete.setEnabled(newNameExistsFlag);
       }
@@ -3107,12 +3107,12 @@ exception.printStackTrace();
       {
         Text widget = (Text)keyEvent.widget;
 
-                String  newName = widget.getText().trim();
+        String  newName = widget.getText().trim();
         boolean newNameEmptyFlag = newName.isEmpty();
-                boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+        boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
         widgetOpen.setEnabled(newNameExistsFlag);
         widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
-                widgetDelete.setEnabled(newNameExistsFlag);
+        widgetDelete.setEnabled(newNameExistsFlag);
       }
     });
 
