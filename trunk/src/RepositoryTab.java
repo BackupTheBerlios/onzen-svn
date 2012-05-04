@@ -864,7 +864,7 @@ Dprintf.dprintf("");
   {
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
 
-    String directory = Dialogs.directory(shell,"Select destination directory",lastDirectory);
+    String directory = Dialogs.directory(shell,"Select destination directory","Copy "+fileDataSet.size()+" files to:",lastDirectory);
     if (directory != null)
     {
       setStatusText("Copy files...");
