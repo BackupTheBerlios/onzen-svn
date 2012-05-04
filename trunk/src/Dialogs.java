@@ -2339,19 +2339,32 @@ class Dialogs
   /** directory dialog
    * @param parentShell parent shell
    * @param title title text
+   * @param text text or null
    * @param pathName path name or null
    * @return directory name or null
    */
-  public static String directory(Shell parentShell, String title, String pathName)
+  public static String directory(Shell parentShell, String title, String text, String pathName)
   {
     DirectoryDialog dialog = new DirectoryDialog(parentShell);
     dialog.setText(title);
+    if (text != null) dialog.setMessage(text);
     if (pathName != null)
     {
       dialog.setFilterPath(pathName);
     }
 
     return dialog.open();
+  }
+
+  /** directory dialog
+   * @param parentShell parent shell
+   * @param title title text
+   * @param pathName path name or null
+   * @return directory name or null
+   */
+  public static String directory(Shell parentShell, String title, String pathName)
+  {
+    return directory(parentShell,title,null,pathName);
   }
 
   /** simple string dialog
