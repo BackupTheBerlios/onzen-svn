@@ -1842,7 +1842,7 @@ Dprintf.dprintf("");
       File newFile = new File(repository.rootPath,data.newFileName);
       if (!oldFile.renameTo(newFile))
       {
-        Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n%s",fileName,data.newFileName);
+        Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n'%s'",oldFile.getName(),newFile.getName());
         return;
       }
 

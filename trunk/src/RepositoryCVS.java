@@ -1923,7 +1923,7 @@ Dprintf.dprintf("unknown %s",line);
   /** get names of existing branches
    * @return array with branch names
    */
-  public String[] getBranchNames()
+  public String[] getBranchNames(String pathName)
     throws RepositoryException
   {
     HashSet<String> branchNameSet = new HashSet<String>();

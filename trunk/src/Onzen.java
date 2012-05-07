@@ -4181,6 +4181,10 @@ Dprintf.dprintf("NYI");
       }
     }
 
+    // user events
+    final int USER_EVENT_NEW_MODULE_NAMES = 0xFFFF+0;
+    final int USER_EVENT_NEW_REVISIONS    = 0xFFFF+1;
+
     Composite composite,subComposite;
     Button    button;
     Label     label;
@@ -4381,15 +4385,17 @@ Dprintf.dprintf("NYI");
           {
             widgetModuleName.add(name);
           }
+          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
           widgetRevision.add("");
           for (String name : RepositoryCVS.DEFAULT_REVISION_NAMES)
           {
-            widgetModuleName.add(name);
+            widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryCVS.LAST_REVISION_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
           Widgets.modified(data);
         }
@@ -4408,8 +4414,7 @@ Dprintf.dprintf("NYI");
         {
           data.type = Repository.Types.SVN;
 
-
-          // add default module names
+          // add default module names (branches)
           widgetModuleName.removeAll();
           widgetModuleName.add("");
           for (String name : RepositorySVN.DEFAULT_BRANCH_NAMES)
@@ -4417,6 +4422,7 @@ Dprintf.dprintf("NYI");
             widgetModuleName.add(name);
           }
           if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositorySVN.DEFAULT_ROOT_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
@@ -4426,6 +4432,7 @@ Dprintf.dprintf("NYI");
             widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositorySVN.LAST_REVISION_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
           Widgets.modified(data);
         }
@@ -4454,6 +4461,8 @@ Dprintf.dprintf("NYI");
           {
             widgetModuleName.add(name);
           }
+          if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositoryHG.DEFAULT_ROOT_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
@@ -4464,6 +4473,7 @@ Dprintf.dprintf("NYI");
             widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryHG.LAST_REVISION_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
           Widgets.modified(data);
         }
@@ -4488,20 +4498,23 @@ Dprintf.dprintf("NYI");
           widgetModuleName.add("trunk");
           widgetModuleName.add("tags");
           widgetModuleName.add("branches");
-          for (String name : RepositoryGit.DEFAULT_BRANCH_NAMES)
+          for (String name : RepositoryGIT.DEFAULT_BRANCH_NAMES)
           {
             widgetModuleName.add(name);
           }
+          if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositoryGIT.DEFAULT_ROOT_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
           widgetRevision.add("");
           widgetRevision.add("tip");
-          for (String name : RepositoryGit.DEFAULT_REVISION_NAMES)
+          for (String name : RepositoryGIT.DEFAULT_REVISION_NAMES)
           {
             widgetRevision.add(name);
           }
-          if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryGit.LAST_REVISION_NAME);
+          if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryGIT.LAST_REVISION_NAME);
+          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
           Widgets.modified(data);
         }
@@ -4516,6 +4529,17 @@ Dprintf.dprintf("NYI");
                                  );
       }
     });
+    widgetRepository.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
+      }
+    });
     widgetDestinationPath.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
@@ -4525,6 +4549,68 @@ Dprintf.dprintf("NYI");
                                  );
       }
     });
+
+    dialog.addListener(USER_EVENT_NEW_MODULE_NAMES,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+Dprintf.dprintf("");
+        String[] branchNames = null;
+        try
+        {
+          if      (widgetCVS.getSelection()) branchNames = new RepositoryCVS().getBranchNames(widgetModuleName.getText());
+          else if (widgetSVN.getSelection()) branchNames = new RepositorySVN().getBranchNames(widgetModuleName.getText());
+          else if (widgetHG.getSelection() ) branchNames = new RepositoryHG().getBranchNames(widgetModuleName.getText());
+          else if (widgetGIT.getSelection()) branchNames = new RepositoryGIT().getBranchNames(widgetModuleName.getText());
+Dprintf.dprintf("%d",branchNames.length);
+        }
+        catch (RepositoryException exception)
+        {
+Dprintf.dprintf("");
+          // ignored
+        }
+
+        if (branchNames != null)
+        {
+          widgetModuleName.removeAll();
+          for (String branchName : branchNames)
+          {
+            widgetModuleName.add(branchName);
+          }
+        }
+      }
+    });
+    dialog.addListener(USER_EVENT_NEW_REVISIONS,new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+Dprintf.dprintf("");
+        String[] branchNames = null;
+        try
+        {
+          if      (widgetCVS.getSelection()) branchNames = new RepositoryCVS().getBranchNames(widgetModuleName.getText());
+          else if (widgetSVN.getSelection()) branchNames = new RepositorySVN().getBranchNames(widgetModuleName.getText());
+          else if (widgetHG.getSelection() ) branchNames = new RepositoryHG().getBranchNames(widgetModuleName.getText());
+          else if (widgetGIT.getSelection()) branchNames = new RepositoryGIT().getBranchNames(widgetModuleName.getText());
+Dprintf.dprintf("%d",branchNames.length);
+        }
+        catch (RepositoryException exception)
+        {
+Dprintf.dprintf("");
+          // ignored
+        }
+
+        if (branchNames != null)
+        {
+          widgetModuleName.removeAll();
+          for (String branchName : branchNames)
+          {
+            widgetModuleName.add(branchName);
+          }
+        }
+      }
+    });
+
     Widgets.setNextFocus(widgetRepository,widgetModuleName);
     Widgets.setNextFocus(widgetModuleName,widgetRevision);
     Widgets.setNextFocus(widgetRevision,widgetDestinationPath);
@@ -4563,7 +4649,7 @@ Dprintf.dprintf("NYI");
     });
 */
 
-    // set tyoe, add checkout history paths
+    // set type, add checkout history paths
     Widgets.invoke(widgetCVS);
     widgetRepository.add("file://");
     widgetRepository.add("ssh://");

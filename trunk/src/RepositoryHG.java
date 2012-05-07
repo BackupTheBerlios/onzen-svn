@@ -2473,7 +2473,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   /** get names of existing branches
    * @return array with branch names
    */
-  public String[] getBranchNames()
+  public String[] getBranchNames(String pathName)
     throws RepositoryException
   {
     return new String[0];

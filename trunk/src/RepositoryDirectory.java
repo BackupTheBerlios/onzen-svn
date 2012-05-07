@@ -410,7 +410,7 @@ class RepositoryDirectory extends Repository
   /** get names of existing branches
    * @return array with branch names
    */
-  public String[] getBranchNames()
+  public String[] getBranchNames(String pathName)
     throws RepositoryException
   {
     return new String[0];

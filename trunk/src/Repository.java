@@ -1749,7 +1749,7 @@ class StoredFiles
                     "autoSummaryFlag"
                    }
         )
-@XmlSeeAlso({RepositoryNone.class,RepositoryDirectory.class,RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGit.class})
+@XmlSeeAlso({RepositoryNone.class,RepositoryDirectory.class,RepositoryCVS.class,RepositorySVN.class,RepositoryHG.class,RepositoryGIT.class})
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
 {
@@ -1945,7 +1945,7 @@ abstract class Repository implements Serializable
       case CVS:       return new RepositoryCVS(rootPath);
       case SVN:       return new RepositorySVN(rootPath);
       case HG:        return new RepositoryHG(rootPath);
-      case GIT:       return new RepositoryGit(rootPath);
+      case GIT:       return new RepositoryGIT(rootPath);
       default:
 // ???
 //        throw new RepositoryException("no repository CVS/SVN/HG/Git found");
@@ -3033,10 +3033,19 @@ Dprintf.dprintf("fileName=%s",fileName);
   /** get names of existing branches
    * @return array with branch names
    */
-  abstract public String[] getBranchNames()
+  abstract public String[] getBranchNames(String pathName)
     throws RepositoryException;
 
-  /** create new branch
+  /** get names of existing branches
+   * @return array with branch names
+   */
+  public String[] getBranchNames()
+    throws RepositoryException
+  {
+    return getBranchNames(getRepositoryPath()+File.separator+getDefaultBranchName());
+  }
+
+    /** create new branch
    * @param rootName root name (source)
    * @param branchName branch name
    * @param commitMessage commit message

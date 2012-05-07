@@ -1763,7 +1763,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   /** get names of existing branches
    * @return array with branch names
    */
-  public String[] getBranchNames()
+  public String[] getBranchNames(String pathName)
     throws RepositoryException
   {
     ArrayList<String> branchNameList = new ArrayList<String>();
@@ -1778,14 +1778,16 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","list",repositoryPath+File.separator+DEFAULT_BRANCH_NAME);
+//      command.append(Settings.svnCommand,"--non-interactive","list",repositoryPath+File.separator+DEFAULT_BRANCH_NAME);
+      command.append(Settings.svnCommand,"--non-interactive","list",pathName);
       command.append("--");
       exec = new Exec(rootPath,command);
 
       // read output
       while ((line = exec.getStdout()) != null)
       {
-        branchNameList.add(DEFAULT_BRANCH_NAME+File.separator+StringUtils.trimEnd(line,File.separator));
+//        branchNameList.add(DEFAULT_BRANCH_NAME+File.separator+StringUtils.trimEnd(line,File.separator));
+        branchNameList.add(StringUtils.trimEnd(line,"/\\"));
       }
 
       // done
