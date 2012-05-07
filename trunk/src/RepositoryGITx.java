@@ -34,7 +34,7 @@ import java.util.LinkedList;
 
 /** Git repository
  */
-class RepositoryGit extends Repository
+class RepositoryGIT extends Repository
 {
   // --------------------------- constants --------------------------------
   public final static String[] DEFAULT_REVISION_NAMES = new String[]{"HEAD"};
@@ -52,14 +52,14 @@ class RepositoryGit extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositoryGit(String rootPath)
+  RepositoryGIT(String rootPath)
   {
     super(rootPath);
   }
 
   /** create repository
    */
-  RepositoryGit()
+  RepositoryGIT()
   {
     this(null);
   }
