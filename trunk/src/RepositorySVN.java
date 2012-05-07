@@ -71,9 +71,11 @@ class RepositorySVN extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME    = "HEAD";
-  private final String DEFAULT_ROOT_NAME     = "trunk";
-  private final String DEFAULT_BRANCHES_NAME = "branches";
+  public final static String[] DEFAULT_REVISION_NAMES = new String[]{"HEAD"};
+  public final static String[] DEFAULT_BRANCH_NAMES   = new String[]{"trunk","tags","branches"};
+  public final static String   DEFAULT_ROOT_NAME      = "trunk";
+  public final static String   DEFAULT_BRANCH_NAME    = "branches";
+  public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
 
@@ -1755,7 +1757,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    */
   public String getDefaultBranchName()
   {
-    return DEFAULT_BRANCHES_NAME+File.separator;
+    return DEFAULT_BRANCH_NAME+File.separator;
   }
 
   /** get names of existing branches
@@ -1776,14 +1778,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","list",repositoryPath+File.separator+DEFAULT_BRANCHES_NAME);
+      command.append(Settings.svnCommand,"--non-interactive","list",repositoryPath+File.separator+DEFAULT_BRANCH_NAME);
       command.append("--");
       exec = new Exec(rootPath,command);
 
       // read output
       while ((line = exec.getStdout()) != null)
       {
-        branchNameList.add(DEFAULT_BRANCHES_NAME+File.separator+StringUtils.trimEnd(line,File.separator));
+        branchNameList.add(DEFAULT_BRANCH_NAME+File.separator+StringUtils.trimEnd(line,File.separator));
       }
 
       // done

@@ -123,9 +123,11 @@ class RepositoryHG extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME    = "tip";
-  private final String DEFAULT_ROOT_NAME     = "trunk";
-  private final String DEFAULT_BRANCHES_NAME = "branches";
+  public final static String[] DEFAULT_REVISION_NAMES = new String[]{"tip"};
+  public final static String[] DEFAULT_BRANCH_NAMES   = new String[]{"trunk","branches"};
+  public final static String   DEFAULT_ROOT_NAME      = "trunk";
+  public final static String   DEFAULT_BRANCHES_NAME  = "branches";
+  public final static String   LAST_REVISION_NAME     = "tip";
 
   /* log format template:
     <rev> <changeset> <date> <time> <timezone> <author>

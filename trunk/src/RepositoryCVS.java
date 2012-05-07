@@ -98,8 +98,10 @@ class RepositoryCVS extends Repository
   }
 
   // --------------------------- constants --------------------------------
-  private final String LAST_REVISION_NAME    = "HEAD";
-  private final String DEFAULT_BRANCHES_NAME = "";
+  public final static String[] DEFAULT_REVISION_NAMES = new String[]{"HEAD"};
+  public final static String[] DEFAULT_BRANCH_NAMES   = new String[0];
+  public final static String   DEFAULT_BRANCHES_NAME  = "";
+  public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
 
