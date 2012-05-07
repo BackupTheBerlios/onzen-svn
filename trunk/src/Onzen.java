@@ -4374,12 +4374,22 @@ Dprintf.dprintf("NYI");
         {
           data.type = Repository.Types.CVS;
 
-          // add default module names
+          // add default module names, set default module name
           widgetModuleName.removeAll();
+          widgetModuleName.add("");
+          for (String name : RepositoryCVS.DEFAULT_BRANCH_NAMES)
+          {
+            widgetModuleName.add(name);
+          }
 
           // add default revision names
           widgetRevision.removeAll();
-          widgetRevision.add("HEAD");
+          widgetRevision.add("");
+          for (String name : RepositoryCVS.DEFAULT_REVISION_NAMES)
+          {
+            widgetModuleName.add(name);
+          }
+          if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryCVS.LAST_REVISION_NAME);
 
           Widgets.modified(data);
         }
@@ -4398,15 +4408,24 @@ Dprintf.dprintf("NYI");
         {
           data.type = Repository.Types.SVN;
 
+
           // add default module names
           widgetModuleName.removeAll();
-          widgetModuleName.add("trunk");
-          widgetModuleName.add("tags");
-          widgetModuleName.add("branches");
+          widgetModuleName.add("");
+          for (String name : RepositorySVN.DEFAULT_BRANCH_NAMES)
+          {
+            widgetModuleName.add(name);
+          }
+          if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositorySVN.DEFAULT_ROOT_NAME);
 
           // add default revision names
           widgetRevision.removeAll();
-          widgetRevision.add("HEAD");
+          widgetRevision.add("");
+          for (String name : RepositorySVN.DEFAULT_REVISION_NAMES)
+          {
+            widgetRevision.add(name);
+          }
+          if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositorySVN.LAST_REVISION_NAME);
 
           Widgets.modified(data);
         }
@@ -4427,13 +4446,24 @@ Dprintf.dprintf("NYI");
 
           // add default module names
           widgetModuleName.removeAll();
+          widgetModuleName.add("");
           widgetModuleName.add("trunk");
           widgetModuleName.add("tags");
           widgetModuleName.add("branches");
+          for (String name : RepositoryHG.DEFAULT_BRANCH_NAMES)
+          {
+            widgetModuleName.add(name);
+          }
 
           // add default revision names
           widgetRevision.removeAll();
+          widgetRevision.add("");
           widgetRevision.add("tip");
+          for (String name : RepositoryHG.DEFAULT_REVISION_NAMES)
+          {
+            widgetRevision.add(name);
+          }
+          if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryHG.LAST_REVISION_NAME);
 
           Widgets.modified(data);
         }
@@ -4454,13 +4484,24 @@ Dprintf.dprintf("NYI");
 
           // add default module names
           widgetModuleName.removeAll();
+          widgetModuleName.add("");
           widgetModuleName.add("trunk");
           widgetModuleName.add("tags");
           widgetModuleName.add("branches");
+          for (String name : RepositoryGit.DEFAULT_BRANCH_NAMES)
+          {
+            widgetModuleName.add(name);
+          }
 
           // add default revision names
           widgetRevision.removeAll();
+          widgetRevision.add("");
           widgetRevision.add("tip");
+          for (String name : RepositoryGit.DEFAULT_REVISION_NAMES)
+          {
+            widgetRevision.add(name);
+          }
+          if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryGit.LAST_REVISION_NAME);
 
           Widgets.modified(data);
         }
@@ -4522,7 +4563,8 @@ Dprintf.dprintf("NYI");
     });
 */
 
-    // add checkout history paths
+    // set tyoe, add checkout history paths
+    Widgets.invoke(widgetCVS);
     widgetRepository.add("file://");
     widgetRepository.add("ssh://");
     widgetRepository.add("http://");
