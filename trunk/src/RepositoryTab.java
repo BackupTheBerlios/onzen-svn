@@ -1651,7 +1651,6 @@ Dprintf.dprintf("");
           }
         }
       });
-
     }
 
     // buttons
