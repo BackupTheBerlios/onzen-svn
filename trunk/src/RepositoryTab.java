@@ -613,7 +613,6 @@ menuItem.setEnabled(false);
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-Dprintf.dprintf("");
             newFile();
           }
         });
@@ -1527,7 +1526,7 @@ Dprintf.dprintf("");
           }
         }
       });
-      widgetCreate.setToolTipText("Create new directory.");
+      widgetCreate.setToolTipText("Create new file.");
 
       button = Widgets.newButton(composite,"Cancel");
       Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
@@ -1619,7 +1618,7 @@ Dprintf.dprintf("");
     final Text   widgetPath;
     final Button widgetCreate;
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Path:");
@@ -1632,6 +1631,27 @@ Dprintf.dprintf("");
         widgetPath.setSelection(data.path.length(),data.path.length());
       }
       Widgets.layout(widgetPath,0,1,TableLayoutData.WE);
+
+      button = Widgets.newButton(composite,Onzen.IMAGE_DIRECTORY);
+      Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          String path = Dialogs.directory(shell,
+                                         "Select path",
+                                          widgetPath.getText()
+                                         );
+          if (path != null)
+          {
+            widgetPath.setText(path);
+          }
+        }
+      });
+
     }
 
     // buttons
@@ -1718,7 +1738,7 @@ Dprintf.dprintf("");
    */
   public void newDirectory()
   {
-    newDirectory(null);
+    newDirectory(getSelectedFileData());
   }
 
   /** rename local file/directory
