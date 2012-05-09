@@ -890,6 +890,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyDeleteLocal                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFileNameFilter                      = SWT.CTRL+'P';
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindFiles                           = SWT.CTRL+'F';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCopyFilesTo                         = SWT.NONE;
