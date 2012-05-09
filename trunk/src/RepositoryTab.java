@@ -1857,8 +1857,9 @@ Dprintf.dprintf("");
     if ((Boolean)Dialogs.run(dialog,false))
     {
       // rename local file/directory
-      File oldFile = new File(fileName);
+      File oldFile = new File(repository.rootPath,fileName);
       File newFile = new File(repository.rootPath,data.newFileName);
+
       if (!oldFile.renameTo(newFile))
       {
         Dialogs.error(shell,"Cannot rename file/directory\n\n'%s'\n\nto\n\n'%s'",oldFile.getName(),newFile.getName());
@@ -1897,7 +1898,11 @@ Dprintf.dprintf("");
    */
   public void renameLocalFile()
   {
-    renameLocalFile(getSelectedFileData());
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      renameLocalFile(fileData);
+    }
   }
 
   /** delete local files/directories
