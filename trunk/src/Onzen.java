@@ -4170,20 +4170,18 @@ Dprintf.dprintf("NYI");
       String           moduleName;
       String           revision;
       String           destinationPath;
+      boolean          quitFlag;
 
       Data()
       {
         this.type            = Repository.Types.CVS;
-        this.repositoryPath  = null;
-        this.moduleName      = null;
-        this.revision        = null;
-        this.destinationPath = null;
+        this.repositoryPath  = "";
+        this.moduleName      = "";
+        this.revision        = "";
+        this.destinationPath = "";
+        this.quitFlag        = false;
       }
     }
-
-    // user events
-    final int USER_EVENT_NEW_MODULE_NAMES = 0xFFFF+0;
-    final int USER_EVENT_NEW_REVISIONS    = 0xFFFF+1;
 
     Composite composite,subComposite;
     Button    button;
@@ -4385,7 +4383,6 @@ Dprintf.dprintf("NYI");
           {
             widgetModuleName.add(name);
           }
-          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
@@ -4395,9 +4392,12 @@ Dprintf.dprintf("NYI");
             widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryCVS.LAST_REVISION_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
-          Widgets.modified(data);
+          synchronized(data)
+          {
+            data.type = Repository.Types.CVS;
+            data.notifyAll();
+          }
         }
       }
     });
@@ -4412,8 +4412,6 @@ Dprintf.dprintf("NYI");
 
         if (widget.getSelection())
         {
-          data.type = Repository.Types.SVN;
-
           // add default module names (branches)
           widgetModuleName.removeAll();
           widgetModuleName.add("");
@@ -4422,7 +4420,6 @@ Dprintf.dprintf("NYI");
             widgetModuleName.add(name);
           }
           if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositorySVN.DEFAULT_ROOT_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
@@ -4432,9 +4429,12 @@ Dprintf.dprintf("NYI");
             widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositorySVN.LAST_REVISION_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
-          Widgets.modified(data);
+          synchronized(data)
+          {
+            data.type = Repository.Types.SVN;
+            data.notifyAll();
+          }
         }
       }
     });
@@ -4462,7 +4462,6 @@ Dprintf.dprintf("NYI");
             widgetModuleName.add(name);
           }
           if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositoryHG.DEFAULT_ROOT_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
@@ -4473,9 +4472,12 @@ Dprintf.dprintf("NYI");
             widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryHG.LAST_REVISION_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
-          Widgets.modified(data);
+          synchronized(data)
+          {
+            data.type = Repository.Types.HG;
+            data.notifyAll();
+          }
         }
       }
     });
@@ -4490,8 +4492,6 @@ Dprintf.dprintf("NYI");
 
         if (widget.getSelection())
         {
-          data.type = Repository.Types.GIT;
-
           // add default module names
           widgetModuleName.removeAll();
           widgetModuleName.add("");
@@ -4503,7 +4503,6 @@ Dprintf.dprintf("NYI");
             widgetModuleName.add(name);
           }
           if (widgetModuleName.getText().trim().isEmpty()) widgetModuleName.setText(RepositoryGIT.DEFAULT_ROOT_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
 
           // add default revision names
           widgetRevision.removeAll();
@@ -4514,9 +4513,12 @@ Dprintf.dprintf("NYI");
             widgetRevision.add(name);
           }
           if (widgetRevision.getText().trim().isEmpty()) widgetRevision.setText(RepositoryGIT.LAST_REVISION_NAME);
-          Widgets.notify(dialog,USER_EVENT_NEW_REVISIONS);
 
-          Widgets.modified(data);
+          synchronized(data)
+          {
+            data.type = Repository.Types.GIT;
+            data.notifyAll();
+          }
         }
       }
     });
@@ -4533,11 +4535,46 @@ Dprintf.dprintf("NYI");
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.repositoryPath = widget.getText().trim();
+          data.notifyAll();
+        }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        Widgets.notify(dialog,USER_EVENT_NEW_MODULE_NAMES);
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.repositoryPath = widget.getText().trim();
+          data.notifyAll();
+        }
+      }
+    });
+    widgetModuleName.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.moduleName = widget.getText().trim();
+          data.notifyAll();
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.moduleName = widget.getText().trim();
+          data.notifyAll();
+        }
       }
     });
     widgetDestinationPath.addModifyListener(new ModifyListener()
@@ -4547,67 +4584,6 @@ Dprintf.dprintf("NYI");
         widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
                                   && !widgetDestinationPath.getText().trim().isEmpty()
                                  );
-      }
-    });
-
-    dialog.addListener(USER_EVENT_NEW_MODULE_NAMES,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-Dprintf.dprintf("");
-        String[] branchNames = null;
-        try
-        {
-          if      (widgetCVS.getSelection()) branchNames = new RepositoryCVS().getBranchNames(widgetModuleName.getText());
-          else if (widgetSVN.getSelection()) branchNames = new RepositorySVN().getBranchNames(widgetModuleName.getText());
-          else if (widgetHG.getSelection() ) branchNames = new RepositoryHG().getBranchNames(widgetModuleName.getText());
-          else if (widgetGIT.getSelection()) branchNames = new RepositoryGIT().getBranchNames(widgetModuleName.getText());
-Dprintf.dprintf("%d",branchNames.length);
-        }
-        catch (RepositoryException exception)
-        {
-Dprintf.dprintf("");
-          // ignored
-        }
-
-        if (branchNames != null)
-        {
-          widgetModuleName.removeAll();
-          for (String branchName : branchNames)
-          {
-            widgetModuleName.add(branchName);
-          }
-        }
-      }
-    });
-    dialog.addListener(USER_EVENT_NEW_REVISIONS,new Listener()
-    {
-      public void handleEvent(Event event)
-      {
-Dprintf.dprintf("");
-        String[] branchNames = null;
-        try
-        {
-          if      (widgetCVS.getSelection()) branchNames = new RepositoryCVS().getBranchNames(widgetModuleName.getText());
-          else if (widgetSVN.getSelection()) branchNames = new RepositorySVN().getBranchNames(widgetModuleName.getText());
-          else if (widgetHG.getSelection() ) branchNames = new RepositoryHG().getBranchNames(widgetModuleName.getText());
-          else if (widgetGIT.getSelection()) branchNames = new RepositoryGIT().getBranchNames(widgetModuleName.getText());
-Dprintf.dprintf("%d",branchNames.length);
-        }
-        catch (RepositoryException exception)
-        {
-Dprintf.dprintf("");
-          // ignored
-        }
-
-        if (branchNames != null)
-        {
-          widgetModuleName.removeAll();
-          for (String branchName : branchNames)
-          {
-            widgetModuleName.add(branchName);
-          }
-        }
       }
     });
 
@@ -4659,6 +4635,173 @@ Dprintf.dprintf("");
     {
       widgetRepository.add(checkoutHistoryPath);
     }
+
+    // update module/branch names, revision names
+    Background.run(new BackgroundRunnable()
+    {
+      Repository.Types type              = Repository.Types.NONE;
+      String           repositoryPath    = "";
+      String           moduleName        = "";
+      String           revision          = "";
+
+      /** check if data is modified
+       * @return true iff data is modified
+       */
+      boolean isDataModified()
+      {
+        return    data.quitFlag
+               || (data.type != type)
+               || !data.repositoryPath.equals(repositoryPath)
+               || !data.moduleName.equals(moduleName)
+               || !data.revision.equals(revision);
+      }
+
+      /** run method
+       */
+      public void run()
+      {
+        while (!data.quitFlag)
+        {
+          // update module/branch names, revisions
+          if (!dialog.isDisposed())
+          {
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+Dprintf.dprintf("clear");
+//                Widgets.removeAllTableEntries(widgetFiles);
+              }
+            });
+          }
+Dprintf.dprintf("repositoryPath=%s",repositoryPath);
+          if (!repositoryPath.isEmpty())
+          {
+//Dprintf.dprintf("findNamePatterns=%s findContentPatterns=%s",findNamePatterns,findContentPatterns);
+            // start update
+            if (!dialog.isDisposed())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
+                }
+              });
+            }
+
+            // update module/branch names
+            try
+            {
+              final String[] branchNames;
+              switch (type)
+              {
+                case CVS: branchNames = RepositoryCVS.getInstance().getBranchNames(repositoryPath); break;
+                case SVN: branchNames = RepositorySVN.getInstance().getBranchNames(repositoryPath); break;
+                case HG:  branchNames = RepositoryHG.getInstance().getBranchNames(repositoryPath); break;
+                case GIT: branchNames = RepositoryGIT.getInstance().getBranchNames(repositoryPath); break;
+                default:  branchNames = null; break;
+              }
+              if (branchNames != null)
+              {
+Dprintf.dprintf("branchNames.length=%d",branchNames.length);
+                if (!dialog.isDisposed())
+                {
+                  display.syncExec(new Runnable()
+                  {
+                    public void run()
+                    {
+                      widgetModuleName.removeAll();
+                      for (String branchName : branchNames)
+                      {
+                        widgetModuleName.add(branchName);
+                      }
+                    }
+                  });
+                }
+              }
+            }
+            catch (RepositoryException exception)
+            {
+Dprintf.dprintf("");
+              // ignored
+            }
+
+            // update revisions
+            try
+            {
+              final String[] revisionNames;
+              switch (type)
+              {
+                case CVS: revisionNames = RepositoryCVS.getInstance().getRevisionNames(repositoryPath); break;
+                case SVN: revisionNames = RepositorySVN.getInstance().getRevisionNames(repositoryPath); break;
+                case HG:  revisionNames = RepositoryHG.getInstance().getRevisionNames(repositoryPath); break;
+                case GIT: revisionNames = RepositoryGIT.getInstance().getRevisionNames(repositoryPath); break;
+                default:  revisionNames = null; break;
+              }
+              if (revisionNames != null)
+              {
+Dprintf.dprintf("revisionNames.length=%d",revisionNames.length);
+                if (!dialog.isDisposed())
+                {
+                  display.syncExec(new Runnable()
+                  {
+                    public void run()
+                    {
+                      widgetRevision.removeAll();
+                      for (String revisionName : revisionNames)
+                      {
+                        widgetRevision.add(revisionName,0);
+                      }
+                    }
+                  });
+                }
+              }
+            }
+            catch (RepositoryException exception)
+            {
+              // ignored
+            }
+
+            // stop update
+            if (!dialog.isDisposed())
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Widgets.resetCursor(dialog);
+                }
+              });
+            }
+          }
+
+          // wait for new filter pattern/quit
+          synchronized(data)
+          {
+            // wait for new find data
+            while (!isDataModified())
+            {
+              try
+              {
+                data.wait();
+              }
+              catch (InterruptedException exception)
+              {
+                // ignored
+              }
+            }
+
+            // get new update data
+Dprintf.dprintf("get new update data");
+            type           = data.type;
+            repositoryPath = new String(data.repositoryPath);
+            moduleName     = new String(data.moduleName);
+            revision       = new String(data.revision);
+          }
+        }
+      }
+    });
 
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
