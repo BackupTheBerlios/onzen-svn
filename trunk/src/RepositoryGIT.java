@@ -44,10 +44,19 @@ class RepositoryGIT extends Repository
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
+ private final static RepositoryGIT staticInstance = new RepositoryGIT();
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
+
+  /** get static instance
+   * @return static instance
+   */
+  public final static RepositoryGIT getInstance()
+  {
+    return staticInstance;
+  }
 
   /** create repository
    * @param rootPath root path
@@ -294,10 +303,10 @@ throw new RepositoryException("NYI");
   }
 
   /** get revision names of file
-   * @param fileData file data
+   * @param name file name or URL
    * @return array with revision names
    */
-  public String[] getRevisionNames(FileData fileData)
+  public String[] getRevisionNames(String name)
     throws RepositoryException
   {
     final Pattern PATTERN_COMMIT = Pattern.compile("^commit\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
@@ -316,7 +325,7 @@ throw new RepositoryException("NYI");
       command.clear();
       command.append(Settings.gitCommand,"log");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (name != null) command.append(name);
       exec = new Exec(rootPath,command);
 
       // parse revisions in log output

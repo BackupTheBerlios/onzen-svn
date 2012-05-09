@@ -2386,13 +2386,23 @@ abstract class Repository implements Serializable
   abstract public String getLastRevision();
 
   /** get revision names of file
+   * @param name file name or URL
+   * @return array with revision names
+   */
+  abstract public String[] getRevisionNames(String name)
+    throws RepositoryException;
+
+  /** get revision names of file
    * @param fileData file data
    * @return array with revision names
    */
-  abstract public String[] getRevisionNames(FileData fileData)
-    throws RepositoryException;
+  public String[] getRevisionNames(FileData fileData)
+    throws RepositoryException
+  {
+    return getRevisionNames(getFileDataName(fileData));
+  }
 
-  /** get revision data
+    /** get revision data
    * @param fileData file data
    * @param revision revision
    * @return revision data

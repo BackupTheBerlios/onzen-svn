@@ -56,10 +56,19 @@ class RepositoryNone extends Repository
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
+ private final static RepositoryNone staticInstance = new RepositoryNone();
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
+
+  /** get static instance
+   * @return static instance
+   */
+  public final static RepositoryNone getInstance()
+  {
+    return staticInstance;
+  }
 
   /** create repository
    * @param rootPath root path
@@ -141,10 +150,10 @@ class RepositoryNone extends Repository
   }
 
   /** get revision names of file
-   * @param fileData file data
+   * @param name file name or URL
    * @return array with revision names
    */
-  public String[] getRevisionNames(FileData fileData)
+  public String[] getRevisionNames(String name)
     throws RepositoryException
   {
     return new String[0];

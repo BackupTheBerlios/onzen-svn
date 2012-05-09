@@ -141,7 +141,9 @@ class RepositoryHG extends Repository
   private final String LOG_TEMPLATE = "{rev} {node|short} {date|isodate} {author}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
 
   // --------------------------- variables --------------------------------
-  @XmlElement(name = "masterRepository")
+ private final static RepositoryHG staticInstance = new RepositoryHG();
+
+ @XmlElement(name = "masterRepository")
   @RepositoryValue(title = "Master repository:", pathSelector=true, tooltip="Path to master repository.")
   public String masterRepository;
 
@@ -149,11 +151,19 @@ class RepositoryHG extends Repository
   @RepositoryValue(title = "Outgoing repository:", pathSelector=true, tooltip="Path to outgoing repository.")
   public String outgoingRepository;
 
-  private HashMap<Integer,ParentData> parentMap = null;
+ private HashMap<Integer,ParentData> parentMap = null;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
+
+  /** get static instance
+   * @return static instance
+   */
+  public final static RepositoryHG getInstance()
+  {
+    return staticInstance;
+  }
 
   /** create repository
    * @param rootPath root path
@@ -550,10 +560,10 @@ throw new RepositoryException("NYI");
   }
 
   /** get revision names of file
-   * @param fileData file data
+   * @param name file name or URL
    * @return array with revision names
    */
-  public String[] getRevisionNames(FileData fileData)
+  public String[] getRevisionNames(String name)
     throws RepositoryException
   {
     final Pattern PATTERN_REVSION = Pattern.compile("^(\\d+).*",Pattern.CASE_INSENSITIVE);
@@ -572,7 +582,7 @@ throw new RepositoryException("NYI");
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","log","--template","{rev} {node|short}\\n");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (name != null) command.append(name);
       exec = new Exec(rootPath,command);
 
       // parse revisions in log output

@@ -104,10 +104,19 @@ class RepositoryCVS extends Repository
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
+  private final static RepositoryCVS staticInstance = new RepositoryCVS();
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
+
+  /** get static instance
+   * @return static instance
+   */
+  public final static RepositoryCVS getInstance()
+  {
+    return staticInstance;
+  }
 
   /** create repository
    * @param rootPath root path
@@ -537,10 +546,10 @@ throw new RepositoryException("NYI");
   }
 
   /** get revision names of file
-   * @param fileData file data
+   * @param name file name or URL
    * @return array with revision names
    */
-  public String[] getRevisionNames(FileData fileData)
+  public String[] getRevisionNames(String name)
     throws RepositoryException
   {
     ArrayList<String> revisionList = new ArrayList<String>();
@@ -555,7 +564,7 @@ throw new RepositoryException("NYI");
       command.clear();
       command.append(Settings.cvsCommand,"log");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (name != null) command.append(name);
       exec = new Exec(rootPath,command);
 
       // parse header

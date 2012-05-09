@@ -78,10 +78,19 @@ class RepositorySVN extends Repository
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
+  private final static RepositorySVN staticInstance = new RepositorySVN();
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
+
+  /** get static instance
+   * @return static instance
+   */
+  public final static RepositorySVN getInstance()
+  {
+    return staticInstance;
+  }
 
   /** create repository
    * @param rootPath root path
@@ -418,10 +427,10 @@ class RepositorySVN extends Repository
   }
 
   /** get revision names of file
-   * @param fileData file data
+   * @param name file name or URL
    * @return array with revision names
    */
-  public String[] getRevisionNames(FileData fileData)
+  public String[] getRevisionNames(String name)
     throws RepositoryException
   {
     final Pattern PATTERN_REVSION = Pattern.compile("^r(\\d+).*",Pattern.CASE_INSENSITIVE);
@@ -440,7 +449,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (name != null) command.append(name);
       exec = new Exec(rootPath,command);
 
       // parse revisions in log output
