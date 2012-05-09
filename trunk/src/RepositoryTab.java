@@ -625,7 +625,7 @@ menuItem.setEnabled(false);
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            newDirectory(getSelectedFileData());
+            newDirectory();
           }
         });
 
@@ -1737,7 +1737,11 @@ Dprintf.dprintf("");
    */
   public void newDirectory()
   {
-    newDirectory(getSelectedFileData());
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      newDirectory(fileData);
+    }
   }
 
   /** rename local file/directory
