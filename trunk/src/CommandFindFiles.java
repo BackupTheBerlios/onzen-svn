@@ -832,7 +832,7 @@ Dprintf.dprintf("");
     // show dialog
     Dialogs.show(dialog,Settings.geometryFindFiles,Settings.setWindowLocation);
 
-    // start find files
+    // find files
     Background.run(new BackgroundRunnable()
     {
       String    fileNameFilterText       = "";
