@@ -125,7 +125,7 @@ SOURCES        = src/Onzen.java \
                  src/RepositoryCVS.java \
                  src/RepositorySVN.java \
                  src/RepositoryHG.java \
-                 src/RepositoryGit.java \
+                 src/RepositoryGIT.java \
                  src/RepositoryList.java \
                  src/RepositoryTab.java \
                  src/Exec.java \
