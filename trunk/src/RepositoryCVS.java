@@ -1937,6 +1937,10 @@ Dprintf.dprintf("unknown %s",line);
   {
     HashSet<String> branchNameSet = new HashSet<String>();
 
+    for (String branchName : DEFAULT_BRANCH_NAMES)
+    {
+      branchNameSet.add(branchName);
+    }
     Exec exec = null;
     try
     {

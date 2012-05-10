@@ -1479,7 +1479,7 @@ throw new RepositoryException("NYI");
   public String[] getBranchNames(String pathName)
     throws RepositoryException
   {
-    ArrayList<String> branchNameList = new ArrayList<String>();
+    HashSet<String> branchNameSet = new HashSet<String>();
 
     Exec exec = null;
     try
@@ -1500,7 +1500,7 @@ throw new RepositoryException("NYI");
       while ((line = exec.getStdout()) != null)
       {
         String[] words = StringUtils.split(line.substring(2));
-        if (words != null) branchNameList.add(words[0]);
+        if (words != null) branchNameSet.add(words[0]);
       }
 
       // done
@@ -1516,7 +1516,7 @@ throw new RepositoryException("NYI");
     }
 
     // convert to array and sort
-    String[] branchNames = branchNameList.toArray(new String[branchNameList.size()]);
+    String[] branchNames = branchNameSet.toArray(new String[branchNameSet.size()]);
     Arrays.sort(branchNames);
 
     return branchNames;

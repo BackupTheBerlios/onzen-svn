@@ -1775,44 +1775,62 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public String[] getBranchNames(String pathName)
     throws RepositoryException
   {
-    ArrayList<String> branchNameList = new ArrayList<String>();
+    HashSet<String> branchNameSet = new HashSet<String>();
 
-    String repositoryPath = getRepositoryPath();
-
-    Exec exec = null;
-    try
+    for (String branchName : DEFAULT_BRANCH_NAMES)
     {
-      Command command = new Command();
-      String  line;
-
-      // checkout
-      command.clear();
-//      command.append(Settings.svnCommand,"--non-interactive","list",repositoryPath+File.separator+DEFAULT_BRANCH_NAME);
-      command.append(Settings.svnCommand,"--non-interactive","list",pathName);
-      command.append("--");
-      exec = new Exec(rootPath,command);
-
-      // read output
-      while ((line = exec.getStdout()) != null)
+      branchNameSet.add(branchName);
+    }
+    if (!pathName.isEmpty())
+    {
+      Exec exec = null;
+      try
       {
-//        branchNameList.add(DEFAULT_BRANCH_NAME+File.separator+StringUtils.trimEnd(line,File.separator));
-        branchNameList.add(StringUtils.trimEnd(line,"/\\"));
-      }
+        Command command = new Command();
+        String  line;
 
-      // done
-      exec.done(); exec = null;
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(Onzen.reniceIOException(exception));
-    }
-    finally
-    {
-      if (exec != null) exec.done();
+        // list branches
+        command.clear();
+        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/branches");
+        command.append("--");
+        exec = new Exec(rootPath,command);
+
+        // read output
+        while ((line = exec.getStdout()) != null)
+        {
+          branchNameSet.add("branches/"+StringUtils.trimEnd(line,"/\\"));
+        }
+
+        // done
+        exec.done(); exec = null;
+
+        // list tags
+        command.clear();
+        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/tags");
+        command.append("--");
+        exec = new Exec(rootPath,command);
+
+        // read output
+        while ((line = exec.getStdout()) != null)
+        {
+          branchNameSet.add("tags/"+StringUtils.trimEnd(line,"/\\"));
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
+      catch (IOException exception)
+      {
+        throw new RepositoryException(Onzen.reniceIOException(exception));
+      }
+      finally
+      {
+        if (exec != null) exec.done();
+      }
     }
 
     // convert to array and sort
-    String[] branchNames = branchNameList.toArray(new String[branchNameList.size()]);
+    String[] branchNames = branchNameSet.toArray(new String[branchNameSet.size()]);
     Arrays.sort(branchNames);
 
     return branchNames;

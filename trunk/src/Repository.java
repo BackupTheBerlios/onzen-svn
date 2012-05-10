@@ -1932,11 +1932,11 @@ abstract class Repository implements Serializable
   }
 
   /** create new repository instance
-   * @param rootPath root path
    * @param type repository type; see Repository.Types
+   * @param rootPath root path
    * @return repository or null if no repository found
    */
-  public static Repository newInstance(String rootPath, Types type)
+  public static Repository newInstance(Types type, String rootPath)
     throws RepositoryException
   {
     switch (type)
@@ -1961,7 +1961,7 @@ abstract class Repository implements Serializable
   public static Repository newInstance(String rootPath)
     throws RepositoryException
   {
-    return newInstance(rootPath,Repository.getType(rootPath));
+    return newInstance(Repository.getType(rootPath),rootPath);
   }
 
   /** create repository
