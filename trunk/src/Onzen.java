@@ -1379,7 +1379,10 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          String rootPath = Dialogs.directory(shell,"Open repository","");
+          String rootPath = Dialogs.directory(shell,
+                                              "Open repository",
+                                              (selectedRepositoryTab != null) ? selectedRepositoryTab.repository.rootPath : ""
+                                             );
           if (rootPath != null)
           {
             openRepository(rootPath);
@@ -3275,7 +3278,10 @@ exception.printStackTrace();
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            String rootPath = Dialogs.directory(shell,"Open repository","");
+            String rootPath = Dialogs.directory(shell,
+                                                "Open repository",
+                                                (selectedRepositoryTab != null) ? selectedRepositoryTab.repository.rootPath : ""
+                                               );
             if (rootPath != null)
             {
               Repository repository = openRepository(rootPath);
