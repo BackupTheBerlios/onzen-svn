@@ -5717,7 +5717,7 @@ exception.printStackTrace();
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetSave = Widgets.newButton(composite,"Save");
+      widgetSave = Widgets.newButton(composite,"Save",SWT.CTRL+'S');
       Widgets.layout(widgetSave,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetSave.addSelectionListener(new SelectionListener()
       {

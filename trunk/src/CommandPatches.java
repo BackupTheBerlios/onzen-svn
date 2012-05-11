@@ -902,7 +902,7 @@ class CommandPatches
         }
       }
 
-      widgetMessageSave = Widgets.newButton(composite,"Save");
+      widgetMessageSave = Widgets.newButton(composite,"Save",SWT.CTRL+'S');
       widgetMessageSave.setEnabled(false);
       Widgets.layout(widgetMessageSave,5,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetMessageSave,data)

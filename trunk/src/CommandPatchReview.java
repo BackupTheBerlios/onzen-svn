@@ -741,7 +741,7 @@ class CommandPatchReview
         }
       });
 
-      button = Widgets.newButton(composite,"Save");
+      button = Widgets.newButton(composite,"Save",SWT.CTRL+'S');
       button.setEnabled(false);
       Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
