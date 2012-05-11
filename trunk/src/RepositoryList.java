@@ -284,6 +284,7 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
   }
 
   /** add repository to list
+   * @param prevRepository previous repository
    * @param repository repository
    */
   public void insert(Repository prevRepository, Repository repository)
@@ -292,9 +293,9 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
     {
       // find index
       int index = 0;
-      for (Repository tmpRespository : repositoryList)
+      for (Repository findRespository : repositoryList)
       {
-        if (prevRepository == tmpRespository)
+        if (prevRepository == findRespository)
         {
           break;
         }
@@ -302,7 +303,7 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
       }
 
       // insert
-      repositoryList.add(index,repository);
+      repositoryList.add(index+1,repository);
     }
   }
 
