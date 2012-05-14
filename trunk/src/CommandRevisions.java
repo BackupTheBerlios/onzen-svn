@@ -1012,7 +1012,6 @@ throw new RepositoryException("NYI");
    * @param containerDeltaWidth,containerDeltaHeight container delta for resize containers or 0,0
    * @param drawInfoList draw info list
    */
-static int xxx = 0;
   private void redraw(Rectangle           view,
                       GC                  gc,
                       Image               image,
@@ -1173,6 +1172,41 @@ static int xxx = 0;
     }
   }
 
+  /** redraw revision tree with container delta width/height (no update of draw infos)
+   */
+  private void redraw(int containerDeltaWidth, int containerDeltaHeight)
+  {
+    // redraw
+    if (data.revisionDataTree != null)
+    {
+      final int ENTRY_WIDTH  = Math.max(Settings.geometryRevisionBox.x+containerDeltaWidth ,CONTAINER_MIN_WIDTH );
+      final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y+containerDeltaHeight,CONTAINER_MIN_HEIGHT);
+
+      GC    gc      = new GC(widgetRevisions);
+      Image image   = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
+      GC    imageGC = new GC(image);
+
+      // clear
+      gc.setBackground(Onzen.COLOR_WHITE);
+      gc.fillRectangle(0,0,data.view.width,data.view.height);
+
+      // redraw
+      redraw(data.view,
+             gc,
+             image,
+             imageGC,
+             data.revisionDataTree,
+             data.view.x+MARGIN,
+             data.view.y+MARGIN,
+             containerDeltaWidth,
+             containerDeltaHeight,
+             null
+            );
+
+      gc.dispose();
+    }
+  }
+
   /** redraw revision tree and update draw info
    * @param clearFlag true to clear background
    */
@@ -1205,41 +1239,6 @@ static int xxx = 0;
              0,
              0,
              data.drawInfoList
-            );
-
-      gc.dispose();
-    }
-  }
-
-  /** redraw revision tree with container delta width/height (no update of draw infos)
-   */
-  private void redraw(int containerDeltaWidth, int containerDeltaHeight)
-  {
-    // redraw
-    if (data.revisionDataTree != null)
-    {
-      final int ENTRY_WIDTH  = Math.max(Settings.geometryRevisionBox.x+containerDeltaWidth ,CONTAINER_MIN_WIDTH );
-      final int ENTRY_HEIGHT = Math.max(Settings.geometryRevisionBox.y+containerDeltaHeight,CONTAINER_MIN_HEIGHT);
-
-      GC    gc      = new GC(widgetRevisions);
-      Image image   = new Image(display,ENTRY_WIDTH,ENTRY_HEIGHT);
-      GC    imageGC = new GC(image);
-
-      // clear
-      gc.setBackground(Onzen.COLOR_WHITE);
-      gc.fillRectangle(0,0,data.view.width,data.view.height);
-
-      // redraw
-      redraw(data.view,
-             gc,
-             image,
-             imageGC,
-             data.revisionDataTree,
-             data.view.x+MARGIN,
-             data.view.y+MARGIN,
-             containerDeltaWidth,
-             containerDeltaHeight,
-             null
             );
 
       gc.dispose();
