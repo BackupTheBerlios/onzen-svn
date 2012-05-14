@@ -927,6 +927,42 @@ throw new RepositoryException("NYI");
     return closestRevisionData;
   }
 
+/** get closest revision in revision tree
+   * @param revisionDataTree revision data tree
+   * @param revision revision
+   * @return closest revision data or null
+   */
+  private RevisionData getNextRevision(RevisionData[] revisionDataTree, RevisionData revisionData)
+  {
+    RevisionData nextRevisionData = null;
+
+    for (int z = 0; z < revisionDataTree.length; z++)
+    {
+      if (revisionDataTree[z] == revisionData)
+      {
+        nextRevisionData = ((z+1) < revisionDataTree.length) ? revisionDataTree[z+1] : null;
+        break;
+      }
+      else
+      {
+        if (revisionData.branches != null)
+        {
+          for (BranchData branchData : revisionData.branches)
+          {
+            RevisionData subRevisionData = getNextRevision(branchData.revisionDataTree,revisionData);
+            if (subRevisionData != null)
+            {
+              nextRevisionData = subRevisionData;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    return nextRevisionData;
+  }
+
   /** get origin (x0,y0) of revision in revision tree
    * @param revisionDataTree revision data tree
    * @param revision revision
@@ -1311,13 +1347,29 @@ throw new RepositoryException("NYI");
           Point point = getRevisionX0Y0(revisionData);
           point.x += ENTRY_WIDTH /2;
           point.y += ENTRY_HEIGHT/2;
+Dprintf.dprintf("point=%s",point);
 
           // scroll
           Rectangle clientArea = widgetRevisions.getClientArea();
           clientArea.x = widgetHorizontalScrollBar.getSelection();
           clientArea.y = widgetVerticalScrollBar.getSelection();
-          if ((point.x > clientArea.x+clientArea.width ) || (point.x < clientArea.x)) data.view.x = -(point.x-ENTRY_WIDTH /2);
-          if ((point.y > clientArea.y+clientArea.height) || (point.y < clientArea.y)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
+Dprintf.dprintf("clientArea=%s",clientArea);
+          if ((point.x < clientArea.x) || (point.x > clientArea.x+clientArea.width )) data.view.x = -(point.x-ENTRY_WIDTH /2);
+          if ((point.y < clientArea.y) || (point.y > clientArea.y+clientArea.height)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
+Dprintf.dprintf("data.view=%s",data.view);
+
+Dprintf.dprintf("revisionData=%s",revisionData);
+          RevisionData nextRevisionData = getNextRevision(data.revisionDataTree,revisionData);;
+          int          verticalSpace    = clientArea.height-(PADDING+ENTRY_HEIGHT);
+          while ((verticalSpace > 0) && (nextRevisionData != null))
+          {
+            nextRevisionData = getNextRevision(data.revisionDataTree,nextRevisionData);
+Dprintf.dprintf("nextRevisionData=%s",nextRevisionData);
+            verticalSpace -= (PADDING+ENTRY_HEIGHT);
+          }
+data.view.y += verticalSpace;
+Dprintf.dprintf("data.view=%s",data.view);
+
           widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
           widgetRevisions.redraw();
           widgetHorizontalScrollBar.setSelection(-data.view.x);
