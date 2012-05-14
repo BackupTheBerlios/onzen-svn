@@ -95,8 +95,68 @@ throw new RepositoryException("NYI");
   public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
-Dprintf.dprintf("NYI");
-throw new RepositoryException("NYI");
+  final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // get full repository path
+      String path = (PATTERN_URI.matcher(repositoryPath).matches()
+                       ? repositoryPath
+                       : "file://"+repositoryPath
+                    )+"/"+moduleName;
+
+      // checkout
+      command.clear();
+      command.append(Settings.gitCommand,"clone");
+      if ((revision != null) && !revision.isEmpty()) command.append("--branch",revision);
+      command.append(path,destinationPath);
+      exec = new Exec(destinationPath,command);
+
+      // read output
+      int n = destinationPath.length();
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && !exec.isTerminated()
+            )
+      {
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if (line != null)
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateList(line);
+        }
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        // abort
+        exec.destroy();
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** update file states
