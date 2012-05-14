@@ -190,7 +190,7 @@ throw new RepositoryException("NYI");
         if (line != null)
         {
 //Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateText(line.substring(1+1+n+1));
+          if (busyDialog != null) busyDialog.updateList(line.substring(1+1+n+1));
         }
       }
       if ((busyDialog == null) || !busyDialog.isAborted())

@@ -4811,7 +4811,7 @@ Dprintf.dprintf("NYI");
                                              "' into '"+
                                              data.destinationPath+
                                              "':",
-                                             BusyDialog.TEXT0
+                                             BusyDialog.LIST
                                             );
       busyDialog.autoAnimate();
 

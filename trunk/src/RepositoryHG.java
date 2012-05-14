@@ -271,7 +271,7 @@ throw new RepositoryException("NYI");
         if ((line != null) && line.startsWith("getting "))
         {
 //Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateText(line);
+          if (busyDialog != null) busyDialog.updateList(line);
         }
       }
       if ((busyDialog == null) || !busyDialog.isAborted())

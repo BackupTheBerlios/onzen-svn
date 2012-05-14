@@ -95,6 +95,8 @@ throw new RepositoryException("NYI");
   public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
+Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
   }
 
   /** update file states
