@@ -4955,9 +4955,24 @@ Dprintf.dprintf("NYI");
         label = Widgets.newLabel(subComposite,"Repository path:");
         Widgets.layout(label,1,0,TableLayoutData.W);
 
-        label = Widgets.newLabel(subComposite);
-        label.setText(repositoryTab.repository.getRepositoryPath());
-        Widgets.layout(label,1,1,TableLayoutData.W);
+        text = Widgets.newStringView(subComposite,SWT.LEFT);
+        text.setText(repositoryTab.repository.getRepositoryPath());
+        Widgets.layout(text,1,1,TableLayoutData.W);
+        text.addMouseListener(new MouseListener()
+        {
+          public void mouseDoubleClick(MouseEvent mouseEvent)
+          {
+            Text widget = (Text)mouseEvent.widget;
+
+            widget.setSelection(0,widget.getText().length());
+          }
+          public void mouseDown(MouseEvent mouseEvent)
+          {
+          }
+          public void mouseUp(MouseEvent mouseEvent)
+          {
+          }
+        });
 
         label = Widgets.newLabel(subComposite,"Title:");
         Widgets.layout(label,2,0,TableLayoutData.W);
