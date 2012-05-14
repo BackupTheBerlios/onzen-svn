@@ -609,6 +609,7 @@ class Preferences
                                                   widgetCVSCommand.getText(),
                                                   new String[]{"All files",  "*",
                                                                "Scripts",    "*.sh",
+                                                               "Batch files","*.cmd",
                                                                "Executables","*.exe"
                                                               }
                                                  );
@@ -664,6 +665,7 @@ class Preferences
                                                   widgetCVSCommand.getText(),
                                                   new String[]{"All files",  "*",
                                                                "Scripts",    "*.sh",
+                                                               "Batch files","*.cmd",
                                                                "Executables","*.exe"
                                                               }
                                                  );
@@ -700,6 +702,7 @@ class Preferences
                                                   widgetSVNDiffCommand.getText(),
                                                   new String[]{"All files",  "*",
                                                                "Scripts",    "*.sh",
+                                                               "Batch files","*.cmd",
                                                                "Executables","*.exe"
                                                               }
                                                  );
@@ -762,6 +765,7 @@ class Preferences
                                                   widgetCVSCommand.getText(),
                                                   new String[]{"All files",  "*",
                                                                "Scripts",    "*.sh",
+                                                               "Batch files","*.cmd",
                                                                "Executables","*.exe"
                                                               }
                                                  );
@@ -798,6 +802,7 @@ class Preferences
                                                   widgetHGDiffCommand.getText(),
                                                   new String[]{"All files",  "*",
                                                                "Scripts",    "*.sh",
+                                                               "Batch files","*.cmd",
                                                                "Executables","*.exe"
                                                               }
                                                  );
@@ -923,7 +928,11 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetCVSCommand.getText(),
-                                                  new String[]{"*","All files","*.sh","Scripts","*.exe","Executables"}
+                                                  new String[]{"All files",  "*",
+                                                               "Scripts",    "*.sh",
+                                                               "Batch files","*.cmd",
+                                                               "Executables","*.exe"
+                                                              }
                                                  );
                 if (command != null)
                 {
