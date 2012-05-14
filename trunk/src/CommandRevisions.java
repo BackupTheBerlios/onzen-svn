@@ -884,24 +884,28 @@ throw new RepositoryException("NYI");
     return size;
   }
 
-  /** get revision in revision tree
+  /** get closest revision in revision tree
    * @param revisionDataTree revision data tree
    * @param revision revision
-   * @return revision data or null
+   * @return closest revision data or null
    */
-  private RevisionData getRevision(RevisionData[] revisionDataTree, String revision)
+  private RevisionData getClosestRevision(RevisionData[] revisionDataTree, String revision)
   {
+    RevisionData closestRevisionData = null;
+
     if (revision.equals(repositoryTab.repository.getLastRevision()))
     {
-      return (revisionDataTree.length > 0) ? revisionDataTree[revisionDataTree.length-1] : null;
+      closestRevisionData = (revisionDataTree.length > 0) ? revisionDataTree[revisionDataTree.length-1] : null;
     }
     else
     {
       for (RevisionData revisionData : revisionDataTree)
       {
-        if (revisionData.revision.equals(revision))
+        if (   (revisionData.revision.compareTo(revision) <= 0)
+            && ((closestRevisionData == null) || (revisionData.revision.compareTo(closestRevisionData.revision) > 0))
+           )
         {
-          return revisionData;
+          closestRevisionData = revisionData;
         }
         else
         {
@@ -909,10 +913,10 @@ throw new RepositoryException("NYI");
           {
             for (BranchData branchData : revisionData.branches)
             {
-              RevisionData subRevisionData = getRevision(branchData.revisionDataTree,revision);
+              RevisionData subRevisionData = getClosestRevision(branchData.revisionDataTree,revision);
               if (subRevisionData != null)
               {
-                return subRevisionData;
+                closestRevisionData = subRevisionData;
               }
             }
           }
@@ -920,7 +924,7 @@ throw new RepositoryException("NYI");
       }
     }
 
-    return null;
+    return closestRevisionData;
   }
 
   /** get origin (x0,y0) of revision in revision tree
@@ -1391,7 +1395,7 @@ throw new RepositoryException("NYI");
               setSize();
 
               // redraw/scroll to selected revision
-              data.selectedRevisionData1 = getRevision(data.revisionDataTree,revision);
+              data.selectedRevisionData1 = getClosestRevision(data.revisionDataTree,revision);
               if (data.selectedRevisionData1 != null)
               {
                 scrollTo(data.selectedRevisionData1);
