@@ -1,4 +1,5 @@
 /***********************************************************************\
+/***********************************************************************\
 *
 * $Revision$
 * $Date$
@@ -250,6 +251,7 @@ public class Onzen
 
   // exit codes
   public static int                    EXITCODE_OK             =   0;
+  public static int                    EXITCODE_RESTART        =  64;
   public static int                    EXITCODE_INTERNAL_ERROR = 127;
 
   // colors
@@ -1096,6 +1098,97 @@ Dprintf.dprintf("ex=%s",exception);
     CURSOR_WAIT       = new Cursor(display,SWT.CURSOR_WAIT);
   }
 
+  /** init loaded classes/JARs watchdog
+   */
+  private void initClassesWatchDog()
+  {
+    // get timestamp of all classes/JAR files
+    final HashMap<File,Long> classModifiedMap = new HashMap<File,Long>();
+    LinkedList<File> directoryList = new LinkedList<File>();
+    for (String name : System.getProperty("java.class.path").split(File.pathSeparator))
+    {
+      File file = new File(name);
+      if (file.isDirectory())
+      {
+        directoryList.add(file);
+      }
+      else
+      {
+        classModifiedMap.put(file,new Long(file.lastModified()));
+      }
+    }
+    while (directoryList.size() > 0)
+    {
+      File directory = directoryList.removeFirst();
+      File[] files = directory.listFiles();
+      if (files != null)
+      {
+        for (File file : files)
+        {
+          if (file.isDirectory())
+          {
+            directoryList.add(file);
+          }
+          else
+          {
+            classModifiedMap.put(file,new Long(file.lastModified()));
+          }
+        }
+      }
+    }
+
+    // periodically check timestamp of classes/JAR files
+    Thread classWatchDogThread = new Thread()
+    {
+      public void run()
+      {
+        final long REMINDER_TIME = 5*60*1000;
+
+        long            lastRemindedTimestamp = 0L;
+        final boolean[] reminderFlag          = new boolean[]{true};
+
+        for (;;)
+        {
+          // check timestamps, show warning dialog
+          for (final File file : classModifiedMap.keySet())
+          {
+            if (   reminderFlag[0]
+                && (file.lastModified() > classModifiedMap.get(file))
+                && (System.currentTimeMillis() > (lastRemindedTimestamp+REMINDER_TIME))
+               )
+            {
+//Dprintf.dprintf("file=%s %d -> %d",file,file.lastModified(),classModifiedMap.get(file));
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  switch (Dialogs.select(shell,"Warning","Class/JAR file '"+file.getName()+"' changed. Is is recommended to restart Onzen now.",new String[]{"Restart","Remind me again in 5min","Ignore"},0))
+                  {
+                    case 0:
+                      // send close event with restart
+                      Widgets.notify(shell,SWT.Close,EXITCODE_RESTART);
+                      break;
+                    case 1:
+                      break;
+                    case 2:
+                      reminderFlag[0] = false;
+                      break;
+                  }
+                }
+              });
+              lastRemindedTimestamp = System.currentTimeMillis();
+            }
+          }
+
+          // sleep a short time
+          try { Thread.sleep(30*1000); } catch (InterruptedException exception) { /* ignored */ }
+        }
+      }
+    };
+    classWatchDogThread.setDaemon(true);
+    classWatchDogThread.start();
+  }
+
   /** create main window
    */
   private void createWindow()
@@ -1471,7 +1564,7 @@ Dprintf.dprintf("");
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           // send close event with restart
-          Widgets.notify(shell,SWT.Close,64);
+          Widgets.notify(shell,SWT.Close,EXITCODE_RESTART);
         }
       });
 
@@ -2080,6 +2173,9 @@ menuItem.addSelectionListener(new SelectionListener()
 
     // init display
     initDisplay();
+
+    // add watchdog for loaded classes/JARs
+    initClassesWatchDog();
 
     // open main window
     createWindow();
