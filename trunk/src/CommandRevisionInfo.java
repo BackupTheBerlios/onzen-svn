@@ -56,7 +56,6 @@ class CommandRevisionInfo
   };
 
   // --------------------------- constants --------------------------------
-  private final int USER_EVENT_SELECT = 0xFFFF+0;
 
   // --------------------------- variables --------------------------------
 
@@ -115,6 +114,21 @@ class CommandRevisionInfo
       text = Widgets.newStringView(composite,SWT.LEFT);
       text.setText(fileData.getFileName());
       Widgets.layout(text,0,1,TableLayoutData.WE);
+      text.addMouseListener(new MouseListener()
+      {
+        public void mouseDoubleClick(MouseEvent mouseEvent)
+        {
+          Text widget = (Text)mouseEvent.widget;
+
+          widget.setSelection(0,widget.getText().length());
+        }
+        public void mouseDown(MouseEvent mouseEvent)
+        {
+        }
+        public void mouseUp(MouseEvent mouseEvent)
+        {
+        }
+      });
 
       label = Widgets.newLabel(composite,"Revision:");
       Widgets.layout(label,1,0,TableLayoutData.W);
@@ -128,9 +142,7 @@ class CommandRevisionInfo
         {
           Text widget = (Text)mouseEvent.widget;
 
-          Event event = new Event();
-          event.widget = widget;
-          widget.notifyListeners(USER_EVENT_SELECT,event);
+          selectText(widget);
         }
         public void mouseDown(MouseEvent mouseEvent)
         {
@@ -139,38 +151,49 @@ class CommandRevisionInfo
         {
         }
       });
-      widgetRevision.addListener(USER_EVENT_SELECT,new Listener()
-      {
-        public void handleEvent(Event event)
-        {
-          Text   widget    = (Text)event.widget;
-          String text      = widget.getText();
-          Point  selection = widget.getSelection();
-
-          while ((selection.x > 0) && Character.isLetterOrDigit(text.charAt(selection.x-1)))
-          {
-            selection.x--;
-          }
-          while ((selection.y < text.length()) && Character.isLetterOrDigit(text.charAt(selection.y)))
-          {
-            selection.y++;
-          }
-          widget.setSelection(selection);
-        }
-      });
 
       label = Widgets.newLabel(composite,"Date:");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
       widgetDate = Widgets.newStringView(composite,SWT.LEFT);
       Widgets.layout(widgetDate,2,1,TableLayoutData.WE);
+      widgetDate.addMouseListener(new MouseListener()
+      {
+        public void mouseDoubleClick(MouseEvent mouseEvent)
+        {
+          Text widget = (Text)mouseEvent.widget;
+
+          selectText(widget);
+        }
+        public void mouseDown(MouseEvent mouseEvent)
+        {
+        }
+        public void mouseUp(MouseEvent mouseEvent)
+        {
+        }
+      });
 
       label = Widgets.newLabel(composite,"Size:");
       Widgets.layout(label,3,0,TableLayoutData.W);
 
-      label = Widgets.newLabel(composite);
-      label.setText(Units.formatByteSize(fileData.size)+" ("+fileData.size+"bytes)");
-      Widgets.layout(label,3,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite,SWT.LEFT);
+      text.setText(Units.formatByteSize(fileData.size)+" ("+fileData.size+"bytes)");
+      Widgets.layout(text,3,1,TableLayoutData.WE);
+      text.addMouseListener(new MouseListener()
+      {
+        public void mouseDoubleClick(MouseEvent mouseEvent)
+        {
+          Text widget = (Text)mouseEvent.widget;
+
+          selectText(widget);
+        }
+        public void mouseDown(MouseEvent mouseEvent)
+        {
+        }
+        public void mouseUp(MouseEvent mouseEvent)
+        {
+        }
+      });
 
       label = Widgets.newLabel(composite,"Permissions:");
       Widgets.layout(label,4,0,TableLayoutData.W);
@@ -304,14 +327,7 @@ class CommandRevisionInfo
         try
         {
           data.logData = repositoryTab.repository.getLog(fileData);
-for (LogData l : data.logData)
-{
-Dprintf.dprintf("-----");
-for (String s : l.commitMessage) Dprintf.dprintf("s=#%s#",s);
-
- }
-
-          }
+        }
         catch (RepositoryException exception)
         {
           final String exceptionMessage = exception.getMessage();
@@ -419,6 +435,55 @@ for (String s : l.commitMessage) Dprintf.dprintf("s=#%s#",s);
         }
       });
     }
+  }
+
+  /** select text in widget on double-click
+   * @param widget widget to select text
+   */
+  private void selectText(Text widget)
+  {
+    String text      = widget.getText();
+    Point  selection = widget.getSelection();
+
+    while (   (selection.x < text.length())
+           && !(   Character.isLetter(text.charAt(selection.x))
+                || Character.isDigit(text.charAt(selection.x))
+                || ("/\\.:-".indexOf(text.charAt(selection.x)) >= 0)
+               )
+          )
+    {
+      selection.x++;
+    }
+    while (   (selection.x > 0)
+           && (   Character.isLetter(text.charAt(selection.x-1))
+               || Character.isDigit(text.charAt(selection.x-1))
+               || ("/\\.:-".indexOf(text.charAt(selection.x-1)) >= 0)
+              )
+          )
+    {
+      selection.x--;
+    }
+
+    while (   (selection.y < text.length())
+           && (   Character.isLetter(text.charAt(selection.y))
+               || Character.isDigit(text.charAt(selection.y))
+               || ("/\\.:-".indexOf(text.charAt(selection.y)) >= 0)
+              )
+          )
+    {
+      selection.y++;
+    }
+    while (   (selection.y > 0)
+           && !(   Character.isLetter(text.charAt(selection.y-1))
+                || Character.isDigit(text.charAt(selection.y-1))
+                || ("/\\.:-".indexOf(text.charAt(selection.y-1)) >= 0)
+               )
+          )
+    {
+      selection.y--;
+    }
+
+    widget.setSelection(selection);
   }
 }
 
