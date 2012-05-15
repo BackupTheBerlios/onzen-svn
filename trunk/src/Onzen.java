@@ -294,6 +294,7 @@ public class Onzen
   public static MimetypesFileTypeMap   MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
   public static HashMap<String,String> FILE_ASSOCIATION_MAP = new HashMap<String,String>();
 
+  public static String                 ALL_FILE_EXTENSION        = isWindowsSystem() ? "*.*" : "*";
   public static String                 EXECUTABLE_FILE_EXTENSION = isWindowsSystem() ? "*.exe" : "*";
 
   // command line options

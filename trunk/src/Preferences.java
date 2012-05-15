@@ -607,7 +607,7 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetCVSCommand.getText(),
-                                                  new String[]{"All files",  "*",
+                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                                "Scripts",    "*.sh",
                                                                "Batch files","*.cmd",
                                                                "Executables","*.exe"
@@ -663,7 +663,7 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetCVSCommand.getText(),
-                                                  new String[]{"All files",  "*",
+                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                                "Scripts",    "*.sh",
                                                                "Batch files","*.cmd",
                                                                "Executables","*.exe"
@@ -700,7 +700,7 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetSVNDiffCommand.getText(),
-                                                  new String[]{"All files",  "*",
+                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                                "Scripts",    "*.sh",
                                                                "Batch files","*.cmd",
                                                                "Executables","*.exe"
@@ -763,7 +763,7 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetCVSCommand.getText(),
-                                                  new String[]{"All files",  "*",
+                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                                "Scripts",    "*.sh",
                                                                "Batch files","*.cmd",
                                                                "Executables","*.exe"
@@ -800,7 +800,7 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetHGDiffCommand.getText(),
-                                                  new String[]{"All files",  "*",
+                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                                "Scripts",    "*.sh",
                                                                "Batch files","*.cmd",
                                                                "Executables","*.exe"
@@ -928,7 +928,7 @@ class Preferences
                 String command = Dialogs.fileOpen(shell,
                                                   "Select command",
                                                   widgetCVSCommand.getText(),
-                                                  new String[]{"All files",  "*",
+                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                                "Scripts",    "*.sh",
                                                                "Batch files","*.cmd",
                                                                "Executables","*.exe"
