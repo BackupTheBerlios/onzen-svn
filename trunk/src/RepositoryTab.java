@@ -878,7 +878,7 @@ menuItem.setEnabled(false);
 
             if (fromFile.isFile())
             {
-              copyFile(fromFile,toFile);
+              FileUtils.copyFile(fromFile,toFile);
             }
           }
           catch (IOException exception)
@@ -1993,46 +1993,44 @@ Dprintf.dprintf("");
           File file = new File(fileData.getFileName(repository.rootPath));
 
           // delete local file/directory
-          boolean deleted = false;
-          if (file.isDirectory())
+          try
           {
-            // confirm deleting directory
-            if (!deleteAll)
+            if (file.isDirectory())
             {
-              switch (Dialogs.select(shell,
-                                     "Error",
-                                     String.format("'%s' is a directory.\n\nDelete directory?",file.getPath()),
-                                     new String[]{"Yes","Yes, always","No"},
-                                     2
-                                    )
-                     )
+              // confirm deleting directory
+              if (!deleteAll)
               {
-                case 0:
-                  break;
-                case 1:
-                  deleteAll = true;
-                  break;
-                case 2:
-                  continue;
+                switch (Dialogs.select(shell,
+                                       "Error",
+                                       String.format("'%s' is a directory.\n\nDelete directory?",file.getPath()),
+                                       new String[]{"Yes","Yes, always","No"},
+                                       2
+                                      )
+                       )
+                {
+                  case 0:
+                    break;
+                  case 1:
+                    deleteAll = true;
+                    break;
+                  case 2:
+                    continue;
+                }
               }
+
+              // delete local directory tree
+              FileUtils.deleteDirectoryTree(file);
+            }
+            else
+            {
+              // delete local file
+              FileUtils.deleteFile(file);
             }
 
-            // delete directory tree
-            deleted = deleteDirectory(file);
-          }
-          else
-          {
-            // delete local file
-            deleted = file.delete();
-          }
-
-          // check if deleted
-          if (deleted)
-          {
             // start update file data
             asyncUpdateFileStates(fileData);
           }
-          else
+          catch (IOException exception)
           {
             if (!skipErrors)
             {
@@ -3549,55 +3547,6 @@ Dprintf.dprintf("");
     }
 
     return command;
-  }
-
-  /** copy file
-   * @param fromFile - from file
-   * @param toFile   - to file
-   */
-  private void copyFile(File fromFile, File toFile)
-    throws IOException
-  {
-    FileInputStream  input  = new FileInputStream(fromFile);
-    FileOutputStream output = new FileOutputStream(toFile);
-    byte[]           buffer = new byte[64*1024];
-
-    int n;
-    while ((n = input.read(buffer)) > 0)
-    {
-      output.write(buffer,0,n);
-    }
-
-    toFile.setExecutable(fromFile.canExecute());
-    toFile.setWritable(fromFile.canWrite());
-
-    output.close();
-    input.close();
-  }
-
-  /** delete directory tree
-   * @param directory directory to delete
-   * @return true if deleted, false otherwise
-   */
-  private boolean deleteDirectory(File directory)
-  {
-    File[] files = directory.listFiles();
-    if (files != null)
-    {
-      for (File file : files)
-      {
-        if (file.isDirectory())
-        {
-          if (!deleteDirectory(file)) return false;
-        }
-        else
-        {
-          if (!file.delete()) return false;
-        }
-      }
-    }
-
-    return directory.delete();
   }
 
   /** check if file contain TABs/trailing whitespaces
