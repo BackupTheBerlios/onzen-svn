@@ -736,7 +736,7 @@ class RepositorySVN extends Repository
           author             = matcher.group(5);
           name               = matcher.group(6);
 
-          if (   new File(name).isFile()
+          if (   new File(rootPath,name).isFile()
               && stateSet.contains(state))
           {
             fileDataSet.add(new FileData(name,
@@ -750,7 +750,7 @@ class RepositorySVN extends Repository
         {
           name = matcher.group(1);
 
-          if (   new File(name).isFile()
+          if (   new File(rootPath,name).isFile()
               && stateSet.contains(FileData.States.UNKNOWN)
              )
           {
