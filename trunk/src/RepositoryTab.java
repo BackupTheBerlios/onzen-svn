@@ -3398,9 +3398,10 @@ Dprintf.dprintf("");
               String fileName = Dialogs.fileOpen(shell,
                                                  "Select program",
                                                  widgetCommand.getText(),
-                                                 new String[]{"Scripts","*.sh",
-                                                              "Executables","*.exe",
-                                                              "All files","*",
+                                                 new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
+                                                              "Scripts",    "*.sh",
+                                                              "Batch files","*.cmd",
+                                                              "Executables","*.exe"
                                                              },
                                                  Onzen.EXECUTABLE_FILE_EXTENSION
                                                 );
