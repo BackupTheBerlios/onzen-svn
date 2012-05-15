@@ -1130,7 +1130,7 @@ Dprintf.dprintf("");
   private Pattern[] compileFileNamePatterns(String findText)
   {
     ArrayList<Pattern> patternList = new ArrayList<Pattern>();
-    for (String pattern : StringUtils.split(findText))
+    for (String pattern : StringUtils.split(findText,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS))
     {
       patternList.add(Pattern.compile(StringUtils.globToRegex(pattern),Pattern.CASE_INSENSITIVE));
     }
@@ -1145,7 +1145,7 @@ Dprintf.dprintf("");
   private Pattern[] compileContentPatterns(String findText)
   {
     ArrayList<Pattern> patternList = new ArrayList<Pattern>();
-    for (String pattern : StringUtils.split(findText))
+    for (String pattern : StringUtils.split(findText,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS))
     {
       patternList.add(Pattern.compile(".*"+StringUtils.globToRegex(pattern)+".*",Pattern.CASE_INSENSITIVE));
     }
