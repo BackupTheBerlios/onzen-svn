@@ -3041,6 +3041,7 @@ Dprintf.dprintf("fileName=%s",fileName);
   abstract public String getDefaultBranchName();
 
   /** get names of existing branches
+   * @param pathName path name
    * @return array with branch names
    */
   abstract public String[] getBranchNames(String pathName)
