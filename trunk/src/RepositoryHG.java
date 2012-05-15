@@ -280,13 +280,15 @@ throw new RepositoryException("NYI");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+         try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
+         throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
       {
         // abort
         exec.destroy();
+        try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
       }
 
       // done
@@ -294,6 +296,7 @@ throw new RepositoryException("NYI");
     }
     catch (IOException exception)
     {
+      try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
       throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
@@ -2481,6 +2484,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** get names of existing branches
+   * @param pathName path name
    * @return array with branch names
    */
   public String[] getBranchNames(String pathName)
