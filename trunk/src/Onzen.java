@@ -4618,6 +4618,7 @@ Dprintf.dprintf("NYI");
     widgetRepository.add("ssh://");
     widgetRepository.add("http://");
     widgetRepository.add("https://");
+    widgetRepository.add("rsync://");
     for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
     {
       widgetRepository.add(checkoutHistoryPath);
