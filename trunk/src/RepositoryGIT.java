@@ -110,7 +110,7 @@ throw new RepositoryException("NYI");
 
       // checkout
       command.clear();
-      command.append(Settings.gitCommand,"clone");
+      command.append(Settings.gitCommand,"clone","--verbose","--progress");
       if ((revision != null) && !revision.isEmpty()) command.append("--branch",revision);
       command.append(path,destinationPath);
       exec = new Exec(destinationPath,command);
@@ -137,6 +137,7 @@ throw new RepositoryException("NYI");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
+          try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
           throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
@@ -144,6 +145,7 @@ throw new RepositoryException("NYI");
       {
         // abort
         exec.destroy();
+        try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
       }
 
       // done
@@ -151,6 +153,7 @@ throw new RepositoryException("NYI");
     }
     catch (IOException exception)
     {
+      try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
       throw new RepositoryException(Onzen.reniceIOException(exception));
     }
     finally
@@ -1536,6 +1539,7 @@ throw new RepositoryException("NYI");
   }
 
   /** get names of existing branches
+   * @param pathName path name
    * @return array with branch names
    */
   public String[] getBranchNames(String pathName)
