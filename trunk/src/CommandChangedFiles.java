@@ -943,18 +943,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          try
-          {
-            data.fileDataSet = repositoryTab.repository.getChangedFiles();
-          }
-          catch (RepositoryException exception)
-          {
-            Dialogs.error(dialog,"Cannot get list of changed files (error: %s)",exception.getMessage());
-            return;
-          }
-          widgetFiles.deselectAll();
-          Widgets.modified(data);
-          Widgets.notify(dialog,USER_EVENT_FILTER);
+          updateChangedFiles();
         }
       });
 
@@ -1196,40 +1185,7 @@ Dprintf.dprintf("");
     {
       public void run()
       {
-        // get changed files
-        repositoryTab.setStatusText("Get changed files for '%s'...",repositoryTab.repository.title);
-        try
-        {
-          data.fileDataSet = repositoryTab.repository.getChangedFiles();
-        }
-        catch (RepositoryException exception)
-        {
-          final String exceptionMessage = exception.getMessage();
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              Dialogs.error(dialog,"Getting file revisions fail: %s",exceptionMessage);
-            }
-          });
-          return;
-        }
-        finally
-        {
-          repositoryTab.clearStatusText();
-        }
-
-        // notify changed data
-        if (!dialog.isDisposed())
-        {
-          display.syncExec(new Runnable()
-          {
-            public void run()
-            {
-              Widgets.notify(dialog,USER_EVENT_FILTER);
-            }
-          });
-        }
+        updateChangedFiles();
       }
     });
   }
@@ -1254,6 +1210,69 @@ Dprintf.dprintf("");
   }
 
   //-----------------------------------------------------------------------
+
+  /** update changed files list
+   */
+  private void updateChangedFiles()
+  {
+    // get changed files
+    repositoryTab.setStatusText("Get changed files for '%s'...",repositoryTab.repository.title);
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          widgetFiles.deselectAll();
+          Widgets.modified(data);
+          Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
+        }
+      });
+    }
+    try
+    {
+      data.fileDataSet = repositoryTab.repository.getChangedFiles();
+    }
+    catch (RepositoryException exception)
+    {
+      final String exceptionMessage = exception.getMessage();
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Dialogs.error(dialog,"Getting file revisions fail: %s",exceptionMessage);
+        }
+      });
+      return;
+    }
+    finally
+    {
+      if (!dialog.isDisposed())
+      {
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            Widgets.resetCursor(dialog);
+          }
+        });
+      }
+      repositoryTab.clearStatusText();
+    }
+
+    // notify changed data
+    if (!dialog.isDisposed())
+    {
+      display.syncExec(new Runnable()
+      {
+        public void run()
+        {
+          Widgets.modified(data);
+          Widgets.notify(dialog,USER_EVENT_FILTER);
+        }
+      });
+    }
+  }
 
   /** get file data background color
    * @param fileData file data
