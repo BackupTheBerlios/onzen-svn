@@ -127,6 +127,8 @@ class Preferences
 
   private final Text          widgetGitCommand;
 
+  private final List          widgetCheckoutHistoryPaths;
+
   private final Button        widgetEOLAuto;
   private final Button        widgetEOLUnix;
   private final Button        widgetEOLMac;
@@ -313,7 +315,7 @@ class Preferences
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,false);
         Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,300,true );
-        widgetEditors.setToolTipText("Mime type list.");
+        widgetEditors.setToolTipText("Editor list.");
         widgetEditors.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -388,7 +390,7 @@ class Preferences
         Widgets.layout(widgetShellCommands,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT,200,true);
         Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT,100,true);
-        widgetShellCommands.setToolTipText("Colors list.");
+        widgetShellCommands.setToolTipText("Shell command list.");
         widgetShellCommands.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -734,7 +736,7 @@ class Preferences
           }
         }
 
-        // --- hg ------------------------------------------------------
+        // --- HG ------------------------------------------------------
 
         subComposite = Widgets.newGroup(composite,"HG");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -899,7 +901,7 @@ class Preferences
           }
         }
 
-        // --- Git -----------------------------------------------------
+        // --- GIT -----------------------------------------------------
 
         subComposite = Widgets.newGroup(composite,"Git");
         subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -914,7 +916,7 @@ class Preferences
             widgetGitCommand = Widgets.newText(subSubComposite);
             widgetGitCommand.setText(Settings.gitCommand);
             Widgets.layout(widgetGitCommand,0,0,TableLayoutData.WE);
-            widgetGitCommand.setToolTipText("Git command.");
+            widgetGitCommand.setToolTipText("GIT command.");
 
             button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
             Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -944,9 +946,99 @@ class Preferences
         }
       }
 
+      composite = Widgets.addTab(tabFolder,"History");
+      composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0},1.0,2));
+      Widgets.layout(composite,0,5,TableLayoutData.NSWE);
+      {
+        label = Widgets.newLabel(composite,"Repository paths:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
+
+        widgetCheckoutHistoryPaths = Widgets.newList(composite);
+        Widgets.layout(widgetCheckoutHistoryPaths,1,0,TableLayoutData.NSWE);
+        widgetCheckoutHistoryPaths.setToolTipText("Repository path history list.");
+        widgetCheckoutHistoryPaths.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+            List widget = (List)selectionEvent.widget;
+
+            int index = widget.getSelectionIndex();
+            if (index >= 0)
+            {
+              String path = Dialogs.path(dialog,"Add repository path","Path:",widget.getItem(index));
+              if (path != null)
+              {
+                widget.setItem(index,path.trim());
+              }
+            }
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+          }
+        });
+        for (String path : Settings.checkoutHistoryPaths)
+        {
+          widgetCheckoutHistoryPaths.add(path.trim());
+        }
+
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(null,null));
+        Widgets.layout(subComposite,2,0,TableLayoutData.E);
+        {
+          button = Widgets.newButton(subComposite,"Add");
+          Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String path = Dialogs.path(dialog,"Add repository path","Path:");
+              if (path != null)
+              {
+                widgetCheckoutHistoryPaths.add(path.trim());
+              }
+            }
+          });
+
+          button = Widgets.newButton(subComposite,"Remove");
+          Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetCheckoutHistoryPaths.getSelectionIndex();
+              if (index >= 0)
+              {
+                widgetCheckoutHistoryPaths.remove(index);
+              }
+            }
+          });
+
+          button = Widgets.newButton(subComposite,"Sort");
+          Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String paths[] = widgetCheckoutHistoryPaths.getItems();
+              Arrays.sort(paths);
+              widgetCheckoutHistoryPaths.setItems(paths);
+            }
+          });
+        }
+      }
+
       composite = Widgets.addTab(tabFolder,"Files");
       composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,1.0,1.0},new double[]{0.0,1.0},2));
-      Widgets.layout(composite,0,5,TableLayoutData.NSWE);
+      Widgets.layout(composite,0,6,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"End-Of-Line type:");
         Widgets.layout(label,0,0,TableLayoutData.NW);
@@ -1211,7 +1303,7 @@ Dprintf.dprintf("");
 
       composite = Widgets.addTab(tabFolder,"Misc");
       composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0},new double[]{0.0,1.0},2));
-      Widgets.layout(composite,0,6,TableLayoutData.NSWE);
+      Widgets.layout(composite,0,7,TableLayoutData.NSWE);
       {
         label = Widgets.newLabel(composite,"Temporary directory:");
         Widgets.layout(label,0,0,TableLayoutData.W);
@@ -1493,6 +1585,19 @@ Dprintf.dprintf("");
           saveColors();
           saveFonts();
 
+          Settings.editors                                = getEditors();
+          Settings.shellCommands                          = getShellCommands();
+
+          Settings.commandMail                            = widgetCommandMail.getText();
+          Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText().trim();
+
+          Settings.mailSMTPHost                           = widgetMailSMTPHost.getText().trim();
+          Settings.mailSMTPPort                           = Integer.parseInt(widgetMailSMTPPort.getText());
+          Settings.mailSMTPSSL                            = widgetMailSMTPSSL.getSelection();
+          Settings.mailLogin                              = widgetMailLogin.getText().trim();
+          onzen.setPassword(Settings.mailLogin,Settings.mailSMTPHost,widgetMailPassword.getText());
+          Settings.mailFrom                               = widgetMailFrom.getText().trim();
+
           Settings.cvsCommand                             = widgetCVSCommand.getText().trim();
           Settings.cvsPruneEmtpyDirectories               = widgetCVSPruneEmptyDirectories.getSelection();
 
@@ -1522,6 +1627,9 @@ Dprintf.dprintf("");
           Settings.maxBackgroundTasks                     = Integer.parseInt(widgetMaxBackgroundTasks.getText());
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
+          Settings.checkoutHistoryPaths                   = widgetCheckoutHistoryPaths.getItems();
+for (String s : Settings.checkoutHistoryPaths) Dprintf.dprintf("s=%s",s);
+
           if      (widgetEOLAuto.getSelection()   ) Settings.eolType = Settings.EOLTypes.AUTO;
           else if (widgetEOLUnix.getSelection()   ) Settings.eolType = Settings.EOLTypes.UNIX;
           else if (widgetEOLMac.getSelection()    ) Settings.eolType = Settings.EOLTypes.MAC;
@@ -1532,19 +1640,6 @@ Dprintf.dprintf("");
 
           Settings.messageBroadcastAddress                = widgetMessageBroadcastAddress.getText().trim();
           Settings.messageBroadcastPort                   = Integer.parseInt(widgetMessageBroadcastPort.getText());
-
-          Settings.editors                                = getEditors();
-          Settings.shellCommands                          = getShellCommands();
-
-          Settings.commandMail                            = widgetCommandMail.getText();
-          Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText().trim();
-
-          Settings.mailSMTPHost                           = widgetMailSMTPHost.getText().trim();
-          Settings.mailSMTPPort                           = Integer.parseInt(widgetMailSMTPPort.getText());
-          Settings.mailSMTPSSL                            = widgetMailSMTPSSL.getSelection();
-          Settings.mailLogin                              = widgetMailLogin.getText().trim();
-          onzen.setPassword(Settings.mailLogin,Settings.mailSMTPHost,widgetMailPassword.getText());
-          Settings.mailFrom                               = widgetMailFrom.getText().trim();
 
           Settings.reviewServerHost                       = widgetReviewServerHost.getText().trim();
           Settings.reviewServerLogin                      = widgetReviewServerLogin.getText().trim();
@@ -1966,6 +2061,42 @@ Dprintf.dprintf("");
     }
   }
 
+  /** get editors array from widget
+   * @return editors array
+   */
+  private Settings.Editor[] getEditors()
+  {
+    Settings.Editor[] editors = new Settings.Editor[widgetEditors.getItemCount()];
+    for (int z = 0; z < widgetEditors.getItemCount(); z++)
+    {
+      editors[z] = (Settings.Editor)(widgetEditors.getItem(z).getData());
+    }
+
+    return editors;
+  }
+
+  /** get shell commands array from widget
+   * @return shell commands array
+   */
+  private Settings.ShellCommand[] getShellCommands()
+  {
+    Settings.ShellCommand[] shellCommands = new Settings.ShellCommand[widgetShellCommands.getItemCount()];
+    for (int z = 0; z < widgetShellCommands.getItemCount(); z++)
+    {
+      shellCommands[z] = (Settings.ShellCommand)(widgetShellCommands.getItem(z).getData());
+    }
+
+    Arrays.sort(shellCommands,new Comparator<Settings.ShellCommand>()
+    {
+      public int compare(Settings.ShellCommand shellCommand1, Settings.ShellCommand shellCommand2)
+      {
+        return shellCommand1.name.compareTo(shellCommand2.name);
+      }
+    });
+
+    return shellCommands;
+  }
+
   /** get skip whitepace-check file pattern array from widget
    * @return skip whitespae-check file pattern array
    */
@@ -2020,42 +2151,6 @@ Dprintf.dprintf("");
     }
 
     return autoSummaryPatterns;
-  }
-
-  /** get editors array from widget
-   * @return editors array
-   */
-  private Settings.Editor[] getEditors()
-  {
-    Settings.Editor[] editors = new Settings.Editor[widgetEditors.getItemCount()];
-    for (int z = 0; z < widgetEditors.getItemCount(); z++)
-    {
-      editors[z] = (Settings.Editor)(widgetEditors.getItem(z).getData());
-    }
-
-    return editors;
-  }
-
-  /** get shell commands array from widget
-   * @return shell commands array
-   */
-  private Settings.ShellCommand[] getShellCommands()
-  {
-    Settings.ShellCommand[] shellCommands = new Settings.ShellCommand[widgetShellCommands.getItemCount()];
-    for (int z = 0; z < widgetShellCommands.getItemCount(); z++)
-    {
-      shellCommands[z] = (Settings.ShellCommand)(widgetShellCommands.getItem(z).getData());
-    }
-
-    Arrays.sort(shellCommands,new Comparator<Settings.ShellCommand>()
-    {
-      public int compare(Settings.ShellCommand shellCommand1, Settings.ShellCommand shellCommand2)
-      {
-        return shellCommand1.name.compareTo(shellCommand2.name);
-      }
-    });
-
-    return shellCommands;
   }
 
   /** edit keyboard shortcut
