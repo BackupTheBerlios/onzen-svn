@@ -1092,11 +1092,7 @@ public class Settings
 
   @SettingComment(text={"","checkout repository path history"})
   @SettingValue
-  public static String[]                 checkoutHistoryPaths                   = new String[]
-                                                                                  {
-                                                                                    "http://svn.berlios.de/svnroot/repos/onzen/trunk",
-                                                                                    "http://svn.berlios.de/svnroot/repos/bar/trunk"
-                                                                                  };
+  public static String[]                 checkoutHistoryPaths                   = new String[0];
 
   @SettingComment(text={"","UDP commit message broadcasting"})
   @SettingValue
