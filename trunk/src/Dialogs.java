@@ -1302,6 +1302,8 @@ class Dialogs
    */
   static boolean warning(Shell parentShell, boolean showAgainCheckbox, String message)
   {
+    final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"warning.png");
+
     final boolean[] result = new boolean[]{true};
     TableLayoutData tableLayoutData;
     Composite       composite;
@@ -1314,7 +1316,6 @@ class Dialogs
       final Shell dialog = open(parentShell,"Warning",200,70);
       dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
-      Image image = Widgets.loadImage(parentShell.getDisplay(),"warning.png");
 
       // message
       composite = new Composite(dialog,SWT.NONE);
@@ -1322,7 +1323,7 @@ class Dialogs
       composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
       {
         label = new Label(composite,SWT.LEFT);
-        label.setImage(image);
+        label.setImage(IMAGE);
         label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
 
         label = new Label(composite,SWT.LEFT|SWT.WRAP);
@@ -2367,14 +2368,188 @@ class Dialogs
     return directory(parentShell,title,null,pathName);
   }
 
+  /** directory dialog
+   * @param parentShell parent shell
+   * @param title title text
+   * @return directory name or null
+   */
+  public static String directory(Shell parentShell, String title)
+  {
+    return directory(parentShell,title,null);
+  }
+
+  /** simple path dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @param value value to edit (can be null)
+   * @param okText OK button text
+   * @param cancelText cancel button text
+   * @param toolTipText tooltip text (can be null)
+   * @return path or null on cancel
+   */
+  public static String path(Shell parentShell, String title, String text, String value, String okText, String cancelText, String toolTipText)
+  {
+    final Image IMAGE = Widgets.loadImage(parentShell.getDisplay(),"directory.png");
+
+    int             row;
+    Composite       composite;
+    Label           label;
+    Button          button;
+
+    if (!parentShell.isDisposed())
+    {
+      final String[] result = new String[1];
+
+      final Shell dialog = openModal(parentShell,title,450,SWT.DEFAULT);
+      dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+
+      final Text   widgetPath;
+      final Button widgetOkButton;
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+      composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.WE));
+      {
+        int column = 0;
+        if (text != null)
+        {
+          label = new Label(composite,SWT.LEFT);
+          label.setText(text);
+          label.setLayoutData(new TableLayoutData(0,column,TableLayoutData.W));
+          column++;
+        }
+        widgetPath = new Text(composite,SWT.LEFT|SWT.BORDER);
+        if (value != null)
+        {
+          widgetPath.setText(value);
+          widgetPath.setSelection(value.length(),value.length());
+        }
+        widgetPath.setLayoutData(new TableLayoutData(0,column,TableLayoutData.WE,0,0,0,0,300,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT));
+        if (toolTipText != null) widgetPath.setToolTipText(toolTipText);
+        column++;
+
+        button = new Button(composite,SWT.CENTER);
+        button.setImage(IMAGE);
+        button.setLayoutData(new TableLayoutData(0,column,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = directory(dialog,"Select path");
+            if (path != null)
+            {
+              widgetPath.setText(path);
+            }
+          }
+        });
+        column++;
+      }
+
+      // buttons
+      composite = new Composite(dialog,SWT.NONE);
+      composite.setLayout(new TableLayout(0.0,1.0));
+      composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4));
+      {
+        widgetOkButton = new Button(composite,SWT.CENTER);
+        widgetOkButton.setText(okText);
+        widgetOkButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        widgetOkButton.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            close(dialog,widgetPath.getText());
+          }
+        });
+
+        button = new Button(composite,SWT.CENTER);
+        button.setText(cancelText);
+        button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            close(dialog,null);
+          }
+        });
+      }
+
+      // install handlers
+      widgetPath.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+          Text widget = (Text)selectionEvent.widget;
+
+          widgetOkButton.setFocus();
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+        }
+      });
+
+      widgetPath.setFocus();
+      return (String)run(dialog,null);
+    }
+    else
+    {
+      return null;
+    }
+  }
+
+  /** simple path dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @param value value to edit (can be null)
+   * @param okText OK button text
+   * @param cancelText cancel button text
+   * @return path or null on cancel
+   */
+  public static String path(Shell parentShell, String title, String text, String value, String okText, String cancelText)
+  {
+    return path(parentShell,title,text,value,okText,cancelText,null);
+  }
+
+  /** simple path dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @param value value to edit (can be null)
+   * @return path or null on cancel
+   */
+  public static String path(Shell parentShell, String title, String text, String value)
+  {
+    return path(parentShell,title,text,value,"OK","Cancel");
+  }
+
+  /** simple path dialog
+   * @param parentShell parent shell
+   * @param title title string
+   * @param text text before input element
+   * @return path or null on cancel
+   */
+  public static String path(Shell parentShell, String title, String text)
+  {
+    return path(parentShell,title,text,null);
+  }
+
   /** simple string dialog
    * @param parentShell parent shell
    * @param title title string
    * @param text text before input element
-   * @param value value to edit
+   * @param value value to edit (can be null)
    * @param okText OK button text
-   * @param CancelText cancel button text
-   * @param toolTipText tooltip text
+   * @param cancelText cancel button text
+   * @param toolTipText tooltip text (can be null)
    * @return string or null on cancel
    */
   public static String string(Shell parentShell, String title, String text, String value, String okText, String cancelText, String toolTipText)
@@ -2478,9 +2653,9 @@ class Dialogs
    * @param parentShell parent shell
    * @param title title string
    * @param text text before input element
-   * @param value value to edit
+   * @param value value to edit (can be null)
    * @param okText OK button text
-   * @param CancelText cancel button text
+   * @param cancelText cancel button text
    * @return string or null on cancel
    */
   public static String string(Shell parentShell, String title, String text, String value, String okText, String cancelText)
@@ -2492,7 +2667,7 @@ class Dialogs
    * @param parentShell parent shell
    * @param title title string
    * @param text text before input element
-   * @param value value to edit
+   * @param value value to edit (can be null)
    * @return string or null on cancel
    */
   public static String string(Shell parentShell, String title, String text, String value)
