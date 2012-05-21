@@ -347,6 +347,7 @@ public class Onzen
 
   private Label                             widgetStatus;
 
+  // stored settingn of last checkout
   private static Repository                 lastCheckoutRepository      = RepositoryCVS.getInstance();
   private static String                     lastCheckoutRepositoryPath  = "";
   private static String                     lastCheckoutModuleName      = "";
