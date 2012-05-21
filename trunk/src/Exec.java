@@ -356,42 +356,68 @@ class Exec
   }
 
   /** poll next line from stdout
+   * @param timeout timeout [ms]
    * @return line or null
    */
-  public String pollStdout()
+  public String pollStdout(int timeout)
   {
     String line = null;
 
-    if (stdoutStack.isEmpty())
+    if (stdout != null)
     {
-      try
+      if (stdoutStack.isEmpty())
       {
-        if ((stdout != null) && stdout.ready())
+        try
         {
-          // check/wait a short time for data
-          if (!stdout.ready())
-          {
-            try { Thread.sleep(100); } catch (InterruptedException exception) { /* ignored */ }
-          }
-
-          // read data
           if (stdout.ready())
           {
             line = stdout.readLine();
           }
+          while ((line == null) && (timeout != 0))
+          {
+            if (line == null)
+            {
+              // wait a short time for data
+              int n;
+              if (timeout > 0)
+              {
+                n = Math.min(100,timeout);
+                timeout -= n;
+              }
+              else
+              {
+                n = 100;
+              }
+              try { Thread.sleep(100); } catch (InterruptedException exception) { /* ignored */ }
+            }
+
+            // try to read data
+            if (stdout.ready())
+            {
+              line = stdout.readLine();
+            }
+          }
+        }
+        catch (IOException exception)
+        {
+          /* ignored => no input */
         }
       }
-      catch (IOException exception)
+      else
       {
-        /* ignored => no input */
+        line = stdoutStack.pop();
       }
-    }
-    else
-    {
-      line = stdoutStack.pop();
     }
 
     return line;
+  }
+
+  /** poll next line from stdout
+   * @return line or null
+   */
+  public String pollStdout()
+  {
+    return pollStdout(250);
   }
 
   /** peek  (do not get) next line from stdout
@@ -459,42 +485,68 @@ class Exec
   }
 
   /** poll next line from stderr
+   * @param timeout timeout [ms]
    * @return line or null
    */
-  public String pollStderr()
+  public String pollStderr(int timeout)
   {
     String line = null;
 
-    if (stderrStack.isEmpty())
+    if (stderr != null)
     {
-      try
+      if (stderrStack.isEmpty())
       {
-        if (stderr != null)
+        try
         {
-          // check/wait a short time for data
-          if (!stderr.ready())
-          {
-            try { Thread.sleep(100); } catch (InterruptedException exception) { /* ignored */ }
-          }
-
-          // read data
           if (stderr.ready())
           {
             line = stderr.readLine();
           }
+          while ((line == null) && (timeout != 0))
+          {
+            if (line == null)
+            {
+              // wait a short time for data
+              int n;
+              if (timeout > 0)
+              {
+                n = Math.min(100,timeout);
+                timeout -= n;
+              }
+              else
+              {
+                n = 100;
+              }
+              try { Thread.sleep(100); } catch (InterruptedException exception) { /* ignored */ }
+            }
+
+            // try to read data
+            if (stderr.ready())
+            {
+              line = stderr.readLine();
+            }
+          }
+        }
+        catch (IOException exception)
+        {
+          /* ignored => no input */
         }
       }
-      catch (IOException exception)
+      else
       {
-        /* ignored => no input */
+        line = stderrStack.pop();
       }
-    }
-    else
-    {
-      line = stderrStack.pop();
     }
 
     return line;
+  }
+
+  /** poll next line from stderr
+   * @return line or null
+   */
+  public String pollStderr()
+  {
+    return pollStderr(250);
   }
 
   /** peek (do not get) next line from stderr
