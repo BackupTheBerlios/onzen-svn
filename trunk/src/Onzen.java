@@ -347,6 +347,13 @@ public class Onzen
 
   private Label                             widgetStatus;
 
+  private static Repository                 lastCheckoutRepository      = RepositoryCVS.getInstance();
+  private static String                     lastCheckoutRepositoryPath  = "";
+  private static String                     lastCheckoutModuleName      = "";
+  private static String                     lastCheckoutRevision        = "";
+  private static String                     lastCheckoutDestinationPath = "";
+
+
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
@@ -4277,11 +4284,11 @@ Dprintf.dprintf("NYI");
 
       Data()
       {
-        this.repository      = RepositoryCVS.getInstance();
-        this.repositoryPath  = "";
-        this.moduleName      = "";
-        this.revision        = "";
-        this.destinationPath = "";
+        this.repository      = lastCheckoutRepository;
+        this.repositoryPath  = lastCheckoutRepositoryPath;
+        this.moduleName      = lastCheckoutModuleName;
+        this.revision        = lastCheckoutRevision;
+        this.destinationPath = lastCheckoutDestinationPath;
         this.quitFlag        = false;
       }
     }
@@ -4293,10 +4300,6 @@ Dprintf.dprintf("NYI");
     final Data  data   = new Data();
     final Shell dialog = Dialogs.openModal(shell,"Checkout repository",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Button widgetCVS;
-    final Button widgetSVN;
-    final Button widgetHG;
-    final Button widgetGIT;
     final Combo  widgetRepository;
     final Combo  widgetModuleName;
     final Combo  widgetRevision;
@@ -4314,21 +4317,97 @@ Dprintf.dprintf("NYI");
       subComposite.setLayout(new TableLayout(null,null));
       Widgets.layout(subComposite,0,1,TableLayoutData.W);
       {
-        widgetCVS = Widgets.newRadio(subComposite,"CVS");
-        widgetCVS.setSelection(true);
-        Widgets.layout(widgetCVS,0,0,TableLayoutData.DEFAULT);
+        button = Widgets.newRadio(subComposite,"CVS");
+        button.setSelection(data.repository == RepositoryCVS.getInstance());
+        Widgets.layout(button,0,0,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
 
-        widgetSVN = Widgets.newRadio(subComposite,"SVN");
-        widgetSVN.setSelection(false);
-        Widgets.layout(widgetSVN,0,1,TableLayoutData.DEFAULT);
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.repository = RepositoryCVS.getInstance();
+                data.notifyAll();
+              }
+            }
+          }
+        });
 
-        widgetHG = Widgets.newRadio(subComposite,"HG");
-        widgetHG.setSelection(false);
-        Widgets.layout(widgetHG,0,2,TableLayoutData.DEFAULT);
+        button = Widgets.newRadio(subComposite,"SVN");
+        button.setSelection(data.repository == RepositorySVN.getInstance());
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
 
-        widgetGIT = Widgets.newRadio(subComposite,"GIT");
-        widgetGIT.setSelection(false);
-        Widgets.layout(widgetGIT,0,3,TableLayoutData.DEFAULT);
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.repository = RepositorySVN.getInstance();
+                data.notifyAll();
+              }
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"HG");
+        button.setSelection(data.repository == RepositoryHG.getInstance());
+        Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.repository = RepositoryHG.getInstance();
+                data.notifyAll();
+              }
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"GIT");
+        button.setSelection(data.repository == RepositoryGIT.getInstance());
+        Widgets.layout(button,0,3,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.repository = RepositoryGIT.getInstance();
+                data.notifyAll();
+              }
+            }
+          }
+        });
       }
 
       label = Widgets.newLabel(composite,"Repository:");
@@ -4339,6 +4418,7 @@ Dprintf.dprintf("NYI");
       Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
       {
         widgetRepository = Widgets.newCombo(subComposite);
+        widgetRepository.setText(data.repositoryPath);
         Widgets.layout(widgetRepository,0,0,TableLayoutData.WE);
         widgetRepository.setToolTipText("Respository path URI.");
 
@@ -4367,6 +4447,7 @@ Dprintf.dprintf("NYI");
       Widgets.layout(label,2,0,TableLayoutData.W);
 
       widgetModuleName = Widgets.newCombo(composite);
+      widgetModuleName.setText(data.moduleName);
       Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
       widgetModuleName.setToolTipText("Module name in repository.");
 
@@ -4374,6 +4455,7 @@ Dprintf.dprintf("NYI");
       Widgets.layout(label,3,0,TableLayoutData.W);
 
       widgetRevision = Widgets.newCombo(composite);
+      widgetRevision.setText(data.revision);
       Widgets.layout(widgetRevision,3,1,TableLayoutData.WE);
       widgetRevision.setToolTipText("Revision to check-out.");
 
@@ -4385,6 +4467,7 @@ Dprintf.dprintf("NYI");
       Widgets.layout(subComposite,4,1,TableLayoutData.WE);
       {
         widgetDestinationPath = Widgets.newText(subComposite);
+        widgetDestinationPath.setText(data.destinationPath);
         Widgets.layout(widgetDestinationPath,0,0,TableLayoutData.WE);
         widgetDestinationPath.setToolTipText("Destination check-out directory path.");
 
@@ -4416,7 +4499,9 @@ Dprintf.dprintf("NYI");
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetCheckout = Widgets.newButton(composite,"Check-out");
-      widgetCheckout.setEnabled(false);
+      widgetCheckout.setEnabled(   !widgetRepository.getText().trim().isEmpty()
+                                && !widgetDestinationPath.getText().trim().isEmpty()
+                               );
       Widgets.layout(widgetCheckout,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetCheckout.addSelectionListener(new SelectionListener()
       {
@@ -4466,82 +4551,6 @@ Dprintf.dprintf("NYI");
     }
 
     // listeners
-    widgetCVS.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        Button widget = (Button)selectionEvent.widget;
-
-        if (widget.getSelection())
-        {
-          synchronized(data)
-          {
-            data.repository = RepositoryCVS.getInstance();
-            data.notifyAll();
-          }
-        }
-      }
-    });
-    widgetSVN.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        Button widget = (Button)selectionEvent.widget;
-
-        if (widget.getSelection())
-        {
-          synchronized(data)
-          {
-            data.repository = RepositorySVN.getInstance();
-            data.notifyAll();
-          }
-        }
-      }
-    });
-    widgetHG.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        Button widget = (Button)selectionEvent.widget;
-
-        if (widget.getSelection())
-        {
-          synchronized(data)
-          {
-            data.repository = RepositoryHG.getInstance();
-            data.notifyAll();
-          }
-        }
-      }
-    });
-    widgetGIT.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        Button widget = (Button)selectionEvent.widget;
-
-        if (widget.getSelection())
-        {
-          synchronized(data)
-          {
-            data.repository = RepositoryGIT.getInstance();
-            data.notifyAll();
-          }
-        }
-      }
-    });
     widgetRepository.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
@@ -4613,7 +4622,6 @@ Dprintf.dprintf("NYI");
     Widgets.setNextFocus(widgetDestinationPath,widgetCheckout);
 
     // set type, add checkout history paths
-    Widgets.invoke(widgetCVS);
     widgetRepository.add("file://");
     widgetRepository.add("ssh://");
     widgetRepository.add("http://");
@@ -4666,18 +4674,6 @@ Dprintf.dprintf("NYI");
       {
         while (!data.quitFlag)
         {
-          // start update
-          if (!dialog.isDisposed())
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
-              }
-            });
-          }
-
           // reset module/branch names, store current selection
           final String[] result = new String[2];
           if (!dialog.isDisposed())
@@ -4702,7 +4698,7 @@ Dprintf.dprintf("NYI");
               final String[] branchNames = repository.getBranchNames(repositoryPath);
               if (branchNames != null)
               {
-  //Dprintf.dprintf("branchNames.length=%d",branchNames.length);
+//Dprintf.dprintf("branchNames.length=%d",branchNames.length);
                 if (!dialog.isDisposed())
                 {
                   display.syncExec(new Runnable()
@@ -4723,7 +4719,7 @@ Dprintf.dprintf("NYI");
             }
             catch (RepositoryException exception)
             {
-  Dprintf.dprintf("exception=%s",exception);
+Dprintf.dprintf("exception=%s",exception);
               // ignored
             }
           }
@@ -4736,7 +4732,7 @@ Dprintf.dprintf("NYI");
               final String[] revisionNames = repository.getRevisionNames(repositoryPath);
               if (revisionNames != null)
               {
-  //Dprintf.dprintf("revisionNames.length=%d",revisionNames.length);
+//Dprintf.dprintf("revisionNames.length=%d",revisionNames.length);
                 if (!dialog.isDisposed())
                 {
                   display.syncExec(new Runnable()
@@ -4758,20 +4754,8 @@ Dprintf.dprintf("NYI");
             catch (RepositoryException exception)
             {
               // ignored
-  Dprintf.dprintf("exception=%s",exception);
+Dprintf.dprintf("exception=%s",exception);
             }
-          }
-
-          // stop update
-          if (!dialog.isDisposed())
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                Widgets.resetCursor(dialog);
-              }
-            });
           }
 
           // wait for new filter pattern/quit
@@ -4804,6 +4788,14 @@ Dprintf.dprintf("NYI");
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
     {
+      // store last data
+      lastCheckoutRepository      = data.repository;
+      lastCheckoutRepositoryPath  = data.repositoryPath;
+      lastCheckoutModuleName      = data.moduleName;
+      lastCheckoutRevision        = data.revision;
+      lastCheckoutDestinationPath = data.destinationPath;
+
+      // checkout
       BusyDialog busyDialog = new BusyDialog(shell,
                                              "Checkout repository",
                                              "Checkout repository '"+
