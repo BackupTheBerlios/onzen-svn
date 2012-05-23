@@ -243,6 +243,8 @@ class CommandFindFiles
   static
   {
     fileNameFilterTextList.add("*.c *.cpp *.h *.hpp");
+    fileNameFilterTextList.add("*.c *.cpp");
+    fileNameFilterTextList.add("*.h *.hpp");
     fileNameFilterTextList.add("*.java");
     fileNameFilterTextList.add("*.sh *.bat");
     fileNameFilterTextList.add("Makefile *.pro");
