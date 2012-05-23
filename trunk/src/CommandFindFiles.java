@@ -248,6 +248,8 @@ class CommandFindFiles
     fileNameFilterTextList.add("*.java");
     fileNameFilterTextList.add("*.sh *.bat");
     fileNameFilterTextList.add("Makefile *.pro");
+    fileNameFilterTextList.add("*.ui");
+    fileNameFilterTextList.add("*.xml");
   }
 
   /** view command
