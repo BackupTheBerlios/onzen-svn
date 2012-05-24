@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.regex.Pattern;
 
 // graphics
+import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
@@ -101,7 +102,7 @@ class CommandFindFiles
     }
 
     /** compare file tree data without taking care about type
-     * @param fileData1, fileData2 file tree data to compare
+     * @param findData1, findData2 file tree data to compare
      * @return -1 iff findData1 < findData2,
                 0 iff findData1 = findData2,
                 1 iff findData1 > findData2
@@ -204,6 +205,7 @@ class CommandFindFiles
   // global variable references
   private final RepositoryTab            repositoryTab;
   private final Display                  display;
+  private final Clipboard     clipboard;
 
   private final RepositoryTab[]          thisRepositoryTabs;
   private final RepositoryTab[]          allRepositoryTabs;
@@ -252,11 +254,9 @@ class CommandFindFiles
     fileNameFilterTextList.add("*.xml");
   }
 
-  /** view command
+  /** find file command
    * @param shell shell
    * @param repositoryTab repository tab
-   * @param fileData file to view
-   * @param revision revision to view
    */
   CommandFindFiles(final Shell shell, final RepositoryTab repositoryTab)
   {
@@ -273,8 +273,9 @@ class CommandFindFiles
     this.thisRepositoryTabs = new RepositoryTab[]{repositoryTab};
     this.allRepositoryTabs  = repositoryTab.onzen.getRepositoryTabs();
 
-    // get display
-    display = shell.getDisplay();
+    // get display, clipboard
+    display   = shell.getDisplay();
+    clipboard = new Clipboard(display);
 
     // add files dialog
     dialog = Dialogs.open(shell,
@@ -420,7 +421,7 @@ class CommandFindFiles
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            FindData findData = getSelectedFile();
+            FindData findData = getSelectedFindData();
             if (findData != null)
             {
               findData.repositoryTab.renameLocalFile(findData.file);
@@ -445,7 +446,7 @@ class CommandFindFiles
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            FindData findData = getSelectedFile();
+            FindData findData = getSelectedFindData();
             if (findData != null)
             {
               findData.repositoryTab.deleteLocalFile(findData.file);
@@ -611,7 +612,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          FindData findData = getSelectedFile();
+          FindData findData = getSelectedFindData();
           if (findData != null)
           {
             findData.repositoryTab.onzen.selectRepositoryTab(findData.repositoryTab);
@@ -637,7 +638,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          FindData findData = getSelectedFile();
+          FindData findData = getSelectedFindData();
           if (findData != null)
           {
             findData.repositoryTab.openFile(findData.file,
@@ -665,7 +666,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          FindData findData = getSelectedFile();
+          FindData findData = getSelectedFindData();
           if (findData != null)
           {
             findData.repositoryTab.openFileWith(findData.file,findData.lineNumber);
@@ -690,7 +691,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          FindData findData = getSelectedFile();
+          FindData findData = getSelectedFindData();
           if (findData != null)
           {
             CommandRevisions commandRevisions = new CommandRevisions(shell,findData.repositoryTab,new FileData(findData.file));
@@ -773,6 +774,23 @@ Dprintf.dprintf("");
         else if (Widgets.isAccelerator(keyEvent,SWT.F8))
         {
           Widgets.invoke(widgetShowHiddenFiles);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'a'))
+        {
+          widgetFiles.selectAll();
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
+        {
+          HashSet<FindData> findDataSet = getSelectedFindDataSet();
+          if (findDataSet != null)
+          {
+            StringBuilder buffer = new StringBuilder();
+            for (FindData findData : findDataSet)
+            {
+              buffer.append(findData.file.getAbsolutePath()); buffer.append('\n');
+            }
+            Widgets.setClipboard(clipboard,buffer.toString());
+          }
         }
       }
       public void keyReleased(KeyEvent keyEvent)
@@ -1096,25 +1114,25 @@ Dprintf.dprintf("");
     }
   }
 
-  /** get selected file data set
-   * @return file data set
+  /** get selected find data set
+   * @return find data set
    */
-  private HashSet<File> getSelectedFileSet()
+  private HashSet<FindData> getSelectedFindDataSet()
   {
-    HashSet<File> fileSet = new HashSet<File>();
+    HashSet<FindData> findDataSet = new HashSet<FindData>();
 
     for (TableItem tableItem : widgetFiles.getSelection())
     {
-      fileSet.add((File)tableItem.getData());
+      findDataSet.add((FindData)tableItem.getData());
     }
 
-    return (fileSet.size() > 0) ? fileSet : null;
+    return (findDataSet.size() > 0) ? findDataSet : null;
   }
 
-  /** get selected find data
-   * @return find data or null
+  /** get selected file data
+   * @return file data or null
    */
-  private FindData getSelectedFile()
+  private FindData getSelectedFindData()
   {
     int index = widgetFiles.getSelectionIndex();
     if (index >= 0)
