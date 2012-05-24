@@ -70,7 +70,6 @@ public abstract class HistoryDatabase<T>
 
       // open database
       database = new Database(HISTORY_DATABASE_NAME);
-Dprintf.dprintf("database=%s",database);
 
       // create tables if needed
       statement = database.connection.createStatement();
@@ -108,13 +107,11 @@ Dprintf.dprintf("database=%s",database);
       resultSet = statement.executeQuery("SELECT value FROM meta");
       if (resultSet.next())
       {
-Dprintf.dprintf("x=%s",resultSet.getString("value"));
         if (Integer.parseInt(resultSet.getString("value")) != HISTORY_DATABASE_VERSION)
         {
           preparedStatement = database.connection.prepareStatement("UPDATE meta SET value=? WHERE name='version';");
           preparedStatement.setString(1,Integer.toString(HISTORY_DATABASE_VERSION));
           preparedStatement.executeUpdate();
-Dprintf.dprintf("updated");
         }
       }
       else
@@ -198,8 +195,6 @@ exception.printStackTrace();
         preparedStatement.setString(2,string);
         preparedStatement.execute();
       }
-else { Dprintf.dprintf("dupli"); }
-Dprintf.dprintf("");
 
       if (maxHistoryLength != HISTORY_LENGTH_INFINTE)
       {
@@ -216,7 +211,7 @@ Dprintf.dprintf("");
           if (resultSet.next())
           {
             int id = resultSet.getInt("id");
-Dprintf.dprintf("delete id=%d",id);
+//Dprintf.dprintf("delete id=%d",id);
 
             preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE id=?;");
             preparedStatement.setInt(1,id);
