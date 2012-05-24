@@ -189,7 +189,6 @@ exception.printStackTrace();
         lastString = resultSet.getString("message");
       }
       resultSet.close();
-Dprintf.dprintf("string=%s",string);
 
       if ((lastString == null) || !lastString.equals(string))
       {
