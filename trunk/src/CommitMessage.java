@@ -163,7 +163,7 @@ class CommitMessage
   /** get message history
    * @return message history array
    */
-  public static LinkedList<String[]> getHistoryX()
+  public static LinkedList<String[]> getHistory()
   {
     // load history if needed
     if (history == null)
@@ -179,27 +179,6 @@ class CommitMessage
     }
 
     return history;
-  }
-
-  /** get message history
-   * @return message history array
-   */
-  public static String[][] getHistory()
-  {
-    // load history if needed
-    if (history == null)
-    {
-      try
-      {
-        history = historyDatabase.getHistory();
-      }
-      catch (SQLException exception)
-      {
-        Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
-      }
-    }
-
-    return history.toArray(new String[history.size()][]);
   }
 
   /** create commit message

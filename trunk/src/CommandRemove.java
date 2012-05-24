@@ -11,8 +11,8 @@
 /****************************** Imports ********************************/
 // base
 import java.io.IOException;
-
 import java.util.HashSet;
+import java.util.LinkedList;
 
 // graphics
 import org.eclipse.swt.events.KeyEvent;
@@ -64,22 +64,22 @@ class CommandRemove
   // --------------------------- variables --------------------------------
 
   // global variable references
-  private final RepositoryTab     repositoryTab;
-  private final HashSet<FileData> fileDataSet;
-  private final Shell             shell;
-  private final Display           display;
-  private final String[][]        history;
+  private final RepositoryTab        repositoryTab;
+  private final HashSet<FileData>    fileDataSet;
+  private final Shell                shell;
+  private final Display              display;
+  private final LinkedList<String[]> history;
 
   // dialog
-  private final Data              data = new Data();
-  private final Shell             dialog;
+  private final Data                 data = new Data();
+  private final Shell                dialog;
 
   // widgets
-  private final List              widgetFiles;
-  private final List              widgetHistory;
-  private final Text              widgetMessage;
-  private final Button            widgetImmediateCommit;
-  private final Button            widgetRemove;
+  private final List                 widgetFiles;
+  private final List                 widgetHistory;
+  private final Text                 widgetMessage;
+  private final Button               widgetImmediateCommit;
+  private final Button               widgetRemove;
 
   // ------------------------ native functions ----------------------------
 
@@ -227,7 +227,7 @@ class CommandRemove
           int i = widget.getSelectionIndex();
           if (i >= 0)
           {
-            widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
+            widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
           }
         }
       }
@@ -243,7 +243,7 @@ class CommandRemove
           int i = widget.getSelectionIndex();
           if (i >= 0)
           {
-            widgetMessage.setText(StringUtils.join(history[i],widgetMessage.DELIMITER));
+            widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
             widgetMessage.setFocus();
           }
         }
@@ -262,17 +262,17 @@ class CommandRemove
         if ((keyEvent.stateMask & SWT.CTRL) != 0)
         {
           int i = widgetHistory.getSelectionIndex();
-          if (i < 0) i = history.length;
+          if (i < 0) i = history.size();
 
           if (keyEvent.keyCode == SWT.ARROW_DOWN)
           {
             // next history entry
-            if (i < history.length-1)
+            if (i < history.size()-1)
             {
               widgetHistory.setSelection(i+1);
               display.update();
               widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history[i+1],widgetMessage.DELIMITER));
+              widgetMessage.setText(StringUtils.join(history.get(i+1),widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
@@ -284,31 +284,31 @@ class CommandRemove
               widgetHistory.setSelection(i-1);
               display.update();
               widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history[i-1],widgetMessage.DELIMITER));
+              widgetMessage.setText(StringUtils.join(history.get(i-1),widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
           else if (keyEvent.keyCode == SWT.HOME)
           {
             // first history entry
-            if (history.length > 0)
+            if (history.size() > 0)
             {
               widgetHistory.setSelection(0);
               display.update();
               widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history[0],widgetMessage.DELIMITER));
+              widgetMessage.setText(StringUtils.join(history.getFirst(),widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
           else if (keyEvent.keyCode == SWT.END)
           {
             // last history entry
-            if (history.length > 0)
+            if (history.size() > 0)
             {
-              widgetHistory.setSelection(history.length-1);
+              widgetHistory.setSelection(history.size()-1);
               display.update();
               widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history[history.length-1],widgetMessage.DELIMITER));
+              widgetMessage.setText(StringUtils.join(history.getLast(),widgetMessage.DELIMITER));
               widgetMessage.setFocus();
             }
           }
