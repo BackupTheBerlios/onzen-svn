@@ -10,11 +10,6 @@
 
 /****************************** Imports ********************************/
 // base
-//import java.io.File;
-//import java.io.PrintWriter;
-//import java.io.FileWriter;
-//import java.io.IOException;
-
 import java.net.UnknownHostException;
 import java.net.SocketException;
 import java.net.InetAddress;
@@ -27,9 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 /****************************** Classes ********************************/
@@ -231,12 +223,12 @@ exception.printStackTrace();
   }
 
   /** get history from database
-   * @return list with history data
+   * @return list with history data (ascending order)
    */
-  public ArrayList<T> getHistory()
+  public LinkedList<T> getHistory()
     throws SQLException
   {
-    ArrayList<T> history = new ArrayList<T>();
+    LinkedList<T> history = new LinkedList<T>();
 
     PreparedStatement preparedStatement;
     ResultSet         resultSet;
@@ -252,7 +244,7 @@ exception.printStackTrace();
       resultSet = preparedStatement.executeQuery();
       while (resultSet.next())
       {
-        history.add(stringToData(resultSet.getString("message")));
+        history.addFirst(stringToData(resultSet.getString("message")));
       }
       resultSet.close();
 
@@ -273,7 +265,7 @@ exception.printStackTrace();
   public T[] toArray(T[] array)
     throws SQLException
   {
-    ArrayList<T> history = getHistory();
+    LinkedList<T> history = getHistory();
 
     return history.toArray(array);
   }
