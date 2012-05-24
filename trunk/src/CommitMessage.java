@@ -41,10 +41,9 @@ class CommitMessageReceiveBroadcast extends Thread
   // --------------------------- constants --------------------------------
 
   // --------------------------- variables --------------------------------
-  private LinkedList<String[]> history;
-  private MulticastSocket      socket;
-  private DatagramPacket       packet;
-  private byte[]               buffer = new byte[4*1024];
+  private MulticastSocket socket;
+  private DatagramPacket  packet;
+  private byte[]          buffer = new byte[4*1024];
 
   // ------------------------ native functions ----------------------------
 
@@ -55,13 +54,12 @@ class CommitMessageReceiveBroadcast extends Thread
    * @param address UDP broadcasting address
    * @param port UDP broadcasting port
    */
-  CommitMessageReceiveBroadcast(LinkedList<String[]> history, InetAddress address, int port)
+  CommitMessageReceiveBroadcast(InetAddress address, int port)
     throws UnknownHostException,SocketException,IOException
   {
-    this.history  = history;
-    this.socket   = new MulticastSocket(port);
+    this.socket = new MulticastSocket(port);
     this.socket.joinGroup(address);
-    this.packet   = new DatagramPacket(buffer,buffer.length);
+    this.packet = new DatagramPacket(buffer,buffer.length);
   }
 
   /** run broadcast handler
@@ -102,22 +100,7 @@ class CommitMessageReceiveBroadcast extends Thread
         String[] message = lineList.toArray(new String[lineList.size()]);
 
         // add to history
-/*
-        synchronized(history)
-        {
-          if (!CommitMessage.equalLines(message,history.peekLast()))
-          {
-            // add to history
-            history.addLast(message);
-
-            // shorten history
-            while (history.size() > Settings.maxMessageHistory)
-            {
-              history.removeFirst();
-            }
-          }
-        }
-*/
+        CommitMessage.addToHistory(message);
       }
       catch (IOException exception)
       {
@@ -135,127 +118,67 @@ class CommitMessage
   protected final static String  USER_NAME = System.getProperty("user.name");
   protected final static String  ID        = String.format("%08x",System.currentTimeMillis());
 
-  private static final int HISTORY_ID = 1;
-
-  private static final String    HISTORY_DATABASE_NAME    = "history";
-  private static final int       HISTORY_DATABASE_VERSION = 1;
+  private static final int       HISTORY_ID = 1;
 
   // --------------------------- variables --------------------------------
-  private static HistoryDatabase historyDatabase = new HistoryDatabase<String[]>(HISTORY_ID,Settings.maxMessageHistory)
-  {
-    public String dataToString(String[] s) { return Database.linesToData(s); }
-    public String[] stringToData(String s) { return Database.dataToLines(s); }
-  };
-//  private static                 LinkedList<String[]> history = new LinkedList<String[]>();
-  private static DatagramSocket  socket;
+  protected static HistoryDatabase      historyDatabase;
+  private   static LinkedList<String[]> history;
+  private   static DatagramSocket       socket;
 
-  private final String           summary;
-  private final String[]         message;
-  private File                   tmpFile;
+  private   final String                summary;
+  private   final String[]              message;
+  private   File                        tmpFile;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
-  /** load message history from database
+  /** init
    */
-  public static void loadHistory()
+  static
   {
-/*
-    Database database = null;
+    // init database
+    historyDatabase = new HistoryDatabase<String[]>(HISTORY_ID,Settings.maxMessageHistory)
+    {
+      public String dataToString(String[] s) { return Database.linesToData(s); }
+      public String[] stringToData(String s) { return Database.dataToLines(s); }
+      @Override
+      public boolean dataEquals(String s0[], String s1[]) { return equalLines(s0,s1); }
+    };
+
+    // load commit message history from database
     try
     {
-      PreparedStatement preparedStatement;
-      ResultSet         resultSet;
-
-      // open database
-      database = openHistoryDatabase();
-
-      synchronized(history)
-      {
-        // load history
-        preparedStatement = database.connection.prepareStatement("SELECT message FROM messages ORDER BY datetime ASC;");
-        resultSet = preparedStatement.executeQuery();
-        history.clear();
-        while (resultSet.next())
-        {
-          history.addLast(Database.dataToLines(resultSet.getString("message").trim()));
-        }
-        resultSet.close();
-
-        // shorten history
-        while (history.size() > Settings.maxMessageHistory)
-        {
-          history.removeFirst();
-        }
-      }
-
-      // close database
-      closeHistoryDatabase(database);
+      history = historyDatabase.getHistory();
     }
     catch (SQLException exception)
     {
-      Onzen.printWarning("Cannot load message history from database (error: %s)",exception.getMessage());
-      return;
+      Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
     }
-    finally
-    {
-      try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { ignored }
-    }
-*/
-  }
 
-  /** start message broadcasting receiver
-   */
-  public static void startBroadcast()
-  {
-    try
-    {
-      // create UDP broadcasting socket
-      InetAddress address = InetAddress.getByName(Settings.messageBroadcastAddress);
-      socket = new DatagramSocket();
-      socket.connect(address,Settings.messageBroadcastPort);
-      socket.setBroadcast(true);
-
-      // start commit message broadcast receive thread
-      CommitMessageReceiveBroadcast commitMessageReceiveBroadcast = new CommitMessageReceiveBroadcast(null/*history*/,address,Settings.messageBroadcastPort);
-      commitMessageReceiveBroadcast.setDaemon(true);
-      commitMessageReceiveBroadcast.start();
-    }
-    catch (UnknownHostException exception)
-    {
-      // ignored
-    }
-    catch (SocketException exception)
-    {
-      // ignored
-    }
-    catch (IOException exception)
-    {
-      // ignored
-    }
+    // start message broadcast
+    startBroadcast();
   }
 
   /** get message history
    * @return message history array
    */
-  public static ArrayList<String[]> getHistoryX()
+  public static LinkedList<String[]> getHistoryX()
   {
-    try
+    // load history if needed
+    if (history == null)
     {
-      return historyDatabase.getHistory();
+      try
+      {
+        history = historyDatabase.getHistory();
+      }
+      catch (SQLException exception)
+      {
+        Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
+      }
     }
-    catch (SQLException exception)
-    {
-      Onzen.printWarning("Cannot load commit message history (error: %s)",exception.getMessage());
-      return null;
-    }
-/*
-    synchronized(history)
-    {
-      return history.toArray(new String[history.size()][]);
-    }
-*/
+
+    return history;
   }
 
   /** get message history
@@ -263,15 +186,20 @@ class CommitMessage
    */
   public static String[][] getHistory()
   {
-    try
+    // load history if needed
+    if (history == null)
     {
-      return (String[][])historyDatabase.toArray(new String[0][0]);
+      try
+      {
+        history = historyDatabase.getHistory();
+      }
+      catch (SQLException exception)
+      {
+        Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
+      }
     }
-    catch (SQLException exception)
-    {
-      Onzen.printWarning("Cannot load commit message history (error: %s)",exception.getMessage());
-      return null;
-    }
+
+    return history.toArray(new String[history.size()][]);
   }
 
   /** create commit message
@@ -340,18 +268,8 @@ class CommitMessage
         // ignored
       }
 
-      // store in history
-      try
-      {
-Dprintf.dprintf("");
-        historyDatabase.add(message);
-//      storeHistory();
-      }
-      catch (SQLException exception)
-      {
-        Onzen.printWarning("Cannot store message into history database (error: %s)",exception.getMessage());
-        return;
-      }
+      // store into history
+      addToHistory(message);
     }
   }
 
@@ -434,19 +352,50 @@ Dprintf.dprintf("");
 
   //-----------------------------------------------------------------------
 
+  /** start message broadcasting receiver
+   */
+  private static void startBroadcast()
+  {
+    try
+    {
+      // create UDP broadcasting socket
+      InetAddress address = InetAddress.getByName(Settings.messageBroadcastAddress);
+      socket = new DatagramSocket();
+      socket.connect(address,Settings.messageBroadcastPort);
+      socket.setBroadcast(true);
+
+      // start commit message broadcast receive thread
+      CommitMessageReceiveBroadcast commitMessageReceiveBroadcast = new CommitMessageReceiveBroadcast(address,Settings.messageBroadcastPort);
+      commitMessageReceiveBroadcast.setDaemon(true);
+      commitMessageReceiveBroadcast.start();
+    }
+    catch (UnknownHostException exception)
+    {
+      // ignored
+    }
+    catch (SocketException exception)
+    {
+      // ignored
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+  }
+
   /** compare lines if they are equal (ignore empty lines, space and case)
    * @param otherLines lines to compare with
    * @return true iff lines are equal  (ignore empty lines, space and case)
    */
-  protected static boolean equalLines(String[] lines0, String[] lines1)
+  private static boolean equalLines(String[] lines0, String[] lines1)
   {
-    boolean equal = true;
+    boolean equalFlag = true;
 
     if ((lines0 != null) && (lines1 != null))
     {
       int i0 = 0;
       int i1 = 0;
-      while ((i0 < lines0.length) && (i1 < lines1.length) && equal)
+      while ((i0 < lines0.length) && (i1 < lines1.length) && equalFlag)
       {
         // skip empty lines
         while ((i0 < lines0.length) && lines0[i0].trim().isEmpty())
@@ -465,7 +414,7 @@ Dprintf.dprintf("");
           String line1 = lines1[i1].replace("\\s","");
           if (!line0.equalsIgnoreCase(line1))
           {
-            equal = false;
+            equalFlag = false;
           }
         }
 
@@ -476,142 +425,53 @@ Dprintf.dprintf("");
     }
     else
     {
-      equal = false;
+      equalFlag = false;
     }
 
-    return equal;
+    return equalFlag;
   }
 
-  /** open history database
-   * @return database
-   */
-  private static Database openHistoryDatabase()
-    throws SQLException
+  protected static void addToHistory(String[] message)
   {
-    Database database = null;
-    try
+    // load history if needed
+    if (history == null)
     {
-      Statement         statement;
-      ResultSet         resultSet;
-      PreparedStatement preparedStatement;
-
-      // open database
-      database = new Database(HISTORY_DATABASE_NAME);
-
-      // create tables if needed
-      statement = database.connection.createStatement();
-      statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
-                              "  name  TEXT, "+
-                              "  value TEXT "+
-                              ");"
-                             );
-      statement = database.connection.createStatement();
-      statement.executeUpdate("CREATE TABLE IF NOT EXISTS messages ( "+
-                              "  id       INTEGER PRIMARY KEY, "+
-                              "  datetime INTEGER DEFAULT (DATETIME('now')), "+
-                              "  message  TEXT "+
-                              ");"
-                             );
-
-      // init meta data (if not already initialized)
-      statement = database.connection.createStatement();
-      resultSet = statement.executeQuery("SELECT name,value FROM meta");
-      if (!resultSet.next())
+      try
       {
-        preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
-        preparedStatement.setString(1,Integer.toString(HISTORY_DATABASE_VERSION));
-        preparedStatement.executeUpdate();
+        history = CommitMessage.historyDatabase.getHistory();
       }
-      resultSet.close();
-    }
-    catch (SQLException exception)
-    {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-      throw exception;
+      catch (SQLException exception)
+      {
+        Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
+        return;
+      }
     }
 
-    return database;
-  }
-
-  /** close history database
-   * @param database database
-   */
-  private static void closeHistoryDatabase(Database database)
-    throws SQLException
-  {
-    database.close();
-  }
-
-  /** store message into history database
-   */
-  private void storeHistory()
-  {
-/*
     synchronized(history)
     {
       if (!equalLines(message,history.peekLast()))
       {
-        // add to history
+        // add to history list
         history.addLast(message);
 
-        // shorten history
+        // shorten history list
         while (history.size() > Settings.maxMessageHistory)
         {
           history.removeFirst();
         }
 
-        // store in database
-        Database database = null;
+        // store into history database
         try
         {
-          PreparedStatement preparedStatement;
-          ResultSet         resultSet;
-
-          // open database
-          database = openHistoryDatabase();
-
-          // add to database
-          preparedStatement = database.connection.prepareStatement("INSERT INTO messages (message) VALUES (?);");
-          preparedStatement.setString(1,Database.linesToData(message));
-          preparedStatement.execute();
-
-          // shorten message table size
-          boolean done = false;
-          do
-          {
-            preparedStatement = database.connection.prepareStatement("SELECT id FROM messages ORDER BY datetime DESC LIMIT ?,1;");
-            preparedStatement.setInt(1,Settings.maxMessageHistory);
-            resultSet = preparedStatement.executeQuery();
-            if (resultSet.next())
-            {
-              preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE id=?;");
-              preparedStatement.setLong(1,resultSet.getLong("id"));
-              preparedStatement.execute();
-            }
-            else
-            {
-              done = true;
-            }
-            resultSet.close();
-          }
-          while (!done);
-
-          // close database
-          closeHistoryDatabase(database);
+          historyDatabase.add(message);
         }
         catch (SQLException exception)
         {
           Onzen.printWarning("Cannot store message into history database (error: %s)",exception.getMessage());
           return;
         }
-        finally
-        {
-          try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { ignored }
-        }
       }
     }
-*/
   }
 }
 
