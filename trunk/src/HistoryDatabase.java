@@ -158,7 +158,6 @@ exception.printStackTrace();
    */
   public boolean dataEquals(T data0, T data1)
   {
-Dprintf.dprintf("");
     return dataToString(data0).equals(dataToString(data1));
   }
 
@@ -186,12 +185,10 @@ Dprintf.dprintf("");
         lastData = stringToData(resultSet.getString("message"));
       }
       resultSet.close();
-Dprintf.dprintf("lastData=%s",lastData);
 
       if ((lastData == null) || !dataEquals(data,lastData))
       {
         // add to history
-Dprintf.dprintf("");
         preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
         preparedStatement.setInt(1,historyId);
         preparedStatement.setString(2,dataToString(data));
