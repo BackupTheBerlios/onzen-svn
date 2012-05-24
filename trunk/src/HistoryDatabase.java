@@ -202,6 +202,7 @@ Dprintf.dprintf("string=%s",string);
 else { Dprintf.dprintf("dupli"); }
 Dprintf.dprintf("");
 
+if (false) {
       if (maxHistoryLength != HISTORY_LENGTH_INFINTE)
       {
         // shorten history
@@ -228,6 +229,7 @@ Dprintf.dprintf("");
         while (!doneFlag);
       }
 Dprintf.dprintf("");
+}
 
       database.close(); database = null;
     }
