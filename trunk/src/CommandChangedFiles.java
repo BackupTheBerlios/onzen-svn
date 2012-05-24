@@ -956,10 +956,6 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Settings.geometryChangedFiles        = dialog.getSize();
-          Settings.geometryChangedFilesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
-          Settings.changedFilesShowStates      = data.showStates;
-
           Dialogs.close(dialog);
         }
       });
@@ -1197,7 +1193,16 @@ Dprintf.dprintf("");
     if (!dialog.isDisposed())
     {
       widgetFilter.setFocus();
-      Dialogs.run(dialog);
+      Dialogs.run(dialog,new DialogRunnable()
+      {
+        public void done(Object result)
+        {
+Dprintf.dprintf("");
+          Settings.geometryChangedFiles        = dialog.getSize();
+          Settings.geometryChangedFilesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
+          Settings.changedFilesShowStates      = data.showStates;
+        }
+      });
     }
   }
 
