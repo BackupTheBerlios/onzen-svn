@@ -976,7 +976,7 @@ Dprintf.dprintf("");
         Widgets.modified(data);
       }
     });
-    widgetFiles.addKeyListener(new KeyListener()
+    KeyListener keyListener = new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
@@ -1021,6 +1021,10 @@ Dprintf.dprintf("");
         {
           Widgets.invoke(widgetButtonReread);
         }
+        else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'a'))
+        {
+          widgetFiles.selectAll();
+        }
         else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
         {
           HashSet<FileData> fileDataSet = getSelectedFileDataSet();
@@ -1038,7 +1042,9 @@ Dprintf.dprintf("");
       public void keyReleased(KeyEvent keyEvent)
       {
       }
-    });
+    };
+    widgetFiles.addKeyListener(keyListener);
+    widgetFilter.addKeyListener(keyListener);
 
     widgetFilter.addSelectionListener(new SelectionListener()
     {
@@ -1197,7 +1203,6 @@ Dprintf.dprintf("");
       {
         public void done(Object result)
         {
-Dprintf.dprintf("");
           Settings.geometryChangedFiles        = dialog.getSize();
           Settings.geometryChangedFilesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
           Settings.changedFilesShowStates      = data.showStates;
