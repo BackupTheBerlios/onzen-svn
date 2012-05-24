@@ -34,6 +34,7 @@ class Database
   // --------------------------- variables --------------------------------
   public final Connection connection;
 
+  private String          name;
   private boolean         open;
 
   // ------------------------ native functions ----------------------------
@@ -46,6 +47,8 @@ class Database
   Database(String name)
     throws SQLException
   {
+    this.name = name;
+
     // create directory
     File directory = new File(Settings.ONZEN_DIRECTORY);
     if ((directory != null) && !directory.exists()) directory.mkdirs();
@@ -158,7 +161,7 @@ class Database
    */
   public String toString()
   {
-    return "Database {}";
+    return "Database {name: "+name+"}";
   }
 
   //-----------------------------------------------------------------------
