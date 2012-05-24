@@ -191,6 +191,7 @@ Dprintf.dprintf("lastData=%s",lastData);
       if ((lastData == null) || !dataEquals(data,lastData))
       {
         // add to history
+Dprintf.dprintf("");
         preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
         preparedStatement.setInt(1,historyId);
         preparedStatement.setString(2,dataToString(data));
