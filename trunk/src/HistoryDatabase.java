@@ -189,7 +189,7 @@ exception.printStackTrace();
         lastString = resultSet.getString("message");
       }
       resultSet.close();
-Dprintf.dprintf("");
+Dprintf.dprintf("string=%s",string);
 
       if ((lastString == null) || !lastString.equals(string))
       {
@@ -217,7 +217,7 @@ Dprintf.dprintf("");
           if (resultSet.next())
           {
             int id = resultSet.getInt("id");
-  //Dprintf.dprintf("id=%d",id);
+  Dprintf.dprintf("delete id=%d",id);
 
             preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE id=?;");
             preparedStatement.setInt(1,id);
