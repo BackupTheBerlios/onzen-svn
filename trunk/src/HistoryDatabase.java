@@ -152,6 +152,16 @@ exception.printStackTrace();
    */
   abstract public T stringToData(String string);
 
+  /** compare entries
+   * @param data0,data1 entries
+   * @return true if entries are equal
+   */
+  public boolean dataEquals(T data0, T data1)
+  {
+Dprintf.dprintf("");
+    return dataToString(data0).equals(dataToString(data1));
+  }
+
   /** add to history
    * @param data history data to add
    */
@@ -161,30 +171,28 @@ exception.printStackTrace();
     PreparedStatement preparedStatement;
     ResultSet         resultSet;
 
-    String string = dataToString(data);
-
     Database database = null;
     try
     {
       database = new Database(HISTORY_DATABASE_NAME);
 
       // check if equal to last entry
-      String lastString = null;
+      T lastData = null;
       preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime DESC LIMIT 0,1;");
       preparedStatement.setInt(1,historyId);
       resultSet = preparedStatement.executeQuery();
       if (resultSet.next())
       {
-        lastString = resultSet.getString("message");
+        lastData = stringToData(resultSet.getString("message"));
       }
       resultSet.close();
 
-      if ((lastString == null) || !lastString.equals(string))
+      if ((lastData == null) || !dataEquals(data,lastData))
       {
         // add to history
         preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
         preparedStatement.setInt(1,historyId);
-        preparedStatement.setString(2,string);
+        preparedStatement.setString(2,dataToString(data));
         preparedStatement.execute();
       }
 
