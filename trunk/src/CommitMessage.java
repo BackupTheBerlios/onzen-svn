@@ -102,6 +102,7 @@ class CommitMessageReceiveBroadcast extends Thread
         String[] message = lineList.toArray(new String[lineList.size()]);
 
         // add to history
+/*
         synchronized(history)
         {
           if (!CommitMessage.equalLines(message,history.peekLast()))
@@ -116,6 +117,7 @@ class CommitMessageReceiveBroadcast extends Thread
             }
           }
         }
+*/
       }
       catch (IOException exception)
       {
@@ -133,16 +135,23 @@ class CommitMessage
   protected final static String  USER_NAME = System.getProperty("user.name");
   protected final static String  ID        = String.format("%08x",System.currentTimeMillis());
 
+  private static final int HISTORY_ID = 1;
+
   private static final String    HISTORY_DATABASE_NAME    = "history";
   private static final int       HISTORY_DATABASE_VERSION = 1;
 
   // --------------------------- variables --------------------------------
-  private static                LinkedList<String[]> history = new LinkedList<String[]>();
-  private static DatagramSocket socket;
+  private static HistoryDatabase historyDatabase = new HistoryDatabase<String[]>(HISTORY_ID,Settings.maxMessageHistory)
+  {
+    public String dataToString(String[] s) { return Database.linesToData(s); }
+    public String[] stringToData(String s) { return Database.dataToLines(s); }
+  };
+//  private static                 LinkedList<String[]> history = new LinkedList<String[]>();
+  private static DatagramSocket  socket;
 
-  private final String          summary;
-  private final String[]        message;
-  private File                  tmpFile;
+  private final String           summary;
+  private final String[]         message;
+  private File                   tmpFile;
 
   // ------------------------ native functions ----------------------------
 
@@ -152,6 +161,7 @@ class CommitMessage
    */
   public static void loadHistory()
   {
+/*
     Database database = null;
     try
     {
@@ -190,8 +200,9 @@ class CommitMessage
     }
     finally
     {
-      try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { /* ignored */ }
+      try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { ignored }
     }
+*/
   }
 
   /** start message broadcasting receiver
@@ -207,7 +218,7 @@ class CommitMessage
       socket.setBroadcast(true);
 
       // start commit message broadcast receive thread
-      CommitMessageReceiveBroadcast commitMessageReceiveBroadcast = new CommitMessageReceiveBroadcast(history,address,Settings.messageBroadcastPort);
+      CommitMessageReceiveBroadcast commitMessageReceiveBroadcast = new CommitMessageReceiveBroadcast(null/*history*/,address,Settings.messageBroadcastPort);
       commitMessageReceiveBroadcast.setDaemon(true);
       commitMessageReceiveBroadcast.start();
     }
@@ -228,11 +239,38 @@ class CommitMessage
   /** get message history
    * @return message history array
    */
-  public static String[][] getHistory()
+  public static ArrayList<String[]> getHistoryX()
   {
+    try
+    {
+      return historyDatabase.getHistory();
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot load commit message history (error: %s)",exception.getMessage());
+      return null;
+    }
+/*
     synchronized(history)
     {
       return history.toArray(new String[history.size()][]);
+    }
+*/
+  }
+
+  /** get message history
+   * @return message history array
+   */
+  public static String[][] getHistory()
+  {
+    try
+    {
+      return (String[][])historyDatabase.toArray(new String[0][0]);
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot load commit message history (error: %s)",exception.getMessage());
+      return null;
     }
   }
 
@@ -303,7 +341,17 @@ class CommitMessage
       }
 
       // store in history
-      storeHistory();
+      try
+      {
+Dprintf.dprintf("");
+        historyDatabase.add(message);
+//      storeHistory();
+      }
+      catch (SQLException exception)
+      {
+        Onzen.printWarning("Cannot store message into history database (error: %s)",exception.getMessage());
+        return;
+      }
     }
   }
 
@@ -499,6 +547,7 @@ exception.printStackTrace();
    */
   private void storeHistory()
   {
+/*
     synchronized(history)
     {
       if (!equalLines(message,history.peekLast()))
@@ -558,10 +607,11 @@ exception.printStackTrace();
         }
         finally
         {
-          try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { /* ignored */ }
+          try { if (database != null) closeHistoryDatabase(database); } catch (SQLException exception) { ignored }
         }
       }
     }
+*/
   }
 }
 
