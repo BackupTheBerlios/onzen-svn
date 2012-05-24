@@ -186,6 +186,7 @@ Dprintf.dprintf("");
         lastData = stringToData(resultSet.getString("message"));
       }
       resultSet.close();
+Dprintf.dprintf("lastData=%s",lastData);
 
       if ((lastData == null) || !dataEquals(data,lastData))
       {
