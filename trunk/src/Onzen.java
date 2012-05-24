@@ -2176,10 +2176,6 @@ menuItem.addSelectionListener(new SelectionListener()
    */
   private void initAll()
   {
-    // load message history, start message broadcast
-    CommitMessage.loadHistory();
-    CommitMessage.startBroadcast();
-
     // init display
     initDisplay();
 
