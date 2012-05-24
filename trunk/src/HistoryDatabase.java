@@ -201,7 +201,6 @@ exception.printStackTrace();
 else { Dprintf.dprintf("dupli"); }
 Dprintf.dprintf("");
 
-if (false) {
       if (maxHistoryLength != HISTORY_LENGTH_INFINTE)
       {
         // shorten history
@@ -217,7 +216,7 @@ if (false) {
           if (resultSet.next())
           {
             int id = resultSet.getInt("id");
-  Dprintf.dprintf("delete id=%d",id);
+Dprintf.dprintf("delete id=%d",id);
 
             preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE id=?;");
             preparedStatement.setInt(1,id);
@@ -227,8 +226,6 @@ if (false) {
         }
         while (!doneFlag);
       }
-Dprintf.dprintf("");
-}
 
       database.close(); database = null;
     }
