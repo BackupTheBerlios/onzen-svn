@@ -10,19 +10,20 @@
 
 /****************************** Imports ********************************/
 // base
-import java.net.UnknownHostException;
-import java.net.SocketException;
-import java.net.InetAddress;
-import java.net.DatagramSocket;
-import java.net.DatagramPacket;
-import java.net.MulticastSocket;
+//import java.net.UnknownHostException;
+//import java.net.SocketException;
+//import java.net.InetAddress;
+//import java.net.DatagramSocket;
+//import java.net.DatagramPacket;
+//import java.net.MulticastSocket;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Iterator;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import java.util.LinkedList;
 
 /****************************** Classes ********************************/
 
@@ -31,27 +32,215 @@ import java.util.LinkedList;
 public abstract class HistoryDatabase<T>
 {
   // --------------------------- constants --------------------------------
+  public enum Directions
+  {
+    ASCENDING,
+    DESCENDING
+  };
+
   public static final int HISTORY_LENGTH_INFINTE = -1;
 
   private static final String    HISTORY_DATABASE_NAME    = "history";
   private static final int       HISTORY_DATABASE_VERSION = 2;
 
   // --------------------------- variables --------------------------------
-  private int historyId;
-  private int maxHistoryLength;
+  private int        historyId;
+  private int        maxHistoryLength;
+  private Directions direction;
 
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
 
+  /** get history from database
+   * @param historyId unique history id
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param direction history direction order
+   * @return list with history data
+   */
+  public static LinkedList<String> getHistory(int historyId, int maxHistoryLength, Directions direction)
+  {
+    LinkedList<String> historyList = null;
+
+    HistoryDatabase historyDatabase = null;
+    try
+    {
+      historyDatabase = new HistoryDatabase<String>(historyId,maxHistoryLength,direction)
+      {
+        public String dataToString(String s) { return s; }
+        public String stringToData(String s) { return s; }
+      };
+
+      historyList = historyDatabase.getHistory();
+
+      historyDatabase.close(); historyDatabase = null;
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot load history with id %d from database (error: %s)",historyId,exception.getMessage());
+      return new LinkedList<String>();
+    }
+    finally
+    {
+      if (historyDatabase != null) historyDatabase.close();
+    }
+
+    return historyList;
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @return list with history data
+   */
+  public static LinkedList<String> getHistory(int historyId, int maxHistoryLength)
+  {
+    return getHistory(historyId,maxHistoryLength,Directions.ASCENDING);
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param historyList history list
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param direction history direction order
+   * @param addEntry entry to add or null
+   */
+  public static void putHistory(int historyId, LinkedList<String> historyList, int maxHistoryLength, Directions direction, String addEntry)
+  {
+    HistoryDatabase historyDatabase = null;
+    try
+    {
+      historyDatabase = new HistoryDatabase<String>(historyId,maxHistoryLength,direction)
+      {
+        public String dataToString(String s) { return s; }
+        public String stringToData(String s) { return s; }
+      };
+
+      historyDatabase.putHistory(historyList);
+      if ((addEntry != null) && !addEntry.isEmpty()) historyDatabase.add(addEntry);
+
+      historyDatabase.close(); historyDatabase = null;
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot save history with id %d into database (error: %s)",historyId,exception.getMessage());
+      return;
+    }
+    finally
+    {
+      if (historyDatabase != null) historyDatabase.close();
+    }
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param historyList history list
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param direction history direction order
+   */
+  public static void putHistory(int historyId, LinkedList<String> historyList, int maxHistoryLength, Directions direction)
+  {
+    putHistory(historyId,historyList,maxHistoryLength,direction,null);
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param historyList history list
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param addEntry entry to add or null
+   */
+  public static void putHistory(int historyId, LinkedList<String> historyList, int maxHistoryLength, String addEntry)
+  {
+    putHistory(historyId,historyList,maxHistoryLength,Directions.ASCENDING,addEntry);
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param history history array (ascending order)
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param direction history direction order
+   * @param addEntry entry to add or null
+   */
+  public static void putHistory(int historyId, String[] history, int maxHistoryLength, Directions direction, String addEntry)
+  {
+    putHistory(historyId,new LinkedList<String>(Arrays.asList(history)),maxHistoryLength,addEntry);
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param historyList history array
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param direction history direction order
+   */
+  public static void putHistory(int historyId, String[] history, int maxHistoryLength, Directions direction)
+  {
+    putHistory(historyId,history,maxHistoryLength,direction,null);
+  }
+
+  /** get history from database
+   * @param historyId unique history id
+   * @param historyList history array
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param addEntry entry to add or null
+   */
+  public static void putHistory(int historyId, String[] history, int maxHistoryLength, String addEntry)
+  {
+    putHistory(historyId,history,maxHistoryLength,Directions.ASCENDING,addEntry);
+  }
+
+  /** convert string array into history
+   * @param history string array
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param addEntry entry to add or null
+   * @return list with history data (ascending order)
+   */
+  public static LinkedList<String> asList(String[] history, int maxHistoryLength, String addEntry)
+  {
+    LinkedList<String> historyList = new LinkedList<String>(Arrays.asList(history));
+    if (!addEntry.equals(historyList.getFirst()))
+    {
+      historyList.addFirst(addEntry);
+    }
+    if (maxHistoryLength != HISTORY_LENGTH_INFINTE)
+    {
+      while (historyList.size() > maxHistoryLength)
+      {
+        historyList.removeLast();
+      }
+    }
+
+    return historyList;
+  }
+
+  /** convert string array into history
+   * @param history string array
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @return list with history data (ascending order)
+   */
+  public static LinkedList<String> asList(String[] history, int maxHistoryLength)
+  {
+    return asList(history,maxHistoryLength,null);
+  }
+
+  /** convert string array into history
+   * @param history string array
+   * @return list with history data (ascending order)
+   */
+  public static LinkedList<String> asList(String[] history)
+  {
+    return asList(history,HISTORY_LENGTH_INFINTE);
+  }
+
   /** open history database
    * @param historyId unique history id
    * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   * @param direction history direction order
    */
-  public HistoryDatabase(int historyId, int maxHistoryLength)
+  public HistoryDatabase(int historyId, int maxHistoryLength, Directions direction)
   {
     this.historyId        = historyId;
     this.maxHistoryLength = maxHistoryLength;
+    this.direction        = direction;
 
     Database database = null;
     try
@@ -128,6 +317,15 @@ exception.printStackTrace();
     }
   }
 
+  /** open history database
+   * @param historyId unique history id
+   * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
+   */
+  public HistoryDatabase(int historyId, int maxHistoryLength)
+  {
+    this(historyId,maxHistoryLength,Directions.ASCENDING);
+  }
+
   public HistoryDatabase(int historyId)
     throws SQLException
   {
@@ -177,7 +375,7 @@ exception.printStackTrace();
 
       // check if equal to last entry
       T lastData = null;
-      preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime DESC LIMIT 0,1;");
+      preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime,id DESC LIMIT 0,1;");
       preparedStatement.setInt(1,historyId);
       resultSet = preparedStatement.executeQuery();
       if (resultSet.next())
@@ -235,7 +433,7 @@ exception.printStackTrace();
   public LinkedList<T> getHistory()
     throws SQLException
   {
-    LinkedList<T> history = new LinkedList<T>();
+    LinkedList<T> historyList = new LinkedList<T>();
 
     PreparedStatement preparedStatement;
     ResultSet         resultSet;
@@ -247,11 +445,21 @@ exception.printStackTrace();
 
       preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime DESC LIMIT 0,?;");
       preparedStatement.setInt(1,historyId);
-      preparedStatement.setInt(2,Settings.maxMessageHistory);
+      preparedStatement.setInt(2,maxHistoryLength);
       resultSet = preparedStatement.executeQuery();
       while (resultSet.next())
       {
-        history.addFirst(stringToData(resultSet.getString("message")));
+        T data = stringToData(resultSet.getString("message"));
+
+        switch (direction)
+        {
+          case ASCENDING:
+            historyList.add(data);
+            break;
+          case DESCENDING:
+            historyList.addFirst(data);
+            break;
+        }
       }
       resultSet.close();
 
@@ -262,7 +470,7 @@ exception.printStackTrace();
       if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
     }
 
-    return history;
+    return historyList;
   }
 
    /** get history
@@ -275,6 +483,48 @@ exception.printStackTrace();
     LinkedList<T> history = getHistory();
 
     return history.toArray(array);
+  }
+
+  /** get history from database
+   * @return list with history data (ascending order)
+   */
+  public void putHistory(LinkedList<T> historyList)
+    throws SQLException
+  {
+    PreparedStatement preparedStatement;
+    ResultSet         resultSet;
+
+    Database database = null;
+    try
+    {
+      database = new Database(HISTORY_DATABASE_NAME);
+
+      preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE historyId=?;");
+      preparedStatement.setInt(1,historyId);
+      preparedStatement.executeUpdate();
+
+      Iterator<T> iterator = null;
+      switch (direction)
+      {
+        case ASCENDING : iterator = historyList.descendingIterator(); break;
+        case DESCENDING: iterator = historyList.iterator();           break;
+      }
+      while (iterator.hasNext())
+      {
+        T data = iterator.next();
+
+        preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
+        preparedStatement.setInt(1,historyId);
+        preparedStatement.setString(2,dataToString(data));
+        preparedStatement.execute();
+      }
+
+      database.close(); database = null;
+    }
+    finally
+    {
+      if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
+    }
   }
 
   /** convert data to string
