@@ -334,7 +334,7 @@ class CommandChangedFiles
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Solve",Settings.keySolve);
+        menuItem = Widgets.addMenuItem(menu,"Resolve",Settings.keyResolve);
 // NYI
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
@@ -908,7 +908,8 @@ menuItem.setEnabled(false);
         }
       });
 
-      widgetButtonSolve = Widgets.newButton(composite,"Solve",Settings.keySolve);
+      widgetButtonSolve = Widgets.newButton(composite,"Resolve",Settings.keyResolve);
+// NYI
 widgetButtonSolve.setEnabled(false);
       Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       Widgets.addModifyListener(new WidgetListener(widgetButtonSolve,data)
