@@ -1407,7 +1407,8 @@ Dprintf.dprintf("ex=%s",exception);
       });
       widgetButtonRevisions.setToolTipText("Show revisions of selected entry.");
 
-      widgetButtonSolve = Widgets.newButton(composite,"Solve",Settings.keySolve);
+      widgetButtonSolve = Widgets.newButton(composite,"Resolve",Settings.keyResolve);
+// NYI
 widgetButtonSolve.setEnabled(false);
       Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetButtonSolve.addSelectionListener(new SelectionListener()
@@ -1689,6 +1690,38 @@ Dprintf.dprintf("");
         }
       });
 
+      menuItem = Widgets.addMenuItem(menu,"Resolve\u2026",Settings.keyResolve);
+// NYI
+menuItem.setEnabled(false);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.resolve();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Set resolved",Settings.keySetResolved);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.setResolved();
+          }
+        }
+      });
+
       menuItemApplyPatches = Widgets.addMenuItem(menu,"Apply patches",Settings.keyApplyPatches);
       menuItemApplyPatches.setEnabled(false);
       menuItemApplyPatches.addSelectionListener(new SelectionListener()
@@ -1933,7 +1966,8 @@ Dprintf.dprintf("");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Solve conflict\u2026",Settings.keySolve);
+      menuItem = Widgets.addMenuItem(menu,"Resolve\u2026",Settings.keyResolve);
+// NYI
 menuItem.setEnabled(false);
       menuItem.addSelectionListener(new SelectionListener()
       {
@@ -1943,6 +1977,20 @@ menuItem.setEnabled(false);
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Widgets.invoke(widgetButtonSolve);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Set resolved",Settings.keySetResolved);
+// NYI
+menuItem.setEnabled(false);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+Dprintf.dprintf("NYI");
         }
       });
     }
