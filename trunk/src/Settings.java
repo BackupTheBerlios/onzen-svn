@@ -853,6 +853,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevert                              = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyResolve                             = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keySetResolved                         = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyApplyPatches                        = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyUnapplyPatches                      = SWT.NONE;
@@ -870,8 +874,6 @@ public class Settings
   public static int                      keyRevisionInfo                        = SWT.CTRL+'I';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevisions                           = SWT.CTRL+'R';
-  @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keySolve                               = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyChangedFiles                        = SWT.CTRL+'L';
   @SettingValue(type=SettingValueAdapterKey.class)
