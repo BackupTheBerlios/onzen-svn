@@ -2053,6 +2053,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
+  /** set conflicts resolved
+   * @param fileDataSet file data set or null for all files
+   */
+  public void resolve(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+throw new Error("NYI");
+  }
+
   /** get incoming changes list
    */
   public LogData[] getIncomingChanges()

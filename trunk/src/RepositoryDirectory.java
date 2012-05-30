@@ -337,6 +337,14 @@ class RepositoryDirectory extends Repository
     }
   }
 
+  /** set conflicts resolved
+   * @param fileDataSet file data set or null for all files
+   */
+  public void resolve(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+  }
+
   /** get incoming changes list
    */
   public LogData[] getIncomingChanges()

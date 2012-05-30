@@ -1445,6 +1445,15 @@ Dprintf.dprintf("NYI");
 throw new RepositoryException("NYI");
   }
 
+  /** set conflicts resolved
+   * @param fileDataSet file data set or null for all files
+   */
+  public void resolve(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+throw new Error("NYI");
+  }
+
   /** get incoming changes list
    */
   public LogData[] getIncomingChanges()

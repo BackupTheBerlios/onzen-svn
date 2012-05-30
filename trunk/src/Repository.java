@@ -2972,6 +2972,12 @@ Dprintf.dprintf("fileName=%s",fileName);
   abstract public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException;
 
+  /** set conflicts resolved
+   * @param fileDataSet file data set or null for all files
+   */
+  abstract public void resolve(HashSet<FileData> fileDataSet)
+    throws RepositoryException;
+
   /** get incoming changes list
    */
   abstract public LogData[] getIncomingChanges()

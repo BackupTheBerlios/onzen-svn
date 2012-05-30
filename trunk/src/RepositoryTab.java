@@ -432,6 +432,34 @@ class RepositoryTab
           }
         });
 
+        menuItem = Widgets.addMenuItem(menu,"Resolve\u2026",Settings.keyResolve);
+// NYI
+menuItem.setEnabled(false);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+Dprintf.dprintf("NYI");
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Set resolved",Settings.keySetResolved);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            setResolved();
+          }
+        });
+
+        menuItem = Widgets.addMenuSeparator(menu);
+
         menuItem = Widgets.addMenuItem(menu,"Add\u2026",Settings.keyAdd);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -556,7 +584,7 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Solve\u2026",Settings.keySolve);
+        menuItem = Widgets.addMenuItem(menu,"Resolve\u2026",Settings.keyResolve);
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -566,7 +594,21 @@ menuItem.setEnabled(false);
           public void widgetSelected(SelectionEvent selectionEvent)
           {
 Dprintf.dprintf("");
-//            solve();
+//            resolve();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Set resolved",Settings.keySetResolved);
+menuItem.setEnabled(false);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+Dprintf.dprintf("NYI");
+//            setResolved();
           }
         });
 
@@ -1032,7 +1074,7 @@ menuItem.setEnabled(false);
     }
   }
 
-  /** revert selected entries
+  /** resolve conflicts
    */
   public void revert()
   {
@@ -1041,6 +1083,44 @@ menuItem.setEnabled(false);
     {
       CommandRevert commandRevert = new CommandRevert(shell,this,fileDataSet);
       commandRevert.run();
+    }
+  }
+
+  /** resolve conflicts
+   */
+  public void resolve()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+// NYI
+Dprintf.dprintf("NYI");
+//      CommandRename commandRename = new CommandRename(shell,this,fileData);
+//      commandRename.run();
+    }
+  }
+
+  /** set conflicts resolved
+   */
+  public void setResolved()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      setStatusText("Set conflicts resolved...");
+      try
+      {
+        repository.resolve(fileDataSet);
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(shell,"Set conflicts resolved fail: %s",exception.getMessage());
+        return;
+      }
+      finally
+      {
+        clearStatusText();
+      }
     }
   }
 

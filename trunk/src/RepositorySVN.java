@@ -1694,6 +1694,34 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
+  /** set conflicts resolved
+   * @param fileDataSet file data set or null for all files
+   */
+  public void resolve(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // copy file
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive","resolve","--accept","working");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+  }
+
   /** get incoming changes list
    */
   public LogData[] getIncomingChanges()
