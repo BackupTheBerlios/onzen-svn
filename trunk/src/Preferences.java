@@ -17,9 +17,23 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import javax.mail.Authenticator;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Part;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
 
 // graphics
 import org.eclipse.swt.events.KeyEvent;
@@ -540,6 +554,30 @@ class Preferences
           widgetMailFrom.setText(Settings.mailFrom);
           Widgets.layout(widgetMailFrom,2,1,TableLayoutData.WE,0,0,2);
           widgetMailFrom.setToolTipText("Mail from address.");
+
+          button = Widgets.newButton(subComposite,"Send test mail");
+          Widgets.layout(button,3,1,TableLayoutData.E);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              String toAddress = Dialogs.string(dialog,"Mail address","Mail address:",widgetMailFrom.getText().trim(),"Send","Cancel");
+              if ((toAddress != null) && !toAddress.trim().isEmpty())
+              {
+                sendTestMail(widgetMailSMTPHost.getText().trim(),
+                             Integer.parseInt(widgetMailSMTPPort.getText()),
+                             widgetMailSMTPSSL.getSelection(),
+                             widgetMailLogin.getText().trim(),
+                             widgetMailPassword.getText().trim(),
+                             widgetMailFrom.getText().trim(),
+                             toAddress.trim()
+                            );
+              }
+           }
+          });
         }
 
         subComposite = Widgets.newGroup(composite,"Post review server");
@@ -1628,7 +1666,6 @@ Dprintf.dprintf("");
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
           Settings.checkoutHistoryPaths                   = widgetCheckoutHistoryPaths.getItems();
-for (String s : Settings.checkoutHistoryPaths) Dprintf.dprintf("s=%s",s);
 
           if      (widgetEOLAuto.getSelection()   ) Settings.eolType = Settings.EOLTypes.AUTO;
           else if (widgetEOLUnix.getSelection()   ) Settings.eolType = Settings.EOLTypes.UNIX;
@@ -2612,6 +2649,91 @@ for (String s : Settings.checkoutHistoryPaths) Dprintf.dprintf("s=%s",s);
     // run dialog
     Widgets.setFocus(widgetName);
     return (Boolean)Dialogs.run(dialog,false);
+  }
+
+  private void sendTestMail(String        mailSMTPHost,
+                            int           mailSMTPPort,
+                            boolean       mailSMTPSSL,
+                            final String  mailLogin,
+                            final String  mailPassword,
+                            String        mailFrom,
+                            String        toAddress
+                           )
+  {
+    final String TEST_MAIL_TEMPLATE =
+    "Test mail:\n" +
+    "\n" +
+    "  SMTP host: ${SMTPHost}\n" +
+    "  SMTP port: ${SMTPPort}\n" +
+    "  SMTP SSL: ${SMTPSSL}\n" +
+    "  Login name: ${login}\n" +
+    "  Mail from: ${from}\n" +
+    "\n" +
+    "";
+
+    // create mail text
+    Macro macro = new Macro(TEST_MAIL_TEMPLATE);
+    macro.expand("SMTPHost", mailSMTPHost                  );
+    macro.expand("SMTPPort", Integer.toString(mailSMTPPort));
+    macro.expand("SMTPSSL",  mailSMTPSSL ? "yes" : "no"    );
+    macro.expand("login",    mailLogin                     );
+    macro.expand("from",     mailFrom                      );
+
+    try
+    {
+      // create mail session
+      Properties properties = new Properties();
+      properties.put("mail.transport.protocol","smtp");
+      properties.put("mail.smtp.host",mailSMTPHost);
+      properties.put("mail.smtp.port",Integer.toString(mailSMTPPort));
+      if (!mailFrom.isEmpty()) properties.put("mail.from",mailFrom);
+//properties.put("mail.smtp.starttls.enable","true");
+      properties.put("mail.smtp.auth",(mailPassword != null) && !mailPassword.isEmpty());
+      if (mailSMTPSSL)
+      {
+        properties.put("mail.smtp.socketFactory.port",Integer.toString(mailSMTPPort));
+        properties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+        properties.put("mail.smtp.socketFactory.fallback","false");
+      }
+
+//properties.put("mail.smtps.starttls.enable","true");
+//                  if (Settings.debugFlag) properties.put("mail.debug","true");
+      Authenticator auth = new Authenticator()
+      {
+        public PasswordAuthentication getPasswordAuthentication()
+        {
+          return new PasswordAuthentication(mailLogin,mailPassword);
+        }
+      };
+      Session session = Session.getInstance(properties,auth);
+
+      // create message
+      MimeMultipart mimeMultipart = new MimeMultipart();
+
+      MimeBodyPart text = new MimeBodyPart();
+      text.setText(macro.getValue());
+      text.setDisposition(MimeBodyPart.INLINE);
+      mimeMultipart.addBodyPart(text);
+
+      Message message = new MimeMessage(session);
+      if (!mailFrom.isEmpty()) message.setFrom(new InternetAddress(mailFrom));
+      message.setSubject("Onzen test mail");
+      message.setRecipient(Message.RecipientType.TO,new InternetAddress(toAddress));
+      message.setSentDate(new Date());
+      message.setContent(mimeMultipart);
+      message.saveChanges();
+
+      // send message
+      Transport.send(message);
+
+      Dialogs.info(dialog,"Information","Test mail successfully sent!");
+    }
+    catch (MessagingException exception)
+    {
+exception.printStackTrace();
+Dprintf.dprintf("exception=%s",exception);
+      Dialogs.error(dialog,"Cannot send test mail (error: %s)",exception.getMessage());
+    }
   }
 }
 
