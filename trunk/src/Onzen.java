@@ -354,7 +354,6 @@ public class Onzen
   private static String                     lastCheckoutRevision        = "";
   private static String                     lastCheckoutDestinationPath = "";
 
-
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
@@ -2093,7 +2092,7 @@ Dprintf.dprintf("");
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"Find files\u2026",Settings.keyFindFiles);
+      menuItem = Widgets.addMenuItem(menu,"Find files by name\u2026",Settings.keyFindFilesByName);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2103,7 +2102,22 @@ Dprintf.dprintf("");
         {
           if (selectedRepositoryTab != null)
           {
-            selectedRepositoryTab.findFiles();
+            selectedRepositoryTab.findFilesByName();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Find in files\u2026",Settings.keyFindFilesByContent);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.findFilesByContent();
           }
         }
       });
