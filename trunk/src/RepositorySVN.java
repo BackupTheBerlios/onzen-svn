@@ -1430,9 +1430,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","-N");
+      command.append(Settings.svnCommand,"--non-interactive","update","--depth","immediates","--accept","postpone");
+//      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
+//      command.append(".");
       exec = new Exec(rootPath,command);
 
       // read output
@@ -1444,10 +1446,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // read stdout
         line = exec.pollStdout();
-        if ((line != null) && line.startsWith("getting "))
+//        if ((line != null) && line.startsWith("getting "))
+        if (line != null)
         {
-//Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateText(line);
+          if (busyDialog != null) busyDialog.updateList(line);
         }
 
         // discard stderr
@@ -1465,6 +1467,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
       }
+      else
+      {
+        // abort
+        exec.destroy();
+      }
 
       // done
       exec.done(); exec = null;
@@ -1476,32 +1483,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     finally
     {
       if (exec != null) exec.done();
-    }
-  }
-
-  /** update all files from respository
-   */
-  public void updateAll()
-    throws RepositoryException
-  {
-    try
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      // update files
-      command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update");
-      command.append("--");
-      exitCode = new Exec(rootPath,command).waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
-      }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 
