@@ -972,7 +972,7 @@ menuItem.setEnabled(false);
     BusyDialog busyDialog = new BusyDialog(shell,
                                            "Update",
                                            "Update all directories and files...",
-                                           BusyDialog.TEXT0
+                                           BusyDialog.LIST
                                           );
     busyDialog.autoAnimate();
 
@@ -983,7 +983,7 @@ menuItem.setEnabled(false);
         setStatusText("Update all directories and files...");
         try
         {
-          repository.updateAll();
+          repository.updateAll(busyDialog);
         }
         catch (RepositoryException exception)
         {
@@ -2160,9 +2160,17 @@ Dprintf.dprintf("");
     deleteLocalFiles(getSelectedFileDataSet());
   }
 
-  /** find files
+  /** find files by name
    */
-  public void findFiles()
+  public void findFilesByName()
+  {
+    CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this);
+    commandFindFiles.run();
+  }
+
+  /** find files by content
+   */
+  public void findFilesByContent()
   {
     CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this);
     commandFindFiles.run();

@@ -729,6 +729,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryFindFilesColumns               = new ColumnSizes(300,300,160,60);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryFindText                       = new Point(800,400);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryFindTextColumns                = new ColumnSizes(300,300,160,60);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryConvertWhitespaces             = new Point(700,200);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryChangedFiles                   = new Point(850,500);
@@ -894,7 +898,9 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFileNameFilter                      = SWT.CTRL+'P';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyFindFiles                           = SWT.CTRL+'F';
+  public static int                      keyFindFilesByName                     = SWT.CTRL+'F';
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFindFilesByContent                  = SWT.CTRL+'T';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyCopyFilesTo                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)

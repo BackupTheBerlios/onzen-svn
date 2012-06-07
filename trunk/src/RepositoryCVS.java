@@ -1526,7 +1526,7 @@ Dprintf.dprintf("unknown %s",line);
         if ((line != null) && line.startsWith("getting "))
         {
 //Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateText(line);
+          if (busyDialog != null) busyDialog.updateList(line);
         }
 
         // discard stderr
@@ -1543,6 +1543,11 @@ Dprintf.dprintf("unknown %s",line);
         {
           throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
         }
+      }
+      else
+      {
+        // abort
+        exec.destroy();
       }
 
       // done
