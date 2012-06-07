@@ -28,6 +28,8 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.SWT;
@@ -46,6 +48,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
+
+import org.eclipse.swt.widgets.Event;
 
 /****************************** Classes ********************************/
 
@@ -221,6 +225,7 @@ class CommandFindFiles
   private final Table                    widgetFiles;
   private final Combo                    widgetFileNameFilterText;
   private final Combo                    widgetTextFindPatterns;
+  private final Listener                 mouseWheelListener;
   private final Button                   widgetFindNames;
   private final Button                   widgetFindContent;
   private final Button                   widgetShowAllRepositories;
@@ -494,7 +499,7 @@ Dprintf.dprintf("");
           }
         });
         widgetFileNameFilterText.setToolTipText("Find file patterns. Use * and ? as wildcards. Use space as separator.");
-        for (String fileNameFilterText : HistoryDatabase.getHistory(HISTORY_ID_FILENAME_FILTER_PATTERNS,20,HistoryDatabase.Directions.DESCENDING))
+        for (String fileNameFilterText : HistoryDatabase.getHistory(HISTORY_ID_FILENAME_FILTER_PATTERNS,20,HistoryDatabase.Directions.SORTED))
         {
           widgetFileNameFilterText.add(fileNameFilterText);
         }
@@ -516,7 +521,7 @@ Dprintf.dprintf("");
             restartFindFiles();
           }
         });
-        for (String textFindPattern : HistoryDatabase.getHistory(HISTORY_ID_TEXT_FIND_PATTERNS,20,HistoryDatabase.Directions.DESCENDING))
+        for (String textFindPattern : HistoryDatabase.getHistory(HISTORY_ID_TEXT_FIND_PATTERNS,20,HistoryDatabase.Directions.SORTED))
         {
           widgetTextFindPatterns.add(textFindPattern);
         }
@@ -831,6 +836,36 @@ Dprintf.dprintf("");
         restartFindFiles();
       }
     });
+    // filter mouse-wheel event to avoid scrolling in file name/content-combo
+    mouseWheelListener = new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        if (   (event.widget == widgetFileNameFilterText)
+            || (event.widget == widgetTextFindPatterns)
+           )
+        {
+Dprintf.dprintf("event=%s",event);
+          event.doit = false;
+
+/*
+??? scroll widgetFiles
+          widgetFiles
+
+          Event redirectedEvent = new Event();
+          redirectedEvent.type   = SWT.MouseWheel;
+          redirectedEvent.widget = widgetFiles;
+          redirectedEvent.time   = event.time;
+          redirectedEvent.x      = event.x;
+          redirectedEvent.y      = event.y;
+          redirectedEvent.detail = event.detail;
+          redirectedEvent.count  = event.count;
+          widgetFiles.notifyListeners(SWT.MouseWheel,redirectedEvent);
+*/
+        }
+      }
+    };
+    display.addFilter(SWT.MouseWheel,mouseWheelListener);
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryFindFiles,Settings.setWindowLocation);
@@ -1046,13 +1081,13 @@ Dprintf.dprintf("");
           HistoryDatabase.putHistory(HISTORY_ID_FILENAME_FILTER_PATTERNS,
                                      widgetFileNameFilterText.getItems(),
                                      20,
-                                     HistoryDatabase.Directions.DESCENDING,
+                                     HistoryDatabase.Directions.SORTED,
                                      widgetFileNameFilterText.getText().trim()
                                     );
           HistoryDatabase.putHistory(HISTORY_ID_TEXT_FIND_PATTERNS,
                                      widgetTextFindPatterns.getItems(),
                                      20,
-                                     HistoryDatabase.Directions.DESCENDING,
+                                     HistoryDatabase.Directions.SORTED,
                                      widgetTextFindPatterns.getText().trim()
                                     );
           CommandFindFiles.fileNameFilterText      = widgetFileNameFilterText.getText().trim();
@@ -1070,6 +1105,9 @@ Dprintf.dprintf("");
             data.quitFlag = true;
             data.notifyAll();
           }
+
+          // remove mouse-wheel filter
+          display.removeFilter(SWT.MouseWheel,mouseWheelListener);
         }
       });
     }
