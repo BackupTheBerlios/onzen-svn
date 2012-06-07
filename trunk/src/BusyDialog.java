@@ -107,7 +107,7 @@ class BusyDialog
 
     // message
     composite = new Composite(dialog,SWT.NONE);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
+    composite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0},4));
     composite.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NSWE));
     {
       widgetImage = new Label(composite,SWT.LEFT);
@@ -178,7 +178,7 @@ class BusyDialog
         if ((flags & LIST) != 0)
         {
           widgetList = new List(subComposite,SWT.BORDER);
-          widgetList.setLayoutData(new TableLayoutData(row,0,TableLayoutData.WE)); row++;
+          widgetList.setLayoutData(new TableLayoutData(row,0,TableLayoutData.NSWE)); row++;
         }
         else
         {
