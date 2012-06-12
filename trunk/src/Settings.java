@@ -898,6 +898,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFileNameFilter                      = SWT.CTRL+'P';
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFilter                              = SWT.CTRL+'F';
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindFilesByName                     = SWT.CTRL+'F';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFindFilesByContent                  = SWT.CTRL+'T';
