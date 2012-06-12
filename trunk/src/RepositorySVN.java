@@ -250,7 +250,7 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
+        command.append(Settings.svnCommand,"--non-interactive","status","-uvN","--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,directory,command);
 
