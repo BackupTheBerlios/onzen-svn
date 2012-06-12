@@ -11,6 +11,8 @@
 /****************************** Imports ********************************/
 // base
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Iterator;
 
@@ -29,7 +31,8 @@ public abstract class HistoryDatabase<T>
   public enum Directions
   {
     ASCENDING,
-    DESCENDING
+    DESCENDING,
+    SORTED
   };
 
   public static final int HISTORY_LENGTH_INFINTE = -1;
@@ -110,8 +113,8 @@ public abstract class HistoryDatabase<T>
         public String stringToData(String s) { return s; }
       };
 
+      if ((addEntry != null) && !addEntry.isEmpty()) add(historyList,maxHistoryLength,direction,addEntry);
       historyDatabase.putHistory(historyList);
-      if ((addEntry != null) && !addEntry.isEmpty()) historyDatabase.add(addEntry);
 
       historyDatabase.close(); historyDatabase = null;
     }
@@ -150,14 +153,14 @@ public abstract class HistoryDatabase<T>
 
   /** get history from database
    * @param historyId unique history id
-   * @param history history array (ascending order)
+   * @param history history array
    * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
    * @param direction history direction order
    * @param addEntry entry to add or null
    */
   public static void putHistory(int historyId, String[] history, int maxHistoryLength, Directions direction, String addEntry)
   {
-    putHistory(historyId,new LinkedList<String>(Arrays.asList(history)),maxHistoryLength,addEntry);
+    putHistory(historyId,new LinkedList<String>(Arrays.asList(history)),maxHistoryLength,direction,addEntry);
   }
 
   /** get history from database
@@ -346,11 +349,20 @@ exception.printStackTrace();
 
   /** compare entries
    * @param data0,data1 entries
+   * @return -1,0,-1 if data0 < data1, data0 == data1, data0 > data1
+   */
+  public int dataCompareTo(T data0, T data1)
+  {
+    return dataToString(data0).compareTo(dataToString(data1));
+  }
+
+  /** compare entries
+   * @param data0,data1 entries
    * @return true if entries are equal
    */
   public boolean dataEquals(T data0, T data1)
   {
-    return dataToString(data0).equals(dataToString(data1));
+    return dataCompareTo(data0,data1) == 0;
   }
 
   /** add to history
@@ -367,18 +379,46 @@ exception.printStackTrace();
     {
       database = new Database(HISTORY_DATABASE_NAME);
 
-      // check if equal to last entry
-      T lastData = null;
-      preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime,id DESC LIMIT 0,1;");
-      preparedStatement.setInt(1,historyId);
-      resultSet = preparedStatement.executeQuery();
-      if (resultSet.next())
+      // check if entry already exists (depending on sort mode)
+      boolean existsFlag = false;
+      switch (direction)
       {
-        lastData = stringToData(resultSet.getString("message"));
+        case ASCENDING:
+          preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime,id DESC LIMIT 0,1;");
+          preparedStatement.setInt(1,historyId);
+          resultSet = preparedStatement.executeQuery();
+          if (resultSet.next())
+          {
+            T existingData = stringToData(resultSet.getString("message"));
+            existsFlag = (existingData != null) && dataEquals(data,existingData);
+          }
+          resultSet.close();
+          break;
+        case DESCENDING:
+          preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime,id ASC LIMIT 0,1;");
+          preparedStatement.setInt(1,historyId);
+          resultSet = preparedStatement.executeQuery();
+          if (resultSet.next())
+          {
+            T existingData = stringToData(resultSet.getString("message"));
+            existsFlag = (existingData != null) && dataEquals(data,existingData);
+          }
+          resultSet.close();
+          break;
+        case SORTED:
+          preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=?;");
+          preparedStatement.setInt(1,historyId);
+          resultSet = preparedStatement.executeQuery();
+          while (!existsFlag && resultSet.next())
+          {
+            T existingData = stringToData(resultSet.getString("message"));
+            existsFlag = (existingData != null) && dataEquals(data,existingData);
+          }
+          resultSet.close();
+          break;
       }
-      resultSet.close();
 
-      if ((lastData == null) || !dataEquals(data,lastData))
+      if (!existsFlag)
       {
         // add to history
         preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
@@ -395,7 +435,7 @@ exception.printStackTrace();
         {
           doneFlag = true;
 
-          preparedStatement = database.connection.prepareStatement("SELECT id FROM messages WHERE historyId=? ORDER BY datetime DESC LIMIT ?,1;");
+          preparedStatement = database.connection.prepareStatement("SELECT id FROM messages WHERE historyId=? ORDER BY datetime,id DESC LIMIT ?,1;");
           preparedStatement.setInt(1,historyId);
           preparedStatement.setInt(2,maxHistoryLength);
           resultSet = preparedStatement.executeQuery();
@@ -422,7 +462,7 @@ exception.printStackTrace();
   }
 
   /** get history from database
-   * @return list with history data (ascending order)
+   * @return list with history data
    */
   public LinkedList<T> getHistory()
     throws SQLException
@@ -453,6 +493,9 @@ exception.printStackTrace();
           case DESCENDING:
             historyList.addFirst(data);
             break;
+          case SORTED:
+            historyList.add(data);
+            break;
         }
       }
       resultSet.close();
@@ -462,6 +505,18 @@ exception.printStackTrace();
     finally
     {
       if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
+    }
+
+    if (direction == Directions.SORTED)
+    {
+      Collections.sort(historyList,new Comparator<T>()
+                       {
+                          public int compare(T data0, T data1)
+                          {
+                            return dataCompareTo(data0,data1);
+                          }
+                       }
+                      );
     }
 
     return historyList;
@@ -500,8 +555,23 @@ exception.printStackTrace();
       Iterator<T> iterator = null;
       switch (direction)
       {
-        case ASCENDING : iterator = historyList.descendingIterator(); break;
-        case DESCENDING: iterator = historyList.iterator();           break;
+        case ASCENDING :
+          iterator = historyList.descendingIterator();
+          break;
+        case DESCENDING:
+          iterator = historyList.iterator();
+          break;
+        case SORTED:
+          Collections.sort(historyList,new Comparator<T>()
+                           {
+                              public int compare(T data0, T data1)
+                              {
+                                return dataCompareTo(data0,data1);
+                              }
+                           }
+                          );
+          iterator = historyList.iterator();
+          break;
       }
       while (iterator.hasNext())
       {
@@ -530,6 +600,68 @@ exception.printStackTrace();
   }
 
   //-----------------------------------------------------------------------
+
+  private static void add(LinkedList<String> historyList, int maxHistoryLength, Directions direction, String addEntry)
+  {
+    switch (direction)
+    {
+      case ASCENDING:
+        {
+          String lastEntry = historyList.peekLast();
+          if ((lastEntry == null) || !lastEntry.equals(addEntry))
+          {
+            historyList.add(addEntry);
+            while (historyList.size() > maxHistoryLength)
+            {
+              historyList.removeFirst();
+            }
+          }
+        }
+        break;
+      case DESCENDING:
+        {
+          String firstEntry = historyList.peekFirst();
+          if ((firstEntry == null) || !firstEntry.equals(addEntry))
+          {
+            historyList.addFirst(firstEntry);
+            while (historyList.size() > maxHistoryLength)
+            {
+              historyList.removeLast();
+            }
+          }
+        }
+        break;
+      case SORTED:
+        {
+          boolean existsFlag = false;
+          for (String entry : historyList)
+          {
+            if (entry.equals(addEntry))
+            {
+              existsFlag = true;
+              break;
+            }
+          }
+          if (!existsFlag)
+          {
+            historyList.addFirst(addEntry);
+            Collections.sort(historyList,new Comparator<String>()
+                             {
+                                public int compare(String data0, String data1)
+                                {
+                                  return data0.compareTo(data1);
+                                }
+                             }
+                            );
+            while (historyList.size() > maxHistoryLength)
+            {
+              historyList.removeLast();
+            }
+          }
+        }
+        break;
+    }
+  }
 
   /** compare lines if they are equal (ignore empty lines, space and case)
    * @param otherLines lines to compare with
