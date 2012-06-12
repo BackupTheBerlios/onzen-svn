@@ -2164,7 +2164,7 @@ Dprintf.dprintf("");
    */
   public void findFilesByName()
   {
-    CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this);
+    CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this,CommandFindFiles.Types.NAME);
     commandFindFiles.run();
   }
 
@@ -2172,7 +2172,7 @@ Dprintf.dprintf("");
    */
   public void findFilesByContent()
   {
-    CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this);
+    CommandFindFiles commandFindFiles = new CommandFindFiles(shell,this,CommandFindFiles.Types.CONTENT);
     commandFindFiles.run();
   }
 
