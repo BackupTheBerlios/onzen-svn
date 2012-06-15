@@ -422,20 +422,20 @@ public class Settings
   {
     public String  mimeType;
     public String  fileName;
-    public String  command;
+    public String  commandLine;
     public Pattern mimeTypePattern;
     public Pattern fileNamePattern;
 
     /** create editor
      * @param mimeType glob mime pattern string
      * @param fileName glob fileName pattern string
-     * @param command command
+     * @param commandLine command line
      */
-    Editor(String mimeType, String fileName, String command)
+    Editor(String mimeType, String fileName, String commandLine)
     {
       this.mimeType        = mimeType;
       this.fileName        = fileName;
-      this.command         = command;
+      this.commandLine     = commandLine;
       this.mimeTypePattern = Pattern.compile(StringUtils.globToRegex(mimeType));
       this.fileNamePattern = Pattern.compile(StringUtils.globToRegex(fileName));
     }
@@ -452,7 +452,7 @@ public class Settings
      */
     public Editor clone()
     {
-      return new Editor(mimeType,fileName,command);
+      return new Editor(mimeType,fileName,commandLine);
     }
 
     /** convert data to string
@@ -460,7 +460,7 @@ public class Settings
      */
     public String toString()
     {
-      return "Editor {"+mimeType+", file name: "+fileName+", command: "+command+"}";
+      return "Editor {"+mimeType+", file name: "+fileName+", command line: "+commandLine+"}";
     }
   }
 
@@ -499,14 +499,14 @@ public class Settings
      */
     public String toString(Editor editor) throws Exception
     {
-      return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.command,false);
+      return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.commandLine,false);
     }
 
     public boolean equals(Editor editor0, Editor editor1)
     {
       return    editor0.mimeType.equals(editor1.mimeType)
              && editor0.fileName.equals(editor1.fileName)
-             && editor0.command.equals(editor1.command);
+             && editor0.commandLine.trim().equals(editor1.commandLine.trim());
     }
   }
 
@@ -515,16 +515,16 @@ public class Settings
   static class ShellCommand implements Cloneable
   {
     public String name;
-    public String command;
+    public String commandLine;
 
     /** create shell command
      * @param name name
-     * @param command command
+     * @param commandLine command line
      */
-    ShellCommand(String name, String command)
+    ShellCommand(String name, String commandLine)
     {
-      this.name    = name;
-      this.command = command;
+      this.name        = name;
+      this.commandLine = commandLine;
     }
 
     /** create shell command
@@ -539,7 +539,7 @@ public class Settings
      */
     public ShellCommand clone()
     {
-      return new ShellCommand(name,command);
+      return new ShellCommand(name,commandLine);
     }
 
     /** convert data to string
@@ -547,7 +547,7 @@ public class Settings
      */
     public String toString()
     {
-      return "ShellCommand {"+name+", command: "+command+"}";
+      return "ShellCommand {"+name+", command line: "+commandLine+"}";
     }
   }
 
@@ -582,13 +582,13 @@ public class Settings
      */
     public String toString(ShellCommand shellCommand) throws Exception
     {
-      return StringUtils.escape(shellCommand.name)+" "+StringUtils.escape(shellCommand.command,false);
+      return StringUtils.escape(shellCommand.name)+" "+StringUtils.escape(shellCommand.commandLine,false);
     }
 
     public boolean equals(ShellCommand shellCommand0, ShellCommand shellCommand1)
     {
       return    shellCommand0.name.equals(shellCommand1.name)
-             && shellCommand0.command.equals(shellCommand1.command);
+             && shellCommand0.commandLine.trim().equals(shellCommand1.commandLine.trim());
     }
   }
 
@@ -623,7 +623,7 @@ public class Settings
   }
 
   // --------------------------- constants --------------------------------
-  public static final String ONZEN_DIRECTORY                = System.getProperty("user.home")+File.separator+".onzen";
+  public static final String ONZEN_DIRECTORY = System.getProperty("user.home")+File.separator+".onzen";
 
   /** host system
    */

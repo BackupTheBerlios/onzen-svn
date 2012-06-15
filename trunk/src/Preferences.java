@@ -104,8 +104,8 @@ class Preferences
 
   private final Table         widgetEditors;
   private final Table         widgetShellCommands;
-  private final Text          widgetCommandMail;
-  private final Text          widgetCommandMailAttachment;
+  private final Text          widgetCommandLineMail;
+  private final Text          widgetCommandLineMailAttachment;
 
   private final Text          widgetMailSMTPHost;
   private final Spinner       widgetMailSMTPPort;
@@ -116,8 +116,8 @@ class Preferences
 
   private final Text          widgetReviewServerHost;
   private final Text          widgetReviewServerLogin;
-  private final Text          widgetCommandPostReviewServer;
-  private final Text          widgetCommandUpdateReviewServer;
+  private final Text          widgetCommandLinePostReviewServer;
+  private final Text          widgetCommandLineUpdateReviewServer;
 
   private final Text          widgetCVSCommand;
   private final Button        widgetCVSPruneEmptyDirectories;
@@ -342,7 +342,7 @@ class Preferences
 
               if (editEditor(editor,"Edit editor","Save"))
               {
-                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.command);
+                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.commandLine);
               }
             }
           }
@@ -352,7 +352,7 @@ class Preferences
         });
         for (Settings.Editor editor : Settings.editors)
         {
-          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.fileName,editor.command);
+          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.fileName,editor.commandLine);
         }
 
         subComposite = Widgets.newComposite(composite);
@@ -372,7 +372,7 @@ class Preferences
 
               if (editEditor(editor,"Add editor","Add"))
               {
-                Widgets.addTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.command);
+                Widgets.addTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.commandLine);
               }
             }
           });
@@ -417,7 +417,7 @@ class Preferences
 
               if (editShellCommand(shellCommand,"Edit shell commands","Save"))
               {
-                Widgets.updateTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.command);
+                Widgets.updateTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine);
               }
             }
           }
@@ -427,7 +427,7 @@ class Preferences
         });
         for (Settings.ShellCommand shellCommand : Settings.shellCommands)
         {
-          Widgets.addTableEntry(widgetShellCommands,shellCommand.clone(),shellCommand.name,shellCommand.command);
+          Widgets.addTableEntry(widgetShellCommands,shellCommand.clone(),shellCommand.name,shellCommand.commandLine);
         }
 
         subComposite = Widgets.newComposite(composite);
@@ -447,7 +447,7 @@ class Preferences
 
               if (editShellCommand(shellCommand,"Add shell command","Add"))
               {
-                Widgets.addTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.command);
+                Widgets.addTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine);
               }
             }
           });
@@ -480,17 +480,17 @@ class Preferences
         {
           label = Widgets.newLabel(subComposite,"Command:");
           Widgets.layout(label,0,0,TableLayoutData.W);
-          widgetCommandMail = Widgets.newText(subComposite);
-          widgetCommandMail.setText(Settings.commandMail);
-          Widgets.layout(widgetCommandMail,0,1,TableLayoutData.WE);
-          widgetCommandMail.setToolTipText("External mail command.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n");
+          widgetCommandLineMail = Widgets.newText(subComposite);
+          widgetCommandLineMail.setText(Settings.commandMail);
+          Widgets.layout(widgetCommandLineMail,0,1,TableLayoutData.WE);
+          widgetCommandLineMail.setToolTipText("External mail command.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n");
 
           label = Widgets.newLabel(subComposite,"Command with attachment:");
           Widgets.layout(label,1,0,TableLayoutData.W);
-          widgetCommandMailAttachment = Widgets.newText(subComposite);
-          widgetCommandMailAttachment.setText(Settings.commandMailAttachment);
-          Widgets.layout(widgetCommandMailAttachment,1,1,TableLayoutData.WE);
-          widgetCommandMailAttachment.setToolTipText("External mail command with an attachment.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n  ${file} - attachment file name");
+          widgetCommandLineMailAttachment = Widgets.newText(subComposite);
+          widgetCommandLineMailAttachment.setText(Settings.commandMailAttachment);
+          Widgets.layout(widgetCommandLineMailAttachment,1,1,TableLayoutData.WE);
+          widgetCommandLineMailAttachment.setToolTipText("External mail command with an attachment.\nMacros:\n  ${to} - to address\n  ${cc} - CC address\n  ${subject} - subject line\n  ${file} - attachment file name");
         }
 
         subComposite = Widgets.newGroup(composite,"SMTP Mail");
@@ -599,17 +599,17 @@ class Preferences
 
           label = Widgets.newLabel(subComposite,"Post command:");
           Widgets.layout(label,2,0,TableLayoutData.W);
-          widgetCommandPostReviewServer = Widgets.newText(subComposite);
-          widgetCommandPostReviewServer.setText(Settings.commandPostReviewServer);
-          Widgets.layout(widgetCommandPostReviewServer,2,1,TableLayoutData.WE);
-          widgetCommandPostReviewServer.setToolTipText("Post review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
+          widgetCommandLinePostReviewServer = Widgets.newText(subComposite);
+          widgetCommandLinePostReviewServer.setText(Settings.commandPostReviewServer);
+          Widgets.layout(widgetCommandLinePostReviewServer,2,1,TableLayoutData.WE);
+          widgetCommandLinePostReviewServer.setToolTipText("Post review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
 
           label = Widgets.newLabel(subComposite,"Update command:");
           Widgets.layout(label,3,0,TableLayoutData.W);
-          widgetCommandUpdateReviewServer = Widgets.newText(subComposite);
-          widgetCommandUpdateReviewServer.setText(Settings.commandUpdateReviewServer);
-          Widgets.layout(widgetCommandUpdateReviewServer,3,1,TableLayoutData.WE);
-          widgetCommandUpdateReviewServer.setToolTipText("Update review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${reference} - reference\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
+          widgetCommandLineUpdateReviewServer = Widgets.newText(subComposite);
+          widgetCommandLineUpdateReviewServer.setText(Settings.commandUpdateReviewServer);
+          Widgets.layout(widgetCommandLineUpdateReviewServer,3,1,TableLayoutData.WE);
+          widgetCommandLineUpdateReviewServer.setToolTipText("Update review server command.\nMacros:\n  ${server} - review server name\n  ${login} - login name\n  ${password} - password\n  ${reference} - reference\n  ${summary} - summary line\n  ${description} - description\n  ${tests} - tests done\n  ${file} - diff file name\n");
         }
       }
 
@@ -1625,8 +1625,8 @@ Dprintf.dprintf("");
           Settings.editors                                = getEditors();
           Settings.shellCommands                          = getShellCommands();
 
-          Settings.commandMail                            = widgetCommandMail.getText();
-          Settings.commandMailAttachment                  = widgetCommandMailAttachment.getText().trim();
+          Settings.commandMail                            = widgetCommandLineMail.getText();
+          Settings.commandMailAttachment                  = widgetCommandLineMailAttachment.getText().trim();
 
           Settings.mailSMTPHost                           = widgetMailSMTPHost.getText().trim();
           Settings.mailSMTPPort                           = Integer.parseInt(widgetMailSMTPPort.getText());
@@ -1680,8 +1680,8 @@ Dprintf.dprintf("");
           Settings.reviewServerHost                       = widgetReviewServerHost.getText().trim();
           Settings.reviewServerLogin                      = widgetReviewServerLogin.getText().trim();
 //          onzen.setPassword(Settings.reviewServerLogin,Settings.reviewServerHost,widgetReviewServerPassword.getText());
-          Settings.commandPostReviewServer                = widgetCommandPostReviewServer.getText().trim();
-          Settings.commandUpdateReviewServer              = widgetCommandUpdateReviewServer.getText().trim();
+          Settings.commandPostReviewServer                = widgetCommandLinePostReviewServer.getText().trim();
+          Settings.commandUpdateReviewServer              = widgetCommandLineUpdateReviewServer.getText().trim();
 
           Settings.skipWhitespaceCheckFilePatterns        = getSkipWhitespaceCheckFilePatterns();
           Settings.hiddenFilePatterns                     = getHiddenFilePatterns();
@@ -2447,7 +2447,7 @@ Dprintf.dprintf("");
 
     final Text   widgetMimeType;
     final Text   widgetFileName;
-    final Text   widgetCommand;
+    final Text   widgetCommandLine;
     final Button widgetAddSave;
 
     composite = Widgets.newComposite(dialog);
@@ -2477,10 +2477,10 @@ Dprintf.dprintf("");
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
       Widgets.layout(subComposite,2,1,TableLayoutData.WE,0,0,4);
       {
-        widgetCommand = Widgets.newText(subComposite);
-        widgetCommand.setText(editor.command);
-        Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
-        widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
+        widgetCommandLine = Widgets.newText(subComposite);
+        widgetCommandLine.setText(editor.commandLine);
+        Widgets.layout(widgetCommandLine,0,0,TableLayoutData.WE);
+        widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.E);
@@ -2493,13 +2493,13 @@ Dprintf.dprintf("");
           {
             String fileName = Dialogs.fileOpen(shell,
                                                "Select program",
-                                               widgetCommand.getText(),
+                                               widgetCommandLine.getText(),
                                                new String[]{"All files","*",
                                                            }
                                               );
             if (fileName != null)
             {
-              widgetCommand.setText(fileName);
+              widgetCommandLine.setText(fileName);
             }
           }
         });
@@ -2520,9 +2520,9 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          editor.mimeType = widgetMimeType.getText();
-          editor.fileName = widgetFileName.getText();
-          editor.command  = widgetCommand.getText();
+          editor.mimeType    = widgetMimeType.getText();
+          editor.fileName    = widgetFileName.getText();
+          editor.commandLine = widgetCommandLine.getText();
 
           Dialogs.close(dialog,true);
         }
@@ -2544,8 +2544,8 @@ Dprintf.dprintf("");
 
     // listeners
     Widgets.setNextFocus(widgetMimeType,widgetFileName);
-    Widgets.setNextFocus(widgetFileName,widgetCommand);
-    Widgets.setNextFocus(widgetCommand,widgetAddSave);
+    Widgets.setNextFocus(widgetFileName,widgetCommandLine);
+    Widgets.setNextFocus(widgetCommandLine,widgetAddSave);
 
     // run dialog
     Widgets.setFocus(widgetMimeType);
@@ -2566,7 +2566,7 @@ Dprintf.dprintf("");
     final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetName;
-    final Text   widgetCommand;
+    final Text   widgetCommandLine;
     final Button widgetAddSave;
 
     composite = Widgets.newComposite(dialog);
@@ -2582,10 +2582,10 @@ Dprintf.dprintf("");
 
       label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,1,0,TableLayoutData.W);
-      widgetCommand = Widgets.newText(composite);
-      widgetCommand.setText(shellCommand.command);
-      Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
+      widgetCommandLine = Widgets.newText(composite);
+      widgetCommandLine.setText(shellCommand.commandLine);
+      Widgets.layout(widgetCommandLine,1,1,TableLayoutData.WE);
+      widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
     }
 
     // buttons
@@ -2602,8 +2602,8 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          shellCommand.name    = widgetName.getText().trim();
-          shellCommand.command = widgetCommand.getText();
+          shellCommand.name        = widgetName.getText().trim();
+          shellCommand.commandLine = widgetCommandLine.getText();
 
           Dialogs.close(dialog,true);
         }
@@ -2628,13 +2628,13 @@ Dprintf.dprintf("");
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        widgetCommand.setFocus();
+        widgetCommandLine.setFocus();
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
       }
     });
-    widgetCommand.addSelectionListener(new SelectionListener()
+    widgetCommandLine.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {

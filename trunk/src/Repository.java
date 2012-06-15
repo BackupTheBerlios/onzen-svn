@@ -1507,7 +1507,7 @@ class AnnotationData
  */
 class RepositoryException extends Exception
 {
-  private String[] extendedErrorMessage = null;
+  private String[] extendedMessage = new String[0];
 
   /** create repository exception
    * @param message message
@@ -1515,10 +1515,10 @@ class RepositoryException extends Exception
    * @param extendedErrorMessage extended error message lines
    * @param arguments optional format arguments for message
    */
-  RepositoryException(String message, Exception cause, String[] extendedErrorMessage, Object... arguments)
+  RepositoryException(String message, Exception cause, String[] extendedMessage, Object... arguments)
   {
     super(String.format(message,arguments),cause);
-    this.extendedErrorMessage = extendedErrorMessage;
+    this.extendedMessage = extendedMessage;
   }
 
   /** create repository exception
@@ -1526,9 +1526,9 @@ class RepositoryException extends Exception
    * @param cause exception cause
    * @param arguments optional format arguments for message
    */
-  RepositoryException(String message, String[] extendedErrorMessage, Object... arguments)
+  RepositoryException(String message, String[] extendedMessage, Object... arguments)
   {
-    this(message,null,extendedErrorMessage,arguments);
+    this(message,null,extendedMessage,arguments);
   }
 
   /** create repository exception
@@ -1548,12 +1548,12 @@ class RepositoryException extends Exception
     this(message,null,arguments);
   }
 
-  /** get extended error message lines
+  /** get extended message lines
    * @return message lines array
    */
-  public String[] getExtendedErrorMessage()
+  public String[] getExtendedMessage()
   {
-    return extendedErrorMessage;
+    return extendedMessage;
   }
 }
 
