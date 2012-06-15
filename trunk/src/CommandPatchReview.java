@@ -1620,7 +1620,7 @@ class CommandPatchReview
         }
         catch (RepositoryException exception)
         {
-          Dialogs.error(dialog,exception.getExtendedErrorMessage(),"Cannot post patch to review server (error: %s)",exception.getMessage());
+          Dialogs.error(dialog,exception.getExtendedMessage(),"Cannot post patch to review server (error: %s)",exception.getMessage());
           return false;
         }
         catch (SQLException exception)
