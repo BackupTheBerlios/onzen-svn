@@ -251,7 +251,7 @@ class RepositoryTab
    * @param leftRepositoryTab repository tab to left or null
    * @param repository repository
    */
-  RepositoryTab(Onzen onzen, TabFolder parentTabFolder, RepositoryTab leftRepositoryTab, Repository repository)
+  RepositoryTab(final Onzen onzen, TabFolder parentTabFolder, RepositoryTab leftRepositoryTab, Repository repository)
   {
     Menu       menu;
     MenuItem   menuItem;
@@ -346,6 +346,19 @@ class RepositoryTab
       menu = Widgets.newPopupMenu(shell);
       {
         menuShellCommands = Widgets.addMenu(menu,"Shell");
+        Widgets.addMenuSeparator(menuShellCommands);
+        menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            onzen.addShellCommand();
+          }
+        });
+
         menuItem = Widgets.addMenuItem(menu,"Copy to\u2026",Settings.keyCopyFilesTo);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -831,15 +844,16 @@ menuItem.setEnabled(false);
     {
       // remove old entries in shell command menu
       MenuItem[] menuItems = menuShellCommands.getItems();
-      for (MenuItem menuItem : menuShellCommands.getItems())
+      for (int i = 0; i < menuItems.length; i++)
       {
-        menuItem.dispose();
+        menuItems[i].dispose();
       }
 
       // add new shell commands to menu
+      MenuItem menuItem;
       for (Settings.ShellCommand shellCommand : Settings.shellCommands)
       {
-        MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
+        menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
         menuItem.setData(shellCommand);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -855,6 +869,18 @@ menuItem.setEnabled(false);
           }
         });
       }
+      Widgets.addMenuSeparator(menuShellCommands);
+      menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          onzen.addShellCommand();
+        }
+      });
     }
   }
 
@@ -952,7 +978,7 @@ menuItem.setEnabled(false);
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Update fail (error: %s)",exception.getMessage());
+      Dialogs.error(shell,exception.getExtendedMessage(),"Update fail (error: %s)",exception.getMessage());
       return;
     }
     finally
@@ -987,12 +1013,13 @@ menuItem.setEnabled(false);
         }
         catch (RepositoryException exception)
         {
-          final String exceptionMessage = exception.getMessage();
+          final String   exceptionMessage         = exception.getMessage();
+          final String[] exceptionExtendedMessage = exception.getExtendedMessage();
           display.syncExec(new Runnable()
           {
             public void run()
             {
-              Dialogs.error(shell,"Update all fail (error: %s)",exceptionMessage);
+              Dialogs.error(shell,exceptionExtendedMessage,"Update all fail (error: %s)",exceptionMessage);
             }
           });
           return;
@@ -1114,7 +1141,7 @@ Dprintf.dprintf("NYI");
       }
       catch (RepositoryException exception)
       {
-        Dialogs.error(shell,"Set conflicts resolved fail: %s",exception.getMessage());
+        Dialogs.error(shell,exception.getExtendedMessage(),"Set conflicts resolved fail: %s",exception.getMessage());
         return;
       }
       finally
@@ -1163,7 +1190,7 @@ Dprintf.dprintf("NYI");
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Pulling changes fail: %s",exception.getMessage());
+      Dialogs.error(shell,exception.getExtendedMessage(),"Pulling changes fail: %s",exception.getMessage());
       return;
     }
     finally
@@ -1183,7 +1210,7 @@ Dprintf.dprintf("NYI");
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Pushing changes fail: %s",exception.getMessage());
+      Dialogs.error(shell,exception.getExtendedMessage(),"Pushing changes fail: %s",exception.getMessage());
       return;
     }
     finally
@@ -1203,7 +1230,7 @@ Dprintf.dprintf("NYI");
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Apply patches fail: %s",exception.getMessage());
+      Dialogs.error(shell,exception.getExtendedMessage(),"Apply patches fail: %s",exception.getMessage());
       return;
     }
     finally
@@ -1223,7 +1250,7 @@ Dprintf.dprintf("NYI");
     }
     catch (RepositoryException exception)
     {
-      Dialogs.error(shell,"Unapply patches fail: %s",exception.getMessage());
+      Dialogs.error(shell,exception.getExtendedMessage(),"Unapply patches fail: %s",exception.getMessage());
       return;
     }
     finally
@@ -1328,8 +1355,8 @@ Dprintf.dprintf("NYI");
   public void openFile(String fileName, String mimeType, int lineNumber)
   {
     // find editor command with file mime-type or file name pattern
-    String command = null;
-    if (command == null)
+    String commandLine = null;
+    if (commandLine == null)
     {
       if ((mimeType != null) && !mimeType.isEmpty() && !mimeType.equals("application/octet-stream"))
       {
@@ -1337,13 +1364,13 @@ Dprintf.dprintf("NYI");
         {
           if (editor.mimeTypePattern.matcher(mimeType).matches())
           {
-            command = editor.command;
+            commandLine = editor.commandLine;
             break;
           }
         }
       }
     }
-    if (command == null)
+    if (commandLine == null)
     {
       String baseName = new File(fileName).getName();
       for (Settings.Editor editor : Settings.editors)
@@ -1352,41 +1379,55 @@ Dprintf.dprintf("NYI");
             || editor.fileNamePattern.matcher(baseName).matches()
            )
         {
-          command = editor.command;
+          commandLine = editor.commandLine;
           break;
         }
       }
     }
 
     // if no editor command found -> ask for command
-    if (command == null)
+    if (commandLine == null)
     {
-      command  = getFileOpenCommand(fileName,mimeType);
+      commandLine  = getFileOpenCommand(fileName,mimeType);
     }
 //Dprintf.dprintf("command=%s",command);
 
     // execute external command
-    if (command != null)
+    if (commandLine != null)
     {
       // expand command
-      Macro macro = new Macro(StringUtils.split(command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+      Macro macro = new Macro(StringUtils.split(commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
       if (!macro.contains("file")) macro.add("file");
       macro.expand("file",      fileName);
       macro.expand("f",         fileName);
       macro.expand("lineNumber",lineNumber);
       macro.expand("n",         lineNumber);
       macro.expand("",          "%");
-      String[] commandLine = macro.getValueArray();
+      Command command = new Command(macro);
 
       // run command
+      Exec exec = null;
       try
       {
-        Runtime.getRuntime().exec(commandLine);
+        exec = new Exec(command);
+        exec.waitFor();
+
+        // done
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
-        Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",command,exception.getMessage());
+        Dialogs.error(shell,
+                      (exec != null) ? exec.getExtendedErrorMessage() : null,
+                      "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                      command,
+                      exception.getMessage()
+                     );
         return;
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
   }
@@ -1456,30 +1497,42 @@ Dprintf.dprintf("NYI");
    */
   public void openFileWith(String fileName, int lineNumber)
   {
-    String command  = getFileOpenCommand(fileName,
-                                         Onzen.getMimeType(fileName)
-                                        );
-    if (command != null)
+    String commandLine  = getFileOpenCommand(fileName,
+                                             Onzen.getMimeType(fileName)
+                                            );
+    if (commandLine != null)
     {
       // expand command
-      Macro macro = new Macro(StringUtils.split(command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+      Macro macro = new Macro(StringUtils.split(commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
       if (!macro.contains("file")) macro.add("file");
       macro.expand("file",      fileName);
       macro.expand("f",         fileName);
       macro.expand("lineNumber",lineNumber);
       macro.expand("n",         lineNumber);
       macro.expand("",          "%");
-      String[] commandLine = macro.getValueArray();
+      Command command = new Command(macro);
 
       // run command
+      Exec exec = null;
       try
       {
-        Runtime.getRuntime().exec(commandLine);
+        exec = new Exec(command);
+        exec.waitFor();
+        exec.done(); exec = null;
       }
       catch (IOException exception)
       {
-        Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",command,exception.getMessage());
+        Dialogs.error(shell,
+                      "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                      (exec != null) ? exec.getExtendedErrorMessage() : null,
+                      command,
+                      exception.getMessage()
+                     );
         return;
+      }
+      finally
+      {
+        if (exec != null) exec.done();
       }
     }
   }
@@ -2638,41 +2691,46 @@ Dprintf.dprintf("");
       for (FileData fileData : fileDataSet)
       {
         // expand command
-        Macro macro = new Macro(StringUtils.split(shellCommand.command,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+        Macro macro = new Macro(StringUtils.split(shellCommand.commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
         if (!macro.contains("file")) macro.add("file");
         macro.expand("file",fileData.getFileName(repository.rootPath));
         macro.expand("",    "%");
-        final String commandLine = macro.getValue();
-//Dprintf.dprintf("command=#%s#",command);
+        Command command = new Command(macro);
 
         // run command
+        Exec exec = null;
         try
         {
-          Process process = Runtime.getRuntime().exec(commandLine);
+          exec = new Exec(command);
 
-          int exitCode = -1;
-          do
+          int exitcode = exec.waitFor();
+          if (exitcode != 0)
           {
-            try { exitCode = process.waitFor(); } catch (InterruptedException exception) { /* ignored */ }
+            Dialogs.error(shell,
+                          (exec != null) ? exec.getExtendedErrorMessage() : null,
+                          "Execute external command fail: \n\n'%s'\n\n (exit code: %s)",
+                          command,
+                          exitcode
+                         );
+            return;
           }
-          while (exitCode == -1);
 
-          if (exitCode != 0)
-          {
-            final String message = String.format("Execute external command fail: \n\n'%s'\n\n (exit code: %s)",commandLine,exitCode);
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                Dialogs.error(shell,message);
-              }
-            });
-          }
+          // done
+          exec.done(); exec = null;
         }
         catch (IOException exception)
         {
-          Dialogs.error(shell,"Execute external command fail: \n\n'%s'\n\n (error: %s)",commandLine,exception.getMessage());
+          Dialogs.error(shell,
+                        (exec != null) ? exec.getExtendedErrorMessage() : null,
+                        "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                        command,
+                        exception.getMessage()
+                       );
           return;
+        }
+        finally
+        {
+          if (exec != null) exec.done();
         }
       }
     }
@@ -3204,7 +3262,7 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                Settings.showUpdateStatusErrors = Dialogs.error(shell,exception.getExtendedErrorMessage(),true,"Getting file states fail.");
+                Settings.showUpdateStatusErrors = Dialogs.error(shell,exception.getExtendedMessage(),true,"Getting file states fail.");
               }
             });
           }
@@ -3389,20 +3447,20 @@ Dprintf.dprintf("");
     {
       String  mimeType;
       String  fileName;
-      String  command;
+      String  commandLine;
       boolean addNewCommand;
 
       Data()
       {
         this.mimeType      = null;
         this.fileName      = null;
-        this.command       = null;
+        this.commandLine   = null;
         this.addNewCommand = false;
       }
     };
 
-    String     command = null;
-    final Data data    = new Data();
+    String     commandLine = null;
+    final Data data        = new Data();
 
     Composite composite,subComposite,subSubComposite;
     Label     label;
@@ -3414,8 +3472,8 @@ Dprintf.dprintf("");
     String suffix = (fileName.lastIndexOf('.') >= 0) ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase() : null;
     if (suffix != null)
     {
-      data.fileName = "*"+suffix;
-      data.command  = Onzen.getFileAssociation(suffix);
+      data.fileName    = "*"+suffix;
+      data.commandLine = Onzen.getFileAssociation(suffix);
     }
 
     // command selection dialog
@@ -3425,7 +3483,7 @@ Dprintf.dprintf("");
     final Table  widgetEditors;
     final Text   widgetMimeType;
     final Text   widgetFileName;
-    final Text   widgetCommand;
+    final Text   widgetCommandLine;
     final Button widgetAddNewCommand;
     final Button widgetOpen;
     composite = Widgets.newComposite(dialog,SWT.NONE,4);
@@ -3467,10 +3525,10 @@ Dprintf.dprintf("");
         subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
         Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
         {
-          widgetCommand = Widgets.newText(subSubComposite);
-          if (data.command != null) widgetCommand.setText(data.command);
-          Widgets.layout(widgetCommand,0,0,TableLayoutData.WE);
-          widgetCommand.setToolTipText("Command to open file with.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
+          widgetCommandLine = Widgets.newText(subSubComposite);
+          if (data.commandLine != null) widgetCommandLine.setText(data.commandLine);
+          Widgets.layout(widgetCommandLine,0,0,TableLayoutData.WE);
+          widgetCommandLine.setToolTipText("Command to open file with.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
 
           button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
           Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -3483,7 +3541,7 @@ Dprintf.dprintf("");
             {
               String fileName = Dialogs.fileOpen(shell,
                                                  "Select program",
-                                                 widgetCommand.getText(),
+                                                 widgetCommandLine.getText(),
                                                  new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
                                                               "Scripts",    "*.sh",
                                                               "Batch files","*.cmd",
@@ -3493,7 +3551,7 @@ Dprintf.dprintf("");
                                                 );
               if (fileName != null)
               {
-                widgetCommand.setText(fileName);
+                widgetCommandLine.setText(fileName);
               }
             }
           });
@@ -3510,7 +3568,7 @@ Dprintf.dprintf("");
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetOpen = Widgets.newButton(composite,"Open");
-      widgetOpen.setEnabled(!widgetCommand.getText().trim().isEmpty());
+      widgetOpen.setEnabled(!widgetCommandLine.getText().trim().isEmpty());
       Widgets.layout(widgetOpen,0,0,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
       widgetOpen.addSelectionListener(new SelectionListener()
       {
@@ -3521,7 +3579,7 @@ Dprintf.dprintf("");
         {
           data.mimeType      = widgetMimeType.getText().trim();
           data.fileName      = widgetFileName.getText().trim();
-          data.command       = widgetCommand.getText();
+          data.commandLine   = widgetCommandLine.getText();
           data.addNewCommand = widgetAddNewCommand.getSelection();
 
           Settings.geometryOpenFile        = dialog.getSize();
@@ -3560,7 +3618,7 @@ Dprintf.dprintf("");
           Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
           widgetFileName.setText(editor.fileName);
-          widgetCommand.setText(editor.command);
+          widgetCommandLine.setText(editor.commandLine);
         }
       }
     });
@@ -3576,7 +3634,7 @@ Dprintf.dprintf("");
 
           data.mimeType      = null;
           data.fileName      = null;
-          data.command       = editor.command;
+          data.commandLine   = editor.commandLine;
           data.addNewCommand = widgetAddNewCommand.getSelection();
 
           Settings.geometryOpenFile        = dialog.getSize();
@@ -3587,8 +3645,8 @@ Dprintf.dprintf("");
       }
     });
     Widgets.setNextFocus(widgetMimeType,widgetFileName);
-    Widgets.setNextFocus(widgetFileName,widgetCommand);
-    widgetCommand.addModifyListener(new ModifyListener()
+    Widgets.setNextFocus(widgetFileName,widgetCommandLine);
+    widgetCommandLine.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
@@ -3597,7 +3655,7 @@ Dprintf.dprintf("");
         widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
       }
     });
-    Widgets.setNextFocus(widgetCommand,widgetOpen);
+    Widgets.setNextFocus(widgetCommandLine,widgetOpen);
 
     // add editors
     for (Settings.Editor editor : Settings.editors)
@@ -3606,35 +3664,35 @@ Dprintf.dprintf("");
       tableItem.setData(editor);
       tableItem.setText(0,editor.mimeType);
       tableItem.setText(1,editor.fileName);
-      tableItem.setText(2,editor.command);
+      tableItem.setText(2,editor.commandLine);
     }
 
         // show dialog
     Dialogs.show(dialog,Settings.geometryOpenFile,Settings.setWindowLocation);
 
     // run
-    widgetCommand.setFocus();
+    widgetCommandLine.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      if (!data.command.isEmpty())
+      if (!data.commandLine.trim().isEmpty())
       {
         if (data.mimeType != null)
         {
           if (data.addNewCommand)
           {
             // add editor
-            Settings.Editor editor = new Settings.Editor(data.mimeType,data.fileName,data.command);
+            Settings.Editor editor = new Settings.Editor(data.mimeType,data.fileName,data.commandLine);
             Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
             Settings.editors[Settings.editors.length-1] = editor;
           }
         }
 
-        // get command
-        command = data.command;
+        // get command line
+        commandLine = data.commandLine;
       }
     }
 
-    return command;
+    return commandLine;
   }
 
   /** check if file contain TABs/trailing whitespaces
