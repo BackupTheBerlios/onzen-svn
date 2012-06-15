@@ -1444,19 +1444,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         String line;
 
-        // read stdout
         line = exec.pollStdout();
-//        if ((line != null) && line.startsWith("getting "))
         if (line != null)
         {
           if (busyDialog != null) busyDialog.updateList(line);
-        }
-
-        // discard stderr
-        line = exec.pollStderr();
-        if (line != null)
-        {
-//Dprintf.dprintf("err1: %s",line);
         }
       }
       if ((busyDialog == null) || !busyDialog.isAborted())
@@ -1464,7 +1455,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s' fail, exit code: %d",
+                                        exec.getExtendedErrorMessage(),
+                                        command.toString(),
+                                        exitCode
+                                       );
         }
       }
       else
