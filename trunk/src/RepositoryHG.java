@@ -1977,8 +1977,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   /** revert files
    * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
    */
-  public void revert(HashSet<FileData> fileDataSet, String revision)
+  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException
   {
     Exec exec = null;

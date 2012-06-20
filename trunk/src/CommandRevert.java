@@ -45,11 +45,13 @@ class CommandRevert
   {
     String[] revisionNames;
     String   revision;
+    boolean  recursiveFlag;
 
     Data()
     {
       this.revisionNames = null;
       this.revision      = null;
+      this.recursiveFlag = false;
     }
   };
 
@@ -111,7 +113,7 @@ class CommandRevert
       widgetFiles.setToolTipText("Files to revert.");
 
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
+      subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0,0.0}));
       Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Revision:");
@@ -121,6 +123,21 @@ class CommandRevert
         widgetRevision.setEnabled(false);
         Widgets.layout(widgetRevision,0,1,TableLayoutData.WE);
         widgetRevision.setToolTipText("Revision to revert to.");
+
+        button = Widgets.newCheckbox(subComposite,"recursive");
+        Widgets.layout(button,0,1,TableLayoutData.WE);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            data.recursiveFlag = widget.getSelection();
+          }
+        });
       }
     }
 
@@ -307,7 +324,7 @@ class CommandRevert
     try
     {
       // revert files
-      repositoryTab.repository.revert(fileDataSet,data.revision);
+      repositoryTab.repository.revert(fileDataSet,data.revision,data.recursiveFlag);
 
       // update file states
       repositoryTab.repository.updateStates(fileDataSet);

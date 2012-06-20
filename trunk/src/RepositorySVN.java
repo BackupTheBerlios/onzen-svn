@@ -1607,8 +1607,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   /** revert files
    * @param fileDataSet file data set
    * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
    */
-  public void revert(HashSet<FileData> fileDataSet, String revision)
+  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException
   {
     try
@@ -1625,6 +1626,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       // revert files
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive","update","-r",revision,"--trust-server-cert");
+      if (recursive) command.append("-R");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();

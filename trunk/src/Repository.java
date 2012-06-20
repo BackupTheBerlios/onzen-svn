@@ -196,7 +196,7 @@ class FileData
         case NOT_EXISTS: return "not exists";
         case WAITING:    return "waiting";
         case ERROR:      return "error";
-        default:         return "unknown";
+        default:         return "unknown state";
       }
     }
   };
@@ -2952,9 +2952,24 @@ Dprintf.dprintf("fileName=%s",fileName);
   /** revert files
    * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
    */
-  abstract public void revert(HashSet<FileData> fileDataSet, String revision)
+  abstract public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException;
+
+  /** revert files
+   * @param fileData file data
+   * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
+   */
+  public void revert(FileData fileData, String revision, boolean recursive)
+    throws RepositoryException
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    fileDataSet.add(fileData);
+
+    revert(fileDataSet,revision,recursive);
+  }
 
   /** revert files
    * @param fileData file data
@@ -2963,10 +2978,7 @@ Dprintf.dprintf("fileName=%s",fileName);
   public void revert(FileData fileData, String revision)
     throws RepositoryException
   {
-    HashSet<FileData> fileDataSet = new HashSet<FileData>();
-    fileDataSet.add(fileData);
-
-    revert(fileDataSet,revision);
+    revert(fileData,revision,false);
   }
 
   /** revert files
@@ -2975,7 +2987,7 @@ Dprintf.dprintf("fileName=%s",fileName);
   public void revert(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
-   revert(fileDataSet,getLastRevision());
+   revert(fileDataSet,getLastRevision(),false);
   }
 
   /** rename file
