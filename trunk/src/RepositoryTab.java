@@ -1482,29 +1482,19 @@ Dprintf.dprintf("NYI");
       macro.expand("",          "%");
       Command command = new Command(macro);
 
-      // run command
-      Exec exec = null;
+      // run command (Note: use Runtime.exec() because it is a background process without i/o here)
       try
       {
-        exec = new Exec(command);
-        exec.waitFor();
-
-        // done
-        exec.done(); exec = null;
+        Runtime.getRuntime().exec(command.getCommandArray());
       }
       catch (IOException exception)
       {
         Dialogs.error(shell,
-                      (exec != null) ? exec.getExtendedErrorMessage() : null,
                       "Execute external command fail: \n\n'%s'\n\n (error: %s)",
                       command,
                       exception.getMessage()
                      );
         return;
-      }
-      finally
-      {
-        if (exec != null) exec.done();
       }
     }
   }
@@ -1589,27 +1579,19 @@ Dprintf.dprintf("NYI");
       macro.expand("",          "%");
       Command command = new Command(macro);
 
-      // run command
-      Exec exec = null;
+      // run command (Note: use Runtime.exec() because it is a background process without i/o here)
       try
       {
-        exec = new Exec(command);
-        exec.waitFor();
-        exec.done(); exec = null;
+        Runtime.getRuntime().exec(command.getCommandArray());
       }
       catch (IOException exception)
       {
         Dialogs.error(shell,
                       "Execute external command fail: \n\n'%s'\n\n (error: %s)",
-                      (exec != null) ? exec.getExtendedErrorMessage() : null,
                       command,
                       exception.getMessage()
                      );
         return;
-      }
-      finally
-      {
-        if (exec != null) exec.done();
       }
     }
   }
