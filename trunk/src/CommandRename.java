@@ -438,6 +438,7 @@ class CommandRename
                                    fileData.type,
                                    fileData.state,
                                    fileData.mode,
+                                   fileData.locked,
                                    fileData.size,
                                    fileData.date
                                   )

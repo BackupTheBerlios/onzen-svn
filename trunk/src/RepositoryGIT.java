@@ -242,6 +242,7 @@ throw new RepositoryException("NYI");
                                                 type,
                                                 state,
                                                 mode,
+                                                false,
                                                 size,
                                                 datetime,
                                                 workingRevision,
@@ -1518,6 +1519,26 @@ throw new RepositoryException("NYI");
   /** unapply patches
    */
   public void unapplyPatches()
+    throws RepositoryException
+  {
+Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
+  }
+
+  /** lock files
+   * @param fileDataSet file data set
+   */
+  public void lock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
+  }
+
+  /** unlock files
+   * @param fileDataSet file data set
+   */
+  public void unlock(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");

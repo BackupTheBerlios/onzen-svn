@@ -107,6 +107,14 @@ class RepositorySVN extends Repository
     this(null);
   }
 
+  /** check if repository support lock/unlock
+   * @return true iff lock/unlock is supported
+   */
+  public boolean supportLockUnlock()
+  {
+    return true;
+  }
+
   /** create new repository module
    * @param repositoryPath repository server
    * @param moduleName module name
@@ -229,7 +237,7 @@ class RepositorySVN extends Repository
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
     throws RepositoryException
   {
-    final Pattern PATTERN_STATUS         = Pattern.compile("^(.)......\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_STATUS         = Pattern.compile("^(.)....(.).\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
@@ -240,6 +248,7 @@ class RepositorySVN extends Repository
     String          name;
     String          fileName;
     FileData.States state              = FileData.States.UNKNOWN;
+    boolean         locked             = false;
     String          workingRevision    = "";
     String          repositoryRevision = "";
     String          author             = "";
@@ -286,6 +295,7 @@ class RepositorySVN extends Repository
                                               FileData.Types.FILE,
                                               FileData.States.UNKNOWN,
                                               FileData.Modes.BINARY,
+                                              false,
                                               size,
                                               datetime
                                              )
@@ -294,11 +304,12 @@ class RepositorySVN extends Repository
           }
           else if ((matcher = PATTERN_STATUS.matcher(line)).matches())
           {
-            state              = parseState(matcher.group(1),matcher.group(2));
-            workingRevision    = matcher.group(3);
-            repositoryRevision = matcher.group(4);
-            author             = matcher.group(5);
-            name               = matcher.group(6);
+            state              = parseState(matcher.group(1),matcher.group(3));
+            locked             = matcher.group(2).equals("K");
+            workingRevision    = matcher.group(4);
+            repositoryRevision = matcher.group(5);
+            author             = matcher.group(6);
+            name               = matcher.group(7);
             fileName           = (!directory.isEmpty() ? directory+File.separator : "")+name;
 
             fileData = findFileData(fileDataSet,fileName);
@@ -306,7 +317,8 @@ class RepositorySVN extends Repository
             {
               fileData.state              = state;
               fileData.mode               = FileData.Modes.BINARY;
-              fileData.workingRevision    = workingRevision;
+              fileData.mode               = FileData.Modes.BINARY;
+              fileData.locked             = locked;
               fileData.repositoryRevision = repositoryRevision;
             }
             else if (   (newFileDataSet != null)
@@ -325,6 +337,7 @@ class RepositorySVN extends Repository
                                               FileData.Types.FILE,
                                               state,
                                               FileData.Modes.BINARY,
+                                              locked,
                                               size,
                                               datetime,
                                               workingRevision,
@@ -741,7 +754,8 @@ class RepositorySVN extends Repository
           {
             fileDataSet.add(new FileData(name,
                                          state,
-                                         FileData.Modes.BINARY
+                                         FileData.Modes.BINARY,
+                                         false
                                         )
                            );
           }
@@ -1748,6 +1762,62 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void unapplyPatches()
     throws RepositoryException
   {
+  }
+
+  /** lock files
+   * @param fileDataSet file data set
+   */
+  public void lock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // copy file
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive","lock","--trust-server-cert");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+  }
+
+  /** unlock files
+   * @param fileDataSet file data set
+   */
+  public void unlock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // copy file
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive","unlock","--trust-server-cert");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
   }
 
   /** set files mode

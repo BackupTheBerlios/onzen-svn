@@ -398,6 +398,26 @@ class RepositoryDirectory extends Repository
   {
   }
 
+  /** lock files
+   * @param fileDataSet file data set
+   */
+  public void lock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
+  }
+
+  /** unlock files
+   * @param fileDataSet file data set
+   */
+  public void unlock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+Dprintf.dprintf("NYI");
+throw new RepositoryException("NYI");
+  }
+
   /** set files mode
    * @param fileDataSet file data set
    * @param mode file mode

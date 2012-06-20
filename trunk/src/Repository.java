@@ -242,15 +242,16 @@ class FileData
   };
 
   // --------------------------- variables --------------------------------
-  public       String name;                  // file name (from root path)
-  public final Types  type;                  // file type
-  public       long   size;                  // size [bytes]
-  public       Date   date;
-  public       States state;                 // current state
-  public       Modes  mode;
-  public       String workingRevision;
-  public       String repositoryRevision;
-  public       String branch;
+  public       String  name;                  // file name (from root path)
+  public final Types   type;                  // file type
+  public       long    size;                  // size [bytes]
+  public       Date    date;
+  public       States  state;                 // current state
+  public       Modes   mode;
+  public       boolean locked;
+  public       String  workingRevision;
+  public       String  repositoryRevision;
+  public       String  branch;
 
   // ------------------------ native functions ----------------------------
 
@@ -261,13 +262,14 @@ class FileData
    * @param type file type (see FileData.Types)
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
+   * @param locked TRUE iff locked
    * @param size file size [bytes]
    * @param date file date/time
    * @param workingRevision working revsion
    * @param repositoryRevision repository revision
    * @param branch branch
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, Date date, String workingRevision, String repositoryRevision, String branch)
+  public FileData(String name, Types type, States state, Modes mode, boolean locked, long size, Date date, String workingRevision, String repositoryRevision, String branch)
   {
     this.name               = name;
     this.type               = type;
@@ -275,6 +277,7 @@ class FileData
     this.date               = date;
     this.state              = state;
     this.mode               = mode;
+    this.locked             = locked;
     this.workingRevision    = workingRevision;
     this.repositoryRevision = repositoryRevision;
     this.branch             = branch;
@@ -285,14 +288,15 @@ class FileData
    * @param type file type (see FileData.Types)
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
+   * @param locked TRUE iff locked
    * @param size file size [bytes]
    * @param date file date/time
    * @param workingRevision working revsion
    * @param repositoryRevision repository revision
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, Date date, String workingRevision, String repositoryRevision)
+  public FileData(String name, Types type, States state, Modes mode, boolean locked, long size, Date date, String workingRevision, String repositoryRevision)
   {
-    this(name,type,state,mode,size,date,workingRevision,repositoryRevision,"");
+    this(name,type,state,mode,locked,size,date,workingRevision,repositoryRevision,"");
   }
 
   /** create file data
@@ -300,12 +304,13 @@ class FileData
    * @param type file type (see FileData.Types)
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
+   * @param locked TRUE iff locked
    * @param size file size [bytes]
    * @param date file date/time
    */
-  public FileData(String name, Types type, States state, Modes mode, long size, Date date)
+  public FileData(String name, Types type, States state, Modes mode, boolean locked, long size, Date date)
   {
-    this(name,type,state,mode,size,date,"","","");
+    this(name,type,state,mode,locked,size,date,"","","");
   }
 
   /** create file data
@@ -316,7 +321,7 @@ class FileData
    */
   public FileData(String name, Types type, long size, Date date)
   {
-    this(name,type,States.UNKNOWN,Modes.UNKNOWN,size,date);
+    this(name,type,States.UNKNOWN,Modes.UNKNOWN,false,size,date);
   }
 
   /** create file data
@@ -332,10 +337,11 @@ class FileData
    * @param name file name
    * @param state state (see FileData.States)
    * @param mode mode (see FileData.Modes)
+   * @param locked TRUE iff locked
    */
-  public FileData(String name, States state, Modes mode)
+  public FileData(String name, States state, Modes mode, boolean locked)
   {
-    this(name,Types.FILE,state,mode,0L,null);
+    this(name,Types.FILE,state,mode,locked,0L,null);
   }
 
   /** create file data
@@ -344,7 +350,7 @@ class FileData
    */
   public FileData(String name, States state)
   {
-    this(name,state,Modes.UNKNOWN);
+    this(name,state,Modes.UNKNOWN,false);
   }
 
   /** create file data
@@ -2015,6 +2021,14 @@ abstract class Repository implements Serializable
     return false;
   }
 
+  /** check if repository support lock/unlock
+   * @return true iff lock/unlock is supported
+   */
+  public boolean supportLockUnlock()
+  {
+    return false;
+  }
+
   /** check if repository support posting reviews
    * @return true iff posting reviews is supported
    */
@@ -3012,6 +3026,18 @@ Dprintf.dprintf("fileName=%s",fileName);
   /** unapply patch queue patches
    */
   abstract public void unapplyPatches()
+    throws RepositoryException;
+
+  /** lock files
+   * @param fileDataSet file data set
+   */
+  abstract public void lock(HashSet<FileData> fileDataSet)
+    throws RepositoryException;
+
+  /** unlock files
+   * @param fileDataSet file data set
+   */
+  abstract public void unlock(HashSet<FileData> fileDataSet)
     throws RepositoryException;
 
   /** set files mode

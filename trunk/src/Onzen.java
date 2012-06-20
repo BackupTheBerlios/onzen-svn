@@ -277,6 +277,8 @@ public class Onzen
   public static Image                  IMAGE_ARROW_DOWN;
   public static Image                  IMAGE_ARROW_LEFT;
   public static Image                  IMAGE_ARROW_RIGHT;
+  public static Image                  IMAGE_LOCK;
+  public static Image                  IMAGE_EMPTY;
 
   // fonts
   public static Font                   FONT_DIFF;
@@ -324,6 +326,8 @@ public class Onzen
 
   private MenuItem                          menuItemApplyPatches;
   private MenuItem                          menuItemUnapplyPatches;
+  private MenuItem                          menuItemLock;
+  private MenuItem                          menuItemUnlock;
   private MenuItem                          menuItemIncomingChanges;
   private MenuItem                          menuItemOutgoingChanges;
   private MenuItem                          menuItemPullChanges;
@@ -1225,6 +1229,8 @@ Dprintf.dprintf("ex=%s",exception);
     IMAGE_ARROW_DOWN  = Widgets.loadImage(display,"arrow-down.png");
     IMAGE_ARROW_LEFT  = Widgets.loadImage(display,"arrow-left.png");
     IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
+    IMAGE_LOCK        = Widgets.loadImage(display,"lock.png");
+    IMAGE_EMPTY       = Widgets.loadImage(display,"empty.png");
 
     // fonts
     FONT_CHANGES      = Widgets.newFont(display,Settings.fontChanges);
@@ -1878,6 +1884,38 @@ menuItem.setEnabled(false);
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.unapplyPatches();
+          }
+        }
+      });
+
+      menuItemLock = Widgets.addMenuItem(menu,"Lock",Settings.keyLock);
+      menuItemLock.setEnabled(false);
+      menuItemLock.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.lock();
+          }
+        }
+      });
+
+      menuItemUnlock = Widgets.addMenuItem(menu,"Unlock",Settings.keyUnlock);
+      menuItemUnlock.setEnabled(false);
+      menuItemUnlock.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.unlock();
           }
         }
       });
@@ -6138,6 +6176,8 @@ exception.printStackTrace();
       // enable/disable menu entries
       menuItemApplyPatches.setEnabled(repositoryTab.repository.supportPatchQueues());
       menuItemUnapplyPatches.setEnabled(repositoryTab.repository.supportPatchQueues());
+      menuItemLock.setEnabled(repositoryTab.repository.supportLockUnlock());
+      menuItemUnlock.setEnabled(repositoryTab.repository.supportLockUnlock());
       menuItemIncomingChanges.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
       menuItemOutgoingChanges.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
       menuItemPullChanges.setEnabled(repositoryTab.repository.supportPullPush());
@@ -6149,6 +6189,8 @@ exception.printStackTrace();
       // disable menu entries
       menuItemApplyPatches.setEnabled(false);
       menuItemUnapplyPatches.setEnabled(false);
+      menuItemLock.setEnabled(false);
+      menuItemUnlock.setEnabled(false);
       menuItemIncomingChanges.setEnabled(false);
       menuItemOutgoingChanges.setEnabled(false);
       menuItemPullChanges.setEnabled(false);
@@ -6170,6 +6212,8 @@ exception.printStackTrace();
       // enable/disable menu entries
       menuItemApplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
       menuItemUnapplyPatches.setEnabled(selectedRepositoryTab.repository.supportPatchQueues());
+      menuItemLock.setEnabled(selectedRepositoryTab.repository.supportLockUnlock());
+      menuItemUnlock.setEnabled(selectedRepositoryTab.repository.supportLockUnlock());
       menuItemIncomingChanges.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
       menuItemOutgoingChanges.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
       menuItemPullChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
@@ -6181,6 +6225,8 @@ exception.printStackTrace();
       // disable menu entries
       menuItemApplyPatches.setEnabled(false);
       menuItemUnapplyPatches.setEnabled(false);
+      menuItemLock.setEnabled(false);
+      menuItemUnlock.setEnabled(false);
       menuItemIncomingChanges.setEnabled(false);
       menuItemOutgoingChanges.setEnabled(false);
       menuItemPullChanges.setEnabled(false);

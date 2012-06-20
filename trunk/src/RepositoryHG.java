@@ -215,6 +215,15 @@ class RepositoryHG extends Repository
     return true;
   }
 
+  /** check if repository support lock/unlock
+   * @return true iff lock/unlock is supported
+   */
+  public boolean supportLockUnlock()
+  {
+Dprintf.dprintf("TODO: check if lock extension is available?");
+    return true;
+  }
+
   /** check if commit message is valid and acceptable
    * @return true iff commit message accepted
    */
@@ -378,6 +387,7 @@ throw new RepositoryException("NYI");
                                                 type,
                                                 state,
                                                 mode,
+                                                false,
                                                 size,
                                                 datetime,
                                                 workingRevision,
@@ -905,7 +915,8 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
           {
             fileDataSet.add(new FileData(name,
                                          state,
-                                         FileData.Modes.BINARY
+                                         FileData.Modes.BINARY,
+                                         false
                                         )
                            );
           }
@@ -2463,6 +2474,62 @@ throw new Error("NYI");
     finally
     {
       if (exec != null) exec.done();
+    }
+  }
+
+  /** lock files
+   * @param fileDataSet file data set
+   */
+  public void lock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // copy file
+      command.clear();
+      command.append(Settings.hgCommand,"lock");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+  }
+
+  /** unlock files
+   * @param fileDataSet file data set
+   */
+  public void unlock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // copy file
+      command.clear();
+      command.append(Settings.hgCommand,"unlock");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exitCode = new Exec(rootPath,command).waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
     }
   }
 

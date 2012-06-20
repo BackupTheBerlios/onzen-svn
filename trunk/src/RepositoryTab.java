@@ -331,6 +331,7 @@ class RepositoryTab
       treeColumn.setToolTipText("Click to sort for name.");
       treeColumn = Widgets.addTreeColumn(widgetFileTree,"Status",  SWT.LEFT,160,true);
       treeColumn.addSelectionListener(fileTreeColumnSelectionListener);
+      treeColumn.addSelectionListener(fileTreeColumnSelectionListener);
       treeColumn.addListener(SWT.Resize,fileTreeColumnResizeListener);
       treeColumn.setToolTipText("Click to sort for status.");
       treeColumn = Widgets.addTreeColumn(widgetFileTree,"Revision",SWT.LEFT,100,true);
@@ -342,6 +343,29 @@ class RepositoryTab
       treeColumn.addListener(SWT.Resize,fileTreeColumnResizeListener);
       treeColumn.setToolTipText("Click to sort for branch.");
       Widgets.setTreeColumnWidth(widgetFileTree,Settings.geometryMainColumns.width);
+      widgetFileTree.addListener(SWT.PaintItem, new Listener()
+      {
+        public void handleEvent(Event event)
+        {
+          final int HEIGHT = Onzen.IMAGE_LOCK.getBounds().height;
+
+          TreeItem item = (TreeItem)event.item;
+
+          if (event.index == 1)
+          {
+            Object data = item.getData();
+            if (data instanceof FileData)
+            {
+              FileData fileData = (FileData)item.getData();
+
+              if (fileData.locked)
+              {
+                event.gc.drawImage(Onzen.IMAGE_LOCK, event.x+event.width, event.y+(event.height-HEIGHT)/2);
+              }
+            }
+          }
+        }
+      });
 
       menu = Widgets.newPopupMenu(shell);
       {
@@ -471,6 +495,32 @@ Dprintf.dprintf("NYI");
           }
         });
 
+        menuItem = Widgets.addMenuItem(menu,"Lock",Settings.keyLock);
+        menuItem.setEnabled(repository.supportLockUnlock());
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            lock();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Unlock",Settings.keyUnlock);
+        menuItem.setEnabled(repository.supportLockUnlock());
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            unlock();
+          }
+        });
+
         menuItem = Widgets.addMenuSeparator(menu);
 
         menuItem = Widgets.addMenuItem(menu,"Add\u2026",Settings.keyAdd);
@@ -594,34 +644,6 @@ Dprintf.dprintf("NYI");
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             annotations();
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Resolve\u2026",Settings.keyResolve);
-menuItem.setEnabled(false);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-Dprintf.dprintf("");
-//            resolve();
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Set resolved",Settings.keySetResolved);
-menuItem.setEnabled(false);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-Dprintf.dprintf("NYI");
-//            setResolved();
           }
         });
 
@@ -1138,6 +1160,7 @@ Dprintf.dprintf("NYI");
       try
       {
         repository.resolve(fileDataSet);
+
       }
       catch (RepositoryException exception)
       {
@@ -1148,6 +1171,8 @@ Dprintf.dprintf("NYI");
       {
         clearStatusText();
       }
+
+      asyncUpdateFileStates(fileDataSet);
     }
   }
 
@@ -1160,6 +1185,46 @@ Dprintf.dprintf("NYI");
     {
       CommandRename commandRename = new CommandRename(shell,this,fileData);
       commandRename.run();
+    }
+  }
+
+  /** apply patches
+   */
+  public void applyPatches()
+  {
+    setStatusText("Apply patches...");
+    try
+    {
+      repository.applyPatches();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,exception.getExtendedMessage(),"Apply patches fail: %s",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      clearStatusText();
+    }
+  }
+
+  /** unapply patches
+   */
+  public void unapplyPatches()
+  {
+    setStatusText("Unapply patches...");
+    try
+    {
+      repository.unapplyPatches();
+    }
+    catch (RepositoryException exception)
+    {
+      Dialogs.error(shell,exception.getExtendedMessage(),"Unapply patches fail: %s",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      clearStatusText();
     }
   }
 
@@ -1219,43 +1284,55 @@ Dprintf.dprintf("NYI");
     }
   }
 
-  /** apply patches
+  /** lock file
    */
-  public void applyPatches()
+  public void lock()
   {
-    setStatusText("Apply patches...");
-    try
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
     {
-      repository.applyPatches();
-    }
-    catch (RepositoryException exception)
-    {
-      Dialogs.error(shell,exception.getExtendedMessage(),"Apply patches fail: %s",exception.getMessage());
-      return;
-    }
-    finally
-    {
-      clearStatusText();
+      setStatusText("Lock...");
+      try
+      {
+        repository.lock(fileDataSet);
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(shell,exception.getExtendedMessage(),"Lock fail: %s",exception.getMessage());
+        return;
+      }
+      finally
+      {
+        clearStatusText();
+      }
+
+      asyncUpdateFileStates(fileDataSet);
     }
   }
 
-  /** unapply patches
+  /** unlock file
    */
-  public void unapplyPatches()
+  public void unlock()
   {
-    setStatusText("Unapply patches...");
-    try
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
     {
-      repository.unapplyPatches();
-    }
-    catch (RepositoryException exception)
-    {
-      Dialogs.error(shell,exception.getExtendedMessage(),"Unapply patches fail: %s",exception.getMessage());
-      return;
-    }
-    finally
-    {
-      clearStatusText();
+      setStatusText("Unlock...");
+      try
+      {
+        repository.unlock(fileDataSet);
+      }
+      catch (RepositoryException exception)
+      {
+        Dialogs.error(shell,exception.getExtendedMessage(),"Unlock fail: %s",exception.getMessage());
+        return;
+      }
+      finally
+      {
+        clearStatusText();
+      }
+
+      asyncUpdateFileStates(fileDataSet);
     }
   }
 
@@ -3170,6 +3247,7 @@ Dprintf.dprintf("");
     if (!treeItem.isDisposed())
     {
       treeItem.setText(0,fileData.getBaseName());
+//treeItem.setImage(1,(fileData.state == FileData.States.OK) ? Onzen.IMAGE_LOCK : Onzen.IMAGE_EMPTY);
       treeItem.setText(1,getFileDataStateString(fileData));
       treeItem.setText(2,fileData.workingRevision);
       treeItem.setText(3,fileData.branch);

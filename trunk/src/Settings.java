@@ -865,6 +865,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyUnapplyPatches                      = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyLock                                = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyUnlock                              = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyIncomingChanges                     = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyOutgoingChanges                     = SWT.NONE;

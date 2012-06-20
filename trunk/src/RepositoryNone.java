@@ -398,6 +398,22 @@ class RepositoryNone extends Repository
   {
   }
 
+  /** lock files
+   * @param fileDataSet file data set
+   */
+  public void lock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+  }
+
+  /** unlock files
+   * @param fileDataSet file data set
+   */
+  public void unlock(HashSet<FileData> fileDataSet)
+    throws RepositoryException
+  {
+  }
+
   /** set files mode
    * @param fileDataSet file data set
    * @param mode file mode
