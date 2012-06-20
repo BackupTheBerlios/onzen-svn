@@ -237,7 +237,7 @@ class RepositorySVN extends Repository
   public void updateStates(HashSet<FileData> fileDataSet, HashSet<String> fileDirectorySet, HashSet<FileData> newFileDataSet)
     throws RepositoryException
   {
-    final Pattern PATTERN_STATUS         = Pattern.compile("^(.)....(.).\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_STATUS         = Pattern.compile("^(.).(.)..(.).\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
@@ -304,12 +304,12 @@ class RepositorySVN extends Repository
           }
           else if ((matcher = PATTERN_STATUS.matcher(line)).matches())
           {
-            state              = parseState(matcher.group(1),matcher.group(3));
-            locked             = matcher.group(2).equals("K");
-            workingRevision    = matcher.group(4);
-            repositoryRevision = matcher.group(5);
-            author             = matcher.group(6);
-            name               = matcher.group(7);
+            state              = parseState(matcher.group(1),matcher.group(4));
+            locked             = matcher.group(2).equals("K") || matcher.group(3).equals("L");
+            workingRevision    = matcher.group(5);
+            repositoryRevision = matcher.group(6);
+            author             = matcher.group(7);
+            name               = matcher.group(8);
             fileName           = (!directory.isEmpty() ? directory+File.separator : "")+name;
 
             fileData = findFileData(fileDataSet,fileName);
@@ -712,7 +712,7 @@ class RepositorySVN extends Repository
   public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException
   {
-    final Pattern PATTERN_STATUS         = Pattern.compile("^(.)......(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_STATUS         = Pattern.compile("^(.).(.)..(.).\\s(.)\\s+(\\d+?)\\s+(\\d+?)\\s+(\\S+?)\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
@@ -726,6 +726,7 @@ class RepositorySVN extends Repository
       Matcher         matcher;
       String          name               = null;
       FileData.States state              = FileData.States.UNKNOWN;
+      boolean         locked             = false;
       String          workingRevision    = "";
       String          repositoryRevision = "";
       String          author             = "";
@@ -743,11 +744,12 @@ class RepositorySVN extends Repository
         // match name, state
         if      ((matcher = PATTERN_STATUS.matcher(line)).matches())
         {
-          state              = parseState(matcher.group(1),matcher.group(2));
-          workingRevision    = matcher.group(3);
-          repositoryRevision = matcher.group(4);
-          author             = matcher.group(5);
-          name               = matcher.group(6);
+          state              = parseState(matcher.group(1),matcher.group(4));
+          locked             = matcher.group(2).equals("K") || matcher.group(3).equals("L");
+          workingRevision    = matcher.group(5);
+          repositoryRevision = matcher.group(6);
+          author             = matcher.group(7);
+          name               = matcher.group(8);
 
           if (   new File(rootPath,name).isFile()
               && stateSet.contains(state))
@@ -755,7 +757,7 @@ class RepositorySVN extends Repository
             fileDataSet.add(new FileData(name,
                                          state,
                                          FileData.Modes.BINARY,
-                                         false
+                                         locked
                                         )
                            );
           }
