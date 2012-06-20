@@ -138,7 +138,8 @@ class RepositorySVN extends Repository
 
       // create repository
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","import",importPath,path,"-m","initial","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","import",importPath,path,"-m","initial");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
@@ -177,7 +178,8 @@ class RepositorySVN extends Repository
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","checkout","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","checkout");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if ((revision != null) && !revision.isEmpty()) command.append("--revision",revision);
       command.append(path,destinationPath);
       exec = new Exec(destinationPath,command);
@@ -259,7 +261,8 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","status","-uvN","--trust-server-cert");
+        command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,directory,command);
 
@@ -404,7 +407,8 @@ class RepositorySVN extends Repository
       Matcher matcher;
 
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","info","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","info");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -463,7 +467,8 @@ class RepositorySVN extends Repository
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (name != null) command.append(name);
       exec = new Exec(rootPath,command);
@@ -536,7 +541,8 @@ class RepositorySVN extends Repository
 
       // get single log entry
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r",revision+":PREV","--verbose","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r",revision+":PREV","--verbose");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -580,7 +586,8 @@ class RepositorySVN extends Repository
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -632,7 +639,8 @@ class RepositorySVN extends Repository
 
       // get file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","cat","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","cat");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -677,7 +685,8 @@ class RepositorySVN extends Repository
 
       // get file data
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","cat","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","cat");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -733,7 +742,8 @@ class RepositorySVN extends Repository
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","status","-uv","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","status","-uv");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -824,7 +834,8 @@ class RepositorySVN extends Repository
       {
         // check out new revision
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","cat","--revision",newRevision,"--trust-server-cert");
+        command.append(Settings.svnCommand,"--non-interactive","cat","--revision",newRevision);
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
@@ -870,7 +881,8 @@ class RepositorySVN extends Repository
 
       // diff file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""),"--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -1119,7 +1131,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // get patch
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","diff","--trust-server-cert");
+        command.append(Settings.svnCommand,"--non-interactive","diff");
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         if (!Settings.svnDiffCommand.isEmpty())
         {
           // use external diff command
@@ -1281,7 +1294,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get patch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""),"--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
@@ -1326,7 +1340,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
@@ -1386,7 +1401,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get annotations
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","blame","-v","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","blame","-v");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
@@ -1446,8 +1462,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","--depth","immediates","--accept","postpone","--trust-server-cert");
-//      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","update","--depth","immediates","--accept","postpone");
+//      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
 //      command.append(".");
@@ -1511,7 +1528,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // commit files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName(),"--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName());
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1541,7 +1559,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // add files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","add","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","add");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1583,7 +1602,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // remove files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","remove","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","remove");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1625,7 +1645,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // revert files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","-r",revision,"--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","update","-r",revision);
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (recursive) command.append("-R");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
@@ -1656,7 +1677,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","rename","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","rename");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
@@ -1671,7 +1693,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         // commit rename
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName(),"--trust-server-cert");
+        command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName());
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         command.append(getFileDataName(fileData));
         command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
@@ -1701,7 +1724,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","resolve","--accept","working","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","resolve","--accept","working");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1781,7 +1805,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","lock","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","lock");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1809,7 +1834,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","unlock","--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","unlock");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exitCode = new Exec(rootPath,command).waitFor();
@@ -1873,7 +1899,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list branches
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/branches","--trust-server-cert");
+        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/branches");
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,command);
 
@@ -1888,7 +1915,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list tags
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/tags","--trust-server-cert");
+        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/tags");
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,command);
 
@@ -1936,7 +1964,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath+File.separator+rootName,repositoryPath+File.separator+branchName,"--trust-server-cert");
+      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath+File.separator+rootName,repositoryPath+File.separator+branchName);
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("-F",commitMessage.getFileName());
       exec = new Exec(rootPath,command);
 

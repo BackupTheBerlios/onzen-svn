@@ -126,6 +126,7 @@ class Preferences
   private final Text          widgetSVNDiffCommand;
   private final Text          widgetSVNDiffCommandOptions;
   private final Text          widgetSVNDiffCommandOptionsIgnoreWhitespaces;
+  private final Button        widgetAlwaysTrustServerCertificate;
 
   private final Text          widgetHGCommand;
   private final Text          widgetHGDiffCommand;
@@ -770,6 +771,18 @@ class Preferences
             widgetSVNDiffCommandOptionsIgnoreWhitespaces.setText(Settings.svnDiffCommandOptionsIgnoreWhitespaces);
             Widgets.layout(widgetSVNDiffCommandOptionsIgnoreWhitespaces,0,3,TableLayoutData.WE);
             widgetSVNDiffCommandOptionsIgnoreWhitespaces.setToolTipText("Options for external diff command with ignoring whitespace changes.");
+          }
+
+          label = Widgets.newLabel(subComposite,"Miscellaneous:");
+          Widgets.layout(label,3,0,TableLayoutData.NW);
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,1.0));
+          Widgets.layout(subSubComposite,3,1,TableLayoutData.WE);
+          {
+            widgetAlwaysTrustServerCertificate = Widgets.newCheckbox(subSubComposite,"always trust server certificate");
+            widgetAlwaysTrustServerCertificate.setSelection(Settings.svnAlwaysTrustServerCertificate);
+            Widgets.layout(widgetAlwaysTrustServerCertificate,0,0,TableLayoutData.WE);
+            widgetAlwaysTrustServerCertificate.setToolTipText("Always trust server certificate.");
           }
         }
 
@@ -1642,6 +1655,7 @@ Dprintf.dprintf("");
           Settings.svnDiffCommand                         = widgetSVNDiffCommand.getText().trim();
           Settings.svnDiffCommandOptions                  = widgetSVNDiffCommandOptions.getText().trim();
           Settings.svnDiffCommandOptionsIgnoreWhitespaces = widgetSVNDiffCommandOptionsIgnoreWhitespaces.getText().trim();
+          Settings.svnAlwaysTrustServerCertificate        = widgetAlwaysTrustServerCertificate.getSelection();
 
           Settings.hgCommand                              = widgetHGCommand.getText().trim();
           Settings.hgDiffCommand                          = widgetHGDiffCommand.getText().trim();

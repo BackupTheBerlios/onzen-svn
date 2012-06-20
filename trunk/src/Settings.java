@@ -1015,6 +1015,8 @@ public class Settings
   public static String                   svnDiffCommandOptions                  = "-ur";
   @SettingValue
   public static String                   svnDiffCommandOptionsIgnoreWhitespaces = "-wbBEdur";
+  @SettingValue
+  public static boolean                  svnAlwaysTrustServerCertificate        = false;
 
   // HG
   @SettingComment(text={"","HG specific settings"})
