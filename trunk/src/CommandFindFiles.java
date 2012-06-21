@@ -183,8 +183,8 @@ public class CommandFindFiles
   {
     String  fileNameFilter;
     String  filter;
-    boolean findNamesFlag;
-    boolean findContentFlag;
+    boolean findByNameFlag;
+    boolean findByContentFlag;
     boolean showAllRepositoriesFlag;
     boolean showHiddenFilesFlag;
     boolean quitFlag;
@@ -193,8 +193,8 @@ public class CommandFindFiles
     {
       this.fileNameFilter          = CommandFindFiles.fileNameFilter;
       this.filter                  = CommandFindFiles.filter;
-      this.findNamesFlag           = false;
-      this.findContentFlag         = false;
+      this.findByNameFlag          = false;
+      this.findByContentFlag       = false;
       this.showAllRepositoriesFlag = CommandFindFiles.showAllRepositoriesFlag;
       this.showHiddenFilesFlag     = CommandFindFiles.showHiddenFilesFlag;
       this.quitFlag                = false;
@@ -232,8 +232,8 @@ public class CommandFindFiles
   private final Combo                    widgetFileNameFilter;
   private final Combo                    widgetFilter;
   private final Listener                 mouseWheelListener;
-  private final Button                   widgetFindNames;
-  private final Button                   widgetFindContent;
+  private final Button                   widgetFindByName;
+  private final Button                   widgetFindByContent;
   private final Button                   widgetShowAllRepositories;
   private final Button                   widgetShowHiddenFiles;
 
@@ -538,10 +538,10 @@ Dprintf.dprintf("");
       subComposite.setLayout(new TableLayout(null,0.0));
       Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
-        widgetFindNames = Widgets.newCheckbox(subComposite,"find files",SWT.F5);
-        widgetFindNames.setSelection(type == Types.NAME);
-        Widgets.layout(widgetFindNames,0,0,TableLayoutData.W);
-        widgetFindNames.addSelectionListener(new SelectionListener()
+        widgetFindByName = Widgets.newCheckbox(subComposite,"find by name",SWT.F5);
+        widgetFindByName.setSelection(type == Types.NAME);
+        Widgets.layout(widgetFindByName,0,0,TableLayoutData.W);
+        widgetFindByName.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
@@ -552,10 +552,10 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetFindContent = Widgets.newCheckbox(subComposite,"find content",SWT.F6);
-        widgetFindContent.setSelection(type == Types.CONTENT);
-        Widgets.layout(widgetFindContent,0,1,TableLayoutData.W);
-        widgetFindContent.addSelectionListener(new SelectionListener()
+        widgetFindByContent = Widgets.newCheckbox(subComposite,"find by content",SWT.F6);
+        widgetFindByContent.setSelection(type == Types.CONTENT);
+        Widgets.layout(widgetFindByContent,0,1,TableLayoutData.W);
+        widgetFindByContent.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
@@ -767,11 +767,11 @@ Dprintf.dprintf("");
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F5))
         {
-          Widgets.invoke(widgetFindNames);
+          Widgets.invoke(widgetFindByName);
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F6))
         {
-          Widgets.invoke(widgetFindContent);
+          Widgets.invoke(widgetFindByContent);
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F7))
         {
@@ -806,8 +806,8 @@ Dprintf.dprintf("");
     widgetFiles.addKeyListener(keyListener);
     widgetFileNameFilter.addKeyListener(keyListener);
     widgetFilter.addKeyListener(keyListener);
-    widgetFindNames.addKeyListener(keyListener);
-    widgetFindContent.addKeyListener(keyListener);
+    widgetFindByName.addKeyListener(keyListener);
+    widgetFindByContent.addKeyListener(keyListener);
     widgetShowAllRepositories.addKeyListener(keyListener);
     widgetShowHiddenFiles.addKeyListener(keyListener);
     widgetFilter.addKeyListener(new KeyListener()
@@ -874,6 +874,8 @@ Dprintf.dprintf("event=%s",event);
       String    filter                  = "";
       Pattern[] fileNamePatterns        = null;
       Pattern[] contentPatterns         = null;
+      boolean   findByNameFlag          = data.findByNameFlag;
+      boolean   findByContentFlag       = data.findByContentFlag;
       boolean   showAllRepositoriesFlag = data.showAllRepositoriesFlag;
       boolean   showHiddenFilesFlag     = data.showHiddenFilesFlag;
 
@@ -885,6 +887,8 @@ Dprintf.dprintf("event=%s",event);
         return    data.quitFlag
                || ((data.fileNameFilter != null) && !data.fileNameFilter.equals(fileNameFilter))
                || ((data.filter != null) && !data.filter.equals(filter))
+               || (data.findByNameFlag != findByNameFlag)
+               || (data.findByContentFlag != findByContentFlag)
                || (data.showAllRepositoriesFlag != showAllRepositoriesFlag)
                || (data.showHiddenFilesFlag != showHiddenFilesFlag);
       }
@@ -953,11 +957,17 @@ Dprintf.dprintf("event=%s",event);
                         {
                           boolean nameMatchFlag = false;
                           int     lineNumber    = 0;
-                          nameMatchFlag =    fileName.toLowerCase().contains(filter)
-                                          || matchPatterns(fileName,fileNamePatterns);
-                          if (!nameMatchFlag)
+                          if (findByNameFlag)
                           {
-                            lineNumber = fileContains(file,filter,contentPatterns);
+                            nameMatchFlag =    fileName.toLowerCase().contains(filter)
+                                            || matchPatterns(fileName,fileNamePatterns);
+                          }
+                          if (findByContentFlag)
+                          {
+                            if (!nameMatchFlag)
+                            {
+                              lineNumber = fileContains(file,filter,contentPatterns);
+                            }
                           }
 
                           if (   nameMatchFlag
@@ -1042,6 +1052,8 @@ Dprintf.dprintf("event=%s",event);
               // clear existing text
               data.filter = null;
             }
+            findByNameFlag          = data.findByNameFlag;
+            findByContentFlag       = data.findByContentFlag;
             showAllRepositoriesFlag = data.showAllRepositoriesFlag;
             showHiddenFilesFlag     = data.showHiddenFilesFlag;
           }
@@ -1122,6 +1134,8 @@ Dprintf.dprintf("event=%s",event);
       {
         data.fileNameFilter          = widgetFileNameFilter.getText().trim();
         data.filter                  = filter;
+        data.findByNameFlag          = widgetFindByName.getSelection();
+        data.findByContentFlag       = widgetFindByContent.getSelection();
         data.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
         data.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
         data.notifyAll();
