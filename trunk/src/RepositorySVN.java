@@ -309,8 +309,8 @@ class RepositorySVN extends Repository
           {
             state              = parseState(matcher.group(1),matcher.group(4));
 // NYI correct?
-//            locked             = matcher.group(2).equals("L") || matcher.group(3).equals("K");
-            locked             = matcher.group(3).equals("K");
+            locked             = matcher.group(2).equals("L") || matcher.group(3).equals("K");
+//            locked             = matcher.group(3).equals("K");
             workingRevision    = matcher.group(5);
             repositoryRevision = matcher.group(6);
             author             = matcher.group(7);
