@@ -1479,7 +1479,7 @@ Dprintf.dprintf("NYI");
       macro.expand("f",         fileName);
       macro.expand("lineNumber",lineNumber);
       macro.expand("n",         lineNumber);
-      macro.expand("",          "%");
+      macro.expand("%%",        "%");
       Command command = new Command(macro);
 
       // run command (Note: use Runtime.exec() because it is a background process without i/o here)
@@ -1576,7 +1576,7 @@ Dprintf.dprintf("NYI");
       macro.expand("f",         fileName);
       macro.expand("lineNumber",lineNumber);
       macro.expand("n",         lineNumber);
-      macro.expand("",          "%");
+      macro.expand("%%",        "%");
       Command command = new Command(macro);
 
       // run command (Note: use Runtime.exec() because it is a background process without i/o here)
@@ -1659,7 +1659,7 @@ Dprintf.dprintf("NYI");
 
     final Data  data = new Data();
     final Shell dialog;
-    Composite   composite,subComposite;
+    Composite   composite;
     Label       label;
     Button      button;
 
@@ -1795,7 +1795,7 @@ Dprintf.dprintf("");
 
     final Data  data = new Data();
     final Shell dialog;
-    Composite   composite,subComposite;
+    Composite   composite;
     Label       label;
     Button      button;
 
@@ -1955,7 +1955,7 @@ Dprintf.dprintf("");
 
     final Data  data = new Data();
     final Shell dialog;
-    Composite   composite,subComposite;
+    Composite   composite;
     Label       label;
     Text        text;
     Button      button;
@@ -2109,7 +2109,7 @@ Dprintf.dprintf("");
     if (fileDataSet.size() > 0)
     {
       final Shell dialog;
-      Composite   composite,subComposite;
+      Composite   composite;
       Button      button;
 
       // delete dialog
