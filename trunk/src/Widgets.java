@@ -3437,6 +3437,18 @@ class Widgets
     }
   }
 
+  /** remove table entries
+   * @param table table
+   * @param tableItems table items to remove
+   */
+  public static void removeTableEntries(Table table, TableItem[] tableItems)
+  {
+    for (TableItem tableItem : tableItems)
+    {
+      removeTableEntry(table,tableItems);
+    }
+  }
+
   /** remove all table entries
    * @param table table
    */
