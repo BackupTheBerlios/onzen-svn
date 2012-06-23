@@ -326,7 +326,7 @@ public class CommandFindFiles
       {
         menuItem = Widgets.addMenuItem(menu,"Open directory");
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -348,7 +348,7 @@ public class CommandFindFiles
 
         menuItem = Widgets.addMenuItem(menu,"Revisions\u2026");
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -370,7 +370,7 @@ public class CommandFindFiles
 
         menuItem = Widgets.addMenuItem(menu,"Open file\u2026");
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -390,7 +390,7 @@ public class CommandFindFiles
 
         menuItem = Widgets.addMenuItem(menu,"Open file with\u2026",Settings.keyOpenFileWith);
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -410,7 +410,7 @@ public class CommandFindFiles
 
         menuItem = Widgets.addMenuItem(menu,"Rename local file/directory\u2026",Settings.keyRenameLocal);
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -435,7 +435,7 @@ public class CommandFindFiles
 
         menuItem = Widgets.addMenuItem(menu,"Delete local files/directories\u2026",Settings.keyDeleteLocal);
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -462,7 +462,7 @@ public class CommandFindFiles
 
         menuItem = Widgets.addMenuItem(menu,"Convert whitespaces\u2026",Settings.keyDeleteLocal);
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -604,7 +604,7 @@ Dprintf.dprintf("");
       widgetButtonOpenDirectory = Widgets.newButton(composite,"Open directory");
       widgetButtonOpenDirectory.setEnabled(false);
       Widgets.layout(widgetButtonOpenDirectory,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonOpenDirectory,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonOpenDirectory,data)
       {
         public void modified(Control control)
         {
@@ -630,7 +630,7 @@ Dprintf.dprintf("");
       widgetButtonOpen = Widgets.newButton(composite,"Open file");
       widgetButtonOpen.setEnabled(false);
       Widgets.layout(widgetButtonOpen,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonOpen,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonOpen,data)
       {
         public void modified(Control control)
         {
@@ -658,7 +658,7 @@ Dprintf.dprintf("");
       widgetButtonOpenWith = Widgets.newButton(composite,"Open file with...",Settings.keyOpenFileWith);
       widgetButtonOpenWith.setEnabled(false);
       Widgets.layout(widgetButtonOpenWith,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonOpenWith,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonOpenWith,data)
       {
         public void modified(Control control)
         {
@@ -683,7 +683,7 @@ Dprintf.dprintf("");
       widgetButtonRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
       widgetButtonRevisions.setEnabled(false);
       Widgets.layout(widgetButtonRevisions,0,3,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonRevisions,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonRevisions,data)
       {
         public void modified(Control control)
         {

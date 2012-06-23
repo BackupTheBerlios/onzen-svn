@@ -587,7 +587,7 @@ class CommandPatches
             button = Widgets.newButton(subSubComposite,"Refresh...");
             button.setEnabled(false);
             Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-            Widgets.addModifyListener(new WidgetListener(button,data)
+            Widgets.addModifyListener(new WidgetModifyListener(button,data)
             {
               public void modified(Control control)
               {
@@ -905,7 +905,7 @@ class CommandPatches
       widgetMessageSave = Widgets.newButton(composite,"Save",SWT.CTRL+'S');
       widgetMessageSave.setEnabled(false);
       Widgets.layout(widgetMessageSave,5,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetMessageSave,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetMessageSave,data)
       {
         public void modified(Control control)
         {
@@ -998,7 +998,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Save as file");
       button.setEnabled(false);
       Widgets.layout(button,0,0,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -1023,7 +1023,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Send for review");
       button.setEnabled(false);
       Widgets.layout(button,0,1,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -1048,7 +1048,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Commit");
       button.setEnabled(false);
       Widgets.layout(button,0,2,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -1073,7 +1073,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Apply");
       button.setEnabled(false);
       Widgets.layout(button,0,3,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -1098,7 +1098,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Unapply");
       button.setEnabled(false);
       Widgets.layout(button,0,4,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -1123,7 +1123,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Discard");
       button.setEnabled(false);
       Widgets.layout(button,0,5,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -1148,7 +1148,7 @@ class CommandPatches
       button = Widgets.newButton(composite,"Delete...");
       button.setEnabled(false);
       Widgets.layout(button,0,6,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {

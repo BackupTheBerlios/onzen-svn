@@ -218,7 +218,7 @@ class CommandDiff
         widgetLineNumbersLeft.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersLeft,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
-        Widgets.addModifyListener(new WidgetListener(widgetLineNumbersLeft,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetLineNumbersLeft,data)
         {
           public void modified(Control control)
           {
@@ -230,7 +230,7 @@ class CommandDiff
         widgetTextLeft.setFont(Onzen.FONT_DIFF);
         widgetTextLeft.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetTextLeft,0,1,TableLayoutData.NSWE);
-        Widgets.addModifyListener(new WidgetListener(widgetTextLeft,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetTextLeft,data)
         {
           public void modified(Control control)
           {
@@ -252,7 +252,7 @@ class CommandDiff
         widgetLineNumbersRight.setFont(Onzen.FONT_DIFF);
         widgetLineNumbersRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbersRight,0,0,TableLayoutData.NS,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT);
-        Widgets.addModifyListener(new WidgetListener(widgetLineNumbersRight,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetLineNumbersRight,data)
         {
           public void modified(Control control)
           {
@@ -264,7 +264,7 @@ class CommandDiff
         widgetTextRight.setFont(Onzen.FONT_DIFF);
         widgetTextRight.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetTextRight,0,1,TableLayoutData.NSWE);
-        Widgets.addModifyListener(new WidgetListener(widgetTextRight,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetTextRight,data)
         {
           public void modified(Control control)
           {
@@ -289,7 +289,7 @@ class CommandDiff
         widgetFindLeftPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindLeftPrev.setEnabled(false);
         Widgets.layout(widgetFindLeftPrev,0,2,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindLeftPrev,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindLeftPrev,data)
         {
           public void modified(Control control)
           {
@@ -301,7 +301,7 @@ class CommandDiff
         widgetFindLeftNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindLeftNext.setEnabled(false);
         Widgets.layout(widgetFindLeftNext,0,3,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindLeftNext,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindLeftNext,data)
         {
           public void modified(Control control)
           {
@@ -325,7 +325,7 @@ class CommandDiff
         widgetFindRightPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindRightPrev.setEnabled(false);
         Widgets.layout(widgetFindRightPrev,0,2,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindRightPrev,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindRightPrev,data)
         {
           public void modified(Control control)
           {
@@ -337,7 +337,7 @@ class CommandDiff
         widgetFindRightNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindRightNext.setEnabled(false);
         Widgets.layout(widgetFindRightNext,0,3,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindRightNext,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindRightNext,data)
         {
           public void modified(Control control)
           {
@@ -351,7 +351,7 @@ class CommandDiff
       widgetLineDiff.setFont(Onzen.FONT_DIFF_LINE);
       widgetLineDiff.setForeground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetLineDiff,3,0,TableLayoutData.WE,0,3,0,0,SWT.DEFAULT,8+2*(Widgets.getTextHeight(widgetLineDiff)+8));
-      Widgets.addModifyListener(new WidgetListener(widgetLineDiff,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetLineDiff,data)
       {
         public void modified(Control control)
         {
@@ -514,7 +514,7 @@ class CommandDiff
       widgetRevision.setEnabled(false);
       Widgets.layout(widgetRevision,0,5,TableLayoutData.WE);
       widgetRevision.setToolTipText("Revisions to show.");
-      Widgets.addModifyListener(new WidgetListener(widgetRevision,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetRevision,data)
       {
         public void modified(Control control)
         {
@@ -525,7 +525,7 @@ class CommandDiff
       widgetRevisionPrev = Widgets.newButton(composite,Onzen.IMAGE_ARROW_LEFT);
       widgetRevisionPrev.setEnabled(false);
       Widgets.layout(widgetRevisionPrev,0,6,TableLayoutData.NSW);
-      Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetRevisionPrev,data)
       {
         public void modified(Control control)
         {
@@ -537,7 +537,7 @@ class CommandDiff
       widgetRevisionNext = Widgets.newButton(composite,Onzen.IMAGE_ARROW_RIGHT);
       widgetRevisionNext.setEnabled(false);
       Widgets.layout(widgetRevisionNext,0,7,TableLayoutData.NSW);
-      Widgets.addModifyListener(new WidgetListener(widgetRevisionNext,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetRevisionNext,data)
       {
         public void modified(Control control)
         {
@@ -549,7 +549,7 @@ class CommandDiff
       widgetPatch = Widgets.newButton(composite,"Patch");
       widgetPatch.setEnabled(false);
       Widgets.layout(widgetPatch,0,8,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(widgetPatch,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetPatch,data)
       {
         public void modified(Control control)
         {
@@ -561,7 +561,7 @@ class CommandDiff
       widgetPrev = Widgets.newButton(composite,"Prev");
       widgetPrev.setEnabled(false);
       Widgets.layout(widgetPrev,0,9,TableLayoutData.E);
-      Widgets.addModifyListener(new WidgetListener(widgetPrev,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetPrev,data)
       {
         public void modified(Control control)
         {
@@ -573,7 +573,7 @@ class CommandDiff
       widgetNext = Widgets.newButton(composite,"Next");
       widgetNext.setEnabled(false);
       Widgets.layout(widgetNext,0,10,TableLayoutData.E);
-      Widgets.addModifyListener(new WidgetListener(widgetNext,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetNext,data)
       {
         public void modified(Control control)
         {
@@ -585,7 +585,7 @@ class CommandDiff
       widgetReread = Widgets.newButton(composite,"Reread");
       widgetReread.setEnabled(false);
       Widgets.layout(widgetReread,0,11,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(widgetReread,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetReread,data)
       {
         public void modified(Control control)
         {

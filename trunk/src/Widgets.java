@@ -180,47 +180,73 @@ class WidgetVariable
 
   /** set boolean value
    * @param b value
+   * @return true iff changed
    */
-  void set(boolean b)
+  boolean set(boolean b)
   {
+    boolean changedFlag;
+
     assert type == WidgetVariableTypes.BOOLEAN;
+
+    changedFlag = (this.b != b);
 
     this.b = b;
     Widgets.modified(this);
+
+    return changedFlag;
   }
 
   /** set long value
    * @param l value
+   * @return true iff changed
    */
-  void set(long l)
+  boolean set(long l)
   {
+    boolean changedFlag;
+
     assert type == WidgetVariableTypes.LONG;
+
+    changedFlag = (this.l != l);
 
     this.l = l;
     Widgets.modified(this);
+
+    return changedFlag;
   }
 
   /** set double value
    * @param d value
+   * @return true iff changed
    */
-  void set(double d)
+  boolean set(double d)
   {
+    boolean changedFlag;
+
     assert type == WidgetVariableTypes.DOUBLE;
+
+    changedFlag = (this.d != d);
 
     this.d = d;
     Widgets.modified(this);
+
+    return changedFlag;
   }
 
   /** set string value
    * @param string value
+   * @return true iff changed
    */
-  void set(String string)
+  boolean set(String string)
   {
+    boolean changedFlag = false;
+
     assert (type == WidgetVariableTypes.STRING) || (type == WidgetVariableTypes.ENUMERATION);
 
     switch (type)
     {
       case STRING:
+        changedFlag = (this.string != string);
+
         this.string = string;
         Widgets.modified(this);
         break;
@@ -229,6 +255,8 @@ class WidgetVariable
         {
           if (s.equals(string))
           {
+            changedFlag = (this.string != string);
+
             this.string = string;
             Widgets.modified(this);
             break;
@@ -236,6 +264,8 @@ class WidgetVariable
         }
         break;
     }
+
+    return changedFlag;
   }
 
   /** compare string values
@@ -275,9 +305,9 @@ class WidgetVariable
   }
 }
 
-/** widget listener
+/** widget modify listener
  */
-class WidgetListener
+class WidgetModifyListener
 {
   private Widget           widget;
   private WidgetVariable[] variables;
@@ -287,7 +317,7 @@ class WidgetListener
 
   /** create widget listener
    */
-  WidgetListener()
+  WidgetModifyListener()
   {
     this.widget    = null;
     this.variables = null;
@@ -297,7 +327,7 @@ class WidgetListener
    * @param widget widget
    * @param variable widget variable
    */
-  WidgetListener(Widget widget, WidgetVariable variable)
+  WidgetModifyListener(Widget widget, WidgetVariable variable)
   {
     this(widget,new WidgetVariable[]{variable});
   }
@@ -306,7 +336,7 @@ class WidgetListener
    * @param widget widget
    * @param variable widget variable
    */
-  WidgetListener(Widget widget, WidgetVariable[] variables)
+  WidgetModifyListener(Widget widget, WidgetVariable[] variables)
   {
     this.widget    = widget;
     this.variables = variables;
@@ -316,7 +346,7 @@ class WidgetListener
    * @param widget widget
    * @param object object
    */
-  WidgetListener(Widget widget, Object object)
+  WidgetModifyListener(Widget widget, Object object)
   {
     this(widget,new WidgetVariable(object));
   }
@@ -387,7 +417,7 @@ class WidgetListener
           case STRING: text = variable.getString(); break;
         }
       }
-      if (!text.equals(cachedText))
+      if ((text != null) && !text.equals(cachedText))
       {
         widgetLabel.setText(text);
         widgetLabel.getParent().layout(true,true);
@@ -410,8 +440,6 @@ class WidgetListener
             case STRING: text = variable.getString(); break;
           }
         }
-Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
-//new Throwable().printStackTrace();
         if ((text != null) && !text.equals(cachedText))
         {
           widgetButton.setText(text);
@@ -458,7 +486,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
           case ENUMERATION: text = variable.getString(); break;
         }
       }
-      if (!text.equals(cachedText))
+      if ((text != null) && !text.equals(cachedText))
       {
         widgetCombo.setText(text);
         widgetCombo.getParent().layout();
@@ -479,7 +507,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
           case STRING: text = variable.getString(); break;
         }
       }
-      if (!text.equals(cachedText))
+      if ((text != null) && !text.equals(cachedText))
       {
         widgetText.setText(text);
         widgetText.getParent().layout();
@@ -500,7 +528,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
           case STRING: text = variable.getString(); break;
         }
       }
-      if (!text.equals(cachedText))
+      if ((text != null) && !text.equals(cachedText))
       {
         widgetStyledText.setText(text);
         widgetStyledText.getParent().layout();
@@ -561,7 +589,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
     }
     else
     {
-      throw new InternalError("Unknown widget '"+widget+"' in widget listener!");
+      throw new InternalError("Unhandled widget '"+widget+"' in widget listener!");
     }
   }
 
@@ -587,7 +615,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
 
   /** set text or selection fo widget according to value of variable
    * @param widget widget to notify about modified variable
-   * @param variable variable
+   * @param variables variables
    */
   void modified(Widget widget, WidgetVariable[] variables)
   {
@@ -597,12 +625,40 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
     }
   }
 
+  /** set text or selection fo widget according to value of variable
+   * @param control control to notify about modified variable
+   * @param variables variables
+   */
+  void modified(Control control, WidgetVariable[] variables)
+  {
+    for (WidgetVariable variable : variables)
+    {
+      modified(control,variable);
+    }
+  }
+
+  /** set text or selection fo widget according to value of variable
+   * @param menuItem menu item to notify about modified variable
+   * @param variables variables
+   */
+  void modified(MenuItem menuItem, WidgetVariable[] variables)
+  {
+    modified((Widget)menuItem,variables);
+  }
+
   /** notify modify variable
    * @param variable widget variable
    */
   public void modified(WidgetVariable variable)
   {
-    modified(widget,variable);
+    if (widget instanceof Control)
+    {
+      modified((Control)widget,variable);
+    }
+    else
+    {
+      modified(widget,variable);
+    }
   }
 
   /** notify modify variable
@@ -610,7 +666,14 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
    */
   public void modified(WidgetVariable[] variables)
   {
-    modified(widget,variables);
+    if (widget instanceof Control)
+    {
+      modified((Control)widget,variables);
+    }
+    else
+    {
+      modified(widget,variables);
+    }
   }
 
   /** notify modify variable
@@ -661,15 +724,7 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
    */
   public void modified()
   {
-    if      (widget instanceof Button)
-    {
-      modified((Button)widget);
-    }
-    else if (widget instanceof Combo)
-    {
-      modified((Combo)widget);
-    }
-    else if (widget instanceof Control)
+    if (widget instanceof Control)
     {
       modified((Control)widget);
     }
@@ -689,6 +744,119 @@ Dprintf.dprintf("widget=%s text=%s variable=%s",widget,text,variable);
   String getString(WidgetVariable variable)
   {
     return null;
+  }
+}
+
+/** widget event
+ */
+class WidgetEvent
+{
+  private HashSet<WidgetEventListener> widgetEventListenerSet;
+
+  /** create widget event listener
+   */
+  WidgetEvent()
+  {
+    widgetEventListenerSet = new HashSet<WidgetEventListener>();
+  }
+
+  /** add widget event listern
+   * @param widgetEventListener widget event listern to add
+
+   */
+  public void add(WidgetEventListener widgetEventListener)
+  {
+    widgetEventListenerSet.add(widgetEventListener);
+  }
+
+  /** remove widget event listern
+   * @param widgetEventListener widget event listern to remove
+
+   */
+  public void remove(WidgetEventListener widgetEventListener)
+  {
+    widgetEventListenerSet.remove(widgetEventListener);
+  }
+
+  /** trigger widget event
+   */
+  public void trigger()
+  {
+    for (WidgetEventListener widgetEventListener : widgetEventListenerSet)
+    {
+      widgetEventListener.trigger();
+    }
+  }
+}
+
+/** widget event listener
+ */
+class WidgetEventListener
+{
+  private Control     control;
+  private Widget      widget;
+  private WidgetEvent widgetEvent;
+
+  /** create widget listener
+   * @param control control widget
+   * @param widgetEvent widget event
+   */
+  WidgetEventListener(Widget widget, WidgetEvent widgetEvent)
+  {
+    this.widget      = widget;
+    this.widgetEvent = widgetEvent;
+  }
+
+  /** add widget event listern
+   * @param widgetEventListener widget event listern to add
+   */
+  public void add()
+  {
+    widgetEvent.add(this);
+  }
+
+  /** remove widget event listern
+   * @param widgetEventListener widget event listern to remove
+   */
+  public void remove()
+  {
+    widgetEvent.remove(this);
+  }
+
+  /** trigger handler
+   * @param widget widget
+   */
+  public void trigger(Widget widget)
+  {
+  }
+
+  /** trigger handler
+   * @param control control
+   */
+  public void trigger(Control control)
+  {
+  }
+
+  /** trigger handler
+   * @param menuItem menu item
+   */
+  public void trigger(MenuItem menuItem)
+  {
+  }
+
+  /** trigger widget event
+   */
+  void trigger()
+  {
+    if      (widget instanceof Control)
+    {
+      trigger((Control)widget);
+    }
+    else if (widget instanceof MenuItem)
+    {
+      trigger((MenuItem)widget);
+    }
+    trigger(widget);
   }
 }
 
@@ -716,7 +884,7 @@ class Widgets
 
   /** list of widgets listeners
    */
-  private static ArrayList<WidgetListener> listenersList = new ArrayList<WidgetListener>();
+  private static ArrayList<WidgetModifyListener> listenersList = new ArrayList<WidgetModifyListener>();
 
   //-----------------------------------------------------------------------
 
@@ -1371,6 +1539,22 @@ class Widgets
     }
   }
 
+  /** set enabled
+   * @param widget control/menu item to enable/disable
+   * @param enableFlag true to enable, false to disable
+   */
+  static void setEnabled(Widget widget, boolean enableFlag)
+  {
+    if      (widget instanceof Control)
+    {
+      ((Control)widget).setEnabled(enableFlag);
+    }
+    else if (widget instanceof MenuItem)
+    {
+      ((MenuItem)widget).setEnabled(enableFlag);
+    }
+  }
+
   /** set visible
    * @param control control to make visible/invisible
    * @param visibleFlag true to make visible, false to make invisible
@@ -1988,24 +2172,77 @@ class Widgets
     return newCheckbox(composite,text,SWT.NONE);
   }
 
-
-  /** create new checkbox
-   * @param composite composite widget
-   * @param accelerator accelerator key code or SWT.NONE
-   * @return new checkbox button
-   */
-  public static Button newCheckbox(Composite composite, int accelerator)
-  {
-    return newCheckbox(composite,null,accelerator);
-  }
-
   /** create new checkbox
    * @param composite composite widget
    * @return new checkbox button
    */
   public static Button newCheckbox(Composite composite)
   {
-    return newCheckbox(composite,SWT.NONE);
+    return newCheckbox(composite,(String)null);
+  }
+
+  /** create new checkbox
+   * @param composite composite widget
+   * @param imageOn,imageOf on/off image
+   * @param data data structure to store checkbox value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for checkbox
+   * @return new checkbox button
+   */
+  public static Button newCheckbox(Composite composite, final Image imageOn, final Image imageOff, final Object data, final String field, boolean value)
+  {
+    Button button;
+
+    button = new Button(composite,SWT.TOGGLE);
+    button.setImage(imageOff);
+    button.addSelectionListener(new SelectionListener()
+    {
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Button widget = (Button)selectionEvent.widget;
+
+        if (widget.getImage() == imageOff)
+        {
+          // switch on
+          widget.setImage(imageOn);
+          widget.setSelection(true);
+          setField(data,field,true);
+        }
+        else
+        {
+          // switch off
+          widget.setImage(imageOff);
+          widget.setSelection(false);
+          setField(data,field,false);
+        }
+      }
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    button.setSelection(value);
+
+    return button;
+  }
+
+  /** create new checkbox
+   * @param composite composite widget
+   * @param accelerator accelerator key code or SWT.NONE
+   * @return new checkbox button
+   */
+  public static Button newCheckbox(Composite composite, Image imageOff, Image imageOn, final Object data, final String field)
+  {
+    return newCheckbox(composite,imageOff,imageOn,data,field,false);
+  }
+
+  /** create new checkbox
+   * @param composite composite widget
+   * @param imageOff,imageOn off/on image
+   * @return new checkbox button
+   */
+  public static Button newCheckbox(Composite composite, Image imageOff, Image imageOn)
+  {
+    return newCheckbox(composite,imageOff,imageOn,null,null);
   }
 
   //-----------------------------------------------------------------------
@@ -4707,12 +4944,12 @@ private static void printTree(Tree tree)
   //-----------------------------------------------------------------------
 
   /** add modify listener
-   * @param widgetListener listener to add
+   * @param widgetModifyListener listener to add
    */
-  public static void addModifyListener(WidgetListener widgetListener)
+  public static void addModifyListener(WidgetModifyListener widgetModifyListener)
   {
-    listenersList.add(widgetListener);
-    widgetListener.modified();
+    listenersList.add(widgetModifyListener);
+    widgetModifyListener.modified();
   }
 
   /** execute modify listeners
@@ -4720,16 +4957,32 @@ private static void printTree(Tree tree)
    */
   public static void modified(Object object)
   {
-    for (WidgetListener widgetListener : listenersList)
+    for (WidgetModifyListener widgetModifyListener : listenersList)
     {
-      if (widgetListener.equals(object))
+      if (widgetModifyListener.equals(object))
       {
-        widgetListener.modified();
+        widgetModifyListener.modified();
       }
     }
   }
 
-  /** event notification
+  /** add event listener
+   * @param widgetEventListener listener to add
+   */
+  static void addEventListener(WidgetEventListener widgetEventListener)
+  {
+    widgetEventListener.add();
+  }
+
+  /** trigger widget event
+   * @param widgetEvent widget event to trigger
+   */
+  static void trigger(WidgetEvent widgetEvent)
+  {
+    widgetEvent.trigger();
+  }
+
+  /** signal modified
    * @param control control
    * @param type event type to generate
    * @param widget widget of event

@@ -935,7 +935,7 @@ class Preferences
               widgetHGSingleLineMaxCommitMessageLength.setSelection(Settings.hgSingleLineMaxCommitMessageLength);
               Widgets.layout(widgetHGSingleLineMaxCommitMessageLength,0,2,TableLayoutData.W);
               widgetHGSingleLineMaxCommitMessageLength.setToolTipText("Max. length of single-line commit message. If the length exceed this limit a warning is shown.");
-              Widgets.addModifyListener(new WidgetListener(widgetHGSingleLineMaxCommitMessageLength,Settings.hgSingleLineCommitMessages)
+              Widgets.addModifyListener(new WidgetModifyListener(widgetHGSingleLineMaxCommitMessageLength,Settings.hgSingleLineCommitMessages)
               {
                 public void modified(Control control)
                 {

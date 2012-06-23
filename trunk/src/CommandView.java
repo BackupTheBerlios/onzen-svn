@@ -142,7 +142,7 @@ class CommandView
         widgetRevision = Widgets.newSelect(subComposite);
         widgetRevision.setEnabled(false);
         Widgets.layout(widgetRevision,0,1,TableLayoutData.WE);
-        Widgets.addModifyListener(new WidgetListener(widgetRevision,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetRevision,data)
         {
           public void modified(Control control)
           {
@@ -154,7 +154,7 @@ class CommandView
         widgetRevisionPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_LEFT);
         widgetRevisionPrev.setEnabled(false);
         Widgets.layout(widgetRevisionPrev,0,2,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetRevisionPrev,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetRevisionPrev,data)
         {
           public void modified(Control control)
           {
@@ -166,7 +166,7 @@ class CommandView
         widgetRevisionNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_RIGHT);
         widgetRevisionNext.setEnabled(false);
         Widgets.layout(widgetRevisionNext,0,3,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetRevisionNext,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetRevisionNext,data)
         {
           public void modified(Control control)
           {
@@ -184,7 +184,7 @@ class CommandView
         widgetLineNumbers = Widgets.newTextView(subComposite,SWT.RIGHT|SWT.BORDER|SWT.MULTI);
         widgetLineNumbers.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetLineNumbers,0,0,TableLayoutData.NS,0,0,0,0,60,SWT.DEFAULT);
-        Widgets.addModifyListener(new WidgetListener(widgetLineNumbers,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetLineNumbers,data)
         {
           public void modified(Control control)
           {
@@ -195,7 +195,7 @@ class CommandView
         widgetText = Widgets.newTextView(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI);
         widgetText.setForeground(Onzen.COLOR_GRAY);
         Widgets.layout(widgetText,0,1,TableLayoutData.NSWE);
-        Widgets.addModifyListener(new WidgetListener(widgetText,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetText,data)
         {
           public void modified(Control control)
           {
@@ -220,7 +220,7 @@ class CommandView
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
         Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindPrev,data)
         {
           public void modified(Control control)
           {
@@ -232,7 +232,7 @@ class CommandView
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
         Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindNext,data)
         {
           public void modified(Control control)
           {

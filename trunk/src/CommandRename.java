@@ -150,7 +150,7 @@ class CommandRename
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.WRAP|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
       widgetMessage.setEnabled(data.immediateCommitFlag);
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
-      Widgets.addModifyListener(new WidgetListener(widgetMessage,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetMessage,data)
       {
         public void modified(Control control)
         {

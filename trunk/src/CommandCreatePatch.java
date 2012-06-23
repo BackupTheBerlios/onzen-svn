@@ -165,7 +165,7 @@ class CommandCreatePatch
           widgetPatch.setFont(Onzen.FONT_CHANGES);
           widgetPatch.setBackground(COLOR_INACTIVE);
           Widgets.layout(widgetPatch,0,0,TableLayoutData.NSWE);
-          Widgets.addModifyListener(new WidgetListener(widgetPatch,data)
+          Widgets.addModifyListener(new WidgetModifyListener(widgetPatch,data)
           {
             public void modified(Control control)
             {
@@ -189,7 +189,7 @@ class CommandCreatePatch
             widgetFindPrev = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_UP);
             widgetFindPrev.setEnabled(false);
             Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
-            Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetFindPrev,data)
             {
               public void modified(Control control)
               {
@@ -201,7 +201,7 @@ class CommandCreatePatch
             widgetFindNext = Widgets.newButton(subSubComposite,Onzen.IMAGE_ARROW_DOWN);
             widgetFindNext.setEnabled(false);
             Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
-            Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetFindNext,data)
             {
               public void modified(Control control)
               {
@@ -225,7 +225,7 @@ class CommandCreatePatch
       widgetIgnoreWhitespaces = Widgets.newCheckbox(composite,"Ignore whitespace changes");
       widgetIgnoreWhitespaces.setSelection(true);
       Widgets.layout(widgetIgnoreWhitespaces,2,0,TableLayoutData.W);
-      Widgets.addModifyListener(new WidgetListener(widgetIgnoreWhitespaces,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetIgnoreWhitespaces,data)
       {
         public void modified(Control control)
         {
@@ -269,7 +269,7 @@ class CommandCreatePatch
       button = Widgets.newButton(composite,"Save as file...");
       button.setEnabled(false);
       Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -348,7 +348,7 @@ class CommandCreatePatch
       button = Widgets.newButton(composite,"Store");
       button.setEnabled(false);
       Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -417,7 +417,7 @@ class CommandCreatePatch
       button = Widgets.newButton(composite,"Send for review");
       button.setEnabled(false);
       Widgets.layout(button,0,2,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {
@@ -485,7 +485,7 @@ class CommandCreatePatch
       button = Widgets.newButton(composite,"Commit");
       button.setEnabled(false);
       Widgets.layout(button,0,3,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(button,data)
+      Widgets.addModifyListener(new WidgetModifyListener(button,data)
       {
         public void modified(Control control)
         {

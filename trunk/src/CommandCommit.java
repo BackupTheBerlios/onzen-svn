@@ -147,7 +147,7 @@ class CommandCommit
           widgetIgnoreWhitespaces.setSelection(true);
           widgetIgnoreWhitespaces.setEnabled(false);
           Widgets.layout(widgetIgnoreWhitespaces,1,0,TableLayoutData.W);
-          Widgets.addModifyListener(new WidgetListener(widgetIgnoreWhitespaces,data)
+          Widgets.addModifyListener(new WidgetModifyListener(widgetIgnoreWhitespaces,data)
           {
             public void modified(Control control)
             {

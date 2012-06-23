@@ -177,7 +177,7 @@ class CommandChangedFiles
       {
         menuItem = Widgets.addMenuItem(menu,"Open directory");
         menuItem.setEnabled(false);
-        Widgets.addModifyListener(new WidgetListener(menuItem,data)
+        Widgets.addModifyListener(new WidgetModifyListener(menuItem,data)
         {
           public void modified(MenuItem menuItem)
           {
@@ -647,7 +647,7 @@ menuItem.setEnabled(false);
       widgetButtonUpdate = Widgets.newButton(composite,"Update",Settings.keyUpdate);
       widgetButtonUpdate.setEnabled(false);
       Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonUpdate,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonUpdate,data)
       {
         public void modified(Control control)
         {
@@ -681,7 +681,7 @@ menuItem.setEnabled(false);
       widgetButtonCommit = Widgets.newButton(composite,"Commit",Settings.keyCommit);
       widgetButtonCommit.setEnabled(false);
       Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonCommit,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonCommit,data)
       {
         public void modified(Control control)
         {
@@ -719,7 +719,7 @@ menuItem.setEnabled(false);
       widgetButtonCreatePatch = Widgets.newButton(composite,"Patch",Settings.keyCreatePatch);
       widgetButtonCreatePatch.setEnabled(false);
       Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonCreatePatch,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonCreatePatch,data)
       {
         public void modified(Control control)
         {
@@ -745,7 +745,7 @@ menuItem.setEnabled(false);
       widgetButtonAdd = Widgets.newButton(composite,"Add",Settings.keyAdd);
       widgetButtonAdd.setEnabled(false);
       Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonAdd,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonAdd,data)
       {
         public void modified(Control control)
         {
@@ -783,7 +783,7 @@ menuItem.setEnabled(false);
       widgetButtonRemove = Widgets.newButton(composite,"Remove",Settings.keyRemove);
       widgetButtonRemove.setEnabled(false);
       Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonRemove,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonRemove,data)
       {
         public void modified(Control control)
         {
@@ -821,7 +821,7 @@ menuItem.setEnabled(false);
       widgetButtonRevert = Widgets.newButton(composite,"Revert",Settings.keyRevert);
       widgetButtonRevert.setEnabled(false);
       Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonRevert,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonRevert,data)
       {
         public void modified(Control control)
         {
@@ -859,7 +859,7 @@ menuItem.setEnabled(false);
       widgetButtonDiff = Widgets.newButton(composite,"Diff",Settings.keyDiff);
       widgetButtonDiff.setEnabled(false);
       Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonDiff,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonDiff,data)
       {
         public void modified(Control control)
         {
@@ -885,7 +885,7 @@ menuItem.setEnabled(false);
       widgetButtonRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
       widgetButtonRevisions.setEnabled(false);
       Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonRevisions,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonRevisions,data)
       {
         public void modified(Control control)
         {
@@ -912,7 +912,7 @@ menuItem.setEnabled(false);
 // NYI
 widgetButtonSolve.setEnabled(false);
       Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetButtonSolve,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonSolve,data)
       {
         public void modified(Control control)
         {

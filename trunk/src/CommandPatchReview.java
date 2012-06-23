@@ -296,7 +296,7 @@ class CommandPatchReview
               widgetSummary.setText(this.summary);
               Widgets.layout(widgetSummary,0,0,TableLayoutData.WE);
               widgetSummary.setToolTipText("Short summary line for patch.");
-              Widgets.addModifyListener(new WidgetListener(widgetSummary,data)
+              Widgets.addModifyListener(new WidgetModifyListener(widgetSummary,data)
               {
                 public void modified(Control control)
                 {
@@ -548,7 +548,7 @@ class CommandPatchReview
               Widgets.modified(data);
             }
           });
-          Widgets.addModifyListener(new WidgetListener(button,data)
+          Widgets.addModifyListener(new WidgetModifyListener(button,data)
           {
             public void modified(Button button)
             {
@@ -565,7 +565,7 @@ class CommandPatchReview
 
             widgetPatchMailTo = Widgets.newText(subSubComposite);
             Widgets.layout(widgetPatchMailTo,0,1,TableLayoutData.WE);
-            Widgets.addModifyListener(new WidgetListener(widgetPatchMailTo,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetPatchMailTo,data)
             {
               public void modified(Control control)
               {
@@ -578,7 +578,7 @@ class CommandPatchReview
 
             widgetPatchMailCC = Widgets.newText(subSubComposite);
             Widgets.layout(widgetPatchMailCC,1,1,TableLayoutData.WE);
-            Widgets.addModifyListener(new WidgetListener(widgetPatchMailCC,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetPatchMailCC,data)
             {
               public void modified(Control control)
               {
@@ -591,7 +591,7 @@ class CommandPatchReview
 
             widgetPatchMailSubject = Widgets.newText(subSubComposite);
             Widgets.layout(widgetPatchMailSubject,2,1,TableLayoutData.WE);
-            Widgets.addModifyListener(new WidgetListener(widgetPatchMailSubject,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetPatchMailSubject,data)
             {
               public void modified(Control control)
               {
@@ -604,7 +604,7 @@ class CommandPatchReview
 
             widgetPatchMailText = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
             Widgets.layout(widgetPatchMailText,3,1,TableLayoutData.NSWE);
-            Widgets.addModifyListener(new WidgetListener(widgetPatchMailText,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetPatchMailText,data)
             {
               public void modified(Control control)
               {
@@ -635,7 +635,7 @@ class CommandPatchReview
               Widgets.modified(data);
             }
           });
-          Widgets.addModifyListener(new WidgetListener(button,data)
+          Widgets.addModifyListener(new WidgetModifyListener(button,data)
           {
             public void modified(Button button)
             {
@@ -652,7 +652,7 @@ class CommandPatchReview
 
             widgetReviewServerSummary = Widgets.newText(subSubComposite);
             Widgets.layout(widgetReviewServerSummary,0,1,TableLayoutData.WE);
-            Widgets.addModifyListener(new WidgetListener(widgetReviewServerSummary,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetReviewServerSummary,data)
             {
               public void modified(Control control)
               {
@@ -665,7 +665,7 @@ class CommandPatchReview
 
             widgetReviewServerDescription = Widgets.newText(subSubComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
             Widgets.layout(widgetReviewServerDescription,1,1,TableLayoutData.NSWE);
-            Widgets.addModifyListener(new WidgetListener(widgetReviewServerDescription,data)
+            Widgets.addModifyListener(new WidgetModifyListener(widgetReviewServerDescription,data)
             {
               public void modified(Control control)
               {

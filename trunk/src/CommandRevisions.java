@@ -212,7 +212,7 @@ class CommandRevisions
         widgetFindPrev = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_UP);
         widgetFindPrev.setEnabled(false);
         Widgets.layout(widgetFindPrev,0,2,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindPrev,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindPrev,data)
         {
           public void modified(Control control)
           {
@@ -224,7 +224,7 @@ class CommandRevisions
         widgetFindNext = Widgets.newButton(subComposite,Onzen.IMAGE_ARROW_DOWN);
         widgetFindNext.setEnabled(false);
         Widgets.layout(widgetFindNext,0,3,TableLayoutData.NSW);
-        Widgets.addModifyListener(new WidgetListener(widgetFindNext,data)
+        Widgets.addModifyListener(new WidgetModifyListener(widgetFindNext,data)
         {
           public void modified(Control control)
           {
@@ -246,7 +246,7 @@ class CommandRevisions
       widgetSelectedRevision0 = Widgets.newStringView(composite);
       widgetSelectedRevision0.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetSelectedRevision0,0,1,TableLayoutData.WE);
-      Widgets.addModifyListener(new WidgetListener(widgetSelectedRevision0,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetSelectedRevision0,data)
       {
         public void modified(Control control)
         {
@@ -260,7 +260,7 @@ class CommandRevisions
       widgetSelectedRevision1 = Widgets.newStringView(composite);
       widgetSelectedRevision1.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetSelectedRevision1,0,3,TableLayoutData.WE);
-      Widgets.addModifyListener(new WidgetListener(widgetSelectedRevision1,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetSelectedRevision1,data)
       {
         public void modified(Control control)
         {
@@ -274,7 +274,7 @@ class CommandRevisions
       widgetDiff = Widgets.newButton(composite,"Diff",Settings.keyDiff);
       widgetDiff.setEnabled(false);
       Widgets.layout(widgetDiff,0,5,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetDiff,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetDiff,data)
       {
         public void modified(Control control)
         {
@@ -302,7 +302,7 @@ class CommandRevisions
       widgetPatch.setFont(Onzen.FONT_CHANGES);
       widgetPatch.setEnabled(false);
       Widgets.layout(widgetPatch,0,6,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetPatch,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetPatch,data)
       {
         public void modified(Control control)
         {
@@ -339,7 +339,7 @@ throw new RepositoryException("NYI");
       widgetSelectedRevision = Widgets.newStringView(composite);
       widgetSelectedRevision.setBackground(Onzen.COLOR_GRAY);
       Widgets.layout(widgetSelectedRevision,0,8,TableLayoutData.WE);
-      Widgets.addModifyListener(new WidgetListener(widgetSelectedRevision,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetSelectedRevision,data)
       {
         public void modified(Control control)
         {
@@ -353,7 +353,7 @@ throw new RepositoryException("NYI");
       widgetView = Widgets.newButton(composite,"View");
       widgetView.setEnabled(false);
       Widgets.layout(widgetView,0,10,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetView,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetView,data)
       {
         public void modified(Control control)
         {
@@ -380,7 +380,7 @@ throw new RepositoryException("NYI");
       widgetSave = Widgets.newButton(composite,"Save...");
       widgetSave.setEnabled(false);
       Widgets.layout(widgetSave,0,11,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetSave,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetSave,data)
       {
         public void modified(Control control)
         {
@@ -430,7 +430,7 @@ throw new RepositoryException("NYI");
       widgetRevert = Widgets.newButton(composite,"Revert...",Settings.keyRevert);
       widgetRevert.setEnabled(false);
       Widgets.layout(widgetRevert,0,12,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetListener(widgetRevert,data)
+      Widgets.addModifyListener(new WidgetModifyListener(widgetRevert,data)
       {
         public void modified(Control control)
         {
