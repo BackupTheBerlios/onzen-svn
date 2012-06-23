@@ -420,7 +420,8 @@ class WidgetModifyListener
       if ((text != null) && !text.equals(cachedText))
       {
         widgetLabel.setText(text);
-        widgetLabel.getParent().layout(true,true);
+// label layout does not work as expected: width of first label is expanded, rest reduced?
+//        widgetLabel.getParent().layout();
         cachedText = text;
       }
     }
@@ -510,7 +511,8 @@ class WidgetModifyListener
       if ((text != null) && !text.equals(cachedText))
       {
         widgetText.setText(text);
-        widgetText.getParent().layout();
+// text layout does not work as expected: width of first label is expanded, rest reduced?
+//        widgetText.getParent().layout();
         cachedText = text;
       }
     }
@@ -3355,17 +3357,6 @@ class Widgets
     }
 
     return tableRunnable.tableItem;
-  }
-
-  /** insert table entry with default string comperator
-   * @param table table
-   * @param table entry data
-   * @param values values list
-   * @return table item
-   */
-  public static TableItem insertTableEntry(Table table, Object data, Object... values)
-  {
-    return insertTableEntry(table,String.CASE_INSENSITIVE_ORDER,data,values);
   }
 
   /** add table entry
