@@ -611,11 +611,11 @@ exception.printStackTrace();
 
       database = openPasswordDatabase();
 
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       resultSet = null;
       try
       {
-        preparedStatement = database.connection.prepareStatement("SELECT data FROM passwords WHERE name=?;");
+        preparedStatement = database.prepareStatement("SELECT data FROM passwords WHERE name=?;");
         preparedStatement.setString(1,name);
         resultSet = preparedStatement.executeQuery();
 
@@ -660,7 +660,7 @@ exception.printStackTrace();
           byte[] encodedPassword = encodePassword(masterPassword,password);
           if (encodedPassword != null)
           {
-            preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
+            preparedStatement = database.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
             preparedStatement.setString(1,name);
             preparedStatement.setBytes(2,encodedPassword);
             preparedStatement.executeUpdate();
@@ -732,12 +732,12 @@ exception.printStackTrace();
       database = openPasswordDatabase();
 
       // delete old password
-      preparedStatement = database.connection.prepareStatement("DELETE FROM passwords WHERE name=?;");
+      preparedStatement = database.prepareStatement("DELETE FROM passwords WHERE name=?;");
       preparedStatement.setString(1,name);
       preparedStatement.executeUpdate();
 
       // store password
-      preparedStatement = database.connection.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
+      preparedStatement = database.prepareStatement("INSERT INTO passwords (name,data) VALUES (?,?);");
       preparedStatement.setString(1,name);
       preparedStatement.setBytes(2,encodedPassword);
       preparedStatement.executeUpdate();
@@ -782,17 +782,17 @@ exception.printStackTrace();
       database = openPasswordDatabase();
 
       // get encoded password
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       resultSet = null;
       try
       {
-        preparedStatement = database.connection.prepareStatement("SELECT name,data FROM passwords;");
+        preparedStatement = database.prepareStatement("SELECT name,data FROM passwords;");
         resultSet = preparedStatement.executeQuery();
 
         boolean deleteAll = false;
         boolean skipAll   = false;
-        preparedStatement1 = database.connection.prepareStatement("UPDATE passwords SET data=? WHERE name=?;");
-        preparedStatement2 = database.connection.prepareStatement("DELETE FROM passwords WHERE name=?;");
+        preparedStatement1 = database.prepareStatement("UPDATE passwords SET data=? WHERE name=?;");
+        preparedStatement2 = database.prepareStatement("DELETE FROM passwords WHERE name=?;");
         String name;
         String password;
         while (resultSet.next())
@@ -2538,13 +2538,13 @@ menuItem.addSelectionListener(new SelectionListener()
       database = new Database("passwords");
 
       // create tables if needed
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
                               "  name  TEXT, "+
                               "  value TEXT "+
                               ");"
                              );
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS passwords ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  datetime INTEGER DEFAULT (DATETIME('now')), "+
@@ -2554,7 +2554,7 @@ menuItem.addSelectionListener(new SelectionListener()
                              );
 
       // init meta data (if not already initialized)
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       resultSet = null;
       try
       {
@@ -2562,7 +2562,7 @@ menuItem.addSelectionListener(new SelectionListener()
 
         if (!resultSet.next())
         {
-          preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+          preparedStatement = database.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
           preparedStatement.setString(1,"1");
           preparedStatement.executeUpdate();
         }
