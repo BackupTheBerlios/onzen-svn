@@ -250,13 +250,13 @@ public abstract class HistoryDatabase<T>
       database = new Database(HISTORY_DATABASE_NAME);
 
       // create tables if needed
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
                               "  name  TEXT, "+
                               "  value TEXT "+
                               ");"
                              );
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS messages ( "+
                               "  id        INTEGER PRIMARY KEY, "+
                               "  historyId INTEGER, "+
@@ -264,16 +264,19 @@ public abstract class HistoryDatabase<T>
                               "  message   TEXT "+
                               ");"
                              );
+      database.commit();
 
       // upgrade tables if needed
       try
       {
-        statement = database.connection.createStatement();
+        statement = database.createStatement();
         statement.executeUpdate("ALTER TABLE messages ADD COLUMN historyId INTEGER;");
 
-        preparedStatement = database.connection.prepareStatement("UPDATE messages SET historyId=? WHERE historyId IS NULL;");
+        preparedStatement = database.prepareStatement("UPDATE messages SET historyId=? WHERE historyId IS NULL;");
         preparedStatement.setInt(1,historyId);
         preparedStatement.executeUpdate();
+
+        database.commit();
       }
       catch (SQLException exception)
       {
@@ -281,24 +284,31 @@ public abstract class HistoryDatabase<T>
       }
 
       // init/update meta data
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       resultSet = statement.executeQuery("SELECT value FROM meta");
       if (resultSet.next())
       {
-        if (Integer.parseInt(resultSet.getString("value")) != HISTORY_DATABASE_VERSION)
+        String value = resultSet.getString("value");
+        resultSet.close();
+
+        if (Integer.parseInt(value) != HISTORY_DATABASE_VERSION)
         {
-          preparedStatement = database.connection.prepareStatement("UPDATE meta SET value=? WHERE name='version';");
+          preparedStatement = database.prepareStatement("UPDATE meta SET value=? WHERE name='version';");
           preparedStatement.setString(1,Integer.toString(HISTORY_DATABASE_VERSION));
           preparedStatement.executeUpdate();
+          database.commit();
         }
       }
       else
       {
-        preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+        resultSet.close();
+
+        preparedStatement = database.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
         preparedStatement.setString(1,Integer.toString(HISTORY_DATABASE_VERSION));
         preparedStatement.executeUpdate();
+        database.commit();
       }
-      resultSet.close();
+
 
       database.close(); database = null;
     }
@@ -384,7 +394,7 @@ exception.printStackTrace();
       switch (direction)
       {
         case ASCENDING:
-          preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime,id DESC LIMIT 0,1;");
+          preparedStatement = database.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime DESC,id DESC LIMIT 0,1;");
           preparedStatement.setInt(1,historyId);
           resultSet = preparedStatement.executeQuery();
           if (resultSet.next())
@@ -395,7 +405,7 @@ exception.printStackTrace();
           resultSet.close();
           break;
         case DESCENDING:
-          preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime,id ASC LIMIT 0,1;");
+          preparedStatement = database.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime ASC,id ASC LIMIT 0,1;");
           preparedStatement.setInt(1,historyId);
           resultSet = preparedStatement.executeQuery();
           if (resultSet.next())
@@ -406,7 +416,7 @@ exception.printStackTrace();
           resultSet.close();
           break;
         case SORTED:
-          preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=?;");
+          preparedStatement = database.prepareStatement("SELECT message FROM messages WHERE historyId=?;");
           preparedStatement.setInt(1,historyId);
           resultSet = preparedStatement.executeQuery();
           while (!existsFlag && resultSet.next())
@@ -421,36 +431,44 @@ exception.printStackTrace();
       if (!existsFlag)
       {
         // add to history
-        preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
+        preparedStatement = database.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
         preparedStatement.setInt(1,historyId);
         preparedStatement.setString(2,dataToString(data));
-        preparedStatement.execute();
+        preparedStatement.executeUpdate();
+        database.commit();
       }
 
       if (maxHistoryLength != HISTORY_LENGTH_INFINTE)
       {
         // shorten history
-        boolean doneFlag;
+        int id;
         do
         {
-          doneFlag = true;
-
-          preparedStatement = database.connection.prepareStatement("SELECT id FROM messages WHERE historyId=? ORDER BY datetime,id DESC LIMIT ?,1;");
+          preparedStatement = database.prepareStatement("SELECT id FROM messages WHERE historyId=? ORDER BY datetime DESC,id DESC LIMIT ?,1;");
           preparedStatement.setInt(1,historyId);
           preparedStatement.setInt(2,maxHistoryLength);
           resultSet = preparedStatement.executeQuery();
           if (resultSet.next())
           {
-            int id = resultSet.getInt("id");
+            id = resultSet.getInt("id");
+          }
+          else
+          {
+            id = -1;
+          }
+          resultSet.close();;
+
+          if (id >= 0)
+          {
 //Dprintf.dprintf("delete id=%d",id);
 
-            preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE id=?;");
+            preparedStatement = database.prepareStatement("DELETE FROM messages WHERE id=?;");
             preparedStatement.setInt(1,id);
-            preparedStatement.execute();
-            doneFlag = false;
+            preparedStatement.executeUpdate();
+            database.commit();
           }
         }
-        while (!doneFlag);
+        while (id >= 0);
       }
 
       database.close(); database = null;
@@ -477,7 +495,7 @@ exception.printStackTrace();
     {
       database = new Database(HISTORY_DATABASE_NAME);
 
-      preparedStatement = database.connection.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime DESC LIMIT 0,?;");
+      preparedStatement = database.prepareStatement("SELECT message FROM messages WHERE historyId=? ORDER BY datetime ASC,id ASC LIMIT 0,?;");
       preparedStatement.setInt(1,historyId);
       preparedStatement.setInt(2,maxHistoryLength);
       resultSet = preparedStatement.executeQuery();
@@ -548,9 +566,10 @@ exception.printStackTrace();
     {
       database = new Database(HISTORY_DATABASE_NAME);
 
-      preparedStatement = database.connection.prepareStatement("DELETE FROM messages WHERE historyId=?;");
+      preparedStatement = database.prepareStatement("DELETE FROM messages WHERE historyId=?;");
       preparedStatement.setInt(1,historyId);
       preparedStatement.executeUpdate();
+      database.commit();
 
       Iterator<T> iterator = null;
       switch (direction)
@@ -577,11 +596,12 @@ exception.printStackTrace();
       {
         T data = iterator.next();
 
-        preparedStatement = database.connection.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
+        preparedStatement = database.prepareStatement("INSERT INTO messages (historyId,datetime,message) VALUES (?,DATETIME('now'),?);");
         preparedStatement.setInt(1,historyId);
         preparedStatement.setString(2,dataToString(data));
-        preparedStatement.execute();
+        preparedStatement.executeUpdate();
       }
+      database.commit();
 
       database.close(); database = null;
     }
