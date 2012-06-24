@@ -32,7 +32,7 @@ class Database
   public final static int ID_NONE = -1;
 
   // --------------------------- variables --------------------------------
-  public final Connection connection;
+  private final Connection connection;
 
   private String          name;
   private boolean         open;
@@ -69,6 +69,38 @@ class Database
       throw new SQLException("SQLite database driver not found");
     }
   }
+
+  /** create new statement
+   * @return statement
+   */
+  public Statement createStatement()
+    throws java.sql.SQLException
+  {
+    return connection.createStatement();
+  }
+
+  /** create new prepared statement
+   * @param sqlCommand SQL command
+   * @return prepared statement
+   */
+  public PreparedStatement prepareStatement(String sqlCommand)
+    throws java.sql.SQLException
+  {
+//Dprintf.dprintf("sqlCommand=%s",sqlCommand);
+    return connection.prepareStatement(sqlCommand);
+  }
+
+  /** commit transaction
+   */
+  public void commit()
+    throws SQLException
+  {
+    if (open)
+    {
+      connection.commit();
+    }
+  }
+
 
   /** close database access
    */
