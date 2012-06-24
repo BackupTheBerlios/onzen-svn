@@ -139,7 +139,7 @@ class Patch
       database = openPatchesDatabase();
 
       // get patches (Note: there is no way to use prepared statements with variable "IN"-operator)
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       resultSet1 = null;
       try
       {
@@ -168,20 +168,20 @@ class Patch
                                             ";"
                                            );
 
-        preparedStatement1 = database.connection.prepareStatement("SELECT "+
-                                                                  "  fileName "+
-                                                                  "FROM files "+
-                                                                  "WHERE patchId=? "+
-                                                                  "ORDER BY id "+
-                                                                  ";"
-                                                                 );
-        preparedStatement2 = database.connection.prepareStatement("SELECT "+
-                                                                  "  test "+
-                                                                  "FROM tests "+
-                                                                  "WHERE patchId=? "+
-                                                                  "ORDER BY id "+
-                                                                  ";"
-                                                                 );
+        preparedStatement1 = database.prepareStatement("SELECT "+
+                                                       "  fileName "+
+                                                       "FROM files "+
+                                                       "WHERE patchId=? "+
+                                                       "ORDER BY id "+
+                                                       ";"
+                                                      );
+        preparedStatement2 = database.prepareStatement("SELECT "+
+                                                       "  test "+
+                                                       "FROM tests "+
+                                                       "WHERE patchId=? "+
+                                                       "ORDER BY id "+
+                                                       ";"
+                                                      );
         while (resultSet1.next())
         {
           // get patch data
@@ -609,7 +609,7 @@ class Patch
         database = openPatchesDatabase();
 
         // remove not use patch number
-        preparedStatement = database.connection.prepareStatement("DELETE FROM numbers WHERE id=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM numbers WHERE id=?;");
         preparedStatement.setInt(1,number);
         preparedStatement.executeUpdate();
 
@@ -708,7 +708,7 @@ class Patch
           try
           {
             // create empty patch number entry
-            preparedStatement = database.connection.prepareStatement("INSERT INTO numbers (patchId) VALUES (?);");
+            preparedStatement = database.prepareStatement("INSERT INTO numbers (patchId) VALUES (?);");
             preparedStatement.setInt(1,databaseId);
             preparedStatement.executeUpdate();
 
@@ -849,7 +849,7 @@ Dprintf.dprintf("");
       if (databaseId >= 0)
       {
         // update
-        preparedStatement = database.connection.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,comment=?,reference=?,data=? WHERE id=?;");
+        preparedStatement = database.prepareStatement("UPDATE patches SET rootPath=?,state=?,summary=?,message=?,comment=?,reference=?,data=? WHERE id=?;");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
@@ -863,7 +863,7 @@ Dprintf.dprintf("");
       else
       {
         // insert
-        preparedStatement = database.connection.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,comment,reference,data) VALUES (?,?,?,?,?,?,?);");
+        preparedStatement = database.prepareStatement("INSERT INTO patches (rootPath,state,summary,message,comment,reference,data) VALUES (?,?,?,?,?,?,?);");
         preparedStatement.setString(1,rootPath);
         preparedStatement.setInt(2,state.ordinal());
         preparedStatement.setString(3,summary);
@@ -877,7 +877,7 @@ Dprintf.dprintf("");
         if (number != Database.ID_NONE)
         {
           // update patch number entry
-          preparedStatement = database.connection.prepareStatement("UPDATE numbers SET patchId=? WHERE id=?;");
+          preparedStatement = database.prepareStatement("UPDATE numbers SET patchId=? WHERE id=?;");
           preparedStatement.setInt(1,databaseId);
           preparedStatement.setInt(2,number);
           preparedStatement.executeUpdate();
@@ -887,10 +887,10 @@ Dprintf.dprintf("");
       if (fileNameSet != null)
       {
         // insert files
-        preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM files WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
-        preparedStatement = database.connection.prepareStatement("INSERT INTO files (patchId,fileName) VALUES (?,?);");
+        preparedStatement = database.prepareStatement("INSERT INTO files (patchId,fileName) VALUES (?,?);");
         for (String fileName : fileNameSet)
         {
           preparedStatement.setInt(1,databaseId);
@@ -902,10 +902,10 @@ Dprintf.dprintf("");
       if (testSet != null)
       {
         // insert tests
-        preparedStatement = database.connection.prepareStatement("DELETE FROM tests WHERE patchId=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM tests WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
-        preparedStatement = database.connection.prepareStatement("INSERT INTO tests (patchId,test) VALUES (?,?);");
+        preparedStatement = database.prepareStatement("INSERT INTO tests (patchId,test) VALUES (?,?);");
         for (String test : testSet)
         {
           preparedStatement.setInt(1,databaseId);
@@ -943,18 +943,18 @@ Dprintf.dprintf("");
         database = openPatchesDatabase();
 
         // load patch data
-        preparedStatement = database.connection.prepareStatement("SELECT "+
-                                                                 "  rootPath, "+
-                                                                 "  state, "+
-                                                                 "  summary, "+
-                                                                 "  message, "+
-                                                                 "  comment, "+
-                                                                 "  reference, "+
-                                                                 "  data "+
-                                                                 "FROM patches "+
-                                                                 "WHERE id=? "+
-                                                                 ";"
-                                                                );
+        preparedStatement = database.prepareStatement("SELECT "+
+                                                      "  rootPath, "+
+                                                      "  state, "+
+                                                      "  summary, "+
+                                                      "  message, "+
+                                                      "  comment, "+
+                                                      "  reference, "+
+                                                      "  data "+
+                                                      "FROM patches "+
+                                                      "WHERE id=? "+
+                                                      ";"
+                                                     );
         preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
@@ -984,12 +984,12 @@ Dprintf.dprintf("");
         // load file names
         if (fileNameSet == null) fileNameSet = new HashSet<String>();
         fileNameSet.clear();
-        preparedStatement = database.connection.prepareStatement("SELECT "+
-                                                                 "  fileName "+
-                                                                 "FROM files "+
-                                                                 "WHERE patchId=? "+
-                                                                 ";"
-                                                                );
+        preparedStatement = database.prepareStatement("SELECT "+
+                                                      "  fileName "+
+                                                      "FROM files "+
+                                                      "WHERE patchId=? "+
+                                                      ";"
+                                                     );
         preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
@@ -1009,12 +1009,12 @@ Dprintf.dprintf("");
         // load tests
         if (testSet == null) testSet = new LinkedHashSet<String>();
         testSet.clear();
-        preparedStatement = database.connection.prepareStatement("SELECT "+
-                                                                 "  test "+
-                                                                 "FROM tests "+
-                                                                 "WHERE patchId=? "+
-                                                                 ";"
-                                                                );
+        preparedStatement = database.prepareStatement("SELECT "+
+                                                      "  test "+
+                                                      "FROM tests "+
+                                                      "WHERE patchId=? "+
+                                                      ";"
+                                                     );
         preparedStatement.setInt(1,databaseId);
         resultSet = null;
         try
@@ -1059,22 +1059,22 @@ Dprintf.dprintf("");
         database = openPatchesDatabase();
 
         // delete patch number
-        preparedStatement = database.connection.prepareStatement("DELETE FROM numbers WHERE patchId=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM numbers WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete file names
-        preparedStatement = database.connection.prepareStatement("DELETE FROM files WHERE patchId=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM files WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete tests
-        preparedStatement = database.connection.prepareStatement("DELETE FROM tests WHERE patchId=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM tests WHERE patchId=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
         // delete patch data
-        preparedStatement = database.connection.prepareStatement("DELETE FROM patches WHERE id=?;");
+        preparedStatement = database.prepareStatement("DELETE FROM patches WHERE id=?;");
         preparedStatement.setInt(1,databaseId);
         preparedStatement.executeUpdate();
 
@@ -2002,13 +2002,13 @@ Dprintf.dprintf("exception=%s",exception);
       database = new Database(PATCHES_DATABASE_NAME);
 
       // create tables if needed
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS meta ( "+
                               "  name  TEXT, "+
                               "  value TEXT "+
                               ");"
                              );
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS patches ( "+
                               "  id                INTEGER PRIMARY KEY, "+
                               "  datetime          INTEGER DEFAULT (DATETIME('now')), "+
@@ -2024,21 +2024,21 @@ Dprintf.dprintf("exception=%s",exception);
                               "  ignoreWhitespaces INTEGER "+
                               ");"
                              );
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS files ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  patchId  INTEGER, "+
                               "  fileName TEXT "+
                               ");"
                              );
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS tests ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  patchId  INTEGER, "+
                               "  test     TEXT "+
                               ");"
                              );
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       statement.executeUpdate("CREATE TABLE IF NOT EXISTS numbers ( "+
                               "  id       INTEGER PRIMARY KEY, "+
                               "  patchId  INTEGER "+
@@ -2046,7 +2046,7 @@ Dprintf.dprintf("exception=%s",exception);
                              );
 
       // init meta data (if not already initialized)
-      statement = database.connection.createStatement();
+      statement = database.createStatement();
       resultSet = null;
       try
       {
@@ -2054,7 +2054,7 @@ Dprintf.dprintf("exception=%s",exception);
 
         if (!resultSet.next())
         {
-          preparedStatement = database.connection.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
+          preparedStatement = database.prepareStatement("INSERT INTO meta (name,value) VALUES ('version',?);");
           preparedStatement.setString(1,Integer.toString(PATCHES_DATABASE_VERSION));
           preparedStatement.executeUpdate();
         }
