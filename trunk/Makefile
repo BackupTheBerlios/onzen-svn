@@ -130,6 +130,7 @@ SOURCES        = src/Onzen.java \
                  src/RepositoryTab.java \
                  src/Exec.java \
                  src/Database.java \
+                 src/HistoryDatabase.java \
                  src/CommitMessage.java \
                  src/Patch.java \
                  src/Background.java \
@@ -219,6 +220,9 @@ jars: $(JARS)
 
 clean_jars:
 	$(RMF) $(JARS)
+
+.PHONY: compile
+compile: $(OBJECTS)
 
 # create JARs
 onzen-linux.jar: src/Config.java jar.txt $(OBJECTS) images/*.png $(SWT_JAR_LINUX)
