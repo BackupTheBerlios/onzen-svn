@@ -187,6 +187,7 @@ public class CommandFindFiles
     boolean findByContentFlag;
     boolean showAllRepositoriesFlag;
     boolean showHiddenFilesFlag;
+    boolean forceFlag;
     boolean quitFlag;
 
     Data()
@@ -197,6 +198,7 @@ public class CommandFindFiles
       this.findByContentFlag       = false;
       this.showAllRepositoriesFlag = CommandFindFiles.showAllRepositoriesFlag;
       this.showHiddenFilesFlag     = CommandFindFiles.showHiddenFilesFlag;
+      this.forceFlag               = false;
       this.quitFlag                = false;
     }
   };
@@ -715,7 +717,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-            restartFindFiles();
+          restartFindFiles(true);
         }
       });
 
@@ -903,7 +905,8 @@ Dprintf.dprintf("event=%s",event);
                || (data.findByNameFlag != findByNameFlag)
                || (data.findByContentFlag != findByContentFlag)
                || (data.showAllRepositoriesFlag != showAllRepositoriesFlag)
-               || (data.showHiddenFilesFlag != showHiddenFilesFlag);
+               || (data.showHiddenFilesFlag != showHiddenFilesFlag)
+               || data.forceFlag;
       }
 
       /** run method
@@ -1052,7 +1055,7 @@ Dprintf.dprintf("event=%s",event);
               }
             }
 
-            // get new find data
+            // get new find data, clear data
             if (data.filter != null)
             {
               // get new find text/pattern
@@ -1062,13 +1065,14 @@ Dprintf.dprintf("event=%s",event);
               fileNamePatterns       = compileFileNamePatterns(data.filter);
               contentPatterns        = compileContentPatterns(data.filter);
 
-              // clear existing text
               data.filter = null;
             }
             findByNameFlag          = data.findByNameFlag;
             findByContentFlag       = data.findByContentFlag;
             showAllRepositoriesFlag = data.showAllRepositoriesFlag;
             showHiddenFilesFlag     = data.showHiddenFilesFlag;
+
+            data.forceFlag = false;
           }
         }
       }
@@ -1132,8 +1136,9 @@ Dprintf.dprintf("event=%s",event);
   //-----------------------------------------------------------------------
 
   /** restart find files matching filters
+   * @param forceFlag true to force restart find files
    */
-  private void restartFindFiles()
+  private void restartFindFiles(boolean forceFlag)
   {
     if (!dialog.isDisposed())
     {
@@ -1151,11 +1156,19 @@ Dprintf.dprintf("event=%s",event);
         data.findByContentFlag       = widgetFindByContent.getSelection();
         data.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
         data.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
+        data.forceFlag               = forceFlag;
         data.notifyAll();
 
         if (!filter.isEmpty()) Widgets.modified(data);
       }
     }
+  }
+
+  /** restart find files matching filters
+   */
+  private void restartFindFiles()
+  {
+    restartFindFiles(false);
   }
 
   /** get selected find data set
