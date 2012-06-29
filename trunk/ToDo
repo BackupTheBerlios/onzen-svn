@@ -16,3 +16,4 @@ ToDo
 - view log funciton
 - selection character set when double-clicking
 - merge function
+- save commit message on cancle (multiple)
