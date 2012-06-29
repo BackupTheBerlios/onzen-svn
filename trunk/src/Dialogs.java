@@ -12,6 +12,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.List;
 
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
@@ -1230,13 +1231,25 @@ class Dialogs
 
   /** error dialog
    * @param parentShell parent shell
+   * @param extendedMessage extended message
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param message error message
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  public static boolean error(Shell parentShell, List<String> extendedMessage, boolean showAgainCheckbox, String message)
+  {
+    return error(parentShell,extendedMessage.toArray(new String[extendedMessage.size()]),showAgainCheckbox, message);
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
    * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
    * @param message error message
    * @return TRUE iff show checkbox again is selected, FALSE otherwise
    */
   public static boolean error(Shell parentShell, boolean showAgainCheckbox, String message)
   {
-    return error(parentShell,null,showAgainCheckbox,message);
+    return error(parentShell,(String[])null,showAgainCheckbox,message);
   }
 
   /** error dialog
@@ -1264,10 +1277,34 @@ class Dialogs
   /** error dialog
    * @param parentShell parent shell
    * @param extendedMessage extended message
+   * @param showAgainCheckbox TRUE to show again checkbox, FALSE otherwise
+   * @param format format string
+   * @param arguments optional arguments
+   * @return TRUE iff show checkbox again is selected, FALSE otherwise
+   */
+  public static boolean error(Shell parentShell, List<String> extendedMessage, boolean showAgainCheckbox, String format, Object... arguments)
+  {
+    return error(parentShell,extendedMessage,showAgainCheckbox,String.format(format,arguments));
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
+   * @param extendedMessage extended message
    * @param format format string
    * @param arguments optional arguments
    */
   public static void error(Shell parentShell, String[] extendedMessage, String format, Object... arguments)
+  {
+    error(parentShell,extendedMessage,false,String.format(format,arguments));
+  }
+
+  /** error dialog
+   * @param parentShell parent shell
+   * @param extendedMessage extended message
+   * @param format format string
+   * @param arguments optional arguments
+   */
+  public static void error(Shell parentShell, List<String> extendedMessage, String format, Object... arguments)
   {
     error(parentShell,extendedMessage,false,String.format(format,arguments));
   }
@@ -1281,7 +1318,7 @@ class Dialogs
    */
   public static boolean error(Shell parentShell, boolean showAgainCheckbox, String format, Object... arguments)
   {
-    return error(parentShell,null,showAgainCheckbox,format,arguments);
+    return error(parentShell,(String[])null,showAgainCheckbox,format,arguments);
   }
 
   /** error dialog
