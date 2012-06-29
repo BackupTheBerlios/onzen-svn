@@ -18,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -1467,7 +1468,6 @@ Dprintf.dprintf("NYI");
     {
       commandLine  = getFileOpenCommand(fileName,mimeType);
     }
-//Dprintf.dprintf("command=%s",command);
 
     // execute external command
     if (commandLine != null)
@@ -1481,11 +1481,40 @@ Dprintf.dprintf("NYI");
       macro.expand("n",         lineNumber);
       macro.expand("%%",        "%");
       Command command = new Command(macro);
+//Dprintf.dprintf("command=%s",command);
 
       // run command (Note: use Runtime.exec() because it is a background process without i/o here)
       try
       {
-        Runtime.getRuntime().exec(command.getCommandArray());
+        // start process
+        Process process = Runtime.getRuntime().exec(command.getCommandArray());
+
+        // wait a short time until process is started
+        try { Thread.sleep(250); } catch (InterruptedException e) {}
+
+        // check if immediate error
+        int exitCode = process.exitValue();
+        if (exitCode != 0)
+        {
+          BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+          ArrayList<String> stderrList = new ArrayList<String>();
+          String line;
+          while ((line = stderr.readLine()) != null)
+          {
+            stderrList.add(line);
+          }
+
+          Dialogs.error(shell,
+                        stderrList,
+                        "Execute external command fail: \n\n'%s'\n\n (exitcode: %d)",
+                        command,
+                        exitCode
+                       );
+        }
+      }
+      catch (IllegalThreadStateException exception)
+      {
+        // OK, process is running
       }
       catch (IOException exception)
       {
@@ -1578,11 +1607,40 @@ Dprintf.dprintf("NYI");
       macro.expand("n",         lineNumber);
       macro.expand("%%",        "%");
       Command command = new Command(macro);
+//Dprintf.dprintf("command=%s",command);
 
       // run command (Note: use Runtime.exec() because it is a background process without i/o here)
       try
       {
-        Runtime.getRuntime().exec(command.getCommandArray());
+        // start process
+        Process process = Runtime.getRuntime().exec(command.getCommandArray());
+
+        // wait a short time until process is started
+        try { Thread.sleep(250); } catch (InterruptedException e) {}
+
+        // check if immediate error
+        int exitCode = process.exitValue();
+        if (exitCode != 0)
+        {
+          BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+          ArrayList<String> stderrList = new ArrayList<String>();
+          String line;
+          while ((line = stderr.readLine()) != null)
+          {
+            stderrList.add(line);
+          }
+
+          Dialogs.error(shell,
+                        stderrList,
+                        "Execute external command fail: \n\n'%s'\n\n (exitcode: %d)",
+                        command,
+                        exitCode
+                       );
+        }
+      }
+      catch (IllegalThreadStateException exception)
+      {
+        // OK, process is running
       }
       catch (IOException exception)
       {
