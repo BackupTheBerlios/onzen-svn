@@ -116,6 +116,24 @@ class Command
     printableCommandLine.clear();
   }
 
+  /** append macro to command array
+   * @param macro macro to append
+   */
+  public void append(Macro macro)
+  {
+    for (Object value : macro.getValueArray())
+    {
+      if (value instanceof Macro.Hidden)
+      {
+        append(hidden(value.toString()));
+      }
+      else
+      {
+        append(value);
+      }
+    }
+  }
+
   /** append arguments to command array
    * @param arguments strings to append
    */
