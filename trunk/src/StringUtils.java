@@ -754,13 +754,8 @@ public class StringUtils
           z++;
           break;
         case '\\':
-          buffer.append('\\');
+          buffer.append("\\\\");
           z++;
-          if (z < string.length())
-          {
-            buffer.append(string.charAt(z));
-            z++;
-          }
           break;
         case '[':
         case ']':
