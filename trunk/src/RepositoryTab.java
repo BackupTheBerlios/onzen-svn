@@ -1483,48 +1483,80 @@ Dprintf.dprintf("NYI");
       Command command = new Command(macro);
 //Dprintf.dprintf("command=%s",command);
 
-      // run command (Note: use Runtime.exec() because it is a background process without i/o here)
-      try
+      // run command
+      Background.run(new BackgroundRunnable(command)
       {
-        // start process
-        Process process = Runtime.getRuntime().exec(command.getCommandArray());
-
-        // wait a short time until process is started
-        try { Thread.sleep(250); } catch (InterruptedException e) {}
-
-        // check if immediate error
-        int exitCode = process.exitValue();
-        if (exitCode != 0)
+        public void run(final Command command)
         {
-          BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-          ArrayList<String> stderrList = new ArrayList<String>();
-          String line;
-          while ((line = stderr.readLine()) != null)
+          try
           {
-            stderrList.add(line);
-          }
+            // start process (Note: use Runtime.exec() because it is a background process without i/o here)
+            Process process = Runtime.getRuntime().exec(command.getCommandArray());
 
-          Dialogs.error(shell,
-                        stderrList,
-                        "Execute external command fail: \n\n'%s'\n\n (exitcode: %d)",
-                        command,
-                        exitCode
-                       );
+            // collect stderr output
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            final ArrayList<String> stderrList = new ArrayList<String>();
+            String line;
+            while ((line = stderr.readLine()) != null)
+            {
+//Dprintf.dprintf("line=%s",line);
+              stderrList.add(line);
+            }
+
+            // wait for exot
+            final int exitCode = process.waitFor();
+            if (exitCode != 0)
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Dialogs.error(shell,
+                                stderrList,
+                                "Execute external command fail: \n\n'%s'\n\n (exitcode: %d)",
+                                command,
+                                exitCode
+                               );
+                }
+              });
+              return;
+            }
+          }
+          catch (InterruptedException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,
+                              "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                              command,
+                              message
+                             );
+              }
+            });
+            return;
+          }
+          catch (IOException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,
+                              "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                              command,
+                              message
+                             );
+              }
+            });
+            return;
+          }
         }
-      }
-      catch (IllegalThreadStateException exception)
-      {
-        // OK, process is running
-      }
-      catch (IOException exception)
-      {
-        Dialogs.error(shell,
-                      "Execute external command fail: \n\n'%s'\n\n (error: %s)",
-                      command,
-                      exception.getMessage()
-                     );
-        return;
-      }
+      });
+Dprintf.dprintf("");
     }
   }
 
@@ -1609,48 +1641,79 @@ Dprintf.dprintf("NYI");
       Command command = new Command(macro);
 //Dprintf.dprintf("command=%s",command);
 
-      // run command (Note: use Runtime.exec() because it is a background process without i/o here)
-      try
+      // run command
+      Background.run(new BackgroundRunnable(command)
       {
-        // start process
-        Process process = Runtime.getRuntime().exec(command.getCommandArray());
-
-        // wait a short time until process is started
-        try { Thread.sleep(250); } catch (InterruptedException e) {}
-
-        // check if immediate error
-        int exitCode = process.exitValue();
-        if (exitCode != 0)
+        public void run(final Command command)
         {
-          BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-          ArrayList<String> stderrList = new ArrayList<String>();
-          String line;
-          while ((line = stderr.readLine()) != null)
+          try
           {
-            stderrList.add(line);
-          }
+            // start process (Note: use Runtime.exec() because it is a background process without i/o here)
+            Process process = Runtime.getRuntime().exec(command.getCommandArray());
 
-          Dialogs.error(shell,
-                        stderrList,
-                        "Execute external command fail: \n\n'%s'\n\n (exitcode: %d)",
-                        command,
-                        exitCode
-                       );
+            // collect stderr output
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            final ArrayList<String> stderrList = new ArrayList<String>();
+            String line;
+            while ((line = stderr.readLine()) != null)
+            {
+//Dprintf.dprintf("line=%s",line);
+              stderrList.add(line);
+            }
+
+            // wait for exot
+            final int exitCode = process.waitFor();
+            if (exitCode != 0)
+            {
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Dialogs.error(shell,
+                                stderrList,
+                                "Execute external command fail: \n\n'%s'\n\n (exitcode: %d)",
+                                command,
+                                exitCode
+                               );
+                }
+              });
+              return;
+            }
+          }
+          catch (InterruptedException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,
+                              "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                              command,
+                              message
+                             );
+              }
+            });
+            return;
+          }
+          catch (IOException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,
+                              "Execute external command fail: \n\n'%s'\n\n (error: %s)",
+                              command,
+                              message
+                             );
+              }
+            });
+            return;
+          }
         }
-      }
-      catch (IllegalThreadStateException exception)
-      {
-        // OK, process is running
-      }
-      catch (IOException exception)
-      {
-        Dialogs.error(shell,
-                      "Execute external command fail: \n\n'%s'\n\n (error: %s)",
-                      command,
-                      exception.getMessage()
-                     );
-        return;
-      }
+      });
     }
   }
 
