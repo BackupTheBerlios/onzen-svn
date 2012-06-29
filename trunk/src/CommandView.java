@@ -260,7 +260,7 @@ class CommandView
           final String EOL = Settings.eolType.get();
 
           // get file name
-          String fileName = Dialogs.fileSave(dialog,"Save file","",new String[]{"*"});
+          String fileName = Dialogs.fileSave(dialog,"Save file");
           if (fileName == null)
           {
             return;

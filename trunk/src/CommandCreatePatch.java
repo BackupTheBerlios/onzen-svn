@@ -287,7 +287,14 @@ class CommandCreatePatch
           if (patchLines != null)
           {
             // get file name
-            String fileName = Dialogs.fileSave(dialog,"Save patch","",new String[]{".patch","*"});
+            String fileName = Dialogs.fileSave(dialog,
+                                               "Save patch",
+                                               "",
+                                               new String[]{"Patch",    ".patch",
+                                                            "All files",Onzen.ALL_FILE_EXTENSION,
+                                                           },
+                                               "*.patch"
+                                              );
             if (fileName == null)
             {
               return;
