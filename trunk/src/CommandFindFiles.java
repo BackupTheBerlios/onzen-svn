@@ -85,10 +85,11 @@ public class CommandFindFiles
   class FindDataComparator implements Comparator<FindData>
   {
     // Note: enum in inner classes are not possible in Java, thus use the old way...
-    private final static int SORTMODE_NAME = 0;
-    private final static int SORTMODE_PATH = 1;
-    private final static int SORTMODE_DATE = 2;
-    private final static int SORTMODE_SIZE = 3;
+    private final static int SORTMODE_NAME        = 0;
+    private final static int SORTMODE_LINE_NUMBER = 1;
+    private final static int SORTMODE_PATH        = 2;
+    private final static int SORTMODE_DATE        = 3;
+    private final static int SORTMODE_SIZE        = 4;
 
     private int sortMode;
 
@@ -99,9 +100,10 @@ public class CommandFindFiles
     FindDataComparator(Table table, TableColumn sortColumn)
     {
       if      (table.getColumn(0) == sortColumn) sortMode = SORTMODE_NAME;
-      else if (table.getColumn(1) == sortColumn) sortMode = SORTMODE_PATH;
-      else if (table.getColumn(2) == sortColumn) sortMode = SORTMODE_DATE;
-      else if (table.getColumn(3) == sortColumn) sortMode = SORTMODE_SIZE;
+      else if (table.getColumn(1) == sortColumn) sortMode = SORTMODE_LINE_NUMBER;
+      else if (table.getColumn(2) == sortColumn) sortMode = SORTMODE_PATH;
+      else if (table.getColumn(3) == sortColumn) sortMode = SORTMODE_DATE;
+      else if (table.getColumn(4) == sortColumn) sortMode = SORTMODE_SIZE;
       else                                       sortMode = SORTMODE_NAME;
     }
 
@@ -121,10 +123,11 @@ public class CommandFindFiles
      */
     public int compare(FindData findData1, FindData findData2)
     {
-      final int[][] SORT_ORDERING = new int[][]{new int[]{SORTMODE_NAME,SORTMODE_PATH,SORTMODE_DATE,SORTMODE_SIZE},
-                                                new int[]{SORTMODE_PATH,SORTMODE_NAME,SORTMODE_DATE,SORTMODE_SIZE},
-                                                new int[]{SORTMODE_DATE,SORTMODE_NAME,SORTMODE_PATH,SORTMODE_SIZE},
-                                                new int[]{SORTMODE_SIZE,SORTMODE_NAME,SORTMODE_PATH,SORTMODE_DATE}
+      final int[][] SORT_ORDERING = new int[][]{new int[]{SORTMODE_NAME,SORTMODE_LINE_NUMBER,SORTMODE_PATH,SORTMODE_DATE,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_LINE_NUMBER,SORTMODE_PATH,SORTMODE_NAME,SORTMODE_DATE,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_PATH,SORTMODE_LINE_NUMBER,SORTMODE_NAME,SORTMODE_DATE,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_DATE,SORTMODE_LINE_NUMBER,SORTMODE_NAME,SORTMODE_PATH,SORTMODE_SIZE},
+                                                new int[]{SORTMODE_SIZE,SORTMODE_LINE_NUMBER,SORTMODE_NAME,SORTMODE_PATH,SORTMODE_DATE}
                                                };
 
       int result = 0;
@@ -138,6 +141,11 @@ public class CommandFindFiles
             String name1 = findData1.file.getName();
             String name2 = findData2.file.getName();
             result = name1.compareTo(name2);
+            break;
+          case SORTMODE_LINE_NUMBER:
+            if      (findData1.lineNumber < findData2.lineNumber) result = -1;
+            else if (findData1.lineNumber > findData2.lineNumber) result =  1;
+            else                                                  result =  0;
             break;
           case SORTMODE_PATH:
             String path1 = findData1.file.getParent();
@@ -185,6 +193,7 @@ public class CommandFindFiles
     String  filter;
     boolean findByNameFlag;
     boolean findByContentFlag;
+    boolean caseSensitiveFlag;
     boolean showAllRepositoriesFlag;
     boolean showHiddenFilesFlag;
     boolean forceFlag;
@@ -196,6 +205,7 @@ public class CommandFindFiles
       this.filter                  = CommandFindFiles.filter;
       this.findByNameFlag          = false;
       this.findByContentFlag       = false;
+      this.caseSensitiveFlag       = false;
       this.showAllRepositoriesFlag = CommandFindFiles.showAllRepositoriesFlag;
       this.showHiddenFilesFlag     = CommandFindFiles.showHiddenFilesFlag;
       this.forceFlag               = false;
@@ -213,6 +223,7 @@ public class CommandFindFiles
   // stored settings
   private static String                  fileNameFilter          = "";
   private static String                  filter                  = "";
+  private static boolean                 caseSensitiveFlag       = false;
   private static boolean                 showAllRepositoriesFlag = false;
   private static boolean                 showHiddenFilesFlag     = false;
 
@@ -236,6 +247,7 @@ public class CommandFindFiles
   private final Listener                 mouseWheelListener;
   private final Button                   widgetFindByName;
   private final Button                   widgetFindByContent;
+  private final Button                   widgetCaseSensitive;
   private final Button                   widgetShowAllRepositories;
   private final Button                   widgetShowHiddenFiles;
 
@@ -316,11 +328,13 @@ public class CommandFindFiles
       };
       tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",        SWT.LEFT, true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Path",        SWT.LEFT, true );
+      tableColumn = Widgets.addTableColumn(widgetFiles,1,"#",           SWT.RIGHT,true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,2,"Date",        SWT.LEFT, false);
+      tableColumn = Widgets.addTableColumn(widgetFiles,2,"Path",        SWT.LEFT, true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,3,"Size [bytes]",SWT.RIGHT,false);
+      tableColumn = Widgets.addTableColumn(widgetFiles,3,"Date",        SWT.LEFT, false);
+      tableColumn.addSelectionListener(selectionListener);
+      tableColumn = Widgets.addTableColumn(widgetFiles,4,"Size [bytes]",SWT.RIGHT,false);
       tableColumn.addSelectionListener(selectionListener);
       Widgets.setTableColumnWidth(widgetFiles,Settings.geometryFindFilesColumns.width);
 
@@ -568,9 +582,23 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories",SWT.F7);
+        widgetCaseSensitive = Widgets.newCheckbox(subComposite,"case sensitive",SWT.F7);
+        widgetCaseSensitive.setSelection(data.caseSensitiveFlag);
+        Widgets.layout(widgetCaseSensitive,0,2,TableLayoutData.W);
+        widgetCaseSensitive.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            restartFindFiles();
+          }
+        });
+
+        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories",SWT.F8);
         widgetShowAllRepositories.setSelection(data.showAllRepositoriesFlag);
-        Widgets.layout(widgetShowAllRepositories,0,2,TableLayoutData.W);
+        Widgets.layout(widgetShowAllRepositories,0,3,TableLayoutData.W);
         widgetShowAllRepositories.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -582,9 +610,9 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files",SWT.F8);
+        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files",SWT.F9);
         widgetShowHiddenFiles.setSelection(data.showHiddenFilesFlag);
-        Widgets.layout(widgetShowHiddenFiles,0,3,TableLayoutData.W);
+        Widgets.layout(widgetShowHiddenFiles,0,4,TableLayoutData.W);
         widgetShowHiddenFiles.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -790,9 +818,13 @@ Dprintf.dprintf("");
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F7))
         {
-          Widgets.invoke(widgetShowAllRepositories);
+          Widgets.invoke(widgetCaseSensitive);
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F8))
+        {
+          Widgets.invoke(widgetShowAllRepositories);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.F9))
         {
           Widgets.invoke(widgetShowHiddenFiles);
         }
@@ -823,6 +855,7 @@ Dprintf.dprintf("");
     widgetFilter.addKeyListener(keyListener);
     widgetFindByName.addKeyListener(keyListener);
     widgetFindByContent.addKeyListener(keyListener);
+    widgetCaseSensitive.addKeyListener(keyListener);
     widgetShowAllRepositories.addKeyListener(keyListener);
     widgetShowHiddenFiles.addKeyListener(keyListener);
     widgetFilter.addKeyListener(new KeyListener()
@@ -891,6 +924,7 @@ Dprintf.dprintf("event=%s",event);
       Pattern[] contentPatterns         = null;
       boolean   findByNameFlag          = data.findByNameFlag;
       boolean   findByContentFlag       = data.findByContentFlag;
+      boolean   caseSensitiveFlag       = data.caseSensitiveFlag;
       boolean   showAllRepositoriesFlag = data.showAllRepositoriesFlag;
       boolean   showHiddenFilesFlag     = data.showHiddenFilesFlag;
 
@@ -904,6 +938,7 @@ Dprintf.dprintf("event=%s",event);
                || ((data.filter != null) && !data.filter.equals(filter))
                || (data.findByNameFlag != findByNameFlag)
                || (data.findByContentFlag != findByContentFlag)
+               || (data.caseSensitiveFlag != caseSensitiveFlag)
                || (data.showAllRepositoriesFlag != showAllRepositoriesFlag)
                || (data.showHiddenFilesFlag != showHiddenFilesFlag)
                || data.forceFlag;
@@ -975,14 +1010,15 @@ Dprintf.dprintf("event=%s",event);
                           int     lineNumber    = 0;
                           if (findByNameFlag)
                           {
-                            nameMatchFlag =    fileName.toLowerCase().contains(filter)
+                            nameMatchFlag =    (data.caseSensitiveFlag && fileName.contains(filter))
+                                            || (!data.caseSensitiveFlag && fileName.toLowerCase().contains(filter))
                                             || matchPatterns(fileName,fileNamePatterns);
                           }
                           if (findByContentFlag)
                           {
                             if (!nameMatchFlag)
                             {
-                              lineNumber = fileContains(file,filter,contentPatterns);
+                              lineNumber = fileContains(file,filter,contentPatterns,data.caseSensitiveFlag);
                             }
                           }
 
@@ -1003,6 +1039,7 @@ Dprintf.dprintf("event=%s",event);
                                                            findDataComparator,
                                                            findData,
                                                            file.getName(),
+                                                           Integer.toString(findData.lineNumber),
                                                            file.getParent(),
                                                            Onzen.DATETIME_FORMAT.format(file.lastModified()),
                                                            Long.toString(file.length())
@@ -1060,15 +1097,16 @@ Dprintf.dprintf("event=%s",event);
             {
               // get new find text/pattern
               fileNameFilter         = new String(data.fileNameFilter);
-              fileNameFilterPatterns = compileFileNamePatterns(data.fileNameFilter);
-              filter                 = new String(data.filter);
-              fileNamePatterns       = compileFileNamePatterns(data.filter);
-              contentPatterns        = compileContentPatterns(data.filter);
+              fileNameFilterPatterns = compileFileNamePatterns(data.fileNameFilter,data.caseSensitiveFlag);
+              filter                 = data.caseSensitiveFlag ? new String(data.filter) : new String(data.filter).toLowerCase();
+              fileNamePatterns       = compileFileNamePatterns(data.filter,data.caseSensitiveFlag);
+              contentPatterns        = compileContentPatterns(data.filter,data.caseSensitiveFlag);
 
               data.filter = null;
             }
             findByNameFlag          = data.findByNameFlag;
             findByContentFlag       = data.findByContentFlag;
+            caseSensitiveFlag       = data.caseSensitiveFlag;
             showAllRepositoriesFlag = data.showAllRepositoriesFlag;
             showHiddenFilesFlag     = data.showHiddenFilesFlag;
 
@@ -1105,6 +1143,7 @@ Dprintf.dprintf("event=%s",event);
                                     );
           CommandFindFiles.fileNameFilter          = widgetFileNameFilter.getText().trim();
           CommandFindFiles.filter                  = widgetFilter.getText().trim();
+          CommandFindFiles.caseSensitiveFlag       = widgetCaseSensitive.getSelection();
           CommandFindFiles.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
           CommandFindFiles.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
 
@@ -1147,19 +1186,19 @@ Dprintf.dprintf("event=%s",event);
                        : "Find files in '"+repositoryTab.repository.rootPath+"'"
                     );
 
-      String filter = widgetFilter.getText().trim().toLowerCase();
       synchronized(data)
       {
         data.fileNameFilter          = widgetFileNameFilter.getText().trim();
-        data.filter                  = filter;
+        data.filter                  = widgetFilter.getText().trim();
         data.findByNameFlag          = widgetFindByName.getSelection();
         data.findByContentFlag       = widgetFindByContent.getSelection();
+        data.caseSensitiveFlag       = widgetCaseSensitive.getSelection();
         data.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
         data.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
         data.forceFlag               = forceFlag;
         data.notifyAll();
 
-        if (!filter.isEmpty()) Widgets.modified(data);
+        if (!data.filter.isEmpty()) Widgets.modified(data);
       }
     }
   }
@@ -1204,14 +1243,15 @@ Dprintf.dprintf("event=%s",event);
 
   /** compile file patterns
    * @param findTextPattern find text string
+   * @param caseSensitiveFlag true for case-sensitive matching
    * @return file name pattern array
    */
-  private Pattern[] compileFileNamePatterns(String findTextPattern)
+  private Pattern[] compileFileNamePatterns(String findTextPattern, boolean caseSensitiveFlag)
   {
     ArrayList<Pattern> patternList = new ArrayList<Pattern>();
     for (String pattern : StringUtils.split(findTextPattern,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS))
     {
-      patternList.add(Pattern.compile(StringUtils.globToRegex(pattern),Pattern.CASE_INSENSITIVE));
+      patternList.add(Pattern.compile(StringUtils.globToRegex(pattern),caseSensitiveFlag ? 0 : Pattern.CASE_INSENSITIVE));
     }
 
     return patternList.toArray(new Pattern[patternList.size()]);
@@ -1219,14 +1259,15 @@ Dprintf.dprintf("event=%s",event);
 
   /** compile content patterns
    * @param findTextPattern find text string
+   * @param caseSensitiveFlag true for case-sensitive matching
    * @return file content pattern array
    */
-  private Pattern[] compileContentPatterns(String findTextPattern)
+  private Pattern[] compileContentPatterns(String findTextPattern, boolean caseSensitiveFlag)
   {
     ArrayList<Pattern> patternList = new ArrayList<Pattern>();
     for (String pattern : StringUtils.split(findTextPattern,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS))
     {
-      patternList.add(Pattern.compile(".*"+StringUtils.globToRegex(pattern)+".*",Pattern.CASE_INSENSITIVE));
+      patternList.add(Pattern.compile(".*"+StringUtils.globToRegex(pattern)+".*",caseSensitiveFlag ? 0 : Pattern.CASE_INSENSITIVE));
     }
 
     return patternList.toArray(new Pattern[patternList.size()]);
@@ -1251,9 +1292,10 @@ Dprintf.dprintf("event=%s",event);
    * @param file file to check
    * @param content text to find
    * @param contentPatterns content patterns
+   * @param caseSensitiveFlag true for case-sensitive matching
    * @return line number or -1 if not found
    */
-  private int fileContains(File file, String content, Pattern[] contentPatterns)
+  private int fileContains(File file, String content, Pattern[] contentPatterns, boolean caseSensitiveFlag)
   {
     int lineNumber = -1;
 
@@ -1264,13 +1306,14 @@ Dprintf.dprintf("event=%s",event);
       input = new BufferedReader(new FileReader(file));
 
       // read file and find text
-      content = content.toLowerCase();
+      if (!caseSensitiveFlag) content = content.toLowerCase();
       String line;
       int    n = 0;
       while ((line = input.readLine()) != null)
       {
         n++;
-        if (   line.toLowerCase().contains(content)
+        if (   (caseSensitiveFlag && line.contains(content))
+            || (!caseSensitiveFlag && line.toLowerCase().contains(content))
             || matchPatterns(line,contentPatterns)
            )
         {
