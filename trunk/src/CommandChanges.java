@@ -417,12 +417,13 @@ class CommandChanges
         }
         catch (RepositoryException exception)
         {
-          final String exceptionMessage = exception.getMessage();
+          final String   exceptionMessage = exception.getMessage();
+          final String[] extendedMessage  = exception.getExtendedMessage();
           display.syncExec(new Runnable()
           {
             public void run()
             {
-              Dialogs.error(dialog,"Getting changes fail: %s",exceptionMessage);
+              Dialogs.error(dialog,extendedMessage,"Getting changes fail: %s",exceptionMessage);
             }
           });
           return;
