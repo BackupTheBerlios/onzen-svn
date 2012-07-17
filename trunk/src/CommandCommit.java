@@ -586,32 +586,40 @@ class CommandCommit
       final String[] fileNames = FileData.toSortedFileNameArray(fileDataSet,repositoryTab.repository);
 
       // check for TABs/trailing whitespaces in files and convert/remove
+      String fileNameWithWhitespaces = null;
       for (final String fileName : fileNames)
       {
         if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileName))
         {
           // check for TABs/trailing whitespaces in file
-          final boolean containTABs                = Settings.checkTABs                && repositoryTab.containTABs(fileName);
-          final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containTrailingWhitespaces(fileName);
-
-          // convert TABs, remove trailing whitespaces
-          if (containTABs || containTrailingWhitespaces)
+          if (   (Settings.checkTABs                && repositoryTab.containTABs(fileName)               )
+              || (Settings.checkTrailingWhitespaces && repositoryTab.containTrailingWhitespaces(fileName))
+             )
           {
-
-            final boolean[] result = new boolean[1];
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                result[0] = repositoryTab.convertWhitespaces(fileName,
-                                                             fileNames,
-                                                             "File '"+fileName+"' contain TABs or trailing whitespaces."
-                                                            );
-              }
-            });
-            if (!result[0]) return;
+            fileNameWithWhitespaces = fileName;
+            break;
           }
         }
+      }
+
+      // convert TABs, remove trailing whitespaces
+      if (fileNameWithWhitespaces != null)
+      {
+        final boolean[] result   = new boolean[1];
+        final String    fileName = fileNameWithWhitespaces;
+        final String    message  = "File '"+fileNameWithWhitespaces+"' contain TABs or trailing whitespaces.";
+        display.syncExec(new Runnable()
+        {
+          public void run()
+          {
+            result[0] = repositoryTab.convertWhitespaces(fileName,
+                                                         fileNames,
+                                                         message
+                                                        );
+Dprintf.dprintf("result[0]=%s",result[0]);
+          }
+        });
+        if (!result[0]) return;
       }
 
       // create message
