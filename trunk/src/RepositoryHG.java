@@ -1663,21 +1663,24 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         trees = new String[]{rootPath};
       }
 
-      // unapply patches for all trees in forest/single repository
-      if ((busyDialog == null) || !busyDialog.isAborted())
+      if (Settings.hgUseQueueExtension)
       {
-        for (String tree : trees)
+        // unapply patches for all trees in forest/single repository
+        if ((busyDialog == null) || !busyDialog.isAborted())
         {
-          command.clear();
-          command.append(Settings.hgCommand,"qpop","-a");
-          command.append("--");
-          exec = new Exec(tree,command);
-          exitCode = exec.waitFor();
-          if (exitCode != 0)
+          for (String tree : trees)
           {
-            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            command.clear();
+            command.append(Settings.hgCommand,"qpop","-a");
+            command.append("--");
+            exec = new Exec(tree,command);
+            exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            }
+            exec.done(); exec = null;
           }
-          exec.done(); exec = null;
         }
       }
 
@@ -1797,21 +1800,24 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
       }
 
-      // apply patches for all trees in forest/single repository
-      if ((busyDialog == null) || !busyDialog.isAborted())
+      if (Settings.hgUseQueueExtension)
       {
-        for (String tree : trees)
+        // apply patches for all trees in forest/single repository
+        if ((busyDialog == null) || !busyDialog.isAborted())
         {
-          command.clear();
-          command.append(Settings.hgCommand,"qpush","-a");
-          command.append("--");
-          exec = new Exec(tree,command);
-          exitCode = exec.waitFor();
-          if (exitCode != 0)
+          for (String tree : trees)
           {
-            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            command.clear();
+            command.append(Settings.hgCommand,"qpush","-a");
+            command.append("--");
+            exec = new Exec(tree,command);
+            exitCode = exec.waitFor();
+            if (exitCode != 0)
+            {
+              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            }
+            exec.done(); exec = null;
           }
-          exec.done(); exec = null;
         }
       }
     }
@@ -2095,6 +2101,7 @@ throw new Error("NYI");
       String             author            = null;
       ArrayList<String>  fileList          = new ArrayList<String>();
       LinkedList<String> commitMessageList = new LinkedList<String>();
+      int                exitCode;
 
       // get log
       command.clear();
@@ -2152,6 +2159,11 @@ throw new Error("NYI");
                          );
         }
       }
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
 
       // done
       exec.done(); exec = null;
@@ -2189,6 +2201,7 @@ throw new Error("NYI");
       String             author            = null;
       ArrayList<String>  fileList          = new ArrayList<String>();
       LinkedList<String> commitMessageList = new LinkedList<String>();
+      int                exitCode;
 
       // get log
       command.clear();
@@ -2245,6 +2258,11 @@ throw new Error("NYI");
                                      )
                          );
         }
+      }
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done

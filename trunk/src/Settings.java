@@ -727,7 +727,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryFindFiles                      = new Point(800,400);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
-  public static ColumnSizes              geometryFindFilesColumns               = new ColumnSizes(300,300,160,60);
+  public static ColumnSizes              geometryFindFilesColumns               = new ColumnSizes(300,60,300,160,60);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryFindText                       = new Point(800,400);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
@@ -1033,6 +1033,8 @@ public class Settings
   @SettingValue
   public static boolean                  hgUseForestExtension                   = false;
   @SettingValue
+  public static boolean                  hgUseQueueExtension                    = false;
+  @SettingValue
   public static boolean                  hgUpdateWithFetch                      = false;
   @SettingValue
   public static boolean                  hgSafeUpdate                           = false;
@@ -1127,6 +1129,7 @@ public class Settings
   @SettingComment(text={"","show dialog flags"})
   @SettingValue
   public static Boolean                  showUpdateStatusErrors                 = new Boolean(true);
+  public static Boolean                  showRestartAfterConfigChanged          = new Boolean(true);
 
   // debug
   public static boolean                  debugFlag                              = false;
