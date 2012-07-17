@@ -909,7 +909,7 @@ menuItem.setEnabled(false);
 
   //-----------------------------------------------------------------------
 
-  /** update states of selected entries
+  /** update states of selected entries/current directory
    */
   public void updateStates()
   {
@@ -1161,7 +1161,6 @@ Dprintf.dprintf("NYI");
       try
       {
         repository.resolve(fileDataSet);
-
       }
       catch (RepositoryException exception)
       {
@@ -1173,7 +1172,19 @@ Dprintf.dprintf("NYI");
         clearStatusText();
       }
 
-      asyncUpdateFileStates(fileDataSet);
+      // get all entries in directories for update (files may be added or disappear after set solved)
+      HashSet<FileData> updateFileDataSet = new HashSet<FileData>();
+      for (FileData fileData : fileDataSet)
+      {
+        TreeItem parentTreeItem = fileNameMap.get(fileData.getFileName()).getParentItem();
+
+        for (TreeItem treeItem : parentTreeItem.getItems())
+        {
+          FileData subFileData = (FileData)treeItem.getData();
+           if (subFileData != null) updateFileDataSet.add(subFileData);
+        }
+      }
+      asyncUpdateFileStates(updateFileDataSet);
     }
   }
 
@@ -1556,7 +1567,6 @@ Dprintf.dprintf("NYI");
           }
         }
       });
-Dprintf.dprintf("");
     }
   }
 
@@ -3432,6 +3442,7 @@ Dprintf.dprintf("");
       try
       {
         repository.updateStates(fileDataSet,newFileDataSet);
+//Dprintf.dprintf("newFileDataSet=%s",newFileDataSet);
       }
       catch (final RepositoryException exception)
       {
