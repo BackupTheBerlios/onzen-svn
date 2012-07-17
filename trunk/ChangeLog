@@ -1,5 +1,9 @@
 2012-xx-xx 0.04
   * added default root and branch name in new branch dialog
+  * improved find files dialog
+  * support file lock/unlock (SVN, HG with extension)
+  * added recursive-flag to revert function
+  * add option to enable/disable usage of HG queue commands
 
 2012-04-14 0.03
   * add sort buttons to tests list
