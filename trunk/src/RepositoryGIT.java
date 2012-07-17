@@ -1462,8 +1462,9 @@ throw new Error("NYI");
   }
 
   /** get incoming changes list
+   * @param masterRepository master repository or null
    */
-  public LogData[] getIncomingChanges()
+  public LogData[] getIncomingChanges(String masterRepository)
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
@@ -1472,8 +1473,9 @@ throw new RepositoryException("NYI");
   }
 
   /** get outgoing changes list
+   * @param masterRepository master repository or null
    */
-  public LogData[] getOutgoingChanges()
+  public LogData[] getOutgoingChanges(String masterRepository)
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
@@ -1491,8 +1493,9 @@ throw new RepositoryException("NYI");
   }
 
   /** pull changes
+   * @param masterRepository master repository or null
    */
-  public void pullChanges()
+  public void pullChanges(String masterRepository)
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
@@ -1500,8 +1503,9 @@ throw new RepositoryException("NYI");
   }
 
   /** push changes
+   * @param masterRepository master repository or null
    */
-  public void pushChanges()
+  public void pushChanges(String masterRepository)
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");

@@ -3005,13 +3005,15 @@ Dprintf.dprintf("fileName=%s",fileName);
     throws RepositoryException;
 
   /** get incoming changes list
+   * @param masterRepository master repository or null
    */
-  abstract public LogData[] getIncomingChanges()
+  abstract public LogData[] getIncomingChanges(String masterRepository)
     throws RepositoryException;
 
   /** get outgoing changes list
+   * @param masterRepository master repository or null
    */
-  abstract public LogData[] getOutgoingChanges()
+  abstract public LogData[] getOutgoingChanges(String masterRepository)
     throws RepositoryException;
 
   /** get incoming/outgoing changes lines
@@ -3021,13 +3023,15 @@ Dprintf.dprintf("fileName=%s",fileName);
     throws RepositoryException;
 
   /** pull changes
+   * @param masterRepository master repository or null
    */
-  abstract public void pullChanges()
+  abstract public void pullChanges(String masterRepository)
     throws RepositoryException;
 
   /** push changes
+   * @param masterRepository master repository or null
    */
-  abstract public void pushChanges()
+  abstract public void pushChanges(String masterRepository)
     throws RepositoryException;
 
   /** apply patch queue patches

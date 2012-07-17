@@ -347,16 +347,18 @@ class RepositoryNone extends Repository
   }
 
   /** get incoming changes list
+   * @param masterRepository master repository or null
    */
-  public LogData[] getIncomingChanges()
+  public LogData[] getIncomingChanges(String masterRepository)
     throws RepositoryException
   {
     return null;
   }
 
   /** get outgoing changes list
+   * @param masterRepository master repository or null
    */
-  public LogData[] getOutgoingChanges()
+  public LogData[] getOutgoingChanges(String masterRepository)
     throws RepositoryException
   {
     return null;
@@ -372,15 +374,17 @@ class RepositoryNone extends Repository
   }
 
   /** pull changes
+   * @param masterRepository master repository or null
    */
-  public void pullChanges()
+  public void pullChanges(String masterRepository)
     throws RepositoryException
   {
   }
 
   /** push changes
+   * @param masterRepository master repository or null
    */
-  public void pushChanges()
+  public void pushChanges(String masterRepository)
     throws RepositoryException
   {
   }

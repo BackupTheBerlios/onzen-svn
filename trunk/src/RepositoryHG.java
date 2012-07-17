@@ -1875,7 +1875,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       // immediate push changes when configured
       if (Settings.hgImmediatePush)
       {
-        pushChanges();
+        pushChanges(masterRepository);
       }
     }
     catch (IOException exception)
@@ -2081,8 +2081,9 @@ throw new Error("NYI");
   }
 
   /** get incoming changes list
+   * @param masterRepository master repository or null
    */
-  public LogData[] getIncomingChanges()
+  public LogData[] getIncomingChanges(String masterRepository)
     throws RepositoryException
   {
     final Pattern PATTERN_CHANGE = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
@@ -2107,6 +2108,7 @@ throw new Error("NYI");
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","incoming","--template","{rev} {node|short} {date|isodate} {author|person}\\n{files}\\n-----\\n{desc}\\n-----\\n");
       command.append("--");
+      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
       exec = new Exec(rootPath,command);
 
       // parse revisions in log output
@@ -2159,6 +2161,8 @@ throw new Error("NYI");
                          );
         }
       }
+
+      // check exitcode (Note: exitcode 1 is OK and mean "no incoming changes")
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
@@ -2181,8 +2185,9 @@ throw new Error("NYI");
   }
 
   /** get outgoing changes list
+   * @param masterRepository master repository or null
    */
-  public LogData[] getOutgoingChanges()
+  public LogData[] getOutgoingChanges(String masterRepository)
     throws RepositoryException
   {
     final Pattern PATTERN_CHANGE = Pattern.compile("^(\\d+)\\s+(\\S+)\\s+(\\S+\\s+\\S+\\s+\\S+)\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
@@ -2207,6 +2212,7 @@ throw new Error("NYI");
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","outgoing","--template","{rev} {node|short} {date|isodate} {author|person}\\n{files}\\n-----\\n{desc}\\n-----\\n");
       command.append("--");
+      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
       exec = new Exec(rootPath,command);
 
       // parse revisions in log output
@@ -2259,8 +2265,10 @@ throw new Error("NYI");
                          );
         }
       }
+
+      // check exitcode (Note: exitcode 1 is OK and mean "no outing changes")
       exitCode = exec.waitFor();
-      if (exitCode != 0)
+      if (exitCode > 1)
       {
         throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
@@ -2322,8 +2330,9 @@ throw new Error("NYI");
   }
 
   /** pull changes
+   * @param masterRepository master repository or null
    */
-  public void pullChanges()
+  public void pullChanges(String masterRepository)
     throws RepositoryException
   {
     Exec exec = null;
@@ -2355,8 +2364,9 @@ throw new Error("NYI");
   }
 
   /** push changes
+   * @param masterRepository master repository or null
    */
-  public void pushChanges()
+  public void pushChanges(String masterRepository)
     throws RepositoryException
   {
     final Pattern PATTERN_ABORT = Pattern.compile("^\\s*abort:.*",Pattern.CASE_INSENSITIVE);

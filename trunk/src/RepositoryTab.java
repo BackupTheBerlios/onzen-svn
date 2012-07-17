@@ -1241,10 +1241,27 @@ Dprintf.dprintf("NYI");
   }
 
   /** show incoming changes
+   * @param masterRepository master repository or ""
+   */
+  public void incomingChanges(String masterRepository)
+  {
+    CommandChanges commandChanges = new CommandChanges(shell,this,masterRepository,CommandChanges.ChangesTypes.INCOMING);
+    commandChanges.run();
+  }
+
+  /** show incoming changes
    */
   public void incomingChanges()
   {
-    CommandChanges commandChanges = new CommandChanges(shell,this,CommandChanges.ChangesTypes.INCOMING);
+    incomingChanges(((RepositoryHG)repository).masterRepository);
+  }
+
+  /** show outgoing changes
+   * @param masterRepository master repository or ""
+   */
+  public void outgoingChanges(String masterRepository)
+  {
+    CommandChanges commandChanges = new CommandChanges(shell,this,masterRepository,CommandChanges.ChangesTypes.OUTGOING);
     commandChanges.run();
   }
 
@@ -1252,18 +1269,18 @@ Dprintf.dprintf("NYI");
    */
   public void outgoingChanges()
   {
-    CommandChanges commandChanges = new CommandChanges(shell,this,CommandChanges.ChangesTypes.OUTGOING);
-    commandChanges.run();
+    outgoingChanges(((RepositoryHG)repository).masterRepository);
   }
 
   /** pull changes
+   * @param masterRepository master repository or ""
    */
-  public void pullChanges()
+  public void pullChanges(String masterRepository)
   {
     setStatusText("Pull changes...");
     try
     {
-      repository.pullChanges();
+      repository.pullChanges(masterRepository);
     }
     catch (RepositoryException exception)
     {
@@ -1276,14 +1293,22 @@ Dprintf.dprintf("NYI");
     }
   }
 
-  /** push changes
+  /** pull changes
    */
-  public void pushChanges()
+  public void pullChanges()
+  {
+    pullChanges(((RepositoryHG)repository).masterRepository);
+  }
+
+  /** push changes
+   * @param masterRepository master repository or ""
+   */
+  public void pushChanges(String masterRepository)
   {
     setStatusText("Push changes...");
     try
     {
-      repository.pushChanges();
+      repository.pushChanges(masterRepository);
     }
     catch (RepositoryException exception)
     {
@@ -1294,6 +1319,13 @@ Dprintf.dprintf("NYI");
     {
       clearStatusText();
     }
+  }
+
+  /** push changes
+   */
+  public void pushChanges()
+  {
+    pushChanges(((RepositoryHG)repository).masterRepository);
   }
 
   /** lock file

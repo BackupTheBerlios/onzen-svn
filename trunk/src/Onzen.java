@@ -329,9 +329,13 @@ public class Onzen
   private MenuItem                          menuItemLock;
   private MenuItem                          menuItemUnlock;
   private MenuItem                          menuItemIncomingChanges;
+  private MenuItem                          menuItemIncomingChangesFrom;
   private MenuItem                          menuItemOutgoingChanges;
+  private MenuItem                          menuItemOutgoingChangesTo;
   private MenuItem                          menuItemPullChanges;
+  private MenuItem                          menuItemPullChangesFrom;
   private MenuItem                          menuItemPushChanges;
+  private MenuItem                          menuItemPushChangesTo;
   private MenuItem                          menuSetFileMode;
 
   private Menu                              menuShellCommands;
@@ -1938,6 +1942,29 @@ menuItem.setEnabled(false);
         }
       });
 
+      menuItemIncomingChangesFrom = Widgets.addMenuItem(menu,"Incoming changes from\u2026",Settings.keyIncomingChangesFrom);
+      menuItemIncomingChangesFrom.setEnabled(false);
+      menuItemIncomingChangesFrom.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select repository path for incoming changes",
+                                            ((RepositoryHG)selectedRepositoryTab.repository).masterRepository
+                                           );
+            if (path != null)
+            {
+              selectedRepositoryTab.incomingChanges(path);
+            }
+          }
+        }
+      });
+
       menuItemOutgoingChanges = Widgets.addMenuItem(menu,"Outgoing changes",Settings.keyOutgoingChanges);
       menuItemOutgoingChanges.setEnabled(false);
       menuItemOutgoingChanges.addSelectionListener(new SelectionListener()
@@ -1950,6 +1977,29 @@ menuItem.setEnabled(false);
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.outgoingChanges();
+          }
+        }
+      });
+
+      menuItemOutgoingChangesTo = Widgets.addMenuItem(menu,"Outgoing changes to\u2026",Settings.keyOutgoingChangesTo);
+      menuItemOutgoingChangesTo.setEnabled(false);
+      menuItemOutgoingChangesTo.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select repository path for outgoing changes",
+                                            ((RepositoryHG)selectedRepositoryTab.repository).masterRepository
+                                           );
+            if (path != null)
+            {
+              selectedRepositoryTab.outgoingChanges(path);
+            }
           }
         }
       });
@@ -1970,6 +2020,29 @@ menuItem.setEnabled(false);
         }
       });
 
+      menuItemPullChangesFrom = Widgets.addMenuItem(menu,"Pull changes from\u2026",Settings.keyPullChangesFrom);
+      menuItemPullChangesFrom.setEnabled(false);
+      menuItemPullChangesFrom.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select repository path for pull changes",
+                                            ((RepositoryHG)selectedRepositoryTab.repository).masterRepository
+                                           );
+            if (path != null)
+            {
+              selectedRepositoryTab.pullChanges(path);
+            }
+          }
+        }
+      });
+
       menuItemPushChanges = Widgets.addMenuItem(menu,"Push changes",Settings.keyPushChanges);
       menuItemPushChanges.setEnabled(false);
       menuItemPushChanges.addSelectionListener(new SelectionListener()
@@ -1982,6 +2055,29 @@ menuItem.setEnabled(false);
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.pushChanges();
+          }
+        }
+      });
+
+      menuItemPushChangesTo = Widgets.addMenuItem(menu,"Push changes to\u2026",Settings.keyPushChangesTo);
+      menuItemPushChangesTo.setEnabled(false);
+      menuItemPushChangesTo.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select repository path for push changes",
+                                            ((RepositoryHG)selectedRepositoryTab.repository).masterRepository
+                                           );
+            if (path != null)
+            {
+              selectedRepositoryTab.pushChanges(path);
+            }
           }
         }
       });
@@ -6179,9 +6275,13 @@ exception.printStackTrace();
       menuItemLock.setEnabled(repositoryTab.repository.supportLockUnlock());
       menuItemUnlock.setEnabled(repositoryTab.repository.supportLockUnlock());
       menuItemIncomingChanges.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
+      menuItemIncomingChangesFrom.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
       menuItemOutgoingChanges.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
+      menuItemOutgoingChangesTo.setEnabled(repositoryTab.repository.supportIncomingOutgoing());
       menuItemPullChanges.setEnabled(repositoryTab.repository.supportPullPush());
+      menuItemPullChangesFrom.setEnabled(repositoryTab.repository.supportPullPush());
       menuItemPushChanges.setEnabled(repositoryTab.repository.supportPullPush());
+      menuItemPushChangesTo.setEnabled(repositoryTab.repository.supportPullPush());
       menuSetFileMode.setEnabled(repositoryTab.repository.supportSetFileMode());
     }
     else
@@ -6192,9 +6292,13 @@ exception.printStackTrace();
       menuItemLock.setEnabled(false);
       menuItemUnlock.setEnabled(false);
       menuItemIncomingChanges.setEnabled(false);
+      menuItemIncomingChangesFrom.setEnabled(false);
       menuItemOutgoingChanges.setEnabled(false);
+      menuItemOutgoingChangesTo.setEnabled(false);
       menuItemPullChanges.setEnabled(false);
+      menuItemPullChangesFrom.setEnabled(false);
       menuItemPushChanges.setEnabled(false);
+      menuItemPushChangesTo.setEnabled(false);
       menuSetFileMode.setEnabled(false);
     }
     selectedRepositoryTab = repositoryTab;
@@ -6215,9 +6319,13 @@ exception.printStackTrace();
       menuItemLock.setEnabled(selectedRepositoryTab.repository.supportLockUnlock());
       menuItemUnlock.setEnabled(selectedRepositoryTab.repository.supportLockUnlock());
       menuItemIncomingChanges.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
+      menuItemIncomingChangesFrom.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
       menuItemOutgoingChanges.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
+      menuItemOutgoingChangesTo.setEnabled(selectedRepositoryTab.repository.supportIncomingOutgoing());
       menuItemPullChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
+      menuItemPullChangesFrom.setEnabled(selectedRepositoryTab.repository.supportPullPush());
       menuItemPushChanges.setEnabled(selectedRepositoryTab.repository.supportPullPush());
+      menuItemPushChangesTo.setEnabled(selectedRepositoryTab.repository.supportPullPush());
       menuSetFileMode.setEnabled(selectedRepositoryTab.repository.supportSetFileMode());
     }
     else
@@ -6228,9 +6336,13 @@ exception.printStackTrace();
       menuItemLock.setEnabled(false);
       menuItemUnlock.setEnabled(false);
       menuItemIncomingChanges.setEnabled(false);
+      menuItemIncomingChangesFrom.setEnabled(false);
       menuItemOutgoingChanges.setEnabled(false);
+      menuItemOutgoingChangesTo.setEnabled(false);
       menuItemPullChanges.setEnabled(false);
+      menuItemPullChangesFrom.setEnabled(false);
       menuItemPushChanges.setEnabled(false);
+      menuItemPushChangesTo.setEnabled(false);
       menuSetFileMode.setEnabled(false);
     }
   }
