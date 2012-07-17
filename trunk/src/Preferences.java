@@ -133,6 +133,7 @@ class Preferences
   private final Text          widgetHGDiffCommandOptions;
   private final Text          widgetHGDiffCommandOptionsIgnoreWhitespaces;
   private final Button        widgetHGUseForestExtension;
+  private final Button        widgetHGUseQueueExtension;
   private final Button        widgetHGUpdateWithFetch;
   private final Button        widgetHGSafeUpdate;
   private final Button        widgetHGSingleLineCommitMessages;
@@ -896,19 +897,24 @@ class Preferences
             Widgets.layout(widgetHGUseForestExtension,0,0,TableLayoutData.WE);
             widgetHGUseForestExtension.setToolTipText("Use HG forest extension commands.");
 
+            widgetHGUseQueueExtension = Widgets.newCheckbox(subSubComposite,"use queue extension");
+            widgetHGUseQueueExtension.setSelection(Settings.hgUseQueueExtension);
+            Widgets.layout(widgetHGUseQueueExtension,1,0,TableLayoutData.WE);
+            widgetHGUseQueueExtension.setToolTipText("Use HG queue extension commands.");
+
             widgetHGUpdateWithFetch = Widgets.newCheckbox(subSubComposite,"update with fetch extension");
             widgetHGUpdateWithFetch.setSelection(Settings.hgUpdateWithFetch);
-            Widgets.layout(widgetHGUpdateWithFetch,1,0,TableLayoutData.WE);
+            Widgets.layout(widgetHGUpdateWithFetch,2,0,TableLayoutData.WE);
             widgetHGUpdateWithFetch.setToolTipText("Use HG fetch extension for update (fetch+fpush).");
 
             widgetHGSafeUpdate = Widgets.newCheckbox(subSubComposite,"'safe' update");
             widgetHGSafeUpdate.setSelection(Settings.hgSafeUpdate);
-            Widgets.layout(widgetHGSafeUpdate,2,0,TableLayoutData.WE);
+            Widgets.layout(widgetHGSafeUpdate,3,0,TableLayoutData.WE);
             widgetHGSafeUpdate.setToolTipText("Do 'safe' update. Allow fetch update with not-commited local changes: save local changes, revert, update and restore local changes with merge if needed.");
 
             subSubSubComposite = Widgets.newComposite(subSubComposite);
             subSubSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0,0.0}));
-            Widgets.layout(subSubSubComposite,3,0,TableLayoutData.WE);
+            Widgets.layout(subSubSubComposite,4,0,TableLayoutData.WE);
             {
               widgetHGSingleLineCommitMessages = Widgets.newCheckbox(subSubSubComposite,"single-line commit messages");
               widgetHGSingleLineCommitMessages.setSelection(Settings.hgSingleLineCommitMessages);
@@ -946,7 +952,7 @@ class Preferences
 
             widgetHGRelativePatchPaths = Widgets.newCheckbox(subSubComposite,"relative patch paths");
             widgetHGRelativePatchPaths.setSelection(Settings.hgRelativePatchPaths);
-            Widgets.layout(widgetHGRelativePatchPaths,4,0,TableLayoutData.WE);
+            Widgets.layout(widgetHGRelativePatchPaths,5,0,TableLayoutData.WE);
             widgetHGRelativePatchPaths.setToolTipText("Remove path prefixes 'a/' and 'b/' Mercurial is adding to file names in patches and convert to a relative path.");
           }
         }
@@ -1662,6 +1668,7 @@ Dprintf.dprintf("");
           Settings.hgDiffCommandOptions                   = widgetHGDiffCommandOptions.getText().trim();
           Settings.hgDiffCommandOptionsIgnoreWhitespaces  = widgetHGDiffCommandOptionsIgnoreWhitespaces.getText().trim();
           Settings.hgUseForestExtension                   = widgetHGUseForestExtension.getSelection();
+          Settings.hgUseQueueExtension                    = widgetHGUseQueueExtension.getSelection();
           Settings.hgUpdateWithFetch                      = widgetHGUpdateWithFetch.getSelection();
           Settings.hgSafeUpdate                           = widgetHGSafeUpdate.getSelection();
           Settings.hgSingleLineCommitMessages             = widgetHGSingleLineCommitMessages.getSelection();
@@ -1773,15 +1780,36 @@ Dprintf.dprintf("");
         boolean saveSettings = true;
         if (Settings.isFileModified())
         {
-          saveSettings = Dialogs.confirm(shell,"Confirmation","Settings were modified externally.\nOverwrite settings?","Overwrite","Cancel",false);
+          saveSettings = Dialogs.confirm(shell,
+                                         "Confirmation",
+                                         "Settings were modified externally.\nOverwrite settings?",
+                                         "Overwrite",
+                                         "Cancel",
+                                         false
+                                        );
         }
         if (saveSettings)
         {
           Settings.save();
         }
-        if (Dialogs.confirm(shell,"Confirmation","Some settings may become active only after restarting Onzen.\nRestart now?","Now","Later"))
+
+        synchronized(Settings.showRestartAfterConfigChanged)
         {
-          Widgets.notify(shell,SWT.Close,64);
+          if (Settings.showRestartAfterConfigChanged)
+          {
+// NYI ??? return showRestartAfterConfigChanged flag?
+            if (Dialogs.confirm(shell,
+                                "Confirmation",
+                                "Some settings may become active only after restarting Onzen.\nRestart now?",
+                                "Now",
+                                "Later",
+                                true
+                               )
+               )
+            {
+              Widgets.notify(shell,SWT.Close,64);
+            }
+          }
         }
       }
     }
@@ -2344,6 +2372,7 @@ Dprintf.dprintf("");
     Label     label;
     Text      text;
     Button    button;
+    Canvas    canvas;
 
     // add editor dialog
     final Shell dialog = Dialogs.openModal(this.dialog,"Edit color",100,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
@@ -2360,17 +2389,21 @@ Dprintf.dprintf("");
 
       label = Widgets.newLabel(composite,"Foreground:");
       Widgets.layout(label,1,0,TableLayoutData.W);
-      button = Widgets.newButton(composite);
-      button.setBackground(new Color(null,color.foreground));
-      Widgets.layout(button,1,1,TableLayoutData.WE,0,0,0,0,60,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
+      canvas = Widgets.newCanvas(composite,SWT.BORDER);
+      canvas.setForeground(new Color(null,color.foreground));
+      canvas.setBackground(new Color(null,color.foreground));
+      Widgets.layout(canvas,1,1,TableLayoutData.WE,0,0,0,0,60,20);
+      canvas.addMouseListener(new MouseListener()
       {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        public void mouseDoubleClick(MouseEvent mouseEvent)
         {
         }
-        public void widgetSelected(SelectionEvent selectionEvent)
+        public void mouseDown(MouseEvent mouseEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
+        }
+        public void mouseUp(MouseEvent mouseEvent)
+        {
+          Canvas widget = (Canvas)mouseEvent.widget;
 
           ColorDialog colorDialog = new ColorDialog(dialog);
           colorDialog.setRGB(color.foreground);
@@ -2378,6 +2411,7 @@ Dprintf.dprintf("");
           if (rgb != null)
           {
             color.foreground = rgb;
+            widget.setForeground(new Color(null,rgb));
             widget.setBackground(new Color(null,rgb));
           }
         }
@@ -2385,17 +2419,21 @@ Dprintf.dprintf("");
 
       label = Widgets.newLabel(composite,"Background:");
       Widgets.layout(label,2,0,TableLayoutData.W);
-      button = Widgets.newButton(composite);
-      button.setBackground(new Color(null,color.background));
-      Widgets.layout(button,2,1,TableLayoutData.WE,0,0,0,0,60,SWT.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
+      canvas = Widgets.newCanvas(composite,SWT.BORDER);
+      canvas.setForeground(new Color(null,color.background));
+      canvas.setBackground(new Color(null,color.background));
+      Widgets.layout(canvas,2,1,TableLayoutData.WE,0,0,0,0,60,20);
+      canvas.addMouseListener(new MouseListener()
       {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        public void mouseDoubleClick(MouseEvent mouseEvent)
         {
         }
-        public void widgetSelected(SelectionEvent selectionEvent)
+        public void mouseDown(MouseEvent mouseEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
+        }
+        public void mouseUp(MouseEvent mouseEvent)
+        {
+          Canvas widget = (Canvas)mouseEvent.widget;
 
           ColorDialog colorDialog = new ColorDialog(dialog);
           colorDialog.setRGB(color.background);
@@ -2403,6 +2441,7 @@ Dprintf.dprintf("");
           if (rgb != null)
           {
             color.background = rgb;
+            widget.setForeground(new Color(null,rgb));
             widget.setBackground(new Color(null,rgb));
           }
         }
