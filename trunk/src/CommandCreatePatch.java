@@ -290,7 +290,7 @@ class CommandCreatePatch
             String fileName = Dialogs.fileSave(dialog,
                                                "Save patch",
                                                "",
-                                               new String[]{"Patch",    ".patch",
+                                               new String[]{"Patch",    "*.patch",
                                                             "All files",Onzen.ALL_FILE_EXTENSION,
                                                            },
                                                "*.patch"
