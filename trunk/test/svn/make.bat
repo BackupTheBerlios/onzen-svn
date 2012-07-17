@@ -82,6 +82,7 @@ rmdir /S /Q tmp 1>NUL
 
 cd test
 %SVN% update --accept=postpone conflict
+cd ..
 @goto end
 
 :clean
