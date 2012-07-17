@@ -351,6 +351,20 @@ class WidgetModifyListener
     this(widget,new WidgetVariable(object));
   }
 
+  /** create widget listener
+   * @param widget widget
+   * @param objects objects
+   */
+  WidgetModifyListener(Widget widget, Object[] objects)
+  {
+    this.widget    = widget;
+    this.variables = new WidgetVariable[objects.length];
+    for (int i = 0; i < objects.length; i++)
+    {
+      this.variables[i] = new WidgetVariable(objects[i]);
+    }
+  }
+
   /** set widget
    * @param widget widget
    */
