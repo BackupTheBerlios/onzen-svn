@@ -2526,6 +2526,16 @@ menuItem.addSelectionListener(new SelectionListener()
 
     // add empty repository tab
     addRepositoryTabEmpty();
+
+    // init commit messages
+    try
+    {
+      CommitMessage.init();
+    }
+    catch (SQLException exception)
+    {
+      Dialogs.warning(shell,false,true,"Cannot load commit message history from database (error: %s)",exception.getMessage());
+    }
   }
 
   /** done all
