@@ -1497,7 +1497,7 @@ Dprintf.dprintf("unknown %s",line);
   }
 
   /** update file from respository
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null
    * @param busyDialog busy dialog or null
    */
   public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
@@ -1513,7 +1513,7 @@ Dprintf.dprintf("unknown %s",line);
       command.append(Settings.cvsCommand,"update","-d");
       if (Settings.cvsPruneEmtpyDirectories) command.append("-P");
       command.append("--");
-      command.append(getFileDataNames(fileDataSet));
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
 
       // read output

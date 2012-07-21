@@ -1451,7 +1451,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** update file from respository
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null
    * @param busyDialog busy dialog or null
    */
   public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
@@ -1464,11 +1464,12 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","--depth","immediates","--accept","postpone");
+      command.append(Settings.svnCommand,"--non-interactive","update","--accept","postpone");
+      if (fileDataSet != null) command.append("--depth","immediates");
 //      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
-      command.append(getFileDataNames(fileDataSet));
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
 //      command.append(".");
       exec = new Exec(rootPath,command);
 

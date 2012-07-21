@@ -2820,7 +2820,7 @@ abstract class Repository implements Serializable
   }
 
   /** update file from respository
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null
    * @param busyDialog busy dialog or null
    */
   abstract public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
@@ -2841,7 +2841,7 @@ abstract class Repository implements Serializable
   public void updateAll(BusyDialog busyDialog)
     throws RepositoryException
   {
-    update(new HashSet<FileData>(),busyDialog);
+    update(null,busyDialog);
   }
 
   /** update all files from respository

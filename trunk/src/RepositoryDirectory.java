@@ -268,7 +268,7 @@ class RepositoryDirectory extends Repository
   }
 
   /** update file from respository
-   * @param fileDataSet file data set
+   * @param fileDataSet file data set or null
    * @param busyDialog busy dialog or null
    */
   public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
