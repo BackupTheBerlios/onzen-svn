@@ -32,6 +32,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import org.eclipse.swt.widgets.Shell;
+
 /****************************** Classes ********************************/
 
 /** commit message broadcast receive thread
@@ -121,7 +123,7 @@ class CommitMessage
   private static final int       HISTORY_ID = 1;
 
   // --------------------------- variables --------------------------------
-  protected static HistoryDatabase      historyDatabase;
+  protected static HistoryDatabase      historyDatabase = null;
   private   static LinkedList<String[]> history;
   private   static DatagramSocket       socket;
 
@@ -133,9 +135,10 @@ class CommitMessage
 
   // ---------------------------- methods ---------------------------------
 
-  /** init
+  /** init commit message functions
    */
-  static
+  public static void init()
+    throws SQLException
   {
     // init database
     historyDatabase = new HistoryDatabase<String[]>(HISTORY_ID,Settings.maxMessageHistory)
@@ -147,17 +150,39 @@ class CommitMessage
     };
 
     // load commit message history from database
-    try
-    {
-      history = historyDatabase.getHistory();
-    }
-    catch (SQLException exception)
-    {
-      Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
-    }
+    history = historyDatabase.getHistory();
 
     // start message broadcast
     startBroadcast();
+  }
+
+  /** get message history
+   * @param shell shell (for error dialog) or null
+   * @return message history array
+   */
+  public static LinkedList<String[]> getHistory(Shell shell)
+  {
+    // load history if needed
+    if (history == null)
+    {
+      try
+      {
+        if (historyDatabase == null) init();
+        history = historyDatabase.getHistory();
+      }
+      catch (SQLException exception)
+      {
+        Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
+        if (shell != null)
+        {
+          Dialogs.error(shell,"Cannot load commit message history from database (error: %s)",exception.getMessage());
+        }
+
+        history = new LinkedList<String[]>();
+      }
+    }
+
+    return history;
   }
 
   /** get message history
@@ -165,20 +190,7 @@ class CommitMessage
    */
   public static LinkedList<String[]> getHistory()
   {
-    // load history if needed
-    if (history == null)
-    {
-      try
-      {
-        history = historyDatabase.getHistory();
-      }
-      catch (SQLException exception)
-      {
-        Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
-      }
-    }
-
-    return history;
+    return getHistory(null);
   }
 
   /** create commit message
@@ -417,7 +429,8 @@ class CommitMessage
     {
       try
       {
-        history = CommitMessage.historyDatabase.getHistory();
+        if (historyDatabase == null) init();
+        history = historyDatabase.getHistory();
       }
       catch (SQLException exception)
       {
@@ -442,6 +455,7 @@ class CommitMessage
         // store into history database
         try
         {
+          if (historyDatabase == null) init();
           historyDatabase.add(message);
         }
         catch (SQLException exception)
