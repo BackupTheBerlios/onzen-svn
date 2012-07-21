@@ -234,6 +234,7 @@ public abstract class HistoryDatabase<T>
    * @param direction history direction order
    */
   public HistoryDatabase(int historyId, int maxHistoryLength, Directions direction)
+    throws SQLException
   {
     this.historyId        = historyId;
     this.maxHistoryLength = maxHistoryLength;
@@ -312,12 +313,6 @@ public abstract class HistoryDatabase<T>
 
       database.close(); database = null;
     }
-    catch (SQLException exception)
-    {
-Dprintf.dprintf("exception=%s",exception);
-exception.printStackTrace();
-      throw new Error(exception);
-    }
     finally
     {
       if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
@@ -329,6 +324,7 @@ exception.printStackTrace();
    * @param maxHistoryLength max. length of history or HISTORY_LENGTH_INFINTE
    */
   public HistoryDatabase(int historyId, int maxHistoryLength)
+    throws SQLException
   {
     this(historyId,maxHistoryLength,Directions.ASCENDING);
   }
