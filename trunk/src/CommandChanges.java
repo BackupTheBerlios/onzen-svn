@@ -91,6 +91,7 @@ class CommandChanges
 
   // global variable references
   private final RepositoryTab repositoryTab;
+  private final String        masterRepository;
   private final Display       display;
   private final Clipboard     clipboard;
   private final FileData      fileData;
@@ -114,7 +115,7 @@ class CommandChanges
    * @param repositoryTab repository tab
    * @param changesType
    */
-  CommandChanges(final Shell shell, final RepositoryTab repositoryTab, ChangesTypes changesType)
+  CommandChanges(final Shell shell, final RepositoryTab repositoryTab, String masterRepository, ChangesTypes changesType)
   {
     TableColumn tableColumn;
     Composite   composite;
@@ -122,8 +123,9 @@ class CommandChanges
     Button      button;
 
     // initialize variables
-    this.repositoryTab = repositoryTab;
-    this.fileData      = null;
+    this.repositoryTab    = repositoryTab;
+    this.masterRepository = masterRepository;
+    this.fileData         = null;
 
     // get display, clipboard
     display   = shell.getDisplay();
@@ -411,8 +413,8 @@ class CommandChanges
         {
           switch (changesType)
           {
-            case INCOMING: data.changes = repositoryTab.repository.getIncomingChanges(); break;
-            case OUTGOING: data.changes = repositoryTab.repository.getOutgoingChanges(); break;
+            case INCOMING: data.changes = repositoryTab.repository.getIncomingChanges(masterRepository); break;
+            case OUTGOING: data.changes = repositoryTab.repository.getOutgoingChanges(masterRepository); break;
           }
         }
         catch (RepositoryException exception)

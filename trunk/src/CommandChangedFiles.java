@@ -364,6 +364,7 @@ menuItem.setEnabled(false);
             {
               repositoryTab.renameLocalFile(fileData);
               dialog.setActive();
+              Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
         });
@@ -381,6 +382,7 @@ menuItem.setEnabled(false);
             {
               repositoryTab.deleteLocalFiles(fileDataSet);
               dialog.setActive();
+              Widgets.notify(dialog,USER_EVENT_FILTER);
             }
           }
         });
