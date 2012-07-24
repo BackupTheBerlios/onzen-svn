@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -3308,20 +3309,51 @@ Dprintf.dprintf("stderr %s",line);
       "yyyy-MM-dd HH:mm Z",          // 2011-01-25 15:19 +0900
       "yyyy/MM/dd HH:mm:ss",         // 2010/05/13 07:09:36
       "EEE MMM dd HH:mm:ss yyyy Z",  // Wed Dec 17 15:41:19 2008 +0100
+      "yyyy-MM-dd",                  // 2011-01-25
+    };
+
+    final Locale[] LOCALES = new Locale[]
+    {
+      Locale.US,
+      Locale.GERMAN,
+      Locale.GERMANY,
+
+      Locale.CANADA,
+      Locale.CANADA_FRENCH,
+      Locale.CHINA,
+      Locale.CHINESE,
+      Locale.ENGLISH,
+      Locale.FRANCE,
+      Locale.FRENCH,
+      Locale.ITALIAN,
+      Locale.ITALY,
+      Locale.JAPAN,
+      Locale.JAPANESE,
+      Locale.KOREA,
+      Locale.KOREAN,
+      Locale.PRC,
+      Locale.ROOT,
+      Locale.SIMPLIFIED_CHINESE,
+      Locale.TAIWAN,
+      Locale.TRADITIONAL_CHINESE,
+      Locale.UK,
     };
 
     Date date;
 
     for (String format : FORMATS)
     {
-      try
+      for (Locale locale : LOCALES)
       {
-        date = new SimpleDateFormat(format).parse(string);
-        return date;
-      }
-      catch (ParseException exception)
-      {
-        // ignored, try next format
+        try
+        {
+          date = new SimpleDateFormat(format,locale).parse(string);
+          return date;
+        }
+        catch (ParseException exception)
+        {
+          // ignored, try next format
+        }
       }
     }
     if (Settings.debugFlag)
