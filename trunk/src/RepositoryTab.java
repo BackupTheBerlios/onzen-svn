@@ -2469,7 +2469,7 @@ Dprintf.dprintf("");
         Data()
         {
           this.convertTABs               = true;
-          this.spacesPerTAB              = 8;
+          this.spacesPerTAB              = Settings.convertSpacesPerTAB;
           this.removeTrailingWhitespaces = true;
         }
       };

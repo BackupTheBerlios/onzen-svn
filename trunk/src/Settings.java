@@ -1063,10 +1063,13 @@ public class Settings
   @SettingValue(type=Settings.EOLTypes.class)
   public static Settings.EOLTypes        eolType                                = Settings.EOLTypes.AUTO;
 
-  @SettingComment(text={"","whitespace flags"})
+  @SettingComment(text={"","whitespace settings"})
   @SettingValue
   public static boolean                  checkTABs                              = true;
+  @SettingValue
   public static boolean                  checkTrailingWhitespaces               = true;
+  @SettingValue
+  public static int                      convertSpacesPerTAB                    = 8;
 
   @SettingComment(text={"","Files without whitespace checks: <pattern>"})
   @SettingValue(name="skipWhitespaceCheckFilePattern", type=SettingValueAdapterFilePattern.class)
