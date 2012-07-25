@@ -1578,7 +1578,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public AnnotationData[] getAnnotations(FileData fileData, String revision)
     throws RepositoryException
   {
-    final Pattern PATTERN_ANNOTATION = Pattern.compile("^\\s*(\\S+)\\s+(\\S+)\\s+(.*):\\s(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_ANNOTATION = Pattern.compile("^\\s*(\\S+)\\s+(\\S+)\\s+(.*?):\\s(.*)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_EMPTY      = Pattern.compile("^\\s*",Pattern.CASE_INSENSITIVE);
 
     ArrayList<AnnotationData> annotationDataList = new ArrayList<AnnotationData>();
@@ -1609,8 +1609,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           annotationDataList.add(new AnnotationData(matcher.group(2),
                                                     matcher.group(1),
                                                     parseDate(matcher.group(3)),
-                                                    matcher.group(4))
-                                                   );
+                                                    matcher.group(4)
+                                                   )
+                                );
         }
         else if (PATTERN_EMPTY.matcher(line).matches())
         {
