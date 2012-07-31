@@ -645,6 +645,7 @@ class CommandDiff
     widgetLineNumbersLeft.addListener(SWT.MouseDown,listener);
     widgetLineNumbersLeft.addListener(SWT.MouseUp,listener);
     widgetLineNumbersLeft.addListener(SWT.MouseMove,listener);
+    widgetLineNumbersLeft.addListener(SWT.MouseWheel,listener);
     widgetLineNumbersLeft.addListener(SWT.Resize,listener);
 
     listener = new Listener()
@@ -652,11 +653,15 @@ class CommandDiff
       public void handleEvent(Event event)
       {
         int topIndex = widgetLineNumbersRight.getTopIndex();
-//Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
+//Dprintf.dprintf("widgetLineNumbersRight: left=%d right=%d",widgetTextLeft.getTopIndex(),widgetTextRight.getTopIndex());
 
         // sync right text widget
-        widgetTextRight.setTopIndex(topIndex);
-        widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
+        if (widgetTextLeft.getTopIndex() != topIndex)
+        {
+          widgetTextRight.setTopIndex(topIndex);
+          widgetTextRight.setCaretOffset(widgetTextRight.getOffsetAtLine(topIndex));
+          widgetBar.redraw();
+        }
 
         // sync to left
         if (widgetSync.getSelection())
@@ -666,7 +671,6 @@ class CommandDiff
           {
             widgetTextLeft.setTopIndex(topIndex);
             widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
-            widgetBar.redraw();
           }
         }
       }
@@ -676,6 +680,7 @@ class CommandDiff
     widgetLineNumbersRight.addListener(SWT.MouseDown,listener);
     widgetLineNumbersRight.addListener(SWT.MouseUp,listener);
     widgetLineNumbersRight.addListener(SWT.MouseMove,listener);
+    widgetLineNumbersRight.addListener(SWT.MouseWheel,listener);
     widgetLineNumbersRight.addListener(SWT.Resize,listener);
 
     listener = new Listener()
@@ -685,7 +690,7 @@ class CommandDiff
         int topIndex           = widgetTextLeft.getTopIndex();
         int horizontalPixel    = widgetTextLeft.getHorizontalPixel();
         int scrollBarSelection = widgetHorizontalScrollBarLeft.getSelection();
-//Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
+//Dprintf.dprintf("left: event=%s widget=%s: left=%d right=%d",event,widgetTextRight,widgetTextLeft.getTopIndex(),widgetTextRight.getTopIndex());
 
         // sync left number text widget, vertical scrollbar
         widgetLineNumbersLeft.setTopIndex(topIndex);
@@ -709,13 +714,33 @@ class CommandDiff
         }
       }
     };
+    widgetTextLeft.addListener(USER_EVENT_SYNC,listener);
+
+    listener = new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        /* use asyncExec() to append event to end of event queue and
+           make sure left widget is updated before synchronization
+           with right widhget is done
+        */
+        display.asyncExec(new Runnable()
+        {
+          public void run()
+          {
+            widgetTextLeft.notifyListeners(USER_EVENT_SYNC,new Event());
+          }
+        });
+      }
+    };
     widgetTextLeft.addListener(SWT.KeyDown,listener);
     widgetTextLeft.addListener(SWT.KeyUp,listener);
     widgetTextLeft.addListener(SWT.MouseDown,listener);
     widgetTextLeft.addListener(SWT.MouseUp,listener);
-    widgetTextLeft.addListener(SWT.MouseMove,listener);
+//    widgetTextLeft.addListener(SWT.MouseMove,listener);
+    widgetTextLeft.addListener(SWT.MouseWheel,listener);
     widgetTextLeft.addListener(SWT.Resize,listener);
-    widgetTextLeft.addListener(USER_EVENT_SYNC,listener);
+
     widgetTextLeft.addLineStyleListener(new LineStyleListener()
     {
       public void lineGetStyle(LineStyleEvent lineStyleEvent)
@@ -837,7 +862,7 @@ class CommandDiff
         int topIndex           = widgetTextRight.getTopIndex();
         int horizontalPixel    = widgetTextRight.getHorizontalPixel();
         int scrollBarSelection = widgetHorizontalScrollBarRight.getSelection();
-//Dprintf.dprintf("widget=%s: %d",widget,widget.getTopIndex());
+//Dprintf.dprintf("USER_EVENT_SYNC: event=%s: left=%d right=%d",event,widgetTextLeft.getTopIndex(),widgetTextRight.getTopIndex());
 
         // sync right number text widget
         widgetLineNumbersRight.setTopIndex(topIndex);
@@ -861,13 +886,33 @@ class CommandDiff
         }
       }
     };
+    widgetTextRight.addListener(USER_EVENT_SYNC,listener);
+
+    listener = new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        /* use asyncExec() to append event to end of event queue and
+           make sure right widget is updated before synchronization
+           with left widhget is done
+        */
+        display.asyncExec(new Runnable()
+        {
+          public void run()
+          {
+            widgetTextRight.notifyListeners(USER_EVENT_SYNC,new Event());
+          }
+        });
+      }
+    };
     widgetTextRight.addListener(SWT.KeyDown,listener);
     widgetTextRight.addListener(SWT.KeyUp,listener);
     widgetTextRight.addListener(SWT.MouseDown,listener);
     widgetTextRight.addListener(SWT.MouseUp,listener);
-    widgetTextRight.addListener(SWT.MouseMove,listener);
+//    widgetTextRight.addListener(SWT.MouseMove,listener);
+    widgetTextRight.addListener(SWT.MouseWheel,listener);
     widgetTextRight.addListener(SWT.Resize,listener);
-    widgetTextRight.addListener(USER_EVENT_SYNC,listener);
+
     widgetTextRight.addLineStyleListener(new LineStyleListener()
     {
       public void lineGetStyle(LineStyleEvent lineStyleEvent)
@@ -1262,6 +1307,7 @@ class CommandDiff
           // set left text widget
           widgetLineNumbersLeft.setTopIndex(topIndex);
           widgetTextLeft.setTopIndex(topIndex);
+          widgetTextLeft.setCaretOffset(widgetTextLeft.getOffsetAtLine(topIndex));
           widgetBar.redraw();
 
           // sync to right
