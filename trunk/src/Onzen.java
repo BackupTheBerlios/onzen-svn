@@ -2534,7 +2534,7 @@ menuItem.addSelectionListener(new SelectionListener()
     }
     catch (SQLException exception)
     {
-      Dialogs.warning(shell,false,true,"Cannot load commit message history from database (error: %s)",exception.getMessage());
+      Dialogs.warning(shell,"Cannot load commit message history from database (error: %s)",exception.getMessage());
     }
   }
 
