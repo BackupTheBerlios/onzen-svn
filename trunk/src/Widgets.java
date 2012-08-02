@@ -1469,7 +1469,7 @@ class Widgets
     else if (text.equals("pageup"        )) keyCode |= SWT.PAGE_UP;
     else if (text.equals("pagedown"      )) keyCode |= SWT.PAGE_DOWN;
     else if (text.equals("bs"            )) keyCode |= SWT.BS;
-    else if (text.equals("delelte"       )) keyCode |= SWT.DEL;
+    else if (text.equals("delete"        )) keyCode |= SWT.DEL;
     else if (text.equals("insert"        )) keyCode |= SWT.INSERT;
     else if (text.equals("home"          )) keyCode |= SWT.HOME;
     else if (text.equals("end"           )) keyCode |= SWT.END;
@@ -4269,9 +4269,7 @@ private static void printTree(Tree tree)
    */
   public static Pane newPane(Composite composite, int style)
   {
-    Pane pane = new Pane(composite,style,null);
-
-    return pane;
+    return newPane(composite,style,null);
   }
 
   //-----------------------------------------------------------------------
