@@ -3486,7 +3486,7 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                Settings.showUpdateStatusErrors = Dialogs.error(shell,exception.getExtendedMessage(),true,"Getting file states fail.");
+                Dialogs.error(shell,Dialogs.booleanFieldUpdater(Settings.class,"showUpdateStatusErrors"),exception.getExtendedMessage(),"Getting file states fail.");
               }
             });
           }
