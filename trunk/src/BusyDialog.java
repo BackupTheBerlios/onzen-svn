@@ -426,6 +426,52 @@ class BusyDialog
     }
   }
 
+  /** set minimal progress value
+   * @param i index 0|1
+   * @param n value
+   */
+  public void setMinimum(int i, double n)
+  {
+    ProgressBar widgetProgressBar = null;
+    switch (i)
+    {
+      case 0: widgetProgressBar = widgetProgressBar0; break;
+      case 1: widgetProgressBar = widgetProgressBar1; break;
+    }
+    if (widgetProgressBar != null) widgetProgressBar.setMinimum(n);
+  }
+
+  /** set maximal progress value
+   * @param i index 0|1
+   * @param n value
+   */
+  public void setMaximum(int i, double n)
+  {
+    ProgressBar widgetProgressBar = null;
+    switch (i)
+    {
+      case 0: widgetProgressBar = widgetProgressBar0; break;
+      case 1: widgetProgressBar = widgetProgressBar1; break;
+    }
+    if (widgetProgressBar != null) widgetProgressBar.setMaximum(n);
+  }
+
+  /** set minimal progress value
+   * @param n value
+   */
+  public void setMinimum(double n)
+  {
+    setMinimum(0,n);
+  }
+
+  /** set maximal progress value
+   * @param n value
+   */
+  public void setMaximum(double n)
+  {
+    setMaximum(0,n);
+  }
+
   /** update busy dialog text
    * @param i index 0|1
    * @param format format string
