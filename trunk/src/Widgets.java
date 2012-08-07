@@ -3723,6 +3723,7 @@ class Widgets
     ProgressBar progressBar;
 
     progressBar = new ProgressBar(composite,SWT.HORIZONTAL);
+    progressBar = new ProgressBar(composite);
     progressBar.setMinimum(min);
     progressBar.setMaximum(max);
     progressBar.setSelection(min);
@@ -4174,7 +4175,6 @@ private static void printTree(Tree tree)
       {
         getExpandedTreeData(expandedEntrySet,treeItem);
       }
-//System.err.println("BARControl.java"+", "+1627+": "+expandedEntrySet.toString());
 
       // sort column
 //printTree(tree);
