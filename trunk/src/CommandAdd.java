@@ -109,7 +109,7 @@ class CommandAdd
     display = shell.getDisplay();
 
     // get commit history
-    history = CommitMessage.getHistory();
+    history = CommitMessage.getHistory(shell);
 
     // init data
     data.immediateCommitFlag = Settings.immediateCommit;
@@ -341,7 +341,7 @@ class CommandAdd
     }
 
     // add history
-    if (!widgetHistory.isDisposed())
+    if (!widgetHistory.isDisposed() && (history != null))
     {
       for (String[] lines : history)
       {

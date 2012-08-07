@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import java.sql.SQLException;
+
 // graphics
 import org.eclipse.swt.custom.LineStyleEvent;
 import org.eclipse.swt.custom.LineStyleListener;
@@ -120,7 +122,7 @@ class CommandCommit
     display = shell.getDisplay();
 
     // get commit history
-    history = CommitMessage.getHistory();
+    history = CommitMessage.getHistory(shell);
 
     // commit files dialog
     dialog = Dialogs.openModal(shell,"Commit files",new double[]{1.0,0.0},1.0);
