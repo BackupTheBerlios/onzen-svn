@@ -429,12 +429,23 @@ throw new RepositoryException("NYI");
         Command command = new Command();
         String  line;
 
-        // get revision (identity)
+        // get revision (tag or identity)
         command.clear();
         command.append(Settings.hgCommand,"identify","-t");
         command.append("--");
         exec = new Exec(rootPath,command);
-        if ((line = exec.getStdout()) != null)
+        line = exec.getStdout();
+        if ((line == null) || line.trim().isEmpty())
+        {
+          exec.waitFor();
+          exec.done(); exec = null;
+          command.clear();
+          command.append(Settings.hgCommand,"identify","-i");
+          command.append("--");
+          exec = new Exec(rootPath,command);
+          line = exec.getStdout();
+        }
+        if (line != null)
         {
           for (FileData fileData : fileDataSet)
           {
