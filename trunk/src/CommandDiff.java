@@ -1104,7 +1104,7 @@ class CommandDiff
         if (widgetSync.getSelection())
         {
           widgetLineNumbersLeft.setTopIndex(topIndex);
-          if (widgetTextRight.getTopIndex() != topIndex)
+          if (widgetTextLeft.getTopIndex() != topIndex)
           {
             widgetTextLeft.setTopIndex(topIndex);
           }
