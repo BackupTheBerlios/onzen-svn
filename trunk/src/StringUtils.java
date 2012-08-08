@@ -200,9 +200,9 @@ public class StringUtils
     StringBuffer buffer = new StringBuffer();
 
     if  (   enclosingQuotes
-         && (   (string.startsWith("\"") && string.endsWith("\""))
-             || (string.startsWith("'") && string.endsWith("'"))
-            )
+         && (string.length() >= 2)
+         && (string.charAt(0) == quoteChar)
+         && (string.charAt(string.length()-1) == quoteChar)
         )
     {
       startIndex = 1;
@@ -222,6 +222,11 @@ public class StringUtils
       if      ((ch == '\\') && ((index+1) < endIndex) && string.charAt(index+1) == quoteChar)
       {
         buffer.append(quoteChar);
+        index += 2;
+      }
+      else if ((ch == '\\') && ((index+1) < endIndex) && string.charAt(index+1) == '\\')
+      {
+        buffer.append('\\');
         index += 2;
       }
       else

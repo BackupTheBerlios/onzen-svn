@@ -479,11 +479,11 @@ public class Settings
       Object[] data = new Object[3];
       if      (StringParser.parse(string,"%s,%s:%*s",data))
       {
-        editor = new Editor(((String)data[0]).trim(),((String)data[1]).trim(),((String)data[2]).trim());
+        editor = new Editor(((String)data[0]).trim(),((String)data[1]).trim(),StringUtils.unescape(((String)data[2]).trim()));
       }
       else if (StringParser.parse(string,"%s:%*s",data))
       {
-        editor = new Editor(((String)data[0]).trim(),"",((String)data[1]).trim());
+        editor = new Editor(((String)data[0]).trim(),"",StringUtils.unescape(((String)data[1]).trim()));
       }
       else
       {
@@ -499,7 +499,7 @@ public class Settings
      */
     public String toString(Editor editor) throws Exception
     {
-      return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.commandLine,false);
+      return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.commandLine);
     }
 
     public boolean equals(Editor editor0, Editor editor1)
@@ -566,7 +566,7 @@ public class Settings
       Object[] data = new Object[2];
       if (StringParser.parse(string,"%S %*s",data,StringParser.QUOTE_CHARS))
       {
-        shellCommand = new ShellCommand(((String)data[0]).trim(),((String)data[1]).trim());
+        shellCommand = new ShellCommand(((String)data[0]).trim(),StringUtils.unescape(((String)data[1]).trim()));
       }
       else
       {
