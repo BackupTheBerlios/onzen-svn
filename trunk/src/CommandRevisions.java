@@ -319,15 +319,27 @@ class CommandRevisions
 
           if (data.selectedRevisionData1 != null)
           {
-            try
+            CommandCreatePatch commandCreatePatch;
+            if (data.selectedRevisionData0 != null)
             {
-Dprintf.dprintf("");
-throw new RepositoryException("NYI");
+              commandCreatePatch = new CommandCreatePatch(dialog,
+                                                          repositoryTab,
+                                                          fileData.toSet(),
+                                                          data.selectedRevisionData0.revision,
+                                                          data.selectedRevisionData1.revision,
+                                                          false
+                                                         );
             }
-            catch (RepositoryException exception)
+            else
             {
-              Dialogs.error(dialog,"Cannot create patch for file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+              commandCreatePatch = new CommandCreatePatch(dialog,
+                                                          repositoryTab,
+                                                          fileData.toSet(),
+                                                          data.selectedRevisionData1.revision,
+                                                          false
+                                                         );
             }
+            commandCreatePatch.run();
           }
         }
       });
@@ -1346,28 +1358,28 @@ throw new RepositoryException("NYI");
           Point point = getRevisionX0Y0(revisionData);
           point.x += ENTRY_WIDTH /2;
           point.y += ENTRY_HEIGHT/2;
-Dprintf.dprintf("point=%s",point);
+//Dprintf.dprintf("point=%s",point);
 
           // scroll
           Rectangle clientArea = widgetRevisions.getClientArea();
           clientArea.x = widgetHorizontalScrollBar.getSelection();
           clientArea.y = widgetVerticalScrollBar.getSelection();
-Dprintf.dprintf("clientArea=%s",clientArea);
+//Dprintf.dprintf("clientArea=%s",clientArea);
           if ((point.x < clientArea.x) || (point.x > clientArea.x+clientArea.width )) data.view.x = -(point.x-ENTRY_WIDTH /2);
           if ((point.y < clientArea.y) || (point.y > clientArea.y+clientArea.height)) data.view.y = -(point.y-ENTRY_HEIGHT/2);
 Dprintf.dprintf("data.view=%s",data.view);
 
-Dprintf.dprintf("revisionData=%s",revisionData);
+//Dprintf.dprintf("revisionData=%s",revisionData);
           RevisionData nextRevisionData = getNextRevision(data.revisionDataTree,revisionData);;
           int          verticalSpace    = clientArea.height-(PADDING+ENTRY_HEIGHT);
           while ((verticalSpace > 0) && (nextRevisionData != null))
           {
             nextRevisionData = getNextRevision(data.revisionDataTree,nextRevisionData);
-Dprintf.dprintf("nextRevisionData=%s",nextRevisionData);
+//Dprintf.dprintf("nextRevisionData=%s",nextRevisionData);
             verticalSpace -= (PADDING+ENTRY_HEIGHT);
           }
 data.view.y += verticalSpace;
-Dprintf.dprintf("data.view=%s",data.view);
+//Dprintf.dprintf("data.view=%s",data.view);
 
           widgetRevisions.scroll(-data.view.x,-data.view.y,0,0,data.size.x,data.size.y,false);
           widgetRevisions.redraw();
