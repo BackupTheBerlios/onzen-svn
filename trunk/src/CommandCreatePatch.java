@@ -124,8 +124,15 @@ class CommandCreatePatch
    * @param repositoryTab repository tab
    * @param fileDataSet files to add
    * @param revision1,revisions2 patch revision
+   * @param checkWhitespacesFlag true to check for/convert whitespaces before creating patch
    */
-  CommandCreatePatch(final Shell shell, final RepositoryTab repositoryTab, final HashSet<FileData> fileDataSet, final String revision1, final String revision2)
+  CommandCreatePatch(final Shell             shell,
+                     final RepositoryTab     repositoryTab,
+                     final HashSet<FileData> fileDataSet,
+                     final String            revision1,
+                     final String            revision2,
+                     boolean                 checkWhitespacesFlag
+                    )
   {
     Composite composite,subComposite,subSubComposite;
     TabFolder tabFolder;
@@ -507,7 +514,6 @@ class CommandCreatePatch
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Button widget = (Button)selectionEvent.widget;
-Dprintf.dprintf("");
 
           // close dialog
           Dialogs.close(dialog,true);
@@ -637,7 +643,7 @@ Dprintf.dprintf("");
       // check for TABs/trailing whitespaces in files and convert/remove
       for (final String fileName : fileNames)
       {
-        if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileName))
+        if (checkWhitespacesFlag && !repositoryTab.repository.isSkipWhitespaceCheckFile(fileName))
         {
           // check for TABs/trailing whitespaces in file
           final boolean containTABs                = Settings.checkTABs                && repositoryTab.containTABs(fileName);
@@ -678,10 +684,31 @@ Dprintf.dprintf("");
    * @param repositoryTab repository tab
    * @param fileDataSet files to add
    * @param revision revisions patch revision
+   * @param checkWhitespacesFlag true to check for/convert whitespaces before creating patch
    */
-  CommandCreatePatch(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet, String revision)
+  CommandCreatePatch(Shell             shell,
+                     RepositoryTab     repositoryTab,
+                     HashSet<FileData> fileDataSet,
+                     String            revision,
+                     boolean           checkWhitespacesFlag
+                    )
   {
-    this(shell,repositoryTab,fileDataSet,revision,null);
+    this(shell,repositoryTab,fileDataSet,revision,null,checkWhitespacesFlag);
+  }
+
+  /** create patch command
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param fileDataSet files to add
+   * @param checkWhitespacesFlag true to check for/convert whitespaces before creating patch
+   */
+  CommandCreatePatch(Shell             shell,
+                     RepositoryTab     repositoryTab,
+                     HashSet<FileData> fileDataSet,
+                     boolean           checkWhitespacesFlag
+                    )
+  {
+    this(shell,repositoryTab,fileDataSet,null,checkWhitespacesFlag);
   }
 
   /** create patch command
@@ -689,9 +716,12 @@ Dprintf.dprintf("");
    * @param repositoryTab repository tab
    * @param fileDataSet files to add
    */
-  CommandCreatePatch(Shell shell, RepositoryTab repositoryTab, HashSet<FileData> fileDataSet)
+  CommandCreatePatch(Shell             shell,
+                     RepositoryTab     repositoryTab,
+                     HashSet<FileData> fileDataSet
+                    )
   {
-    this(shell,repositoryTab,fileDataSet,null);
+    this(shell,repositoryTab,fileDataSet,true);
   }
 
   /** run dialog
