@@ -1226,11 +1226,30 @@ class CommandDiff
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        HashSet<FileData> fileDataSet = new HashSet<FileData>();
-        fileDataSet.add(fileData);
-        if (fileDataSet != null)
+        int index = widgetRevision.getSelectionIndex();
+        if ((data.revisionNames != null) && (index < data.revisionNames.length))
         {
-          CommandCreatePatch commandCreatePatch = new CommandCreatePatch(shell, repositoryTab, fileDataSet);
+          CommandCreatePatch commandCreatePatch;
+
+          if (index < data.revisionNames.length-1)
+          {
+            commandCreatePatch = new CommandCreatePatch(shell,
+                                                        repositoryTab,
+                                                        fileData.toSet(),
+                                                        data.revisionNames[index+0],
+                                                        data.revisionNames[index+1],
+                                                        false
+                                                       );
+          }
+          else
+          {
+            commandCreatePatch = new CommandCreatePatch(shell,
+                                                        repositoryTab,
+                                                        fileData.toSet(),
+                                                        data.revisionNames[index],
+                                                        false
+                                                       );
+          }
           commandCreatePatch.run();
         }
       }
