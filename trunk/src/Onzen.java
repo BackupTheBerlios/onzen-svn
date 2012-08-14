@@ -5079,8 +5079,7 @@ Dprintf.dprintf("exception=%s",exception);
                 public void run()
                 {
                   // add repository tab
-                  RepositoryTab repositoryTab = new RepositoryTab(onzen,widgetTabFolder,repository);
-                  repositoryTabMap.put(repository,repositoryTab);
+                  RepositoryTab repositoryTab = addRepositoryTab(repository);
 
                   // select repository tab
                   selectRepositoryTab(repositoryTab);
