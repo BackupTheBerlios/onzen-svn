@@ -194,6 +194,7 @@ public class CommandFindFiles
     boolean findByNameFlag;
     boolean findByContentFlag;
     boolean caseSensitiveFlag;
+    boolean showAllHitsFlag;
     boolean showAllRepositoriesFlag;
     boolean showHiddenFilesFlag;
     boolean forceFlag;
@@ -206,6 +207,7 @@ public class CommandFindFiles
       this.findByNameFlag          = false;
       this.findByContentFlag       = false;
       this.caseSensitiveFlag       = false;
+      this.showAllHitsFlag         = CommandFindFiles.showAllHitsFlag;
       this.showAllRepositoriesFlag = CommandFindFiles.showAllRepositoriesFlag;
       this.showHiddenFilesFlag     = CommandFindFiles.showHiddenFilesFlag;
       this.forceFlag               = false;
@@ -224,6 +226,7 @@ public class CommandFindFiles
   private static String                  fileNameFilter          = "";
   private static String                  filter                  = "";
   private static boolean                 caseSensitiveFlag       = false;
+  private static boolean                 showAllHitsFlag         = false;
   private static boolean                 showAllRepositoriesFlag = false;
   private static boolean                 showHiddenFilesFlag     = false;
 
@@ -248,6 +251,7 @@ public class CommandFindFiles
   private final Button                   widgetFindByName;
   private final Button                   widgetFindByContent;
   private final Button                   widgetCaseSensitive;
+  private final Button                   widgetShowAllHits;
   private final Button                   widgetShowAllRepositories;
   private final Button                   widgetShowHiddenFiles;
 
@@ -596,9 +600,23 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories",SWT.F8);
+        widgetShowAllHits = Widgets.newCheckbox(subComposite,"show all hits",SWT.F8);
+        widgetShowAllHits.setSelection(data.showAllRepositoriesFlag);
+        Widgets.layout(widgetShowAllHits,0,3,TableLayoutData.W);
+        widgetShowAllHits.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            restartFindFiles();
+          }
+        });
+
+        widgetShowAllRepositories = Widgets.newCheckbox(subComposite,"show all repositories",SWT.F9);
         widgetShowAllRepositories.setSelection(data.showAllRepositoriesFlag);
-        Widgets.layout(widgetShowAllRepositories,0,3,TableLayoutData.W);
+        Widgets.layout(widgetShowAllRepositories,0,4,TableLayoutData.W);
         widgetShowAllRepositories.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -610,9 +628,9 @@ Dprintf.dprintf("");
           }
         });
 
-        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files",SWT.F9);
+        widgetShowHiddenFiles = Widgets.newCheckbox(subComposite,"show hidden files",SWT.F10);
         widgetShowHiddenFiles.setSelection(data.showHiddenFilesFlag);
-        Widgets.layout(widgetShowHiddenFiles,0,4,TableLayoutData.W);
+        Widgets.layout(widgetShowHiddenFiles,0,5,TableLayoutData.W);
         widgetShowHiddenFiles.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -822,9 +840,13 @@ Dprintf.dprintf("");
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F8))
         {
-          Widgets.invoke(widgetShowAllRepositories);
+          Widgets.invoke(widgetShowAllHits);
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.F9))
+        {
+          Widgets.invoke(widgetShowAllRepositories);
+        }
+        else if (Widgets.isAccelerator(keyEvent,SWT.F10))
         {
           Widgets.invoke(widgetShowHiddenFiles);
         }
@@ -925,6 +947,7 @@ Dprintf.dprintf("event=%s",event);
       boolean   findByNameFlag          = data.findByNameFlag;
       boolean   findByContentFlag       = data.findByContentFlag;
       boolean   caseSensitiveFlag       = data.caseSensitiveFlag;
+      boolean   showAllHitsFlag         = data.showAllHitsFlag;
       boolean   showAllRepositoriesFlag = data.showAllRepositoriesFlag;
       boolean   showHiddenFilesFlag     = data.showHiddenFilesFlag;
 
@@ -939,6 +962,7 @@ Dprintf.dprintf("event=%s",event);
                || (data.findByNameFlag != findByNameFlag)
                || (data.findByContentFlag != findByContentFlag)
                || (data.caseSensitiveFlag != caseSensitiveFlag)
+               || (data.showAllHitsFlag != showAllHitsFlag)
                || (data.showAllRepositoriesFlag != showAllRepositoriesFlag)
                || (data.showHiddenFilesFlag != showHiddenFilesFlag)
                || data.forceFlag;
@@ -1006,6 +1030,10 @@ Dprintf.dprintf("event=%s",event);
                       {
                         if ((fileNameFilterPatterns.length == 0) || matchPatterns(fileName,fileNameFilterPatterns))
                         {
+                          // initialise text search
+                          TextSearch textSearch = new TextSearch(file,filter,contentPatterns,data.caseSensitiveFlag);
+
+                          // find by name or content
                           boolean nameMatchFlag = false;
                           int     lineNumber    = 0;
                           if (findByNameFlag)
@@ -1018,7 +1046,7 @@ Dprintf.dprintf("event=%s",event);
                           {
                             if (!nameMatchFlag)
                             {
-                              lineNumber = fileContains(file,filter,contentPatterns,data.caseSensitiveFlag);
+                              lineNumber = textSearch.findNext();
                             }
                           }
 
@@ -1026,28 +1054,45 @@ Dprintf.dprintf("event=%s",event);
                               || (lineNumber > 0)
                              )
                           {
-                            if (!dialog.isDisposed())
+                            do
                             {
+                              // add find data to list
                               final FindData findData = new FindData(repositoryTab,file,lineNumber);
                               display.syncExec(new Runnable()
                               {
                                 public void run()
                                 {
-                                  FindDataComparator findDataComparator = new FindDataComparator(widgetFiles);
+                                  if (!dialog.isDisposed())
+                                  {
+                                    FindDataComparator findDataComparator = new FindDataComparator(widgetFiles);
 
-                                  Widgets.insertTableEntry(widgetFiles,
-                                                           findDataComparator,
-                                                           findData,
-                                                           file.getName(),
-                                                           Integer.toString(findData.lineNumber),
-                                                           file.getParent(),
-                                                           Onzen.DATETIME_FORMAT.format(file.lastModified()),
-                                                           Long.toString(file.length())
-                                                          );
+                                    Widgets.insertTableEntry(widgetFiles,
+                                                             findDataComparator,
+                                                             findData,
+                                                             file.getName(),
+                                                             Integer.toString(findData.lineNumber),
+                                                             file.getParent(),
+                                                             Onzen.DATETIME_FORMAT.format(file.lastModified()),
+                                                             Long.toString(file.length())
+                                                            );
+                                  }
                                 }
                               });
+
+                              // check for modified data
+                              if (isDataModified()) break;
+
+                              // find next text line
+                              if (data.showAllHitsFlag && (lineNumber > 0))
+                              {
+                                lineNumber = textSearch.findNext();
+                              }
                             }
+                            while (data.showAllHitsFlag && (lineNumber > 0));
                           }
+
+                          // free resources
+                          textSearch.close();
                         }
                       }
                       else if (file.isDirectory())
@@ -1107,6 +1152,7 @@ Dprintf.dprintf("event=%s",event);
             findByNameFlag          = data.findByNameFlag;
             findByContentFlag       = data.findByContentFlag;
             caseSensitiveFlag       = data.caseSensitiveFlag;
+            showAllHitsFlag         = data.showAllHitsFlag;
             showAllRepositoriesFlag = data.showAllRepositoriesFlag;
             showHiddenFilesFlag     = data.showHiddenFilesFlag;
 
@@ -1144,6 +1190,7 @@ Dprintf.dprintf("event=%s",event);
           CommandFindFiles.fileNameFilter          = widgetFileNameFilter.getText().trim();
           CommandFindFiles.filter                  = widgetFilter.getText().trim();
           CommandFindFiles.caseSensitiveFlag       = widgetCaseSensitive.getSelection();
+          CommandFindFiles.showAllHitsFlag         = widgetShowAllHits.getSelection();
           CommandFindFiles.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
           CommandFindFiles.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
 
@@ -1174,6 +1221,87 @@ Dprintf.dprintf("event=%s",event);
 
   //-----------------------------------------------------------------------
 
+  class TextSearch
+  {
+    private BufferedReader input;
+    private String         content;
+    private Pattern[]      contentPatterns;
+    private boolean        caseSensitiveFlag;
+    private int            lineNumber;
+
+    /** create text search
+     * @param
+     */
+    TextSearch(File file, String content, Pattern[] contentPatterns, boolean caseSensitiveFlag)
+    {
+      this.input             = null;
+      this.content           = (caseSensitiveFlag) ? content : content.toLowerCase();
+      this.contentPatterns   = contentPatterns;
+      this.caseSensitiveFlag = caseSensitiveFlag;
+      this.lineNumber        = 0;
+
+      // open file
+      try
+      {
+        input = new BufferedReader(new FileReader(file));
+      }
+      catch (IOException exception)
+      {
+        input = null;
+      }
+    }
+
+    /** create text search
+     * @param
+     */
+    public void close()
+    {
+      try
+      {
+        if (input != null) input.close();
+      }
+      catch (IOException exception)
+      {
+        // ignored
+      }
+    }
+
+    /** find next line with search text
+     * @return line number or -1 if not found
+     */
+    int findNext()
+    {
+      int n = -1;
+
+      if (input != null)
+      {
+        try
+        {
+          // read file and find text
+          String line;
+          while ((line = input.readLine()) != null)
+          {
+            lineNumber++;
+            if (   (caseSensitiveFlag && line.contains(content))
+                || (!caseSensitiveFlag && line.toLowerCase().contains(content))
+                || matchPatterns(line,contentPatterns)
+               )
+            {
+              n = lineNumber;
+              break;
+            }
+          }
+        }
+        catch (IOException exception)
+        {
+          // not found
+        }
+      }
+
+      return n;
+    }
+  }
+
   /** restart find files matching filters
    * @param forceFlag true to force restart find files
    */
@@ -1193,6 +1321,7 @@ Dprintf.dprintf("event=%s",event);
         data.findByNameFlag          = widgetFindByName.getSelection();
         data.findByContentFlag       = widgetFindByContent.getSelection();
         data.caseSensitiveFlag       = widgetCaseSensitive.getSelection();
+        data.showAllHitsFlag         = widgetShowAllHits.getSelection();
         data.showAllRepositoriesFlag = widgetShowAllRepositories.getSelection();
         data.showHiddenFilesFlag     = widgetShowHiddenFiles.getSelection();
         data.forceFlag               = forceFlag;
