@@ -426,12 +426,12 @@ class BooleanFieldUpdater
    * @param clazz class with boolean or Boolean field
    * @param fieldName field name
    */
-  BooleanFieldUpdater(Class clazz, String fieldName)
+  BooleanFieldUpdater(Object object, String fieldName)
   {
     try
     {
       this.object = object;
-      this.field  = clazz.getDeclaredField(fieldName);
+      this.field  = object.getClass().getDeclaredField(fieldName);
     }
     catch (NoSuchFieldException exception)
     {
