@@ -3687,7 +3687,7 @@ class Widgets
   {
     for (TableItem tableItem : tableItems)
     {
-      removeTableEntry(table,tableItems);
+      removeTableEntry(table,tableItem);
     }
   }
 
