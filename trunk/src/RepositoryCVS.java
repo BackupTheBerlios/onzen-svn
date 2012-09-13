@@ -859,25 +859,43 @@ throw new RepositoryException("NYI");
       {
         if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
         {
-          if (stateSet.contains(FileData.States.UNKNOWN))
+          String name = matcher.group(1);
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(FileData.States.UNKNOWN)
+             )
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.UNKNOWN));
+            fileDataSet.add(new FileData(name,FileData.States.UNKNOWN));
           }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_UPDATE.matcher(line)).matches())
         {
-          if (stateSet.contains(FileData.States.UPDATE))
+          String name = matcher.group(1);
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(FileData.States.UPDATE)
+             )
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.UPDATE));
+            fileDataSet.add(new FileData(name,FileData.States.UPDATE));
           }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_MODIFIED.matcher(line)).matches())
         {
-          if (stateSet.contains(FileData.States.MODIFIED))
+          String name = matcher.group(1);
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(FileData.States.MODIFIED)
+             )
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.MODIFIED));
+            fileDataSet.add(new FileData(name,FileData.States.MODIFIED));
           }
           mergeFlag = false;
         }
@@ -887,35 +905,55 @@ throw new RepositoryException("NYI");
         }
         else if ((matcher = PATTERN_CONFLICT.matcher(line)).matches())
         {
-          if (mergeFlag)
+          String name = matcher.group(1);
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+             )
           {
-            if (stateSet.contains(FileData.States.MERGE))
+            if (mergeFlag)
             {
-              fileDataSet.add(new FileData(matcher.group(1),FileData.States.MERGE));
+              if (stateSet.contains(FileData.States.MERGE))
+              {
+                fileDataSet.add(new FileData(name,FileData.States.MERGE));
+              }
             }
-          }
-          else
-          {
-            if (stateSet.contains(FileData.States.CONFLICT))
+            else
             {
-              fileDataSet.add(new FileData(matcher.group(1),FileData.States.CONFLICT));
+              if (stateSet.contains(FileData.States.CONFLICT))
+              {
+                fileDataSet.add(new FileData(name,FileData.States.CONFLICT));
+              }
             }
           }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_ADDED.matcher(line)).matches())
         {
-          if (stateSet.contains(FileData.States.ADDED))
+          String name = matcher.group(1);
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(FileData.States.ADDED)
+             )
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.ADDED));
+            fileDataSet.add(new FileData(name,FileData.States.ADDED));
           }
           mergeFlag = false;
         }
         else if ((matcher = PATTERN_REMOVED.matcher(line)).matches())
         {
-          if (stateSet.contains(FileData.States.REMOVED))
+          String name = matcher.group(1);
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(FileData.States.REMOVED)
+             )
           {
-            fileDataSet.add(new FileData(matcher.group(1),FileData.States.REMOVED));
+            fileDataSet.add(new FileData(name,FileData.States.REMOVED));
           }
           mergeFlag = false;
         }

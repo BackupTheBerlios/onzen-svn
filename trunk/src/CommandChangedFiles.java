@@ -364,7 +364,7 @@ menuItem.setEnabled(false);
             {
               repositoryTab.renameLocalFile(fileData);
               dialog.setActive();
-              Widgets.notify(dialog,USER_EVENT_FILTER);
+              updateChangedFiles();
             }
           }
         });
@@ -382,7 +382,25 @@ menuItem.setEnabled(false);
             {
               repositoryTab.deleteLocalFiles(fileDataSet);
               dialog.setActive();
-              Widgets.notify(dialog,USER_EVENT_FILTER);
+              updateChangedFiles();
+            }
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Add to file ignore list",Settings.keyAddIgnoreFile);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+            if (fileDataSet != null)
+            {
+              repositoryTab.addIgnoreFiles(fileDataSet);
+              dialog.setActive();
+              updateChangedFiles();
             }
           }
         });
@@ -706,7 +724,7 @@ menuItem.setEnabled(false);
               try
               {
                 repositoryTab.repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
+                updateChangedFiles();
               }
               catch (RepositoryException exception)
               {
@@ -770,7 +788,7 @@ menuItem.setEnabled(false);
               try
               {
                 repositoryTab.repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
+                updateChangedFiles();
               }
               catch (RepositoryException exception)
               {
@@ -808,7 +826,7 @@ menuItem.setEnabled(false);
               try
               {
                 repositoryTab.repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
+                updateChangedFiles();
               }
               catch (RepositoryException exception)
               {
@@ -846,7 +864,7 @@ menuItem.setEnabled(false);
               try
               {
                 repositoryTab.repository.updateStates(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
+                updateChangedFiles();
               }
               catch (RepositoryException exception)
               {

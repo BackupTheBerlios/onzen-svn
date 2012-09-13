@@ -216,6 +216,7 @@ class RepositoryTab
   public static Color COLOR_WAITING;
   public static Color COLOR_ERROR;
   public static Color COLOR_UPDATE_STATUS;
+  public static Color COLOR_IGNORE;
 
   // --------------------------- variables --------------------------------
   // repository
@@ -287,6 +288,7 @@ class RepositoryTab
     COLOR_WAITING       = new Color(display,Settings.colorStatusWaiting.background     );
     COLOR_ERROR         = new Color(display,Settings.colorStatusError.background       );
     COLOR_UPDATE_STATUS = new Color(display,Settings.colorStatusUpdateStatus.foreground);
+    COLOR_IGNORE        = new Color(display,Settings.colorStatusIgnore.foreground      );
 
     // create tab
     widgetComposite = Widgets.insertTab(parentTabFolder,
@@ -731,9 +733,21 @@ menuItem.setEnabled(false);
           }
         });
 
+        menuItem = Widgets.addMenuItem(menu,"Add to file ignore list",Settings.keyAddIgnoreFile);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            addIgnoreFiles();
+          }
+        });
+
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Convert whitespaces\u2026",Settings.keyDeleteLocal);
+        menuItem = Widgets.addMenuItem(menu,"Convert whitespaces\u2026",Settings.keyConvertWhitespaces);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2435,6 +2449,25 @@ Dprintf.dprintf("");
     deleteLocalFiles(getSelectedFileDataSet());
   }
 
+  /** add to ignore file list
+   * @param fileNameSet files to add to ignore liste
+   */
+  public void addIgnoreFiles(HashSet<FileData> fileDataSet)
+  {
+    for (FileData fileData : fileDataSet)
+    {
+      repository.addIgnorePattern(fileData.getFileName(repository));
+    }
+  }
+
+  /** add selected files to ignore file list
+   * @param fileNameSet files to add to ignore liste
+   */
+  public void addIgnoreFiles()
+  {
+    deleteLocalFiles(getSelectedFileDataSet());
+  }
+
   /** find files by name
    */
   public void findFilesByName()
@@ -3269,21 +3302,47 @@ Dprintf.dprintf("");
   private String getFileDataStateString(FileData fileData)
   {
     String string = null;
-    switch (fileData.type)
+    if (!repository.isIgnoreFile(fileData.name))
     {
-      case DIRECTORY:
-        string = "";
-        break;
-      case FILE:
-      case LINK:
-        string = fileData.state.toString();
-        break;
-      default:
-        string = "";
-        break;
+      switch (fileData.type)
+      {
+        case DIRECTORY:
+          string = "";
+          break;
+        case FILE:
+        case LINK:
+          string = fileData.state.toString();
+          break;
+        default:
+          string = "";
+          break;
+      }
+    }
+    else
+    {
+      string = "";
     }
 
     return string;
+  }
+
+  /** get file data foreground color
+   * @param fileData file data
+   * @return color
+   */
+  private Color getFileDataForeground(FileData fileData)
+  {
+    Color color = null;
+    if (!repository.isIgnoreFile(fileData.name))
+    {
+      color = Onzen.COLOR_BLACK;
+    }
+    else
+    {
+      color = COLOR_IGNORE;
+    }
+
+    return color;
   }
 
   /** get file data background color
@@ -3293,33 +3352,40 @@ Dprintf.dprintf("");
   private Color getFileDataBackground(FileData fileData)
   {
     Color color = null;
-    switch (fileData.type)
+    if (!repository.isIgnoreFile(fileData.name))
     {
-      case DIRECTORY:
-        color = COLOR_OK;
-        break;
-      case FILE:
-      case LINK:
-        switch (fileData.state)
-        {
-          case OK        : color = COLOR_OK;         break;
-          case UNKNOWN   : color = COLOR_UNKNOWN;    break;
-          case MODIFIED  : color = COLOR_MODIFIED;   break;
-          case CHECKOUT  : color = COLOR_CHECKOUT;   break;
-          case UPDATE    : color = COLOR_UPDATE;     break;
-          case MERGE     : color = COLOR_MERGE;      break;
-          case CONFLICT  : color = COLOR_CONFLICT;   break;
-          case ADDED     : color = COLOR_ADDED;      break;
-          case REMOVED   : color = COLOR_REMOVED;    break;
-          case NOT_EXISTS: color = COLOR_NOT_EXISTS; break;
-          case WAITING   : color = COLOR_WAITING;    break;
-          case ERROR     : color = COLOR_ERROR;      break;
-          default        : color = COLOR_UNKNOWN;    break;
-        }
-        break;
-      default:
-        color = COLOR_OK;
-        break;
+      switch (fileData.type)
+      {
+        case DIRECTORY:
+          color = COLOR_OK;
+          break;
+        case FILE:
+        case LINK:
+          switch (fileData.state)
+          {
+            case OK        : color = COLOR_OK;         break;
+            case UNKNOWN   : color = COLOR_UNKNOWN;    break;
+            case MODIFIED  : color = COLOR_MODIFIED;   break;
+            case CHECKOUT  : color = COLOR_CHECKOUT;   break;
+            case UPDATE    : color = COLOR_UPDATE;     break;
+            case MERGE     : color = COLOR_MERGE;      break;
+            case CONFLICT  : color = COLOR_CONFLICT;   break;
+            case ADDED     : color = COLOR_ADDED;      break;
+            case REMOVED   : color = COLOR_REMOVED;    break;
+            case NOT_EXISTS: color = COLOR_NOT_EXISTS; break;
+            case WAITING   : color = COLOR_WAITING;    break;
+            case ERROR     : color = COLOR_ERROR;      break;
+            default        : color = COLOR_UNKNOWN;    break;
+          }
+          break;
+        default:
+          color = COLOR_OK;
+          break;
+      }
+    }
+    else
+    {
+      color = COLOR_OK;
     }
 
     return color;
@@ -3396,7 +3462,7 @@ Dprintf.dprintf("");
       treeItem.setText(1,getFileDataStateString(fileData));
       treeItem.setText(2,fileData.workingRevision);
       treeItem.setText(3,fileData.branch);
-      treeItem.setForeground(Onzen.COLOR_BLACK);
+      treeItem.setForeground(getFileDataForeground(fileData));
       treeItem.setBackground(getFileDataBackground(fileData));
     }
   }

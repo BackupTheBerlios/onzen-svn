@@ -1375,7 +1375,11 @@ Dprintf.dprintf("ex=%s",exception);
 
           if (tabItem != null)
           {
-            editRepository((RepositoryTab)selectedTabItems[0].getData());
+            RepositoryTab repositoryTab = (RepositoryTab)selectedTabItems[0].getData();
+            if (editRepository(repositoryTab))
+            {
+              repositoryTab.updateStates();
+            }
           }
         }
       }
@@ -1653,7 +1657,10 @@ Dprintf.dprintf("");
         {
           if (selectedRepositoryTab != null)
           {
-            editRepository(selectedRepositoryTab);
+            if (editRepository(selectedRepositoryTab))
+            {
+              selectedRepositoryTab.updateStates();
+            }
           }
         }
       });
@@ -2349,6 +2356,21 @@ Dprintf.dprintf("");
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.deleteLocalFiles();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Add to file ignore list",Settings.keyAddIgnoreFile);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.addIgnoreFiles();
           }
         }
       });
@@ -3627,6 +3649,7 @@ exception.printStackTrace();
               if (editRepository(repositoryTab))
               {
                 widgetList.setItem(index,repositoryTab.repository.title);
+                repositoryTab.updateStates();
               }
             }
           }
@@ -5153,6 +5176,7 @@ Dprintf.dprintf("exception=%s",exception);
       String   title;
       String   rootPath;
       String   masterRepository;
+      String[] ignorePatterns;
       String[] patchTests;
       String   mailSMTPHost;
       int      mailSMTPPort;
@@ -5178,6 +5202,7 @@ Dprintf.dprintf("exception=%s",exception);
         this.title                   = null;
         this.rootPath                = null;
         this.masterRepository        = null;
+        this.ignorePatterns          = null;
         this.patchTests              = null;
         this.mailSMTPHost            = null;
         this.mailSMTPPort            = 0;
@@ -5216,6 +5241,7 @@ Dprintf.dprintf("exception=%s",exception);
 
     final Text                  widgetTitle;
     final Text                  widgetRootPath;
+    final List                  widgetIgnorePatterns;
     final HashMap<Field,Widget> widgetFieldMap = new HashMap<Field,Widget>();
     final List                  widgetPatchTests;
     final Text                  widgetMailSMTPHost;
@@ -5245,7 +5271,7 @@ Dprintf.dprintf("exception=%s",exception);
       Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
 
       subComposite = Widgets.addTab(tabFolder,"Repository");
-      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0},2));
+      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0,0.0},new double[]{0.0,1.0},2));
       Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
         // common values
@@ -5318,8 +5344,63 @@ Dprintf.dprintf("exception=%s",exception);
           });
         }
 
+        label = Widgets.newLabel(subComposite,"Ignore patterns:");
+        Widgets.layout(label,4,0,TableLayoutData.NW);
+
+        subSubComposite = Widgets.newComposite(subComposite);
+        subSubComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subSubComposite,4,1,TableLayoutData.NSWE);
+        {
+          widgetIgnorePatterns = Widgets.newList(subSubComposite);
+          for (String pattern : repositoryTab.repository.getIgnorePatterns())
+          {
+            widgetIgnorePatterns.add(pattern);
+          }
+          Widgets.layout(widgetIgnorePatterns,0,0,TableLayoutData.NSWE);
+          widgetIgnorePatterns.setToolTipText("List of file patterns to ignore.");
+
+          subSubSubComposite = Widgets.newComposite(subSubComposite);
+          subSubSubComposite.setLayout(new TableLayout(null,0.0));
+          Widgets.layout(subSubSubComposite,1,0,TableLayoutData.WE,0,0,2);
+          {
+            button = Widgets.newButton(subSubSubComposite,"Add");
+            Widgets.layout(button,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                String pattern = Dialogs.path(dialog,"Add ignore pattern","Pattern:","","Add","Cancel");
+                if (pattern != null)
+                {
+                  widgetIgnorePatterns.add(pattern);
+                }
+              }
+            });
+
+            button = Widgets.newButton(subSubSubComposite,"Remove");
+            Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetIgnorePatterns.getSelectionIndex();
+                if (index >= 0)
+                {
+                  widgetIgnorePatterns.remove(index);
+                }
+              }
+            });
+          }
+        }
+
         // additional repository values
-        int row = 3;
+        int row = 5;
         for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
@@ -6056,6 +6137,7 @@ exception.printStackTrace();
           // get base data
           data.title                   = widgetTitle.getText().trim();
           data.rootPath                = widgetRootPath.getText().trim();
+          data.ignorePatterns          = widgetIgnorePatterns.getItems();
           data.patchTests              = widgetPatchTests.getItems();
           data.mailSMTPHost            = widgetMailSMTPHost.getText().trim();
           data.mailSMTPPort            = widgetMailSMTPPort.getSelection();
@@ -6195,6 +6277,7 @@ exception.printStackTrace();
       // set data
       repositoryTab.setTitle(data.title);
       repositoryTab.repository.rootPath                = data.rootPath;
+      repositoryTab.repository.setIgnorePatterns(data.ignorePatterns);
       repositoryTab.repository.patchTests              = data.patchTests;
       repositoryTab.repository.mailSMTPHost            = data.mailSMTPHost;
       repositoryTab.repository.mailSMTPPort            = data.mailSMTPPort;

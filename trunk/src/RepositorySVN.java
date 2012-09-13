@@ -285,6 +285,7 @@ class RepositorySVN extends Repository
             else if (   (newFileDataSet != null)
                      && !name.equals(".")
                      && !isHiddenFile(name)
+                     && !isIgnoreFile(name)
                     )
             {
               // get file type, size, date/time
@@ -329,6 +330,7 @@ class RepositorySVN extends Repository
             else if (   (newFileDataSet != null)
                      && !name.equals(".")
                      && !isHiddenFile(name)
+                     && !isIgnoreFile(name)
                     )
             {
               // get file type, size, date/time
@@ -763,8 +765,11 @@ class RepositorySVN extends Repository
           author             = matcher.group(7);
           name               = matcher.group(8);
 
-          if (   new File(rootPath,name).isFile()
-              && stateSet.contains(state))
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(state)
+             )
           {
             fileDataSet.add(new FileData(name,
                                          state,
@@ -778,7 +783,9 @@ class RepositorySVN extends Repository
         {
           name = matcher.group(1);
 
-          if (   new File(rootPath,name).isFile()
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
               && stateSet.contains(FileData.States.UNKNOWN)
              )
           {

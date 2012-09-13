@@ -1729,6 +1729,7 @@ class StoredFiles
 @XmlType(propOrder={"title",
                     "rootPath",
                     "openDirectories",
+                    "ignorePatterns",
 
                     "patchTests",
 
@@ -1849,6 +1850,10 @@ abstract class Repository implements Serializable
   @XmlElementWrapper(name = "openDirectories")
   @XmlElement(name = "path")
   private HashSet<String> openDirectories;
+
+  @XmlElementWrapper(name = "ignorePatterns")
+  @XmlElement(name = "pattern")
+  private HashSet<String> ignorePatterns;
 
   @XmlElementWrapper(name = "patchTests")
   @XmlElement(name = "patchTests", defaultValue = "")
@@ -1981,6 +1986,7 @@ abstract class Repository implements Serializable
     this.title           = rootPath;
     this.rootPath        = rootPath;
     this.openDirectories = new HashSet<String>();
+    this.ignorePatterns  = new HashSet<String>();
   }
 
   /** create repository
@@ -2091,6 +2097,54 @@ abstract class Repository implements Serializable
           openDirectories.remove(subDirectory);
         }
       }
+    }
+  }
+
+  /** get ignore patterns
+   * @return ignore patterns array
+   */
+  public String[] getIgnorePatterns()
+  {
+    synchronized(ignorePatterns)
+    {
+      return ignorePatterns.toArray(new String[ignorePatterns.size()]);
+    }
+  }
+
+  /** set ignore patterns
+   * @param patterns ignore patterns array
+   */
+  public void setIgnorePatterns(String[] patterns)
+  {
+    synchronized(ignorePatterns)
+    {
+      ignorePatterns.clear();
+      for (String pattern : patterns)
+      {
+        ignorePatterns.add(pattern);
+      }
+    }
+  }
+
+  /** remove ignore pattern
+   * @param pattern pattern to add
+   */
+  public void addIgnorePattern(String pattern)
+  {
+    synchronized(ignorePatterns)
+    {
+      ignorePatterns.add(pattern);
+    }
+  }
+
+  /** remove ignore pattern
+   * @param pattern pattern to remove
+   */
+  public void removeIgnorePattern(String pattern)
+  {
+    synchronized(ignorePatterns)
+    {
+      ignorePatterns.remove(pattern);
     }
   }
 
@@ -2229,6 +2283,36 @@ abstract class Repository implements Serializable
   {
     String fileName = !directory.isEmpty() ? directory+File.separator+baseName : baseName;
     return isHiddenFile(fileName,getFileType(fileName));
+  }
+
+  /** check if file should be ignored
+   * @param fileName file name
+   * @param true iff file should be ignored
+   */
+  public boolean isIgnoreFile(String fileName)
+  {
+    fileName = rootPath+File.separator+fileName;
+    synchronized(ignorePatterns)
+    {
+      for (String ignorePattern : ignorePatterns)
+      {
+        if (fileName.matches(StringUtils.globToRegex(ignorePattern)))
+        {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /** check if file should be ignored
+   * @param file file
+   * @param true iff file should be ignored
+   */
+  public boolean isIgnoreFile(File file)
+  {
+    return isIgnoreFile(file.getName());
   }
 
   /** check if file should be skipped for whitespace-ckeck

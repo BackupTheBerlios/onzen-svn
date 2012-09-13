@@ -792,6 +792,8 @@ public class Settings
   public static Color                    colorStatusError                       = new Color(null,new RGB(255,  0,  0));
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                    colorStatusUpdateStatus                = new Color(new RGB(128,128,128),null);
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorStatusIgnore                      = new Color(new RGB(196,196,196),null);
 
   @SettingComment(text={""})
   @SettingValue(type=SettingValueAdapterColor.class)
@@ -919,6 +921,8 @@ public class Settings
   public static int                      keyCopyFilesTo                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyConvertWhitespaces                  = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyAddIgnoreFile                       = SWT.NONE;
 
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFind                                = SWT.CTRL+'F';

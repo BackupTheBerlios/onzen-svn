@@ -922,7 +922,11 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
           state = parseState(matcher.group(1));
           name  = matcher.group(2);
 
-          if (stateSet.contains(state))
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(state)
+             )
           {
             fileDataSet.add(new FileData(name,
                                          state,
