@@ -208,7 +208,6 @@ class Preferences
         Widgets.layout(widgetKeys,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetKeys,0,"Name",SWT.LEFT,200,true);
         Widgets.addTableColumn(widgetKeys,1,"Key", SWT.LEFT,100,true);
-        widgetKeys.setToolTipText("Keyboard short cuts list.");
         widgetKeys.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -233,6 +232,7 @@ class Preferences
           {
           }
         });
+        widgetKeys.setToolTipText("Keyboard short cuts list.");
         addKeys();
       }
 
@@ -245,7 +245,6 @@ class Preferences
         Widgets.addTableColumn(widgetColors,0,"Name", SWT.LEFT,320,true);
         Widgets.addTableColumn(widgetColors,1,"Foreground",SWT.LEFT,100,true);
         Widgets.addTableColumn(widgetColors,2,"Background",SWT.LEFT,100,true);
-        widgetColors.setToolTipText("Colors list.");
         widgetColors.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -274,6 +273,7 @@ class Preferences
           {
           }
         });
+        widgetColors.setToolTipText("Colors list.");
         addColors();
       }
 
@@ -285,7 +285,6 @@ class Preferences
         Widgets.layout(widgetFonts,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetFonts,0,"Name",SWT.LEFT,200,true);
         Widgets.addTableColumn(widgetFonts,1,"Font",SWT.LEFT,100,true);
-        widgetFonts.setToolTipText("Fonts list.");
         widgetFonts.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -319,6 +318,7 @@ class Preferences
           {
           }
         });
+        widgetFonts.setToolTipText("Fonts list.");
         addFonts();
       }
 
@@ -331,7 +331,6 @@ class Preferences
         Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,false);
         Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
         Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,300,true );
-        widgetEditors.setToolTipText("Editor list.");
         widgetEditors.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -353,6 +352,7 @@ class Preferences
           {
           }
         });
+        widgetEditors.setToolTipText("Editor list.");
         for (Settings.Editor editor : Settings.editors)
         {
           Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.fileName,editor.commandLine);
@@ -406,7 +406,6 @@ class Preferences
         Widgets.layout(widgetShellCommands,0,0,TableLayoutData.NSWE);
         Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT,200,true);
         Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT,100,true);
-        widgetShellCommands.setToolTipText("Shell command list.");
         widgetShellCommands.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -428,6 +427,7 @@ class Preferences
           {
           }
         });
+        widgetShellCommands.setToolTipText("Shell command list.");
         for (Settings.ShellCommand shellCommand : Settings.shellCommands)
         {
           Widgets.addTableEntry(widgetShellCommands,shellCommand.clone(),shellCommand.name,shellCommand.commandLine);
@@ -1221,7 +1221,6 @@ Dprintf.dprintf("");
         {
           widgetHiddenFilePatterns = Widgets.newList(subComposite);
           Widgets.layout(widgetHiddenFilePatterns,0,0,TableLayoutData.NSWE);
-          widgetHiddenFilePatterns.setToolTipText("Patterns for hidden files in tree view.");
           widgetHiddenFilePatterns.addMouseListener(new MouseListener()
           {
             public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -1241,6 +1240,7 @@ Dprintf.dprintf("");
             {
             }
           });
+          widgetHiddenFilePatterns.setToolTipText("Patterns for hidden files in tree view.");
           for (Settings.FilePattern filePattern : Settings.hiddenFilePatterns)
           {
             widgetHiddenFilePatterns.add(filePattern.string);
