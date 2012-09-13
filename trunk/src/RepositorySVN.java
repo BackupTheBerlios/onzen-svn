@@ -284,8 +284,8 @@ class RepositorySVN extends Repository
             }
             else if (   (newFileDataSet != null)
                      && !name.equals(".")
-                     && !isHiddenFile(name)
-                     && !isIgnoreFile(name)
+                     && !isHiddenFile(fileName)
+                     && !isIgnoreFile(fileName)
                     )
             {
               // get file type, size, date/time
@@ -329,8 +329,8 @@ class RepositorySVN extends Repository
             }
             else if (   (newFileDataSet != null)
                      && !name.equals(".")
-                     && !isHiddenFile(name)
-                     && !isIgnoreFile(name)
+                     && !isHiddenFile(fileName)
+                     && !isIgnoreFile(fileName)
                     )
             {
               // get file type, size, date/time

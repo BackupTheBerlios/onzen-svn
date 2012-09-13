@@ -2465,7 +2465,7 @@ Dprintf.dprintf("");
    */
   public void addIgnoreFiles()
   {
-    deleteLocalFiles(getSelectedFileDataSet());
+    addIgnoreFiles(getSelectedFileDataSet());
   }
 
   /** find files by name
@@ -3302,7 +3302,7 @@ Dprintf.dprintf("");
   private String getFileDataStateString(FileData fileData)
   {
     String string = null;
-    if (!repository.isIgnoreFile(fileData.name))
+    if (!repository.isIgnoreFile(fileData.getFileName(repository)))
     {
       switch (fileData.type)
       {
@@ -3333,7 +3333,7 @@ Dprintf.dprintf("");
   private Color getFileDataForeground(FileData fileData)
   {
     Color color = null;
-    if (!repository.isIgnoreFile(fileData.name))
+    if (!repository.isIgnoreFile(fileData.getFileName(repository)))
     {
       color = Onzen.COLOR_BLACK;
     }
@@ -3352,7 +3352,7 @@ Dprintf.dprintf("");
   private Color getFileDataBackground(FileData fileData)
   {
     Color color = null;
-    if (!repository.isIgnoreFile(fileData.name))
+    if (!repository.isIgnoreFile(fileData.getFileName(repository)))
     {
       switch (fileData.type)
       {

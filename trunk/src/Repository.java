@@ -2291,12 +2291,13 @@ abstract class Repository implements Serializable
    */
   public boolean isIgnoreFile(String fileName)
   {
-    fileName = rootPath+File.separator+fileName;
     synchronized(ignorePatterns)
     {
       for (String ignorePattern : ignorePatterns)
       {
-        if (fileName.matches(StringUtils.globToRegex(ignorePattern)))
+        if (   fileName.equals(ignorePattern)
+            || fileName.matches(StringUtils.globToRegex(ignorePattern))
+           )
         {
           return true;
         }
@@ -2312,7 +2313,7 @@ abstract class Repository implements Serializable
    */
   public boolean isIgnoreFile(File file)
   {
-    return isIgnoreFile(file.getName());
+    return isIgnoreFile(file.getPath());
   }
 
   /** check if file should be skipped for whitespace-ckeck
