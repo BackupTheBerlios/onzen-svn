@@ -2458,6 +2458,7 @@ Dprintf.dprintf("");
     {
       repository.addIgnorePattern(fileData.getFileName(repository));
     }
+    asyncUpdateFileStates(fileDataSet);
   }
 
   /** add selected files to ignore file list
