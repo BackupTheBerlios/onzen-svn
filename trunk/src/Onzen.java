@@ -2371,6 +2371,7 @@ Dprintf.dprintf("");
           if (selectedRepositoryTab != null)
           {
             selectedRepositoryTab.addIgnoreFiles();
+            selectedRepositoryTab.updateStates();
           }
         }
       });
