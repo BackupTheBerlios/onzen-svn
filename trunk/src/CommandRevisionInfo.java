@@ -198,16 +198,16 @@ class CommandRevisionInfo
       label = Widgets.newLabel(composite,"Permissions:");
       Widgets.layout(label,4,0,TableLayoutData.W);
 
-      label = Widgets.newLabel(composite);
-      label.setText(fileData.getPermissions(repositoryTab.repository));
-      Widgets.layout(label,4,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite,SWT.LEFT);
+      text.setText(fileData.getPermissions(repositoryTab.repository));
+      Widgets.layout(text,4,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Mode:");
       Widgets.layout(label,5,0,TableLayoutData.W);
 
-      label = Widgets.newLabel(composite);
-      label.setText(fileData.mode.toString());
-      Widgets.layout(label,5,1,TableLayoutData.WE);
+      text = Widgets.newStringView(composite,SWT.LEFT);
+      text.setText(fileData.mode.toString());
+      Widgets.layout(text,5,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Author:");
       Widgets.layout(label,6,0,TableLayoutData.W);
