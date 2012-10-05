@@ -2649,7 +2649,7 @@ Dprintf.dprintf("");
               }
             }
 
-            // add files in directory for conversion
+            // add files in directory for checking for whitespaces
             for (String directoryFileName : file.list())
             {
               fileNameList.add(directoryFileName);
@@ -2661,7 +2661,7 @@ Dprintf.dprintf("");
             try
             {
               convertWhitespaces(fileName,
-                                 data.convertTABs?data.spacesPerTAB:0,
+                                 data.convertTABs ? data.spacesPerTAB : 0,
                                  data.removeTrailingWhitespaces
                                 );
             }
@@ -2887,7 +2887,7 @@ Dprintf.dprintf("");
         try
         {
           convertWhitespaces(fileNames,
-                             data.convertTABs?data.spacesPerTAB:0,
+                             data.convertTABs ? data.spacesPerTAB : 0,
                              data.removeTrailingWhitespaces
                             );
         }
@@ -2904,7 +2904,7 @@ Dprintf.dprintf("");
         try
         {
           convertWhitespaces(fileName,
-                             data.convertTABs?data.spacesPerTAB:0,
+                             data.convertTABs ? data.spacesPerTAB : 0,
                              data.removeTrailingWhitespaces
                             );
         }
