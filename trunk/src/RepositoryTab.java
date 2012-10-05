@@ -1978,11 +1978,18 @@ Dprintf.dprintf("");
 
     if (fileData != null)
     {
-      data.path = fileData.getDirectoryName(repository.rootPath);
+      if (fileData.type == FileData.Types.DIRECTORY)
+      {
+        data.path = fileData.getFileName();
+      }
+      else
+      {
+        data.path = fileData.getDirectoryName();
+      }
     }
 
     // new directory dialog
-    dialog = Dialogs.openModal(shell,"New directory",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"New directory in: "+repository.rootPath,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetPath;
     final Button widgetCreate;
@@ -1990,14 +1997,14 @@ Dprintf.dprintf("");
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Path:");
+      label = Widgets.newLabel(composite,"Sub-directory:");
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       widgetPath = Widgets.newText(composite);
       if (data.path != null)
       {
-        widgetPath.setText(data.path);
-        widgetPath.setSelection(data.path.length(),data.path.length());
+        widgetPath.setText(data.path+File.separator);
+        widgetPath.setSelection(data.path.length()+File.separator.length(),data.path.length()+File.separator.length());
       }
       Widgets.layout(widgetPath,0,1,TableLayoutData.WE);
 
@@ -2036,7 +2043,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          File file = new File(widgetPath.getText());
+          File file = new File(repository.rootPath,widgetPath.getText());
           if      (file.exists())
           {
             Dialogs.error(shell,"File or directory '%s' already exists!",file.getPath());
@@ -2089,8 +2096,10 @@ Dprintf.dprintf("");
     widgetPath.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
+      HashSet<FileData> fileDataSet = repository.listFiles(new File(data.path).getParent());
+
       // create directory
-      File file = new File(data.path);
+      File file = new File(repository.rootPath,data.path);
       if (!file.mkdirs())
       {
         Dialogs.error(shell,"Cannot create new directory '%s'",data.path);
@@ -2098,7 +2107,7 @@ Dprintf.dprintf("");
       }
 
       // start update file data
-      asyncUpdateFileStates(fileData);
+      asyncUpdateFileStates(fileDataSet);
     }
   }
 
