@@ -296,7 +296,7 @@ class RepositorySVN extends Repository
 
               // create file data
               newFileDataSet.add(new FileData(fileName,
-                                              FileData.Types.FILE,
+                                              type,
                                               FileData.States.UNKNOWN,
                                               FileData.Modes.BINARY,
                                               false,
@@ -341,7 +341,7 @@ class RepositorySVN extends Repository
 
               // create file data
               newFileDataSet.add(new FileData(fileName,
-                                              FileData.Types.FILE,
+                                              type,
                                               state,
                                               FileData.Modes.BINARY,
                                               locked,
