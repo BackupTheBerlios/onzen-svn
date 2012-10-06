@@ -130,7 +130,7 @@ class CommandCreateBranch
           Widgets.layout(label,0,0,TableLayoutData.W);
 
           widgetRootName = Widgets.newText(subComposite);
-          widgetRootName.setText(defaultRootName);
+          if (defaultRootName != null) widgetRootName.setText(defaultRootName);
           Widgets.layout(widgetRootName,0,1,TableLayoutData.WE);
           widgetRootName.setToolTipText("Root for the new branch. For SVN, HG and GIT this is usually the main development fork 'trunk' or some directory name, usually below 'branches'.");
 
@@ -138,7 +138,7 @@ class CommandCreateBranch
           Widgets.layout(label,1,0,TableLayoutData.W);
 
           widgetBranchName = Widgets.newCombo(subComposite);
-          widgetBranchName.setText(defaultBranchName);
+          if (defaultBranchName != null) widgetBranchName.setText(defaultBranchName);
           Widgets.layout(widgetBranchName,1,1,TableLayoutData.WE);
           widgetBranchName.setToolTipText("Branch name. For CVS this is a tag name, for SVN, HG and GIT this is a directory name, usually below 'branches'.\n\nNote: HG use the term 'branch' different. Nevertheless a 'branch' follow here the common understanding: a branch is a fork of the checked-in files.");
         }
