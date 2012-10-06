@@ -237,7 +237,13 @@ public class Settings
      */
     public String toString()
     {
-      return "ColumnSizes {"+width+"}";
+      StringBuilder buffer = new StringBuilder();
+      for (int n : width)
+      {
+        if (buffer.length() > 0) buffer.append(',');
+        buffer.append(Integer.toString(n));
+      }
+      return "ColumnSizes {"+buffer.toString()+"}";
     }
   }
 
