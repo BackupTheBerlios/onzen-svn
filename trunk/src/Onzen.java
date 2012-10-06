@@ -415,7 +415,7 @@ public class Onzen
     System.err.println();
   }
 
-  /** renice i/o exception (removed java.io.IOExcpetion text)
+  /** renice i/o exception (remove java.io.IOExcpetion text from exception)
    * @param exception i/o exception to renice
    * @return reniced exception
    */
