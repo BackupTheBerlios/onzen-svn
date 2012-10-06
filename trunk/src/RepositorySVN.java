@@ -1913,7 +1913,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list branches
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/branches");
+        command.append(Settings.svnCommand,"--non-interactive","list",pathName);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,command);
