@@ -4950,7 +4950,8 @@ Dprintf.dprintf("NYI");
                       {
                         widgetModuleName.add(branchName);
                       }
-                      widgetModuleName.setText(!selectedModuleName.isEmpty() ? selectedModuleName : repository.getDefaultRootName());
+                      if      (!selectedModuleName.isEmpty()) widgetModuleName.setText(selectedModuleName);
+                      else if (repository.getDefaultRootName() != null) widgetModuleName.setText(repository.getDefaultRootName());
                     }
                   });
                 }
