@@ -3187,7 +3187,7 @@ Dprintf.dprintf("fileName=%s",fileName);
   public String[] getBranchNames()
     throws RepositoryException
   {
-    return getBranchNames(getRepositoryPath()+File.separator+getDefaultBranchName());
+    return getBranchNames(getRepositoryPath()+"/"+getDefaultBranchName());
   }
 
     /** create new branch
