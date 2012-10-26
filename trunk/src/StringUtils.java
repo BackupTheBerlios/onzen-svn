@@ -235,9 +235,9 @@ public class StringUtils
         buffer.append(quoteChar);
         index += 2;
       }
-      else if ((ch == '\\') && ((index+1) < endIndex) && (string.charAt(index+1) == '\\'))
+      else if ((ch == '\\') && ((index+1) < endIndex))
       {
-        buffer.append('\\');
+        buffer.append(string.charAt(index+1));
         index += 2;
       }
       else
