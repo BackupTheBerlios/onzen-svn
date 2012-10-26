@@ -522,22 +522,25 @@ public class Settings
   {
     public String name;
     public String commandLine;
+    public int    validExitcode;
 
     /** create shell command
      * @param name name
      * @param commandLine command line
+     * @param validExitcode valid exitcode
      */
-    ShellCommand(String name, String commandLine)
+    ShellCommand(String name, String commandLine, int validExitcode)
     {
-      this.name        = name;
-      this.commandLine = commandLine;
+      this.name          = name;
+      this.commandLine   = commandLine;
+      this.validExitcode = validExitcode;
     }
 
     /** create shell command
      */
     ShellCommand()
     {
-      this("","");
+      this("","",0);
     }
 
     /** clone object
@@ -545,7 +548,7 @@ public class Settings
      */
     public ShellCommand clone()
     {
-      return new ShellCommand(name,commandLine);
+      return new ShellCommand(name,commandLine,validExitcode);
     }
 
     /** convert data to string
@@ -569,10 +572,20 @@ public class Settings
     {
       ShellCommand shellCommand = null;
 
-      Object[] data = new Object[2];
-      if (StringParser.parse(string,"%S %*s",data,StringParser.QUOTE_CHARS))
+      Object[] data = new Object[3];
+      if      (StringParser.parse(string,"%S %d %*s",data,StringParser.QUOTE_CHARS))
       {
-        shellCommand = new ShellCommand(((String)data[0]).trim(),StringUtils.unescape(((String)data[1]).trim()));
+        shellCommand = new ShellCommand(((String)data[0]).trim(),
+                                        StringUtils.unescape(((String)data[2]).trim()),
+                                        (Integer)data[1]
+                                       );
+      }
+      else if (StringParser.parse(string,"%S %*s",data,StringParser.QUOTE_CHARS))
+      {
+        shellCommand = new ShellCommand(((String)data[0]).trim(),
+                                        StringUtils.unescape(((String)data[1]).trim()),
+                                        0
+                                       );
       }
       else
       {
@@ -588,13 +601,18 @@ public class Settings
      */
     public String toString(ShellCommand shellCommand) throws Exception
     {
-      return StringUtils.escape(shellCommand.name)+" "+StringUtils.escape(shellCommand.commandLine,false);
+      return StringUtils.escape(shellCommand.name)+" "+shellCommand.validExitcode+" "+StringUtils.escape(shellCommand.commandLine,false);
     }
 
+    /** compare entries
+     * @param shellCommand0,shellCommand1 shell commands to compare
+     * @return TRUE iff equal
+     */
     public boolean equals(ShellCommand shellCommand0, ShellCommand shellCommand1)
     {
       return    shellCommand0.name.equals(shellCommand1.name)
-             && shellCommand0.commandLine.trim().equals(shellCommand1.commandLine.trim());
+             && shellCommand0.commandLine.trim().equals(shellCommand1.commandLine.trim())
+             && shellCommand0.validExitcode == shellCommand1.validExitcode;
     }
   }
 

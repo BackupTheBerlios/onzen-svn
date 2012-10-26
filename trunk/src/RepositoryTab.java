@@ -2957,9 +2957,10 @@ Dprintf.dprintf("");
       {
         // expand command
         Macro macro = new Macro(StringUtils.split(shellCommand.commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
-        if (!macro.contains("file")) macro.add("file");
-        macro.expand("file",fileData.getFileName(repository.rootPath));
-        macro.expand("",    "%");
+        if (!macro.contains("file") && !macro.contains("directory")) macro.add("file");
+        macro.expand("file",     fileData.getFileName(repository.rootPath));
+        macro.expand("directory",fileData.getDirectoryName(repository.rootPath));
+        macro.expand("",         "%");
         Command command = new Command(macro);
 
         // run command
@@ -2969,7 +2970,7 @@ Dprintf.dprintf("");
           exec = new Exec(command);
 
           int exitcode = exec.waitFor();
-          if (exitcode != 0)
+          if (exitcode > shellCommand.validExitcode)
           {
             Dialogs.error(shell,
                           (exec != null) ? exec.getExtendedErrorMessage() : null,

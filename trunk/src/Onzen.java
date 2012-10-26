@@ -954,11 +954,13 @@ exception.printStackTrace();
     {
      String name;
      String command;
+     int    validExitcode;
 
       Data()
       {
-        this.name    = null;
-        this.command = null;
+        this.name          = null;
+        this.command       = null;
+        this.validExitcode = 0;
       }
     };
 
@@ -971,9 +973,10 @@ exception.printStackTrace();
     // add editor dialog
     final Shell dialog = Dialogs.openModal(shell,"Add shell command",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Text   widgetName;
-    final Text   widgetCommand;
-    final Button widgetAddSave;
+    final Text    widgetName;
+    final Text    widgetCommand;
+    final Spinner widgetValidExitcode;
+    final Button  widgetAddSave;
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
@@ -989,7 +992,14 @@ exception.printStackTrace();
       Widgets.layout(label,1,0,TableLayoutData.W);
       widgetCommand = Widgets.newText(composite);
       Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %% - %");
+      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %% - %");
+
+      label = Widgets.newLabel(composite,"Valid exitcode:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+      widgetValidExitcode = Widgets.newSpinner(composite);
+      widgetValidExitcode.setMinimum(0);
+      widgetValidExitcode.setMaximum(255);
+      Widgets.layout(widgetValidExitcode,2,1,TableLayoutData.W);
     }
 
     // buttons
@@ -1006,8 +1016,9 @@ exception.printStackTrace();
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.name    = widgetName.getText().trim();
-          data.command = widgetCommand.getText();
+          data.name          = widgetName.getText().trim();
+          data.command       = widgetCommand.getText();
+          data.validExitcode = widgetValidExitcode.getSelection();
 
           Dialogs.close(dialog,true);
         }
@@ -1056,7 +1067,7 @@ exception.printStackTrace();
       // add shell command
       Settings.ShellCommand[] newShellCommands = new Settings.ShellCommand[Settings.shellCommands.length+1];
       System.arraycopy(Settings.shellCommands,0,newShellCommands,0,Settings.shellCommands.length);
-      newShellCommands[newShellCommands.length-1] = new Settings.ShellCommand(data.name,data.command);
+      newShellCommands[newShellCommands.length-1] = new Settings.ShellCommand(data.name,data.command,data.validExitcode);
       Settings.shellCommands = newShellCommands;
 
       // sort

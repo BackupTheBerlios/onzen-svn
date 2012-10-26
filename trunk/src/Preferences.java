@@ -404,8 +404,9 @@ class Preferences
       {
         widgetShellCommands = Widgets.newTable(composite);
         Widgets.layout(widgetShellCommands,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT,200,true);
-        Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT,100,true);
+        Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT, 200,true);
+        Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT, 200,true);
+        Widgets.addTableColumn(widgetShellCommands,2,"Exitcode",SWT.RIGHT, 20,true);
         widgetShellCommands.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -419,7 +420,7 @@ class Preferences
 
               if (editShellCommand(shellCommand,"Edit shell commands","Save"))
               {
-                Widgets.updateTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine);
+                Widgets.updateTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine,Integer.toString(shellCommand.validExitcode));
               }
             }
           }
@@ -430,7 +431,7 @@ class Preferences
         widgetShellCommands.setToolTipText("Shell command list.");
         for (Settings.ShellCommand shellCommand : Settings.shellCommands)
         {
-          Widgets.addTableEntry(widgetShellCommands,shellCommand.clone(),shellCommand.name,shellCommand.commandLine);
+          Widgets.addTableEntry(widgetShellCommands,shellCommand.clone(),shellCommand.name,shellCommand.commandLine,Integer.toString(shellCommand.validExitcode));
         }
 
         subComposite = Widgets.newComposite(composite);
@@ -450,7 +451,7 @@ class Preferences
 
               if (editShellCommand(shellCommand,"Add shell command","Add"))
               {
-                Widgets.addTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine);
+                Widgets.addTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine,Integer.toString(shellCommand.validExitcode));
               }
             }
           });
@@ -2628,9 +2629,10 @@ Dprintf.dprintf("");
     // add editor dialog
     final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Text   widgetName;
-    final Text   widgetCommandLine;
-    final Button widgetAddSave;
+    final Text    widgetName;
+    final Text    widgetCommandLine;
+    final Spinner widgetValidExitcode;
+    final Button  widgetAddSave;
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
@@ -2648,7 +2650,14 @@ Dprintf.dprintf("");
       widgetCommandLine = Widgets.newText(composite);
       widgetCommandLine.setText(shellCommand.commandLine);
       Widgets.layout(widgetCommandLine,1,1,TableLayoutData.WE);
-      widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %n% - line number\n  %% - %");
+      widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %n% - line number\n  %% - %");
+
+      label = Widgets.newLabel(composite,"Valid exitcode:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+      widgetValidExitcode = Widgets.newSpinner(composite);
+      widgetValidExitcode.setMinimum(0);
+      widgetValidExitcode.setMaximum(255);
+      Widgets.layout(widgetValidExitcode,2,1,TableLayoutData.W);
     }
 
     // buttons
@@ -2665,8 +2674,9 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          shellCommand.name        = widgetName.getText().trim();
-          shellCommand.commandLine = widgetCommandLine.getText();
+          shellCommand.name          = widgetName.getText().trim();
+          shellCommand.commandLine   = widgetCommandLine.getText();
+          shellCommand.validExitcode = widgetValidExitcode.getSelection();
 
           Dialogs.close(dialog,true);
         }
