@@ -1368,6 +1368,7 @@ Dprintf.dprintf("");
   public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       // delete local files
@@ -1378,17 +1379,17 @@ Dprintf.dprintf("");
 
       // remove from repository
       Command command = new Command();
-      int     exitCode;
 
       // remove files
       command.clear();
       command.append(Settings.gitCommand,"rm");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // immediate commit when message is given
@@ -1397,10 +1398,17 @@ Dprintf.dprintf("");
         // commit removed files
         commit(fileDataSet,commitMessage);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 

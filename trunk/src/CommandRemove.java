@@ -430,12 +430,13 @@ class CommandRemove
     }
     catch (RepositoryException exception)
     {
-      final String exceptionMessage = exception.getMessage();
+      final String   exceptionMessage = exception.getMessage();
+      final String[] extendedMessage  = exception.getExtendedMessage();
       display.syncExec(new Runnable()
       {
         public void run()
         {
-          Dialogs.error(shell,"Cannot remove files (error: %s)",exceptionMessage);
+          Dialogs.error(shell,extendedMessage,"XCannot remove files (error: %s)",exceptionMessage);
         }
       });
       return;
