@@ -32,6 +32,7 @@ import java.util.BitSet;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.WeakHashMap;
@@ -733,6 +734,8 @@ menuItem.setEnabled(false);
           }
         });
 
+        menuItem = Widgets.addMenuSeparator(menu);
+
         menuItem = Widgets.addMenuItem(menu,"Add to file ignore list",Settings.keyAddIgnoreFile);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -742,6 +745,18 @@ menuItem.setEnabled(false);
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             addIgnoreFiles();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Add to hidden list",Settings.keyAddHiddenFile);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            addHiddenFiles();
           }
         });
 
@@ -971,31 +986,26 @@ menuItem.setEnabled(false);
     String directory = Dialogs.directory(shell,"Select destination directory","Copy "+fileDataSet.size()+" files to:",lastDirectory);
     if (directory != null)
     {
-      setStatusText("Copy files...");
-      try
+      for (FileData fileData : fileDataSet)
       {
-        for (FileData fileData : fileDataSet)
+        setStatusText("Copy file '%s' -> '%s'...",fileData.getFileName(),directory);
+        try
         {
-          try
-          {
-            File fromFile = new File(fileData.getFileName(repository));
-            File toFile   = new File(directory,fileData.getBaseName());
-
-            if (fromFile.isFile())
-            {
-              FileUtils.copyFile(fromFile,toFile);
-            }
-          }
-          catch (IOException exception)
-          {
-            Dialogs.error(shell,"Copy file '"+fileData.getBaseName()+"' fail (error: %s)",exception.getMessage());
-            return;
-          }
+          File fromFile = new File(fileData.getFileName(repository));
+          File toFile   = new File(directory);
+//Dprintf.dprintf("fromFile=%s\n",fromFile);
+//Dprintf.dprintf("toFile=%s\n",toFile);
+          FileUtils.copyFile(fromFile,toFile);
         }
-      }
-      finally
-      {
-        clearStatusText();
+        catch (IOException exception)
+        {
+          Dialogs.error(shell,"Copy file '"+fileData.getBaseName()+"' fail (error: %s)",exception.getMessage());
+          return;
+        }
+        finally
+        {
+          clearStatusText();
+        }
       }
 
       lastDirectory = directory;
@@ -2463,10 +2473,13 @@ Dprintf.dprintf("");
    */
   public void addIgnoreFiles(HashSet<FileData> fileDataSet)
   {
+    // add files
     for (FileData fileData : fileDataSet)
     {
       repository.addIgnorePattern(fileData.getFileName(repository));
     }
+
+    // refresh
     asyncUpdateFileStates(fileDataSet);
   }
 
@@ -2476,6 +2489,51 @@ Dprintf.dprintf("");
   public void addIgnoreFiles()
   {
     addIgnoreFiles(getSelectedFileDataSet());
+  }
+
+  /** add to hidden list
+   * @param fileNameSet files to add to ignore liste
+   */
+  public void addHiddenFiles(HashSet<FileData> fileDataSet)
+  {
+    // get pattern maps
+    LinkedHashMap<String,Settings.FilePattern> hiddenFilePatternsMap = new LinkedHashMap<String,Settings.FilePattern>();
+    for (Settings.FilePattern hiddenFilePattern : Settings.hiddenFilePatterns)
+    {
+      hiddenFilePatternsMap.put(hiddenFilePattern.string,hiddenFilePattern);
+    }
+    LinkedHashMap<String,Settings.FilePattern> hiddenDirectoryPatternsMap = new LinkedHashMap<String,Settings.FilePattern>();
+    for (Settings.FilePattern hiddenDirectoryPattern : Settings.hiddenDirectoryPatterns)
+    {
+      hiddenDirectoryPatternsMap.put(hiddenDirectoryPattern.string,hiddenDirectoryPattern);
+    }
+
+    // add patterns
+    for (FileData fileData : fileDataSet)
+    {
+      if (fileData.type == FileData.Types.DIRECTORY)
+      {
+      }
+      else
+      {
+      }
+      repository.addIgnorePattern(fileData.getFileName(repository));
+    }
+
+    // store new pattern maps
+    Settings.hiddenFilePatterns      = hiddenFilePatternsMap.entrySet().toArray(new Settings.FilePattern[hiddenFilePatternsMap.size()]);
+    Settings.hiddenDirectoryPatterns = hiddenDirectoryPatternsMap.entrySet().toArray(new Settings.FilePattern[hiddenDirectoryPatternsMap.size()]);
+
+    // refresh
+    asyncUpdateFileStates(fileDataSet);
+  }
+
+  /** add selected files to hidden list
+   * @param fileNameSet files to add to ignore liste
+   */
+  public void addHiddenFiles()
+  {
+    addHiddenFiles(getSelectedFileDataSet());
   }
 
   /** find files by name
@@ -2627,7 +2685,7 @@ Dprintf.dprintf("");
 
         // convert TABs/whitespaces in files
         boolean convertAll = false;
-        while (fileNameList.size() > 0)
+        while (!fileNameList.isEmpty())
         {
           String fileName = fileNameList.removeFirst();
           File   file     = new File(fileName);

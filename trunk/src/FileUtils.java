@@ -15,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.LinkedList;
+
 /****************************** Classes ********************************/
 
 public class FileUtils
@@ -26,21 +28,52 @@ public class FileUtils
   public static void copyFile(File fromFile, File toFile)
     throws IOException
   {
-    FileInputStream  input  = new FileInputStream(fromFile);
-    FileOutputStream output = new FileOutputStream(toFile);
-    byte[]           buffer = new byte[64*1024];
+    File fromDirectory = fromFile.getParentFile();
 
-    int n;
-    while ((n = input.read(buffer)) > 0)
+    LinkedList<String> fileNameList = new LinkedList<String>();
+    fileNameList.add(fromFile.getName());
+
+    while (!fileNameList.isEmpty())
     {
-      output.write(buffer,0,n);
+      String fileName = fileNameList.removeFirst();
+
+      File file = new File(fromDirectory,fileName);
+      if (file.isDirectory())
+      {
+        String[] subFileNames = file.list();
+        if (subFileNames != null)
+        {
+          for (String subFileName : subFileNames)
+          {
+            fileNameList.add(fileName + File.separator + subFileName);
+          }
+        }
+      }
+      else
+      {
+        File newDirectory = new File(toFile,fileName).getParentFile();
+        if (!newDirectory.exists())
+        {
+          newDirectory.mkdirs();
+        }
+
+        FileInputStream  input  = new FileInputStream(file);
+        FileOutputStream output = new FileOutputStream(new File(toFile,fileName));
+        byte[]           buffer = new byte[64*1024];
+
+        int n;
+        while ((n = input.read(buffer)) > 0)
+        {
+          output.write(buffer,0,n);
+        }
+
+        toFile.setExecutable(fromFile.canExecute());
+        toFile.setWritable(fromFile.canWrite());
+
+        output.close();
+        input.close();
+      }
     }
-
-    toFile.setExecutable(fromFile.canExecute());
-    toFile.setWritable(fromFile.canWrite());
-
-    output.close();
-    input.close();
   }
 
   /** delete file or direcotry
