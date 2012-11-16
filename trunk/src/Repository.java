@@ -3389,12 +3389,12 @@ Dprintf.dprintf("stderr %s",line);
   {
     final String[] FORMATS = new String[]
     {
-      "dd-MMM-yy",                   // 25-Jan-11
       "yyyy-MM-dd HH:mm:ss Z",       // 2011-01-25 15:19:06 +0900
       "yyyy-MM-dd HH:mm Z",          // 2011-01-25 15:19 +0900
       "yyyy/MM/dd HH:mm:ss",         // 2010/05/13 07:09:36
       "EEE MMM dd HH:mm:ss yyyy Z",  // Wed Dec 17 15:41:19 2008 +0100
       "yyyy-MM-dd",                  // 2011-01-25
+      "dd-MMM-yy",                   // 25-Jan-11
     };
 
     final Locale[] LOCALES = new Locale[]
