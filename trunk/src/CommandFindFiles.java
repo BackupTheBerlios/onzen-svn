@@ -972,9 +972,11 @@ Dprintf.dprintf("event=%s",event);
        */
       public void run()
       {
+        HashSet<String> findDataKeySet = new HashSet<String>();
+ 
         while (!data.quitFlag)
         {
-          // find files
+          // clearfiles
           if (!dialog.isDisposed())
           {
             display.syncExec(new Runnable()
@@ -985,6 +987,9 @@ Dprintf.dprintf("event=%s",event);
               }
             });
           }
+          findDataKeySet.clear();
+
+          // find files
           if (!filter.isEmpty())
           {
 //Dprintf.dprintf("findNamePatterns=%s findContentPatterns=%s",findNamePatterns,findContentPatterns);
@@ -1056,28 +1061,33 @@ Dprintf.dprintf("event=%s",event);
                           {
                             do
                             {
-                              // add find data to list
-                              final FindData findData = new FindData(repositoryTab,file,lineNumber);
-                              display.syncExec(new Runnable()
+                              String findDataKey = file.getAbsolutePath()+Integer.toString(lineNumber);
+                              if (!findDataKeySet.contains(findDataKey))
                               {
-                                public void run()
+//Dprintf.dprintf("file=%s n=%d x=%s",file.getAbsolutePath(),lineNumber,findDataKeySet.contains(findDataKey));
+                                // add find data to list
+                                final FindData findData = new FindData(repositoryTab,file,lineNumber);
+                                display.syncExec(new Runnable()
                                 {
-                                  if (!dialog.isDisposed())
+                                  public void run()
                                   {
-                                    FindDataComparator findDataComparator = new FindDataComparator(widgetFiles);
-
-                                    Widgets.insertTableEntry(widgetFiles,
-                                                             findDataComparator,
-                                                             findData,
-                                                             file.getName(),
-                                                             Integer.toString(findData.lineNumber),
-                                                             file.getParent(),
-                                                             Onzen.DATETIME_FORMAT.format(file.lastModified()),
-                                                             Long.toString(file.length())
-                                                            );
+                                    if (!dialog.isDisposed())
+                                    {
+                                      Widgets.insertTableEntry(widgetFiles,
+                                                               new FindDataComparator(widgetFiles),
+                                                               findData,
+                                                               file.getName(),
+                                                               Integer.toString(findData.lineNumber),
+                                                               file.getParent(),
+                                                               Onzen.DATETIME_FORMAT.format(file.lastModified()),
+                                                               Long.toString(file.length())
+                                                              );
+                                    }
                                   }
-                                }
-                              });
+                                });
+
+                                findDataKeySet.add(findDataKey);
+                              }
 
                               // check for modified data
                               if (isDataModified()) break;
@@ -1417,7 +1427,7 @@ Dprintf.dprintf("event=%s",event);
     return false;
   }
 
-  /** get selected find data
+  /** check if file contains text
    * @param file file to check
    * @param content text to find
    * @param contentPatterns content patterns
