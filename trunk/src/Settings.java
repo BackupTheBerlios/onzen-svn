@@ -792,6 +792,10 @@ public class Settings
   public static Color                    colorDiffChanged                       = new Color(null,new RGB(255,  0,  0));
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                    colorDiffChangedWhitespaces            = new Color(null,new RGB(255,128,128));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorSelect0                           = new Color(null,new RGB(  0,255,196));
+  @SettingValue(type=SettingValueAdapterColor.class)
+  public static Color                    colorSelect1                           = new Color(null,new RGB(  0,196,255));
 
   @SettingComment(text={""})
   @SettingValue(type=SettingValueAdapterColor.class)
