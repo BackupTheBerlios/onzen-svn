@@ -126,8 +126,8 @@ class CommandRevisions
   private final Color COLOR_CONTAINER            = Onzen.COLOR_GRAY;
   private final Color COLOR_HANDLE               = Onzen.COLOR_RED;
   private final Color COLOR_CONTAINER_CURRENT_   = Onzen.COLOR_GRAY;
-  private final Color COLOR_CONTAINER_SELECTED0  = Onzen.COLOR_BLUE;
-  private final Color COLOR_CONTAINER_SELECTED1  = Onzen.COLOR_GREEN;
+  private final Color COLOR_CONTAINER_SELECTED0;
+  private final Color COLOR_CONTAINER_SELECTED1;
   private final Color COLOR_LINES                = Onzen.COLOR_BLACK;
 
   // --------------------------- variables --------------------------------
@@ -182,6 +182,10 @@ class CommandRevisions
     // get display, clipboard
     display   = shell.getDisplay();
     clipboard = new Clipboard(display);
+
+    // init colors
+    COLOR_CONTAINER_SELECTED0 = new Color(display,Settings.colorSelect0.background);
+    COLOR_CONTAINER_SELECTED1 = new Color(display,Settings.colorSelect1.background);
 
     // create dialog
     dialog = Dialogs.open(shell,"Revisions: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
