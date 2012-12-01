@@ -152,7 +152,7 @@ class CommandDiff
   /** diff command
    * @param shell shell
    * @param repositoryTab repository tab
-   * @param fileData file to show diff for
+   * @param fileData file to show diff for or null
    * @param revisionLeft left revision or null
    * @param revisionRight right revision or null
    */
@@ -180,7 +180,7 @@ class CommandDiff
     COLOR_FIND_TEXT                = new Color(display,Settings.colorFindText.foreground              );
 
     // show diff dialog
-    dialog = Dialogs.open(shell,"Diff: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"Diff"+((fileData != null) ? ": "+fileData.getFileName() : ""),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0,0.0},new double[]{1.0,0.0,1.0},4));
@@ -1235,7 +1235,7 @@ class CommandDiff
           {
             commandCreatePatch = new CommandCreatePatch(shell,
                                                         repositoryTab,
-                                                        fileData.toSet(),
+                                                        (fileData != null) ? fileData.toSet() : null,
                                                         data.revisionNames[index+0],
                                                         data.revisionNames[index+1],
                                                         false
@@ -1245,7 +1245,7 @@ class CommandDiff
           {
             commandCreatePatch = new CommandCreatePatch(shell,
                                                         repositoryTab,
-                                                        fileData.toSet(),
+                                                        (fileData != null) ? fileData.toSet() : null,
                                                         data.revisionNames[index],
                                                         false
                                                        );
@@ -1529,7 +1529,14 @@ class CommandDiff
 
           // get revisions
           Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
-          repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
+          if (fileData != null)
+          {
+            repositoryTab.setStatusText("Get revisions for '%s'...",fileData.getFileName());
+          }
+          else
+          {
+            repositoryTab.setStatusText("Get revisions...");
+          }
           try
           {
             data.revisionNames = repositoryTab.repository.getRevisionNames(fileData);
@@ -1602,7 +1609,19 @@ class CommandDiff
   /** diff command
    * @param shell shell
    * @param repositoryTab repository tab
+   * @param revisionLeft left revision or null
+   * @param revisionRight right revision or null
+   */
+  CommandDiff(Shell shell, RepositoryTab repositoryTab, String revisionLeft, String revisionRight)
+  {
+    this(shell,repositoryTab,null,revisionLeft,revisionRight);
+  }
+
+  /** diff command
+   * @param shell shell
+   * @param repositoryTab repository tab
    * @param fileData file to show diff for
+   * @param revision right revision or null
    */
   CommandDiff(Shell shell, RepositoryTab repositoryTab, FileData fileData, String revision)
   {
@@ -2402,7 +2421,14 @@ Dprintf.dprintf("maxWidth=%d widgetTextLeft=%s %d",maxWidth,widgetTextLeft.getBo
       {
         // get diff data
         Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
-        repositoryTab.setStatusText("Get differences for '%s'...",fileData.getFileName());
+        if (fileData != null)
+        {
+          repositoryTab.setStatusText("Get differences for '%s'...",fileData.getFileName());
+        }
+        else
+        {
+          repositoryTab.setStatusText("Get differences...");
+        }
         try
         {
           if      ((revisionLeft != null) && (revisionRight != null))
