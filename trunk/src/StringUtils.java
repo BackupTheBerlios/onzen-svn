@@ -235,9 +235,9 @@ public class StringUtils
         buffer.append(quoteChar);
         index += 2;
       }
-      else if ((ch == '\\') && ((index+1) < endIndex))
+      else if ((ch == '\\') && ((index+1) < endIndex) && (string.charAt(index+1) == '\\'))
       {
-        buffer.append(string.charAt(index+1));
+        buffer.append('\\');
         index += 2;
       }
       else
@@ -397,13 +397,35 @@ public class StringUtils
 
   /** join object array
    * @param objects objects to join (convert to string with toString())
-   * @param joinString string used to join two strings
-   * @param quote true iff escape strings
+   * @param joinChar character used to join two strings
+   * @param quoteChar quote char
    * @return string
    */
-  public static String join(Object[] objects, String joinString, boolean quote)
+  public static String join(Object[] objects, char joinChar, char quoteChar)
   {
-    return join(objects,joinString,(quote) ? '"' : '\0');
+    return join(objects,Character.toString(joinChar),quoteChar);
+  }
+
+  /** join object array
+   * @param objects objects to join (convert to string with toString())
+   * @param joinString string used to join two strings
+   * @param quoteFlag true iff escape strings
+   * @return string
+   */
+  public static String join(Object[] objects, String joinString, boolean quoteFlag)
+  {
+    return join(objects,joinString,(quoteFlag) ? '"' : '\0');
+  }
+
+  /** join object array
+   * @param objects objects to join (convert to string with toString())
+   * @param joinChar character used to join two strings
+   * @param quoteFlag true iff escape strings
+   * @return string
+   */
+  public static String join(Object[] objects, char joinChar, boolean quoteFlag)
+  {
+    return join(objects,Character.toString(joinChar),quoteFlag);
   }
 
   /** join object array
@@ -414,6 +436,16 @@ public class StringUtils
   public static String join(Object[] objects, String joinString)
   {
     return join(objects,joinString,'\0');
+  }
+
+  /** join object array
+   * @param objects objects to join (convert to string with toString())
+   * @param joinChar character used to join two strings
+   * @return string
+   */
+  public static String join(Object[] objects, char joinChar)
+  {
+    return join(objects,Character.toString(joinChar));
   }
 
   /** join string array with single space
