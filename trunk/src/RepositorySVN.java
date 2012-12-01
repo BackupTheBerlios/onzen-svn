@@ -37,39 +37,6 @@ import java.util.regex.Matcher;
  */
 class RepositorySVN extends Repository
 {
-  /** SVN revision data
-   */
-  class RevisionDataSVN extends RevisionData
-  {
-    final String[] fileNames;
-
-    /** create revision info
-     * @param revision revision string
-     * @param date date
-     * @param author author name
-     * @param commitMessage commit message lines
-     * @param fileNameList file name list
-     */
-    RevisionDataSVN(String               revision,
-                    Date                 date,
-                    String               author,
-                    AbstractList<String> commitMessage,
-                    AbstractList<String> fileNameList
-                   )
-    {
-      super(revision,(AbstractList<RevisionData>)null,(AbstractList<String>)null,date,author,commitMessage);
-      this.fileNames = fileNameList.toArray(new String[fileNameList.size()]);
-    }
-
-    /** convert data to string
-     * @return string
-     */
-    public String toString()
-    {
-      return "SVN revision data {revision: "+revision+", date: "+date+", author: "+author+", message: "+commitMessage+"}";
-    }
-  }
-
   // --------------------------- constants --------------------------------
   public final static String[] DEFAULT_REVISION_NAMES = new String[]{"HEAD"};
   public final static String[] DEFAULT_BRANCH_NAMES   = new String[]{"trunk","tags","branches"};
@@ -580,7 +547,7 @@ class RepositorySVN extends Repository
   public RevisionData[] getRevisionDataTree(FileData fileData)
     throws RepositoryException
   {
-    LinkedList<RevisionDataSVN> revisionDataList = new LinkedList<RevisionDataSVN>();
+    LinkedList<RevisionData> revisionDataList = new LinkedList<RevisionData>();
 
     Exec exec = null;
     try
@@ -600,7 +567,7 @@ class RepositorySVN extends Repository
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionDataSVN revisionData;
+        RevisionData revisionData;
         while ((revisionData = parseLogData(exec)) != null)
         {
           // add revision info entry
@@ -844,7 +811,7 @@ class RepositorySVN extends Repository
         // check out new revision
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive","cat","--revision",newRevision);
-      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         if (fileData != null) command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
@@ -1359,14 +1326,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (parseLogHeader(exec))
       {
         // parse data
-        RevisionDataSVN revisionData;
+        RevisionData revisionData;
         while ((revisionData = parseLogData(exec)) != null)
         {
           // add log info entry
           logDataList.add(new LogData(revisionData.revision,
                                       revisionData.date,
                                       revisionData.author,
-                                      revisionData.commitMessage
+                                      revisionData.commitMessage,
+                                      revisionData.fileNames
                                      )
                          );
         }
@@ -2111,15 +2079,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    * @param symbolicNamesMap symbolic names map
    * @return revision info or null
    */
-  private RevisionDataSVN parseLogData(Exec exec)
+  private RevisionData parseLogData(Exec exec)
     throws IOException
-//    throws RepositoryException
-
   {
     final Pattern PATTERN_REVISION = Pattern.compile("^r(\\d+)\\s*\\|\\s*(\\S*)\\s*\\|\\s*(\\S*\\s+\\S*\\s+\\S*).*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_FILE     = Pattern.compile("^\\s*?\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
 
-    RevisionDataSVN    revisionData      = null;
+    RevisionData       revisionData      = null;
 
     boolean            dataDone          = false;
     Matcher            matcher;
@@ -2178,12 +2144,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
 
         // add log info entry
-        revisionData = new RevisionDataSVN(revision,
-                                           date,
-                                           author,
-                                           commitMessageList,
-                                           fileNameList
-                                          );
+        revisionData = new RevisionData(revision,
+                                        (String)null,
+                                        date,
+                                        author,
+                                        commitMessageList,
+                                        fileNameList
+                                       );
         dataDone = true;
       }
     }

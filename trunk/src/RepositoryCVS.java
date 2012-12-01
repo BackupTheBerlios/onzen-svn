@@ -68,6 +68,7 @@ class RepositoryCVS extends Repository
      * @param author author name
      * @param branchRevisionList branch revisions
      * @param commitMessageList commit message lines
+     * @param fileNameList names of changed files
      */
     RevisionDataCVS(String                revision,
                     AbstractList<Integer> revisionNumberList,
@@ -75,10 +76,11 @@ class RepositoryCVS extends Repository
                     Date                  date,
                     String                author,
                     AbstractList<String>  branchRevisionList,
-                    AbstractList<String>  commitMessageList
+                    AbstractList<String>  commitMessageList,
+                    AbstractList<String>  fileNameList
                    )
     {
-      super(revision,tag,date,author,commitMessageList);
+      super(revision,tag,date,author,commitMessageList,fileNameList);
 
       this.revisionNumbers = new int[revisionNumberList.size()];
       for (int z = 0; z < revisionNumberList.size(); z++)
@@ -1444,7 +1446,8 @@ else {
           logDataList.add(new LogData(revisionData.revision,
                                       revisionData.date,
                                       revisionData.author,
-                                      revisionData.commitMessage
+                                      revisionData.commitMessage,
+                                      revisionData.fileNames
                                      )
                          );
         }
@@ -2298,6 +2301,7 @@ throw new RepositoryException("NYI");
     String             author             = null;
     ArrayList<String>  branchRevisionList = new ArrayList<String>();
     LinkedList<String> commitMessageList  = new LinkedList<String>();
+    ArrayList<String>  fileNameList       = new ArrayList<String>();
     while (   !dataDone
            && ((line = exec.getStdout()) != null)
           )
@@ -2368,7 +2372,9 @@ throw new RepositoryException("NYI");
                                            date,
                                            author,
                                            branchRevisionList,
-                                           commitMessageList
+                                           commitMessageList,
+//??? file name list?
+                                           fileNameList
                                           );
         dataDone = true;
       }

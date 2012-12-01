@@ -1024,6 +1024,7 @@ class RevisionData
   public Date           date;               // commit/push date
   public String         author;             // author name
   public String[]       commitMessage;      // comment message text
+  public String[]       fileNames;          // names of changed files
   public BranchData[]   branches;
 
   // ------------------------ native functions ----------------------------
@@ -1037,9 +1038,10 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
+   * @param fileNames names of changed files
    * @param branches branches
    */
-  public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
+  public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, String[] fileNames, BranchData[] branches)
   {
     this.revision      = revision;
     this.parents       = parents;
@@ -1047,6 +1049,7 @@ class RevisionData
     this.date          = date;
     this.author        = author;
     this.commitMessage = commitMessage;
+    this.fileNames     = fileNames;
     this.branches      = branches;
   }
 
@@ -1057,9 +1060,10 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
+   * @param fileNames names of changed files
    * @param branches branches
    */
-  public RevisionData(String revision, RevisionData parent, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
+  public RevisionData(String revision, RevisionData parent, String[] tags, Date date, String author, String[] commitMessage, String[] fileNames, BranchData[] branches)
   {
     this(revision,
          new RevisionData[]{parent},
@@ -1067,6 +1071,7 @@ class RevisionData
          date,
          author,
          commitMessage,
+         fileNames,
          branches
         );
   }
@@ -1078,16 +1083,18 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    * @param branches branches
    */
-  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, BranchData[] branches)
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList, BranchData[] branches)
   {
     this(revision,
          (parentList != null)?parentList.toArray(new RevisionData[parentList.size()]):(RevisionData[])null,
          (tagList != null)?tagList.toArray(new String[tagList.size()]):(String[])null,
          date,
          author,
-         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         (commitMessageList != null) ? commitMessageList.toArray(new String[commitMessageList.size()]) : (String[])null,
+         (fileNameList != null) ? fileNameList.toArray(new String[fileNameList.size()]) : (String[])null,
          branches
         );
   }
@@ -1098,9 +1105,10 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
+   * @param fileNames names of changed files
    * @param branch branch
    */
-  public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, BranchData branchData)
+  public RevisionData(String revision, RevisionData[] parents, String[] tags, Date date, String author, String[] commitMessage, String[] fileNames, BranchData branchData)
   {
     this(revision,
          parents,
@@ -1108,6 +1116,7 @@ class RevisionData
          date,
          author,
          commitMessage,
+         fileNames,
          new BranchData[]{branchData}
         );
   }
@@ -1119,9 +1128,10 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    * @param branch branch
    */
-  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, BranchData branchData)
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList, BranchData branchData)
   {
     this(revision,
          parentList,
@@ -1129,6 +1139,7 @@ class RevisionData
          date,
          author,
          commitMessageList,
+         fileNameList,
          new BranchData[]{branchData}
         );
   }
@@ -1140,8 +1151,9 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    */
-  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList)
   {
     this(revision,
          parentList,
@@ -1149,6 +1161,7 @@ class RevisionData
          date,
          author,
          commitMessageList,
+         fileNameList,
          new BranchData[]{}
         );
   }
@@ -1160,8 +1173,9 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    */
-  public RevisionData(String revision, AbstractList<RevisionData> parentList, String tag, Date date, String author, AbstractList<String> commitMessageList)
+  public RevisionData(String revision, AbstractList<RevisionData> parentList, String tag, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList)
   {
     this(revision,
          (parentList != null)?parentList.toArray(new RevisionData[parentList.size()]):(RevisionData[])null,
@@ -1169,6 +1183,7 @@ class RevisionData
          date,
          author,
          (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         (fileNameList != null) ? fileNameList.toArray(new String[fileNameList.size()]) : (String[])null,
          new BranchData[]{}
         );
   }
@@ -1179,9 +1194,10 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessage commit message
+   * @param fileNames names of changed files
    * @param branches branches
    */
-  public RevisionData(String revision, String[] tags, Date date, String author, String[] commitMessage, BranchData[] branches)
+  public RevisionData(String revision, String[] tags, Date date, String author, String[] commitMessage, String[] fileNames, BranchData[] branches)
   {
     this(revision,
          (RevisionData[])null,
@@ -1189,6 +1205,7 @@ class RevisionData
          date,
          author,
          commitMessage,
+         fileNames,
          branches
         );
   }
@@ -1199,9 +1216,10 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    * @param branches branches
    */
-  public RevisionData(String revision, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, BranchData[] branches)
+  public RevisionData(String revision, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList, BranchData[] branches)
   {
     this(revision,
          (RevisionData[])null,
@@ -1209,6 +1227,7 @@ class RevisionData
          date,
          author,
          (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         (fileNameList != null) ? fileNameList.toArray(new String[fileNameList.size()]) : (String[])null,
          branches
         );
   }
@@ -1219,15 +1238,17 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    */
-  public RevisionData(String revision, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
+  public RevisionData(String revision, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList)
   {
     this(revision,
          (RevisionData[])null,
          (tagList != null)?tagList.toArray(new String[tagList.size()]):(String[])null,
          date,
          author,
-         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         (commitMessageList != null) ? commitMessageList.toArray(new String[commitMessageList.size()]) : (String[])null,
+         (fileNameList != null) ? fileNameList.toArray(new String[fileNameList.size()]) : (String[])null,
          (BranchData[])null
         );
   }
@@ -1238,15 +1259,17 @@ class RevisionData
    * @param date date
    * @param author author name
    * @param commitMessageList commit message
+   * @param fileNameList names of changed files
    */
-  public RevisionData(String revision, String tag, Date date, String author, AbstractList<String> commitMessageList)
+  public RevisionData(String revision, String tag, Date date, String author, AbstractList<String> commitMessageList, AbstractList<String> fileNameList)
   {
     this(revision,
          (RevisionData[])null,
          (tag != null)?new String[]{tag}:(String[])null,
          date,
          author,
-         (commitMessageList != null)?commitMessageList.toArray(new String[commitMessageList.size()]):(String[])null,
+         (commitMessageList != null) ? commitMessageList.toArray(new String[commitMessageList.size()]) : (String[])null,
+         (fileNameList != null) ? fileNameList.toArray(new String[fileNameList.size()]) : (String[])null,
          new BranchData[]{}
         );
   }
@@ -1259,6 +1282,7 @@ class RevisionData
     this(revision,
          (AbstractList<RevisionData>)null,
          (AbstractList<String>)null,
+         null,
          null,
          null,
          null
@@ -1349,6 +1373,7 @@ class LogData
   public final Date     date;
   public final String   author;              // name of author
   public final String[] commitMessage;       // commit message lines
+  public final String[] fileNames;           // names of changed files
 
   // ------------------------ native functions ----------------------------
 
@@ -1359,13 +1384,15 @@ class LogData
    * @param author author name
    * @param date date/time
    * @param commitMessage commit message
+   * @param fileNames names of changed files
    */
-  public LogData(String revision, Date date, String author, String[] commitMessage)
+  public LogData(String revision, Date date, String author, String[] commitMessage, String[] fileNames)
   {
     this.revision      = revision;
     this.author        = author;
     this.date          = date;
     this.commitMessage = commitMessage;
+    this.fileNames     = fileNames;
   }
 
   /** match revision/author/commit message with text
@@ -1382,9 +1409,17 @@ class LogData
 
     if (commitMessage != null)
     {
-      for (String string : commitMessage)
+      for (String line : commitMessage)
       {
-        if (string.toLowerCase().indexOf(text) >= 0) return true;
+        if (line.toLowerCase().indexOf(text) >= 0) return true;
+      }
+    }
+
+    if (fileNames != null)
+    {
+      for (String fileName : fileNames)
+      {
+        if (fileName.toLowerCase().indexOf(text) >= 0) return true;
       }
     }
 
@@ -1396,7 +1431,7 @@ class LogData
    */
   public String toString()
   {
-    return "LogData {"+revision+", author: "+author+", date/time: "+date+", commit message: "+commitMessage+"}";
+    return "LogData {"+revision+", author: "+author+", date/time: "+date+", commit message: "+StringUtils.join(commitMessage,", ")+", file: "+StringUtils.join(fileNames,", ")+"}";
   }
 }
 

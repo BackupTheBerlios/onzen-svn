@@ -1135,7 +1135,8 @@ Dprintf.dprintf("");
         logDataList.add(new LogData(revisionData.revision,
                                     revisionData.date,
                                     revisionData.author,
-                                    revisionData.commitMessage
+                                    revisionData.commitMessage,
+                                    revisionData.fileNames
                                    )
                        );
       }
@@ -1712,6 +1713,7 @@ throw new RepositoryException("NYI");
     String             changeSet         = null;
     Date               date              = null;
     String             author            = null;
+    ArrayList<String>  fileNameList      = new ArrayList<String>();
     LinkedList<String> commitMessageList = new LinkedList<String>();
     while (   !dataDone
            && ((line = exec.getStdout()) != null)
@@ -1767,7 +1769,9 @@ throw new RepositoryException("NYI");
                                         (String)null,
                                         date,
                                         author,
-                                        commitMessageList
+                                        commitMessageList,
+//??? file list?
+                                        fileNameList
                                        );
 
         dataDone = true;

@@ -51,20 +51,28 @@ class RepositoryHG extends Repository
    */
   class RevisionDataHG extends RevisionData
   {
-    private String changeSet;
+    private String changeSetId;
 
     /** create HG revision data
      * @param revision revision
-     * @param changeSet change-set id
+     * @param changeSetId change-set id
      * @param tagList list with tags
      * @param date date
      * @param author author name
      * @param commitMessageList commit message
+     * @param fileNameList names of changed files
      */
-    public RevisionDataHG(String revision, String changeSet, AbstractList<String> tagList, Date date, String author, AbstractList<String> commitMessageList)
+    public RevisionDataHG(String               revision,
+                          String               changeSetId,
+                          AbstractList<String> tagList,
+                          Date                 date,
+                          String               author,
+                          AbstractList<String> commitMessageList,
+                          AbstractList<String> fileNameList
+                         )
     {
-      super(revision,tagList,date,author,commitMessageList);
-      this.changeSet = changeSet;
+      super(revision,tagList,date,author,commitMessageList,fileNameList);
+      this.changeSetId = changeSetId;
     }
 
     /** create HG revision data
@@ -80,7 +88,7 @@ class RepositoryHG extends Repository
      */
     public String getRevisionText()
     {
-      return revision+" ("+changeSet+")";
+      return revision+" ("+changeSetId+")";
     }
 
     /** convert data to string
@@ -130,7 +138,7 @@ class RepositoryHG extends Repository
   public final static String   LAST_REVISION_NAME     = "tip";
 
   /* log format template:
-    <rev> <changeset> <date> <time> <timezone> <author>
+    <rev> <changeset id> <date> <time> <timezone> <author>
     <parents>
     <branches>
     <tags>
@@ -1563,7 +1571,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           logDataList.add(new LogData(revisionData.revision,
                                       revisionData.date,
                                       revisionData.author,
-                                      revisionData.commitMessage
+                                      revisionData.commitMessage,
+                                      revisionData.fileNames
                                      )
                          );
         }
@@ -2113,7 +2122,7 @@ throw new Error("NYI");
       String             line;
       Matcher            matcher;
       String             revision          = null;
-      String             changeSet         = null;
+      String             changeSetId       = null;
       Date               date              = null;
       String             author            = null;
       ArrayList<String>  fileList          = new ArrayList<String>();
@@ -2134,10 +2143,10 @@ throw new Error("NYI");
         // match revision, node, date author
         if      ((matcher = PATTERN_CHANGE.matcher(line)).matches())
         {
-          revision  = matcher.group(1);
-          changeSet = matcher.group(2);
-          date      = parseDate(matcher.group(3));
-          author    = matcher.group(4);
+          revision    = matcher.group(1);
+          changeSetId = matcher.group(2);
+          date        = parseDate(matcher.group(3));
+          author      = matcher.group(4);
 
           // get files
           fileList.clear();
@@ -2172,7 +2181,8 @@ throw new Error("NYI");
           logDataList.add(new LogData(revision,
                                       date,
                                       author,
-                                      commitMessageList.toArray(new String[commitMessageList.size()])
+                                      commitMessageList.toArray(new String[commitMessageList.size()]),
+                                      fileList.toArray(new String[fileList.size()])
                                      )
                          );
         }
@@ -2217,7 +2227,7 @@ throw new Error("NYI");
       String             line;
       Matcher            matcher;
       String             revision          = null;
-      String             changeSet         = null;
+      String             changeSetId       = null;
       Date               date              = null;
       String             author            = null;
       ArrayList<String>  fileList          = new ArrayList<String>();
@@ -2238,10 +2248,10 @@ throw new Error("NYI");
         // match revision, node, date author
         if      ((matcher = PATTERN_CHANGE.matcher(line)).matches())
         {
-          revision  = matcher.group(1);
-          changeSet = matcher.group(2);
-          date      = parseDate(matcher.group(3));
-          author    = matcher.group(4);
+          revision    = matcher.group(1);
+          changeSetId = matcher.group(2);
+          date        = parseDate(matcher.group(3));
+          author      = matcher.group(4);
 
           // get files
           fileList.clear();
@@ -2276,7 +2286,8 @@ throw new Error("NYI");
           logDataList.add(new LogData(revision,
                                       date,
                                       author,
-                                      commitMessageList.toArray(new String[commitMessageList.size()])
+                                      commitMessageList.toArray(new String[commitMessageList.size()]),
+                                      fileList.toArray(new String[fileList.size()])
                                      )
                          );
         }
@@ -2968,7 +2979,7 @@ throw new Error("NYI");
     Matcher                 matcher;
     String                  line;
     String                  revision          = null;
-    String                  changeSet         = null;
+    String                  changeSetId       = null;
     Date                    date              = null;
     String                  author            = null;
     ArrayList<RevisionData> parentList        = new ArrayList<RevisionData>();
@@ -2976,6 +2987,7 @@ throw new Error("NYI");
     int                     parentRevision2   = 0;
     ArrayList<String>       tagList           = new ArrayList<String>();
     String                  branches          = null;
+    ArrayList<String>       fileNameList      = new ArrayList<String>();
     LinkedList<String>      commitMessageList = new LinkedList<String>();
     while (   !dataDone
            && ((line = exec.getStdout()) != null)
@@ -2989,10 +3001,10 @@ throw new Error("NYI");
       else if ((matcher = PATTERN_REVISION.matcher(line)).matches())
       {
         // revision
-        revision  = matcher.group(1);
-        changeSet = matcher.group(2);
-        date      = parseDate(matcher.group(3));
-        author    = matcher.group(4);
+        revision    = matcher.group(1);
+        changeSetId = matcher.group(2);
+        date        = parseDate(matcher.group(3));
+        author      = matcher.group(4);
 
         // get parents
         if ((line = exec.getStdout()) != null)
@@ -3049,11 +3061,13 @@ throw new Error("NYI");
 
         // add log info entry
         revisionData = new RevisionDataHG(revision,
-                                          changeSet,
+                                          changeSetId,
                                           tagList,
                                           date,
                                           author,
-                                          commitMessageList
+                                          commitMessageList,
+//??? file name list?
+                                          fileNameList
                                          );
         if (revisionDataMap != null) revisionDataMap.put(Integer.parseInt(revision),revisionData);
         if (fileParentMap != null) fileParentMap.put(revisionData,new ParentData(parentRevision1,parentRevision2));
