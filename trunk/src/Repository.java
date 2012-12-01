@@ -1439,7 +1439,18 @@ class LogDataComparator implements Comparator<LogData>
     switch (sortMode)
     {
       case REVISION:
-        return logData0.revision.compareTo(logData1.revision);
+        try
+        {
+          long n0 = Long.parseLong(logData0.revision);
+          long n1 = Long.parseLong(logData1.revision);
+          if      (n0 < n1) return -1;
+          else if (n0 > n1) return  1;
+          else              return  0;
+        }
+        catch (NumberFormatException exception)
+        {
+          return logData0.revision.compareTo(logData1.revision);
+        }
       case DATE:
         if      (logData0.date.before(logData1.date)) return -1;
         else if (logData0.date.after(logData1.date))  return  1;
@@ -2886,6 +2897,15 @@ abstract class Repository implements Serializable
    */
   abstract public LogData[] getLog(FileData fileData)
     throws RepositoryException;
+
+  /** get complete log
+   * @return log array
+   */
+  public LogData[] getLog()
+    throws RepositoryException
+  {
+    return getLog(null);
+  }
 
   /** get annotations to file
    * @param fileData file data
