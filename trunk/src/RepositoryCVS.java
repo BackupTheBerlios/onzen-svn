@@ -1430,7 +1430,7 @@ else {
       command.clear();
       command.append(Settings.cvsCommand,"log");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header

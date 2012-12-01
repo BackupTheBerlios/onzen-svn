@@ -1352,7 +1352,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header

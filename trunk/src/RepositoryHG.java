@@ -1549,7 +1549,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.hgCommand,"-y","-v","log","--template",LOG_TEMPLATE);
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header

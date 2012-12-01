@@ -1123,7 +1123,7 @@ Dprintf.dprintf("");
       command.clear();
       command.append(Settings.gitCommand,"log");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse data
