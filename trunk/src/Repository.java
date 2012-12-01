@@ -1368,6 +1368,29 @@ class LogData
     this.commitMessage = commitMessage;
   }
 
+  /** match revision/author/commit message with text
+   * @param text text
+   * @return true if text match to (is contained in) author or commit message
+   */
+  public boolean match(String text)
+  {
+    text = text.toLowerCase();
+
+    if (revision.toLowerCase().indexOf(text) >= 0) return true;
+
+    if (author.toLowerCase().indexOf(text) >= 0) return true;
+
+    if (commitMessage != null)
+    {
+      for (String string : commitMessage)
+      {
+        if (string.toLowerCase().indexOf(text) >= 0) return true;
+      }
+    }
+
+    return false;
+  }
+
   /** convert data to string
    * @return string
    */
@@ -1458,15 +1481,15 @@ class LogDataComparator implements Comparator<LogData>
       case AUTHOR:
         return logData0.author.compareTo(logData1.author);
       case COMMIT_MESSAGE:
-        if ((logData0.commitMessage != null) && (logData1.commitMessage != null))
+        if ((logData0.commitMessage != null) && (logData0.commitMessage.length > 0) && (logData1.commitMessage != null) && (logData1.commitMessage.length > 0))
         {
           return logData0.commitMessage[0].compareTo(logData1.commitMessage[0]);
         }
-        else if (logData0.commitMessage != null)
+        else if ((logData0.commitMessage != null) && (logData0.commitMessage.length > 0))
         {
           return -1;
         }
-        else if (logData0.commitMessage != null)
+        else if ((logData1.commitMessage != null) && (logData1.commitMessage.length > 0))
         {
           return 1;
         }
@@ -2514,7 +2537,7 @@ abstract class Repository implements Serializable
   }
 
     /** get revision data
-   * @param fileData file data
+   * @param fileData file data (can be null)
    * @param revision revision
    * @return revision data
    */
@@ -2529,6 +2552,16 @@ abstract class Repository implements Serializable
     throws RepositoryException
   {
     return getRevisionData(fileData,getLastRevision());
+  }
+
+  /** get revision data
+   * @param fileData file data
+   * @param revision revision
+   */
+  public RevisionData getRevisionData(String revision)
+    throws RepositoryException
+  {
+    return getRevisionData(null,revision);
   }
 
   /** get revision data tree (grow down, root = initial entry, leaves = newest entries)
