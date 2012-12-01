@@ -947,6 +947,8 @@ public class Settings
   public static int                      keyConvertWhitespaces                  = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyAddIgnoreFile                       = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyAddHiddenFile                       = SWT.NONE;
 
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFind                                = SWT.CTRL+'F';
