@@ -102,7 +102,7 @@ class CommandRevisionInfo
     display = shell.getDisplay();
 
     // add files dialog
-    dialog = Dialogs.open(shell,"File revision: "+fileData.getFileName(),new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.open(shell,"File revision" + ((fileData != null) ? ": "+fileData.getFileName() : ""),new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,1.0},new double[]{0.0,1.0}));
@@ -112,7 +112,14 @@ class CommandRevisionInfo
       Widgets.layout(label,0,0,TableLayoutData.W);
 
       text = Widgets.newStringView(composite,SWT.LEFT);
-      text.setText(fileData.getFileName());
+      if (fileData != null)
+      {
+        text.setText(fileData.getFileName());
+      }
+      else
+      {
+        text.setText("???");
+      }
       Widgets.layout(text,0,1,TableLayoutData.WE);
       text.addMouseListener(new MouseListener()
       {
@@ -177,7 +184,7 @@ class CommandRevisionInfo
       Widgets.layout(label,3,0,TableLayoutData.W);
 
       text = Widgets.newStringView(composite,SWT.LEFT);
-      text.setText(Units.formatByteSize(fileData.size)+" ("+fileData.size+"bytes)");
+      if (fileData != null) text.setText(Units.formatByteSize(fileData.size)+" ("+fileData.size+"bytes)");
       Widgets.layout(text,3,1,TableLayoutData.WE);
       text.addMouseListener(new MouseListener()
       {
@@ -199,14 +206,14 @@ class CommandRevisionInfo
       Widgets.layout(label,4,0,TableLayoutData.W);
 
       text = Widgets.newStringView(composite,SWT.LEFT);
-      text.setText(fileData.getPermissions(repositoryTab.repository));
+      if (fileData != null) text.setText(fileData.getPermissions(repositoryTab.repository));
       Widgets.layout(text,4,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Mode:");
       Widgets.layout(label,5,0,TableLayoutData.W);
 
       text = Widgets.newStringView(composite,SWT.LEFT);
-      text.setText(fileData.mode.toString());
+      if (fileData != null) text.setText(fileData.mode.toString());
       Widgets.layout(text,5,1,TableLayoutData.WE);
 
       label = Widgets.newLabel(composite,"Author:");
@@ -283,7 +290,14 @@ class CommandRevisionInfo
         {
           // get revision info
           Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
-          repositoryTab.setStatusText("Get revision '%s' for '%s'...",revision,fileData.getFileName());
+          if (fileData != null)
+          {
+            repositoryTab.setStatusText("Get revision '%s' for '%s'...",revision,fileData.getFileName());
+          }
+          else
+          {
+            repositoryTab.setStatusText("Get revision '%s'...",revision);
+          }
           try
           {
             data.revisionData = repositoryTab.repository.getRevisionData(fileData,revision);
@@ -323,7 +337,14 @@ class CommandRevisionInfo
 
         // get log
         Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
-        repositoryTab.setStatusText("Get log for '%s'...",fileData.getFileName());
+        if (fileData != null)
+        {
+          repositoryTab.setStatusText("Get log for '%s'...",fileData.getFileName());
+        }
+        else
+        {
+          repositoryTab.setStatusText("Get log...");
+        }
         try
         {
           data.logData = repositoryTab.repository.getLog(fileData);
@@ -383,6 +404,16 @@ class CommandRevisionInfo
   CommandRevisionInfo(Shell shell, RepositoryTab repositoryTab, FileData fileData)
   {
     this(shell,repositoryTab,fileData,repositoryTab.repository.getLastRevision());
+  }
+
+  /** show revision command of last revision
+   * @param shell shell
+   * @param repositoryTab repository tab
+   * @param revision revision to show or null
+   */
+  CommandRevisionInfo(Shell shell, RepositoryTab repositoryTab, String revision)
+  {
+    this(shell,repositoryTab,null,revision);
   }
 
   /** run dialog
