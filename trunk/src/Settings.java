@@ -759,6 +759,10 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryConvertWhitespaces             = new Point(700,200);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryChangesLog                     = new Point(850,500);
+  @SettingValue(type=SettingValueAdapterWidthArray.class)
+  public static ColumnSizes              geometryChangesLogColumns              = new ColumnSizes(60,60,80,60,100);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryChangedFiles                   = new Point(850,500);
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryChangedFilesColumns            = new ColumnSizes(600,100);
@@ -912,6 +916,8 @@ public class Settings
   public static int                      keyPushChangesTo                       = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyDiff                                = SWT.CTRL+'D';
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyChangesLog                          = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevisionInfo                        = SWT.CTRL+'I';
   @SettingValue(type=SettingValueAdapterKey.class)
