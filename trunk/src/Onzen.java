@@ -2177,7 +2177,7 @@ menuItem.setEnabled(false);
 
     menu = Widgets.addMenu(menuBar,"View");
     {
-      menuItem = Widgets.addMenuItem(menu,"Revision info\u2026",Settings.keyRevisionInfo);
+      menuItem = Widgets.addMenuItem(menu,"Changes log\u2026",Settings.keyChangesLog);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2187,7 +2187,7 @@ menuItem.setEnabled(false);
         {
           if (selectedRepositoryTab != null)
           {
-            selectedRepositoryTab.revisionInfo();
+            selectedRepositoryTab.changesLog();
           }
         }
       });
@@ -2201,6 +2201,21 @@ menuItem.setEnabled(false);
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Widgets.invoke(widgetButtonRevisions);
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Revision info\u2026",Settings.keyRevisionInfo);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.revisionInfo();
+          }
         }
       });
 

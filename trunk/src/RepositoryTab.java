@@ -591,7 +591,7 @@ Dprintf.dprintf("NYI");
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Revision info\u2026",Settings.keyRevisionInfo);
+        menuItem = Widgets.addMenuItem(menu,"Changes log\u2026",Settings.keyChangesLog);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -599,7 +599,7 @@ Dprintf.dprintf("NYI");
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            revisionInfo();
+            changesLog();
           }
         });
 
@@ -612,6 +612,18 @@ Dprintf.dprintf("NYI");
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             revisions();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Revision info\u2026",Settings.keyRevisionInfo);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            revisionInfo();
           }
         });
 
@@ -1448,16 +1460,12 @@ Dprintf.dprintf("NYI");
     }
   }
 
-  /** show revision info of selected entry
+  /** show changes log
    */
-  public void revisionInfo()
+  public void changesLog()
   {
-    FileData fileData = getSelectedFileData();
-    if (fileData != null)
-    {
-      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,this,fileData);
-      commandRevisionInfo.run();
-    }
+    CommandChangesLog commandChangesLog = new CommandChangesLog(shell,this);
+    commandChangesLog.run();
   }
 
   /** show revision tree of selected entry
@@ -1469,6 +1477,18 @@ Dprintf.dprintf("NYI");
     {
       CommandRevisions commandRevisions = new CommandRevisions(shell,this,fileData);
       commandRevisions.run();
+    }
+  }
+
+  /** show revision info of selected entry
+   */
+  public void revisionInfo()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,this,fileData);
+      commandRevisionInfo.run();
     }
   }
 
