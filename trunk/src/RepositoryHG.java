@@ -985,7 +985,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
         command.clear();
         command.append(Settings.hgCommand,"-y","cat","-r",newRevision);
         command.append("--");
-        command.append(getFileDataName(fileData));
+        if (fileData != null) command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content

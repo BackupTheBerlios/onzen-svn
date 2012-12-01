@@ -846,7 +846,7 @@ class RepositorySVN extends Repository
         command.append(Settings.svnCommand,"--non-interactive","cat","--revision",newRevision);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
-        command.append(getFileDataName(fileData));
+        if (fileData != null) command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content
@@ -893,7 +893,7 @@ class RepositorySVN extends Repository
       command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // skip diff header

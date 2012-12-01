@@ -1012,7 +1012,7 @@ Dprintf.dprintf("unknown %s",line);
         command.clear();
         command.append(Settings.cvsCommand,"up","-p","-r",newRevision);
         command.append("--");
-        command.append(getFileDataName(fileData));
+        if (fileData != null) command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content

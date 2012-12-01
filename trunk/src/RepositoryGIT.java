@@ -639,7 +639,8 @@ Dprintf.dprintf("");
 
         // check out new revision
         command.clear();
-        command.append(Settings.gitCommand,"show",newRevision+":"+getFileDataName(fileData));
+        command.append(Settings.gitCommand,"show");
+        command.append(newRevision+((fileData != null) ? ":"+getFileDataName(fileData) : ""));
         exec = new Exec(rootPath,command);
 
         // read content
