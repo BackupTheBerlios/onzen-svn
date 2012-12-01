@@ -654,7 +654,7 @@ throw new RepositoryException("NYI");
       command.clear();
       command.append(Settings.cvsCommand,"log","-r",revision);
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header

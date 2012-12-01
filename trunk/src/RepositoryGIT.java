@@ -445,7 +445,7 @@ throw new RepositoryException("NYI");
       command.clear();
       command.append(Settings.gitCommand,"log","-1");
       command.append("--");
-      command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
+      if (fileData != null) command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse data

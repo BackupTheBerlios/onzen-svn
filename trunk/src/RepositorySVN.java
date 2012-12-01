@@ -548,7 +548,7 @@ class RepositorySVN extends Repository
       command.append(Settings.svnCommand,"--non-interactive","log","-r",revision+":PREV","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header

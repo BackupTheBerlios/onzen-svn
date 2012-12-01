@@ -681,7 +681,7 @@ throw new RepositoryException("NYI");
       if (revision != null) command.append("-r",revision);
       command.append("-l","1","--template",LOG_TEMPLATE);
       command.append("--");
-      command.append(getFileDataName(fileData));
+      if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse header
