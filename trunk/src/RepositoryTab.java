@@ -1055,8 +1055,8 @@ menuItem.setEnabled(false);
     final HashSet<FileData> fileDataSet = getAllFileDataSet();
 
     BusyDialog busyDialog = new BusyDialog(shell,
-                                           "Update",
                                            "Update all directories and files...",
+                                           400,200,
                                            BusyDialog.LIST
                                           );
     busyDialog.autoAnimate();
@@ -2533,11 +2533,12 @@ Dprintf.dprintf("");
     {
       if (fileData.type == FileData.Types.DIRECTORY)
       {
+        hiddenDirectoryPatternsMap.put(fileData.getFileName(),new Settings.FilePattern(fileData.getFileName()));
       }
       else
       {
+        hiddenFilePatternsMap.put(fileData.getFileName(),new Settings.FilePattern(fileData.getFileName()));
       }
-      repository.addIgnorePattern(fileData.getFileName(repository));
     }
 
     // store new pattern maps
