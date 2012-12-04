@@ -103,7 +103,7 @@ class CommandChangedFiles
   private final Button        widgetButtonRevert;
   private final Button        widgetButtonDiff;
   private final Button        widgetButtonRevisions;
-  private final Button        widgetButtonSolve;
+  private final Button        widgetButtonResolve;
   private final Button        widgetButtonReread;
   private final Button        widgetClose;
 
@@ -344,7 +344,32 @@ menuItem.setEnabled(false);
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            Widgets.invoke(widgetButtonSolve);
+            Widgets.invoke(widgetButtonResolve);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Set resolved",Settings.keySetResolved);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+            if (fileDataSet != null)
+            {
+              try
+              {
+                repositoryTab.repository.resolve(fileDataSet);
+                Widgets.notify(dialog,USER_EVENT_FILTER);
+              }
+              catch (RepositoryException exception)
+              {
+                Dialogs.error(shell,"Update fail: %s",exception.getMessage());
+                return;
+              }
+            }
           }
         });
 
@@ -928,18 +953,18 @@ menuItem.setEnabled(false);
         }
       });
 
-      widgetButtonSolve = Widgets.newButton(composite,"Resolve",Settings.keyResolve);
+      widgetButtonResolve = Widgets.newButton(composite,"Resolve",Settings.keyResolve);
 // NYI
-widgetButtonSolve.setEnabled(false);
-      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonSolve,data)
+widgetButtonResolve.setEnabled(false);
+      Widgets.layout(widgetButtonResolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.addModifyListener(new WidgetModifyListener(widgetButtonResolve,data)
       {
         public void modified(Control control)
         {
 //          control.setEnabled(widgetFiles.getSelectionCount() > 0);
         }
       });
-      widgetButtonSolve.addSelectionListener(new SelectionListener()
+      widgetButtonResolve.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
