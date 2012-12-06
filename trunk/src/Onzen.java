@@ -5531,7 +5531,7 @@ throw new Error("Internal error: NYI");
                   else
                   {
                     text = Widgets.newText(subComposite);
-                    text.setText(value);
+                    if (value != null) text.setText(value);
                     Widgets.layout(text,row,1,TableLayoutData.WE);
                     text.setToolTipText(repositoryValue.tooltip());
                     widgetFieldMap.put(field,text);
