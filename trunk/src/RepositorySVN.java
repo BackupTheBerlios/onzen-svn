@@ -31,6 +31,11 @@ import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
 /****************************** Classes ********************************/
 
 /** Apache Subversion (SVN) repository
@@ -46,6 +51,10 @@ class RepositorySVN extends Repository
 
   // --------------------------- variables --------------------------------
   private final static RepositorySVN staticInstance = new RepositorySVN();
+
+  @XmlElement(name = "logPrefix")
+  @RepositoryValue(title = "Log prefix:", defaultValue="/trunk", tooltip="Prefix of repository log path.")
+  public String logPrefix;
 
   // ------------------------ native functions ----------------------------
 
@@ -2083,7 +2092,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     throws IOException
   {
     final Pattern PATTERN_REVISION = Pattern.compile("^r(\\d+)\\s*\\|\\s*(\\S*)\\s*\\|\\s*(\\S*\\s+\\S*\\s+\\S*).*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_FILE     = Pattern.compile("^\\s*?\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_FILE     = Pattern.compile("^\\s*.\\s+(.+)\\s*",Pattern.CASE_INSENSITIVE);
 
     RevisionData       revisionData      = null;
 
@@ -2119,7 +2128,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
                && (matcher = PATTERN_FILE.matcher(line)).matches()
               )
         {
-          fileNameList.add(matcher.group(1));
+          String fileName = matcher.group(1);
+          if ((logPrefix != null) && fileName.startsWith(logPrefix)) fileName = fileName.substring(logPrefix.length());
+          fileNameList.add(fileName);
         }
 
         // get commit message lines
