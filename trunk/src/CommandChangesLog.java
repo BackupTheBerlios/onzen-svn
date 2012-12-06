@@ -77,12 +77,14 @@ class CommandChangesLog
   {
     LogData[] logData;
     LogData   selectedLogData0,selectedLogData1;
+    FileData  fileData;
 
     Data()
     {
       this.logData          = null;
       this.selectedLogData0 = null;
       this.selectedLogData1 = null;
+      this.fileData         = null;
     }
   };
 
@@ -107,6 +109,7 @@ class CommandChangesLog
   private final Text          widgetSelectedLog1;
   private final Table         widgetChangesLog;
   private final TableColumn   widgetChangesLogColumn;
+  private final List          widgetFiles;
   private final Text          widgetFind;
   private final Button        widgetFindPrev;
   private final Button        widgetFindNext;
@@ -151,7 +154,7 @@ class CommandChangesLog
     dialog = Dialogs.open(shell,"Changes log",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+    composite.setLayout(new TableLayout(new double[]{0.7,0.3,0.0},1.0));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       // changes log
@@ -203,10 +206,16 @@ class CommandChangesLog
       widgetChangesLog.setMenu(menu);
       widgetChangesLog.setToolTipText("Changes log. Double-click to view revision info.");
 
+      // files
+      widgetFiles = Widgets.newList(composite);
+      widgetFiles.setBackground(Onzen.COLOR_GRAY);
+      Widgets.layout(widgetFiles,1,0,TableLayoutData.NSWE);
+      widgetFiles.setToolTipText("Changed files.");
+
       // find
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
+      Widgets.layout(subComposite,2,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
@@ -222,8 +231,7 @@ class CommandChangesLog
         {
           public void modified(Control control)
           {
-Dprintf.dprintf("");
-//            Widgets.setEnabled(control,(data.logData != null) && (data.logData != null));
+            Widgets.setEnabled(control,(data.logData != null) && (data.logData != null));
           }
         });
         widgetFindPrev.setToolTipText("Find previous occurrence of text ["+Widgets.acceleratorToText(Settings.keyFindPrev)+"].");
@@ -235,8 +243,7 @@ Dprintf.dprintf("");
         {
           public void modified(Control control)
           {
-Dprintf.dprintf("");
-//            Widgets.setEnabled(control,(data.logData != null) && (data.logData != null));
+            Widgets.setEnabled(control,(data.logData != null) && (data.logData != null));
           }
         });
         widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
@@ -286,7 +293,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled((data.selectedLogData0 != null) && (data.selectedLogData1 != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedLogData0 != null) && (data.selectedLogData1 != null) && (data.fileData != null));
         }
       });
       widgetDiff.addSelectionListener(new SelectionListener()
@@ -294,12 +301,16 @@ Dprintf.dprintf("");
         public void widgetSelected(SelectionEvent selectionEvent)
         {
 Dprintf.dprintf("");
-          CommandDiff commandDiff = new CommandDiff(dialog,
-                                                    repositoryTab,
-                                                    data.selectedLogData0.revision,
-                                                    (data.selectedLogData1 != null) ? data.selectedLogData1.revision : null
-                                                   );
-          commandDiff.run();
+          if ((data.selectedLogData1 != null) && (data.fileData != null))
+          {
+            CommandDiff commandDiff = new CommandDiff(dialog,
+                                                      repositoryTab,
+                                                      data.fileData,
+                                                      data.selectedLogData0.revision,
+                                                      (data.selectedLogData1 != null) ? data.selectedLogData1.revision : null
+                                                     );
+            commandDiff.run();
+          }
         }
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -313,7 +324,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled((data.selectedLogData0 != null) && (data.selectedLogData1 != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedLogData0 != null) && (data.selectedLogData1 != null) && (data.fileData != null));
         }
       });
       widgetPatch.addSelectionListener(new SelectionListener()
@@ -323,9 +334,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          if (data.selectedLogData1 != null)
+          if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
             CommandCreatePatch commandCreatePatch;
 /*
@@ -379,7 +388,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled(data.selectedLogData1 != null);
+          if (!control.isDisposed()) control.setEnabled((data.selectedLogData1 != null) && (data.fileData != null));
         }
       });
       widgetView.addSelectionListener(new SelectionListener()
@@ -389,13 +398,11 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          if (data.selectedLogData1 != null)
+          if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
 Dprintf.dprintf("");
-//            CommandView commandView = new CommandView(dialog,repositoryTab,fileData,data.selectedLogData1.revision);
-//            commandView.run();
+            CommandView commandView = new CommandView(dialog,repositoryTab,data.fileData,data.selectedLogData1.revision);
+            commandView.run();
           }
         }
       });
@@ -407,7 +414,7 @@ Dprintf.dprintf("");
       {
         public void modified(Control control)
         {
-          if (!control.isDisposed()) control.setEnabled((data.selectedLogData1 != null));
+          if (!control.isDisposed()) control.setEnabled((data.selectedLogData1 != null) && (data.fileData != null));
         }
       });
       widgetSave.addSelectionListener(new SelectionListener()
@@ -419,7 +426,7 @@ Dprintf.dprintf("");
         {
           Button widget = (Button)selectionEvent.widget;
 
-          if (data.selectedLogData1 != null)
+          if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
 /*
             try
@@ -474,9 +481,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Button widget = (Button)selectionEvent.widget;
-
-          if (data.selectedLogData1 != null)
+          if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
             if (Dialogs.confirm(dialog,String.format("Revert file '%s' to revision %s?",fileData.getFileName(),data.selectedLogData1.revision)))
             {
@@ -529,16 +534,6 @@ Dprintf.dprintf("");
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
-        Table       widget     = (Table)mouseEvent.widget;
-        TableItem[] tableItems = widgetChangesLog.getSelection();
-
-        if (tableItems.length >= 0)
-        {
-          LogData logData = (LogData)tableItems[0].getData();
-
-          CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,repositoryTab,logData.revision);
-          commandRevisionInfo.run();
-        }
       }
       public void mouseDown(MouseEvent mouseEvent)
       {
@@ -559,6 +554,56 @@ Dprintf.dprintf("");
       }
     });
     widgetChangesLog.addKeyListener(new KeyListener()
+    {
+      public void keyPressed(KeyEvent keyEvent)
+      {
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyFind))
+        {
+          widgetFind.forceFocus();
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindPrev))
+        {
+          Widgets.invoke(widgetFindPrev);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
+        {
+          Widgets.invoke(widgetFindNext);
+        }
+      }
+      public void keyReleased(KeyEvent keyEvent)
+      {
+      }
+    });
+    widgetFiles.addMouseListener(new MouseListener()
+    {
+      public void mouseDoubleClick(MouseEvent mouseEvent)
+      {
+        List     widget    = (List)mouseEvent.widget;
+        String[] fileNames = widgetFiles.getSelection();
+
+        if ((data.selectedLogData1 != null) && (data.fileData != null))
+        {
+          CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,repositoryTab,data.fileData,data.selectedLogData1.revision);
+          commandRevisionInfo.run();
+        }
+      }
+      public void mouseDown(MouseEvent mouseEvent)
+      {
+        List     widget    = (List)mouseEvent.widget;
+        String[] fileNames = widgetFiles.getSelection();
+
+        if (fileNames.length > 0)
+        {
+          data.fileData = new FileData(fileNames[0]);
+
+          Widgets.modified(data);
+        }
+      }
+      public void mouseUp(MouseEvent mouseEvent)
+      {
+      }
+    });
+    widgetFiles.addKeyListener(new KeyListener()
     {
       public void keyPressed(KeyEvent keyEvent)
       {
@@ -807,7 +852,7 @@ Dprintf.dprintf("");
   }
 
   /** select revision
-   * @param index index
+   * @param logData0,logData1 logData
    */
   private void selectRevision(LogData logData0, LogData logData1)
   {
@@ -816,16 +861,25 @@ Dprintf.dprintf("");
     data.selectedLogData0 = logData0;
     data.selectedLogData1 = logData1;
     if (data.selectedLogData0 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData0,COLOR_SELECTED0);
+    if (data.selectedLogData1 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData1,COLOR_SELECTED1);    
+    data.fileData = null;
+
     if (data.selectedLogData1 != null)
     {
-      Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData1,COLOR_SELECTED1);
-
       if (!dialog.isDisposed())
       {
         display.syncExec(new Runnable()
         {
           public void run()
           {
+            // set changed files
+            widgetFiles.removeAll();
+            for (String fileName : data.selectedLogData1.fileNames)
+            {
+              widgetFiles.add(fileName);
+            }
+
+            // select table item, show it
             TableItem[] tableItems = widgetChangesLog.getItems();
             for (TableItem tableItem : widgetChangesLog.getItems())
             {
