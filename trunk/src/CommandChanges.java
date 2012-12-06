@@ -428,6 +428,7 @@ class CommandChanges
               Dialogs.error(dialog,extendedMessage,"Getting changes fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally
@@ -595,6 +596,7 @@ class CommandChanges
           Dialogs.error(dialog,"Getting changes fail: %s",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally

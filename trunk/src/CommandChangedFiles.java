@@ -367,6 +367,7 @@ menuItem.setEnabled(false);
               catch (RepositoryException exception)
               {
                 Dialogs.error(shell,"Update fail: %s",exception.getMessage());
+                Onzen.printStacktrace(exception);
                 return;
               }
             }
@@ -717,6 +718,7 @@ menuItem.setEnabled(false);
             catch (RepositoryException exception)
             {
               Dialogs.error(shell,"Update fail: %s",exception.getMessage());
+              Onzen.printStacktrace(exception);
               return;
             }
           }
@@ -1294,6 +1296,7 @@ Dprintf.dprintf("");
           Dialogs.error(dialog,"Getting file revisions fail: %s",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally
