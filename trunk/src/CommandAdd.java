@@ -483,6 +483,7 @@ class CommandAdd
           Dialogs.error(shell,"Cannot add files (error: %s)",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally

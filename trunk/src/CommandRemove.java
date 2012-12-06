@@ -439,6 +439,7 @@ class CommandRemove
           Dialogs.error(shell,extendedMessage,"XCannot remove files (error: %s)",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally

@@ -380,6 +380,7 @@ class CommandCreateBranch
               Dialogs.error(dialog,String.format("Getting branch names fail: %s",exceptionMessage));
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally
@@ -457,14 +458,17 @@ class CommandCreateBranch
       }
       catch (RepositoryException exception)
       {
+        final String exceptionMessage = exception.getMessage();
         display.syncExec(new Runnable()
         {
           public void run()
           {
             busyDialog.close();
+
+            Dialogs.error(dialog,"Create branch fail: %s",exceptionMessage);
           }
         });
-        Dialogs.error(dialog,"Create branch fail: %s",exception.getMessage());
+        Onzen.printStacktrace(exception);
         return;
       }
       finally

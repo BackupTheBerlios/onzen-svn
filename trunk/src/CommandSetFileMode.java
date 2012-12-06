@@ -449,6 +449,7 @@ class CommandSetFileMode
           Dialogs.error(dialog,"Cannot set file mode (error: %s)",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally

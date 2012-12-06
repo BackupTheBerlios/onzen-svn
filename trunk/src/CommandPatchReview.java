@@ -796,6 +796,7 @@ class CommandPatchReview
             catch (RepositoryException exception)
             {
               Dialogs.error(dialog,"Cannot get patch (error: %s)",exception.getMessage());
+              Onzen.printStacktrace(exception);
               return;
             }
             finally
@@ -1621,6 +1622,7 @@ class CommandPatchReview
         catch (RepositoryException exception)
         {
           Dialogs.error(dialog,exception.getExtendedMessage(),"Cannot post patch to review server (error: %s)",exception.getMessage());
+          Onzen.printStacktrace(exception);
           return false;
         }
         catch (SQLException exception)
@@ -1677,6 +1679,7 @@ class CommandPatchReview
         catch (RepositoryException exception)
         {
           Dialogs.error(dialog,"Cannot post patch to review server (error: %s)",exception.getMessage());
+          Onzen.printStacktrace(exception);
           return false;
         }
         finally

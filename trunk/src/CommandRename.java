@@ -463,6 +463,7 @@ class CommandRename
                        );
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally

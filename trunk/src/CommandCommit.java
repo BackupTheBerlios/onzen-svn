@@ -461,6 +461,7 @@ class CommandCommit
               Dialogs.error(shell,"Getting file patch fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally
@@ -656,6 +657,7 @@ Dprintf.dprintf("result[0]=%s",result[0]);
           Dialogs.error(shell,"Cannot commit files (error: %s)",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally

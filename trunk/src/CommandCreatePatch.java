@@ -1008,6 +1008,7 @@ class CommandCreatePatch
               Dialogs.error(dialog,"Getting file patch fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally

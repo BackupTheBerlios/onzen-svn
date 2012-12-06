@@ -312,6 +312,7 @@ class CommandRevisionInfo
                 Dialogs.error(dialog,"Getting file revision '%s' fail: %s",revision,exceptionMessage);
               }
             });
+            Onzen.printStacktrace(exception);
             return;
           }
           finally
@@ -359,6 +360,7 @@ class CommandRevisionInfo
               Dialogs.error(dialog,"Getting log of file fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally

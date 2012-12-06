@@ -509,6 +509,7 @@ class CommandAnnotations
               Dialogs.error(dialog,String.format("Getting revisions fail: %s",exceptionMessage));
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally
@@ -891,6 +892,7 @@ class CommandAnnotations
               Dialogs.error(dialog,"Getting file annotations fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally

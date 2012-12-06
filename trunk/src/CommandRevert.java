@@ -222,6 +222,7 @@ class CommandRevert
                 Dialogs.error(dialog,String.format("Getting revisions fail: %s",exceptionMessage));
               }
             });
+            Onzen.printStacktrace(exception);
             return;
           }
           finally
@@ -346,6 +347,7 @@ class CommandRevert
           Dialogs.error(shell,"Cannot revert files (error: %s)",exceptionMessage);
         }
       });
+      Onzen.printStacktrace(exception);
       return;
     }
     finally
