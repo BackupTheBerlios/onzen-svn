@@ -367,7 +367,12 @@ public class Settings
     {
       if      (color.foreground != null)
       {
-        if      ((color.background != null) && (color.foreground != color.background))
+        if      (   (color.background != null)
+                 && (   (color.foreground.red   != color.background.red  )
+                     || (color.foreground.green != color.background.green)
+                     || (color.foreground.blue  != color.background.blue )
+                    )
+                )
         {
           return  ((color.foreground != null) ? color.foreground.red+","+color.foreground.green+","+color.foreground.blue : "")
                  +":"
@@ -795,7 +800,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                    colorSelect0                           = new Color(null,new RGB(  0,255,196));
   @SettingValue(type=SettingValueAdapterColor.class)
-  public static Color                    colorSelect1                           = new Color(null,new RGB(  0,196,255));
+  public static Color                    colorSelect1                           = new Color(null,new RGB(196,255,  0));
 
   @SettingComment(text={""})
   @SettingValue(type=SettingValueAdapterColor.class)
