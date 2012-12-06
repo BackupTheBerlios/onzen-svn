@@ -391,13 +391,7 @@ public class Onzen
   public static void printInternalError(Throwable throwable, Object... args)
   {
     printInternalError(throwable.toString());
-    if (Settings.debugFlag)
-    {
-      for (StackTraceElement stackTraceElement : throwable.getStackTrace())
-      {
-        System.err.println("  "+stackTraceElement);
-      }
-    }
+    printStacktrace(throwable);
   }
 
   /** print warning to stderr
@@ -413,6 +407,20 @@ public class Onzen
       System.err.print(" at "+stackTrace[2].getFileName()+", "+stackTrace[2].getLineNumber());
     }
     System.err.println();
+  }
+
+  /** print exception stack trace to stderr
+   * @param exception exception to print
+   */
+  public static void printStacktrace(Throwable throwable)
+  {
+    if (Settings.debugFlag)
+    {
+      for (StackTraceElement stackTraceElement : throwable.getStackTrace())
+      {
+        System.err.println("  "+stackTraceElement);
+      }
+    }
   }
 
   /** renice i/o exception (remove java.io.IOExcpetion text from exception)
@@ -492,13 +500,7 @@ Dprintf.dprintf("d=%s",d);
 Dprintf.dprintf("exception=%s",exception);
 exception.printStackTrace();
       System.err.println("ERROR graphics: "+exception.getCause());
-      if (Settings.debugFlag)
-      {
-        for (StackTraceElement stackTraceElement : exception.getStackTrace())
-        {
-          System.err.println("  "+stackTraceElement);
-        }
-      }
+      printStacktrace(exception);
     }
     catch (AssertionError assertionError)
     {
