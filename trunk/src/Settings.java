@@ -291,6 +291,9 @@ public class Settings
    */
   static class Color implements Cloneable
   {
+    public final RGB DEFAULT_FOREGROUND;
+    public final RGB DEFAULT_BACKGROUND;
+
     public RGB foreground;
     public RGB background;
 
@@ -299,8 +302,10 @@ public class Settings
      */
     Color(RGB foreground, RGB background)
     {
-      this.foreground = foreground;
-      this.background = background;
+      this.DEFAULT_FOREGROUND = foreground;
+      this.DEFAULT_BACKGROUND = foreground;
+      this.foreground         = foreground;
+      this.background         = background;
     }
 
     /** create color
