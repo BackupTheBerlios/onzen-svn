@@ -1612,7 +1612,8 @@ class RepositoryException extends Exception
    */
   RepositoryException(Exception cause)
   {
-    this(cause.getMessage(),null,cause);
+    super(cause.getMessage(),cause);
+    this.extendedMessage = null;
   }
 
   /** create repository exception
