@@ -921,7 +921,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyDiff                                = SWT.CTRL+'D';
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyChangesLog                          = SWT.NONE;
+  public static int                      keyChangesLog                          = SWT.CTRL+'K';
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevisionInfo                        = SWT.CTRL+'I';
   @SettingValue(type=SettingValueAdapterKey.class)
