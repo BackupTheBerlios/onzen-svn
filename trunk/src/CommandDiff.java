@@ -1551,6 +1551,7 @@ class CommandDiff
                 Dialogs.error(dialog,String.format("Getting revisions fail: %s",exceptionMessage));
               }
             });
+            Onzen.printStacktrace(exception);
             return;
           }
           finally
@@ -2454,6 +2455,7 @@ Dprintf.dprintf("maxWidth=%d widgetTextLeft=%s %d",maxWidth,widgetTextLeft.getBo
               Dialogs.error(dialog,"Getting file differences fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally
@@ -2575,6 +2577,9 @@ Dprintf.dprintf("maxWidth=%d widgetTextLeft=%s %d",maxWidth,widgetTextLeft.getBo
 
               // notify modification
               Widgets.modified(data);
+
+              // show first difference
+              Widgets.invoke(widgetNext);
             }
           });
         }
