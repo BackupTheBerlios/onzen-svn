@@ -149,9 +149,9 @@ class RepositoryHG extends Repository
   private final String LOG_TEMPLATE = "{rev} {node|short} {date|isodate} {author}\\n{parents}\\n{branches}\\n{tags}\\n{desc}\\n-----\\n";
 
   // --------------------------- variables --------------------------------
- private final static RepositoryHG staticInstance = new RepositoryHG();
+  private final static RepositoryHG staticInstance = new RepositoryHG();
 
- @XmlElement(name = "masterRepository")
+  @XmlElement(name = "masterRepository")
   @RepositoryValue(title = "Master repository:", pathSelector=true, tooltip="Path to master repository.")
   public String masterRepository;
 
@@ -159,7 +159,7 @@ class RepositoryHG extends Repository
   @RepositoryValue(title = "Outgoing repository:", pathSelector=true, tooltip="Path to outgoing repository.")
   public String outgoingRepository;
 
- private HashMap<Integer,ParentData> parentMap = null;
+  private HashMap<Integer,ParentData> parentMap = null;
 
   // ------------------------ native functions ----------------------------
 
