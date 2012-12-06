@@ -1912,12 +1912,9 @@ Dprintf.dprintf("");
                 // get name
                 String name = (!configValue.name().isEmpty()) ? configValue.name() : field.getName();
 
-                // convert to string
-                String string = (String)settingValueAdapter.toString(color);
-
                 // add entry
                 color = color.clone();
-                Widgets.addTableEntry(widgetColors,color,name.substring(5));
+                Widgets.addTableEntry(widgetColors,color,name.substring(5));   // Note: remove prefix "Color"
                 Widgets.setTableEntryColor(widgetColors,color,1,new Color(null,color.foreground));
                 Widgets.setTableEntryColor(widgetColors,color,2,new Color(null,color.background));
               }
@@ -2379,14 +2376,18 @@ Dprintf.dprintf("");
    */
   private boolean editColor(String name, final Settings.Color color)
   {
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Text      text;
     Button    button;
-    Canvas    canvas;
 
     // add editor dialog
     final Shell dialog = Dialogs.openModal(this.dialog,"Edit color",100,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Canvas widgetColorForeground;
+    final Canvas widgetColorBackground;
+    final Label  widgetValueForeground;
+    final Label  widgetValueBackground;
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
@@ -2400,63 +2401,75 @@ Dprintf.dprintf("");
 
       label = Widgets.newLabel(composite,"Foreground:");
       Widgets.layout(label,1,0,TableLayoutData.W);
-      canvas = Widgets.newCanvas(composite,SWT.BORDER);
-      canvas.setForeground(new Color(null,color.foreground));
-      canvas.setBackground(new Color(null,color.foreground));
-      Widgets.layout(canvas,1,1,TableLayoutData.WE,0,0,0,0,60,20);
-      canvas.addMouseListener(new MouseListener()
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.WE);
       {
-        public void mouseDoubleClick(MouseEvent mouseEvent)
+        widgetColorForeground = Widgets.newCanvas(subComposite,SWT.BORDER);
+        widgetColorForeground.setForeground(new Color(null,color.foreground));
+        widgetColorForeground.setBackground(new Color(null,color.foreground));
+        Widgets.layout(widgetColorForeground,0,0,TableLayoutData.WE,0,0,0,0,60,20);
+        widgetValueForeground = Widgets.newLabel(subComposite,String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue));
+        Widgets.layout(widgetValueForeground,0,1,TableLayoutData.W);
+        widgetColorForeground.addMouseListener(new MouseListener()
         {
-        }
-        public void mouseDown(MouseEvent mouseEvent)
-        {
-        }
-        public void mouseUp(MouseEvent mouseEvent)
-        {
-          Canvas widget = (Canvas)mouseEvent.widget;
-
-          ColorDialog colorDialog = new ColorDialog(dialog);
-          colorDialog.setRGB(color.foreground);
-          RGB rgb = colorDialog.open();
-          if (rgb != null)
+          public void mouseDoubleClick(MouseEvent mouseEvent)
           {
-            color.foreground = rgb;
-            widget.setForeground(new Color(null,rgb));
-            widget.setBackground(new Color(null,rgb));
           }
-        }
-      });
+          public void mouseDown(MouseEvent mouseEvent)
+          {
+          }
+          public void mouseUp(MouseEvent mouseEvent)
+          {
+            ColorDialog colorDialog = new ColorDialog(dialog);
+            colorDialog.setRGB(color.foreground);
+            RGB rgb = colorDialog.open();
+            if (rgb != null)
+            {
+              color.foreground = rgb;
+              widgetColorForeground.setForeground(new Color(null,rgb));
+              widgetColorForeground.setBackground(new Color(null,rgb));
+              widgetValueForeground.setText(String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue));
+            }
+          }
+        });
+      }
 
       label = Widgets.newLabel(composite,"Background:");
       Widgets.layout(label,2,0,TableLayoutData.W);
-      canvas = Widgets.newCanvas(composite,SWT.BORDER);
-      canvas.setForeground(new Color(null,color.background));
-      canvas.setBackground(new Color(null,color.background));
-      Widgets.layout(canvas,2,1,TableLayoutData.WE,0,0,0,0,60,20);
-      canvas.addMouseListener(new MouseListener()
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,2,1,TableLayoutData.WE);
       {
-        public void mouseDoubleClick(MouseEvent mouseEvent)
+        widgetColorBackground = Widgets.newCanvas(subComposite,SWT.BORDER);
+        widgetColorBackground.setForeground(new Color(null,color.background));
+        widgetColorBackground.setBackground(new Color(null,color.background));
+        Widgets.layout(widgetColorBackground,0,0,TableLayoutData.WE,0,0,0,0,60,20);
+        widgetValueBackground = Widgets.newLabel(subComposite,String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue));
+        Widgets.layout(widgetValueBackground,0,1,TableLayoutData.W);
+        widgetColorBackground.addMouseListener(new MouseListener()
         {
-        }
-        public void mouseDown(MouseEvent mouseEvent)
-        {
-        }
-        public void mouseUp(MouseEvent mouseEvent)
-        {
-          Canvas widget = (Canvas)mouseEvent.widget;
-
-          ColorDialog colorDialog = new ColorDialog(dialog);
-          colorDialog.setRGB(color.background);
-          RGB rgb = colorDialog.open();
-          if (rgb != null)
+          public void mouseDoubleClick(MouseEvent mouseEvent)
           {
-            color.background = rgb;
-            widget.setForeground(new Color(null,rgb));
-            widget.setBackground(new Color(null,rgb));
           }
-        }
-      });
+          public void mouseDown(MouseEvent mouseEvent)
+          {
+          }
+          public void mouseUp(MouseEvent mouseEvent)
+          {
+            ColorDialog colorDialog = new ColorDialog(dialog);
+            colorDialog.setRGB(color.background);
+            RGB rgb = colorDialog.open();
+            if (rgb != null)
+            {
+              color.background = rgb;
+              widgetColorBackground.setForeground(new Color(null,rgb));
+              widgetColorBackground.setBackground(new Color(null,rgb));
+              widgetValueBackground.setText(String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue));
+            }
+          }
+        });
+      }
     }
 
     // buttons
@@ -2477,8 +2490,28 @@ Dprintf.dprintf("");
         }
       });
 
+      button = Widgets.newButton(composite,"Default");
+      Widgets.layout(button,0,1,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          color.foreground = color.DEFAULT_FOREGROUND;
+          color.background = color.DEFAULT_BACKGROUND;
+          widgetColorForeground.setForeground(new Color(null,color.foreground));
+          widgetColorForeground.setBackground(new Color(null,color.foreground));
+          widgetColorBackground.setForeground(new Color(null,color.background));
+          widgetColorBackground.setBackground(new Color(null,color.background));
+          widgetValueForeground.setText(String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue));
+          widgetValueBackground.setText(String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue));
+        }
+      });
+
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
