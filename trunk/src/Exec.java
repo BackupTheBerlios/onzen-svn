@@ -214,18 +214,18 @@ class Exec
   // --------------------------- variables --------------------------------
   private static HashSet<Process> processHash = new HashSet<Process>();
 
-  private final BufferedWriter    stdin;
-  private final BufferedReader    stdout;
-  private final BufferedReader    stderr;
-  private final Stack<String>     stdoutStack = new Stack<String>();
-  private final Stack<String>     stderrStack = new Stack<String>();
-  private final DataInputStream   stdoutBinary;
+  private BufferedWriter      stdin = null;
+  private BufferedReader      stdout = null;
+  private DataInputStream     stdoutBinary = null;;
+  private BufferedReader      stderr = null;
+  private final Stack<String> stdoutStack = new Stack<String>();
+  private final Stack<String> stderrStack = new Stack<String>();
 
-  private Process                 process;
-  private int                     pid;
-  private ArrayList<String>       stdoutList = new ArrayList<String>();
-  private ArrayList<String>       stderrList = new ArrayList<String>();
-  private int                     exitCode = -1;
+  private Process             process;
+  private int                 pid;
+  private ArrayList<String>   stdoutList = new ArrayList<String>();
+  private ArrayList<String>   stderrList = new ArrayList<String>();
+  private int                 exitCode = -1;
 
   // ------------------------ native functions ----------------------------
 
@@ -259,20 +259,6 @@ class Exec
     processBuilder.directory(workingDirectory);
     process = processBuilder.start();
     processHash.add(process);
-
-    // get stdin, stdout, stderr
-    stdin = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()));
-    if (binaryFlag)
-    {
-      stdout       = null;
-      stdoutBinary = new DataInputStream(process.getInputStream());
-    }
-    else
-    {
-      stdout       = new BufferedReader(new InputStreamReader(process.getInputStream()));
-      stdoutBinary = null;
-    }
-    stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
   }
 
   /** execute external command
@@ -336,6 +322,30 @@ class Exec
     return waitFor();
   }
 
+  /** get stdin stream
+   * @return stream
+   */
+  public OutputStream getStdinStream()
+  {
+    return process.getOutputStream();
+  }
+
+  /** get stdout stream
+   * @return stream
+   */
+  public InputStream getStdoutStream()
+  {
+    return process.getInputStream();
+  }
+
+  /** get stderr stream
+   * @return stream
+   */
+  public InputStream getStderrStream()
+  {
+    return process.getErrorStream();
+  }
+
   /** get next line from stdout
    * @return line or null at EOF
    */
@@ -347,6 +357,11 @@ class Exec
     {
       try
       {
+        if (stdout == null)
+        {
+          stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        }
+
         if (stdout != null)
         {
           line = stdout.readLine();
@@ -381,11 +396,16 @@ class Exec
   {
     String line = null;
 
-    if (stdout != null)
+    if (stdoutStack.isEmpty())
     {
-      if (stdoutStack.isEmpty())
+      try
       {
-        try
+        if (stdout == null)
+        {
+          stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        }
+
+        if (stdout != null)
         {
           if (stdout.ready())
           {
@@ -416,15 +436,15 @@ class Exec
             }
           }
         }
-        catch (IOException exception)
-        {
-          /* ignored => no input */
-        }
       }
-      else
+      catch (IOException exception)
       {
-        line = stdoutStack.pop();
+        /* ignored => no input */
       }
+    }
+    else
+    {
+      line = stdoutStack.pop();
     }
 
     return line;
@@ -476,6 +496,11 @@ class Exec
     {
       try
       {
+        if (stdout == null)
+        {
+          stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        }
+
         if (stderr != null)
         {
           line = stderr.readLine();
@@ -510,11 +535,16 @@ class Exec
   {
     String line = null;
 
-    if (stderr != null)
+    if (stderrStack.isEmpty())
     {
-      if (stderrStack.isEmpty())
+      try
       {
-        try
+        if (stderr == null)
+        {
+          stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        }
+
+        if (stderr != null)
         {
           if (stderr.ready())
           {
@@ -545,15 +575,15 @@ class Exec
             }
           }
         }
-        catch (IOException exception)
-        {
-          /* ignored => no input */
-        }
       }
-      else
+      catch (IOException exception)
       {
-        line = stderrStack.pop();
+        /* ignored => no input */
       }
+    }
+    else
+    {
+      line = stderrStack.pop();
     }
 
     return line;
@@ -600,6 +630,11 @@ class Exec
   public int readStdout(byte[] buffer)
   {
     int n = 0;
+
+    if (stdoutBinary != null)
+    {
+      stdoutBinary = new DataInputStream(process.getInputStream());
+    }
 
     if (stdoutBinary != null)
     {

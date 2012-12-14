@@ -35,6 +35,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /****************************** Classes ********************************/
 
@@ -47,6 +55,7 @@ class RepositorySVN extends Repository
   public final static String[] DEFAULT_BRANCH_NAMES   = new String[]{"trunk","tags","branches"};
   public final static String   DEFAULT_ROOT_NAME      = "trunk";
   public final static String   DEFAULT_BRANCH_NAME    = "branches";
+  public final static String   FIRST_REVISION_NAME    = "1";
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
@@ -133,10 +142,12 @@ class RepositorySVN extends Repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
+   * @param userName user name or ""
+   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
@@ -157,6 +168,8 @@ class RepositorySVN extends Repository
       command.append(Settings.svnCommand,"--non-interactive","checkout");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if ((revision != null) && !revision.isEmpty()) command.append("--revision",revision);
+      if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",password);
       command.append(path,destinationPath);
       exec = new Exec(destinationPath,command);
 
@@ -224,6 +237,7 @@ class RepositorySVN extends Repository
     Matcher         matcher;
     FileData        fileData;
     String          name;
+    String          path;
     String          fileName;
     FileData.States state              = FileData.States.UNKNOWN;
     boolean         locked             = false;
@@ -237,11 +251,111 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
+//        command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
+        command.append(Settings.svnCommand,"--non-interactive","status","-uvN","--xml");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,directory,command);
 
+        try
+        {
+          DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+          Document document = documentBuilder.parse(exec.getStdoutStream());
+          document.getDocumentElement().normalize();
+
+          NodeList entryList = document.getElementsByTagName("entry");
+          NodeList nodeList;
+          for (int z = 0; z < entryList.getLength(); z++)
+          {
+Dprintf.dprintf("-----------------------------");
+            Element entryElement = (Element)entryList.item(z);
+
+            state              = FileData.States.UNKNOWN;
+            locked             = false;
+            workingRevision    = "";
+            repositoryRevision = "";
+            author             = "";
+            fileName           = "";
+
+            name = entryElement.getAttribute("path");
+            fileName = (!directory.isEmpty() ? directory+File.separator : "")+name;
+
+            nodeList = entryElement.getElementsByTagName("wc-status");
+            if (nodeList.getLength() > 0)
+            {
+              Element wcStatusElement = (Element)nodeList.item(0);
+
+              state = parseState(wcStatusElement.getAttribute("item"));
+              workingRevision = wcStatusElement.getAttribute("revision");
+
+              nodeList = wcStatusElement.getElementsByTagName("commit");
+              if (nodeList.getLength() > 0)
+              {
+                Element commitElement = (Element)nodeList.item(0);
+
+                repositoryRevision = commitElement.getAttribute("revision");
+
+                nodeList = commitElement.getElementsByTagName("author");
+                if (nodeList.getLength() > 0)
+                {
+                  Element authorElement = (Element)nodeList.item(0);
+                  author = authorElement.getFirstChild().getNodeValue();
+                }
+              }
+            }
+
+            fileData = findFileData(fileDataSet,fileName);
+            if      (fileData != null)
+            {
+              fileData.state              = state;
+              fileData.mode               = FileData.Modes.BINARY;
+              fileData.mode               = FileData.Modes.BINARY;
+              fileData.locked             = locked;
+              fileData.repositoryRevision = repositoryRevision;
+            }
+            else if (   (newFileDataSet != null)
+                     && !name.equals(".")
+                     && !isHiddenFile(fileName)
+                     && !isIgnoreFile(fileName)
+                    )
+            {
+              // get file type, size, date/time
+              File file = new File(rootPath,fileName);
+              FileData.Types type     = getFileType(file);
+              long           size     = file.length();
+              Date           datetime = new Date(file.lastModified());
+
+              // create file data
+              newFileDataSet.add(new FileData(fileName,
+                                              type,
+                                              state,
+                                              FileData.Modes.BINARY,
+                                              locked,
+                                              size,
+                                              datetime,
+                                              workingRevision,
+                                              repositoryRevision
+                                             )
+                                );
+            }
+//Dprintf.dprintf("fileName=%s",fileName);
+//Dprintf.dprintf("state=%s",state);
+//Dprintf.dprintf("workingRevision=%s",workingRevision);
+//Dprintf.dprintf("repositoryRevision=%s",repositoryRevision);
+//Dprintf.dprintf("author=%s",author);
+//Dprintf.dprintf("");
+          }
+        }
+        catch (org.xml.sax.SAXException exception)
+        {
+          // ignored
+        }
+        catch (javax.xml.parsers.ParserConfigurationException exception)
+        {
+          // ignored
+        }
+
+/*
         // parse status data
         while ((line = exec.getStdout()) != null)
         {
@@ -339,6 +453,7 @@ class RepositorySVN extends Repository
             Onzen.printWarning("No match for line '%s'",line);
           }
         }
+*/
 
         // wait for termination
         int exitCode = exec.waitFor();
@@ -416,6 +531,14 @@ class RepositorySVN extends Repository
     }
 
     return repositoryPath;
+  }
+
+  /** get first revision name
+   * @return first revision name
+   */
+  public String getFirstRevision()
+  {
+    return FIRST_REVISION_NAME;
   }
 
   /** get last revision name
@@ -2005,7 +2128,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   //-----------------------------------------------------------------------
 
   /** parse SVN state string
-   * @param string state string
+   * @param stateFlag state flag string
+   * @param updateFlag update flag string
    * @return state
    */
   private FileData.States parseState(String stateFlag, String updateFlag)
@@ -2037,6 +2161,23 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
     else if (stateFlag.equalsIgnoreCase("!")) return FileData.States.CHECKOUT;
     else                                      return FileData.States.UNKNOWN;
+  }
+
+  /** parse SVN state string
+   * @param string state string
+   * @return state
+   */
+  private FileData.States parseState(String string)
+  {
+    if      (string.equalsIgnoreCase("normal"  )) return FileData.States.OK;
+    else if (string.equalsIgnoreCase("update"  )) return FileData.States.UPDATE;
+    else if (string.equalsIgnoreCase("modified")) return FileData.States.MODIFIED;
+    else if (string.equalsIgnoreCase("added"   )) return FileData.States.ADDED;
+    else if (string.equalsIgnoreCase("conflict")) return FileData.States.CONFLICT;
+    else if (string.equalsIgnoreCase("removed" )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("merge"   )) return FileData.States.MERGE;
+    else if (string.equalsIgnoreCase("checkout")) return FileData.States.CHECKOUT;
+    else                                          return FileData.States.UNKNOWN;
   }
 
   /** parse SVN diff index
