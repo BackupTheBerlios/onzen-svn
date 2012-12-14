@@ -2453,22 +2453,26 @@ abstract class Repository implements Serializable
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
+   * @param userName user name or ""
+   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  abstract public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
+  abstract public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException;
 
   /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
+   * @param userName user name or ""
+   * @param password password or ""
    * @param destinationPath destination path
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath)
+  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath)
     throws RepositoryException
   {
-    checkout(repositoryPath,moduleName,revision,destinationPath,null);
+    checkout(repositoryPath,moduleName,revision,userName,password,destinationPath,null);
   }
 
   /** update file states
@@ -2549,6 +2553,11 @@ abstract class Repository implements Serializable
   {
     return "";
   }
+
+  /** get first revision name
+   * @return first revision name
+   */
+  abstract public String getFirstRevision();
 
   /** get last revision name
    * @return last revision name

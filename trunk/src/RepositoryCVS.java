@@ -103,6 +103,7 @@ class RepositoryCVS extends Repository
   public final static String[] DEFAULT_REVISION_NAMES = new String[]{"HEAD"};
   public final static String[] DEFAULT_BRANCH_NAMES   = new String[0];
   public final static String   DEFAULT_BRANCHES_NAME  = "";
+  public final static String   FIRST_REVISION_NAME    = "1.1";
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
@@ -159,12 +160,15 @@ throw new RepositoryException("NYI");
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
+   * @param userName user name or ""
+   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
+Dprintf.dprintf("checkout username, password???");
     Exec exec = null;
     try
     {
@@ -542,6 +546,14 @@ throw new RepositoryException("NYI");
     }
 
     return repositoryPath;
+  }
+
+  /** get first revision name
+   * @return first revision name
+   */
+  public String getFirstRevision()
+  {
+    return FIRST_REVISION_NAME;
   }
 
   /** get last revision name

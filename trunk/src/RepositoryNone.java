@@ -107,10 +107,12 @@ class RepositoryNone extends Repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
+   * @param userName user name or ""
+   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
   }
@@ -137,6 +139,14 @@ class RepositoryNone extends Repository
    * @return repository path
    */
   public String getRepositoryPath()
+  {
+    return "";
+  }
+
+  /** get first revision name
+   * @return first revision name
+   */
+  public String getFirstRevision()
   {
     return "";
   }

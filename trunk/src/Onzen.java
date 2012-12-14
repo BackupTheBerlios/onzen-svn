@@ -360,6 +360,8 @@ public class Onzen
   private static String                     lastCheckoutRepositoryPath  = "";
   private static String                     lastCheckoutModuleName      = "";
   private static String                     lastCheckoutRevision        = "";
+  private static String                     lastCheckoutUserName        = "";
+  private static String                     lastCheckoutPassword        = "";
   private static String                     lastCheckoutDestinationPath = "";
 
   // ------------------------ native functions ----------------------------
@@ -3273,6 +3275,8 @@ exception.printStackTrace();
             {
               data.name = data.names[index];
 
+              Settings.geometryRepositoryList = dialog.getSize();
+
               Dialogs.close(dialog,true);
             }
           }
@@ -3296,6 +3300,8 @@ exception.printStackTrace();
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.name = widgetNewName.getText().trim();
+
+          Settings.geometryRepositoryList = dialog.getSize();
 
           Dialogs.close(dialog,true);
         }
@@ -3490,7 +3496,7 @@ exception.printStackTrace();
     });
 
     // show dialog
-    Dialogs.show(dialog,Settings.setWindowLocation);
+    Dialogs.show(dialog,Settings.geometryRepositoryList,Settings.setWindowLocation);
 
     // add names
     for (String name : data.names)
@@ -4546,6 +4552,8 @@ Dprintf.dprintf("NYI");
       String     repositoryPath;
       String     moduleName;
       String     revision;
+      String     userName;
+      String     password;
       String     destinationPath;
       boolean    quitFlag;
 
@@ -4555,6 +4563,8 @@ Dprintf.dprintf("NYI");
         this.repositoryPath  = lastCheckoutRepositoryPath;
         this.moduleName      = lastCheckoutModuleName;
         this.revision        = lastCheckoutRevision;
+        this.userName        = lastCheckoutUserName;
+        this.password        = lastCheckoutPassword;
         this.destinationPath = lastCheckoutDestinationPath;
         this.quitFlag        = false;
       }
@@ -4570,6 +4580,8 @@ Dprintf.dprintf("NYI");
     final Combo  widgetRepository;
     final Combo  widgetModuleName;
     final Combo  widgetRevision;
+    final Text   widgetUserName;
+    final Text   widgetPassword;
     final Text   widgetDestinationPath;
     final Button widgetCheckout;
 
@@ -4726,12 +4738,28 @@ Dprintf.dprintf("NYI");
       Widgets.layout(widgetRevision,3,1,TableLayoutData.WE);
       widgetRevision.setToolTipText("Revision to check-out.");
 
-      label = Widgets.newLabel(composite,"Destination:");
+      label = Widgets.newLabel(composite,"User name:");
       Widgets.layout(label,4,0,TableLayoutData.W);
+
+      widgetUserName = Widgets.newText(composite);
+      widgetUserName.setText(data.userName);
+      Widgets.layout(widgetUserName,4,1,TableLayoutData.WE);
+      widgetUserName.setToolTipText("Check-out user name.");
+
+      label = Widgets.newLabel(composite,"Password:");
+      Widgets.layout(label,5,0,TableLayoutData.W);
+
+      widgetPassword = Widgets.newPassword(composite);
+      widgetPassword.setText(data.password);
+      Widgets.layout(widgetPassword,5,1,TableLayoutData.WE);
+      widgetPassword.setToolTipText("Check-out password.");
+
+      label = Widgets.newLabel(composite,"Destination:");
+      Widgets.layout(label,6,0,TableLayoutData.W);
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,4,1,TableLayoutData.WE);
+      Widgets.layout(subComposite,6,1,TableLayoutData.WE);
       {
         widgetDestinationPath = Widgets.newText(subComposite);
         widgetDestinationPath.setText(data.destinationPath);
@@ -4781,6 +4809,8 @@ Dprintf.dprintf("NYI");
           data.repositoryPath  = widgetRepository.getText();
           data.moduleName      = widgetModuleName.getText().trim();
           data.revision        = widgetRevision.getText().trim();
+          data.userName        = widgetUserName.getText();
+          data.password        = widgetPassword.getText();
           data.destinationPath = widgetDestinationPath.getText();
 
           // store repository path into checkout history
@@ -4884,7 +4914,9 @@ Dprintf.dprintf("NYI");
     });
 
     Widgets.setNextFocus(widgetRepository,widgetModuleName);
-    Widgets.setNextFocus(widgetModuleName,widgetRevision);
+    Widgets.setNextFocus(widgetModuleName,widgetUserName);
+    Widgets.setNextFocus(widgetUserName,widgetPassword);
+    Widgets.setNextFocus(widgetPassword,widgetRevision);
     Widgets.setNextFocus(widgetRevision,widgetDestinationPath);
     Widgets.setNextFocus(widgetDestinationPath,widgetCheckout);
 
@@ -5061,6 +5093,8 @@ Dprintf.dprintf("exception=%s",exception);
       lastCheckoutRepositoryPath  = data.repositoryPath;
       lastCheckoutModuleName      = data.moduleName;
       lastCheckoutRevision        = data.revision;
+      lastCheckoutUserName        = data.userName;
+      lastCheckoutPassword        = data.password;
       lastCheckoutDestinationPath = data.destinationPath;
 
       // checkout
@@ -5123,7 +5157,7 @@ Dprintf.dprintf("exception=%s",exception);
             }
 
             final Repository repository = Repository.newInstance(data.repository.getType(),data.destinationPath);
-            repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.destinationPath,busyDialog);
+            repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
 
             if (!busyDialog.isAborted())
             {
