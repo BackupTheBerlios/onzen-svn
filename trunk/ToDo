@@ -18,3 +18,5 @@ ToDo
 - merge function
 - changes window: button/key to jump to next -+
 - save commit message on cancle (multiple)
+- add svn cleanup command
+- date in revision tree wrong? ecal2_plugins ActtiveDataManagementWorkerThread.cpp
