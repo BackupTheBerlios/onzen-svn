@@ -713,6 +713,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterWidthArray.class)
   public static ColumnSizes              geometryMainColumns                    = new ColumnSizes(600,90,900,100);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryRepositoryList                 = new Point(350,400);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepositoryList             = new Point(400,400);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryEditRepository                 = new Point(800,600);
