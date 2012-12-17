@@ -267,7 +267,6 @@ class RepositorySVN extends Repository
           NodeList nodeList;
           for (int z = 0; z < entryList.getLength(); z++)
           {
-Dprintf.dprintf("-----------------------------");
             Element entryElement = (Element)entryList.item(z);
 
             state              = FileData.States.UNKNOWN;
