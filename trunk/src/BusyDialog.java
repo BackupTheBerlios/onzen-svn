@@ -352,7 +352,7 @@ class BusyDialog
    */
   public BusyDialog(Shell parentShell, String title, String message, int flags)
   {
-    this(parentShell,title,300,150,message,flags,10);
+    this(parentShell,title,300,150,message,flags,100);
   }
 
   /** create busy dialog
@@ -372,7 +372,7 @@ class BusyDialog
    */
   public BusyDialog(Shell parentShell, String title, int flags)
   {
-    this(parentShell,title,null,flags,10);
+    this(parentShell,title,null,flags,100);
   }
 
   /** create busy dialog
