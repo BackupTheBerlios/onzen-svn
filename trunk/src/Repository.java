@@ -1798,6 +1798,7 @@ class StoredFiles
  */
 @XmlType(propOrder={"title",
                     "rootPath",
+                    "comment",
                     "openDirectories",
                     "ignorePatterns",
 
@@ -1917,6 +1918,9 @@ abstract class Repository implements Serializable
   @XmlElement(name = "rootPath")
   public String rootPath;
 
+  @XmlElement(name = "comment")
+  public String comment;
+
   @XmlElementWrapper(name = "openDirectories")
   @XmlElement(name = "path")
   private HashSet<String> openDirectories;
@@ -2016,24 +2020,41 @@ abstract class Repository implements Serializable
   /** create new repository instance
    * @param type repository type; see Repository.Types
    * @param rootPath root path
+   * @param comment comment text
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(Types type, String rootPath, String comment)
+    throws RepositoryException
+  {
+    Repository repository;
+
+    switch (type)
+    {
+      case DIRECTORY: repository = new RepositoryDirectory(rootPath); break;
+      case CVS:       repository = new RepositoryCVS(rootPath);       break;
+      case SVN:       repository = new RepositorySVN(rootPath);       break;
+      case HG:        repository = new RepositoryHG(rootPath);        break;
+      case GIT:       repository = new RepositoryGIT(rootPath);       break;
+      default:
+// ???
+//        throw new RepositoryException("no repository CVS/SVN/HG/Git found");
+//        Dialogs.warning(dialog,"No repository CVS/SVN/HG/Git found");
+        repository = new RepositoryNone(rootPath); break;
+    }
+    repository.comment = comment;
+
+    return repository;
+  }
+
+  /** create new repository instance
+   * @param type repository type; see Repository.Types
+   * @param rootPath root path
    * @return repository or null if no repository found
    */
   public static Repository newInstance(Types type, String rootPath)
     throws RepositoryException
   {
-    switch (type)
-    {
-      case DIRECTORY: return new RepositoryDirectory(rootPath);
-      case CVS:       return new RepositoryCVS(rootPath);
-      case SVN:       return new RepositorySVN(rootPath);
-      case HG:        return new RepositoryHG(rootPath);
-      case GIT:       return new RepositoryGIT(rootPath);
-      default:
-// ???
-//        throw new RepositoryException("no repository CVS/SVN/HG/Git found");
-//        Dialogs.warning(dialog,"No repository CVS/SVN/HG/Git found");
-        return new RepositoryNone(rootPath);
-    }
+    return newInstance(Repository.getType(rootPath),rootPath,"");
   }
 
   /** create new repository instance

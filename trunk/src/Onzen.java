@@ -1094,8 +1094,8 @@ exception.printStackTrace();
    */
   {
     // add known additional mime types
-    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-c c cpp c++");
-    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-h h hpp h++");
+    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-c c cpp cxx c++");
+    MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-h h hpp hxx h++");
     MIMETYPES_FILE_TYPE_MAP.addMimeTypes("text/x-java java");
 
     // initialize file associations (Windows only)
@@ -4555,6 +4555,7 @@ Dprintf.dprintf("NYI");
       String     userName;
       String     password;
       String     destinationPath;
+      String     comment;
       boolean    quitFlag;
 
       Data()
@@ -4566,6 +4567,7 @@ Dprintf.dprintf("NYI");
         this.userName        = lastCheckoutUserName;
         this.password        = lastCheckoutPassword;
         this.destinationPath = lastCheckoutDestinationPath;
+        this.comment         = "";
         this.quitFlag        = false;
       }
     }
@@ -4583,11 +4585,12 @@ Dprintf.dprintf("NYI");
     final Text   widgetUserName;
     final Text   widgetPassword;
     final Text   widgetDestinationPath;
+    final Text   widgetComment;
     final Button widgetCheckout;
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
-    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Type:");
       Widgets.layout(label,0,0,TableLayoutData.W);
@@ -4786,6 +4789,13 @@ Dprintf.dprintf("NYI");
           }
         });
       }
+
+      label = Widgets.newLabel(composite,"Comment:");
+      Widgets.layout(label,7,0,TableLayoutData.NW);
+
+      widgetComment = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+      Widgets.layout(widgetComment,7,1,TableLayoutData.NSWE);
+      widgetComment.setToolTipText("Comment text.");
     }
 
     // buttons
@@ -4812,6 +4822,7 @@ Dprintf.dprintf("NYI");
           data.userName        = widgetUserName.getText();
           data.password        = widgetPassword.getText();
           data.destinationPath = widgetDestinationPath.getText();
+          data.comment         = widgetComment.getText();
 
           // store repository path into checkout history
           boolean flag = false;
@@ -4918,7 +4929,8 @@ Dprintf.dprintf("NYI");
     Widgets.setNextFocus(widgetUserName,widgetPassword);
     Widgets.setNextFocus(widgetPassword,widgetRevision);
     Widgets.setNextFocus(widgetRevision,widgetDestinationPath);
-    Widgets.setNextFocus(widgetDestinationPath,widgetCheckout);
+    Widgets.setNextFocus(widgetDestinationPath,widgetComment);
+    Widgets.setNextFocus(widgetComment,widgetCheckout);
 
     // set type, add checkout history paths
     widgetRepository.add("file://");
@@ -5150,13 +5162,13 @@ Dprintf.dprintf("exception=%s",exception);
                   public void run()
                   {
                     Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
-                    }
+                  }
                 });
                 return;
               }
             }
 
-            final Repository repository = Repository.newInstance(data.repository.getType(),data.destinationPath);
+            final Repository repository = Repository.newInstance(data.repository.getType(),data.destinationPath,data.comment);
             repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
 
             if (!busyDialog.isAborted())
@@ -5240,6 +5252,7 @@ Dprintf.dprintf("exception=%s",exception);
       String   title;
       String   rootPath;
       String   masterRepository;
+      String   comment;
       String[] ignorePatterns;
       String[] patchTests;
       String   mailSMTPHost;
@@ -5266,6 +5279,7 @@ Dprintf.dprintf("exception=%s",exception);
         this.title                   = null;
         this.rootPath                = null;
         this.masterRepository        = null;
+        this.comment                 = null;
         this.ignorePatterns          = null;
         this.patchTests              = null;
         this.mailSMTPHost            = null;
@@ -5305,6 +5319,7 @@ Dprintf.dprintf("exception=%s",exception);
 
     final Text                  widgetTitle;
     final Text                  widgetRootPath;
+    final Text                  widgetComment;
     final List                  widgetIgnorePatterns;
     final HashMap<Field,Widget> widgetFieldMap = new HashMap<Field,Widget>();
     final List                  widgetPatchTests;
@@ -5335,7 +5350,7 @@ Dprintf.dprintf("exception=%s",exception);
       Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
 
       subComposite = Widgets.addTab(tabFolder,"Repository");
-      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0,0.0},new double[]{0.0,1.0},2));
+      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0,1.0,0.0},new double[]{0.0,1.0},2));
       Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
         // common values
@@ -5386,6 +5401,7 @@ Dprintf.dprintf("exception=%s",exception);
           widgetRootPath = Widgets.newText(subSubComposite);
           widgetRootPath.setText(repositoryTab.repository.rootPath);
           Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
+          widgetRootPath.setToolTipText("Repository root path.");
 
           button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
           Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -5408,12 +5424,20 @@ Dprintf.dprintf("exception=%s",exception);
           });
         }
 
-        label = Widgets.newLabel(subComposite,"Ignore patterns:");
+        label = Widgets.newLabel(subComposite,"Comment:");
         Widgets.layout(label,4,0,TableLayoutData.NW);
+
+        widgetComment = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+        if (repositoryTab.repository.comment != null) widgetComment.setText(repositoryTab.repository.comment);
+        Widgets.layout(widgetComment,4,1,TableLayoutData.NSWE);
+        widgetComment.setToolTipText("Comment text.");
+
+        label = Widgets.newLabel(subComposite,"Ignore patterns:");
+        Widgets.layout(label,5,0,TableLayoutData.NW);
 
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subSubComposite,4,1,TableLayoutData.NSWE);
+        Widgets.layout(subSubComposite,5,1,TableLayoutData.NSWE);
         {
           widgetIgnorePatterns = Widgets.newList(subSubComposite);
           for (String pattern : repositoryTab.repository.getIgnorePatterns())
@@ -5464,7 +5488,7 @@ Dprintf.dprintf("exception=%s",exception);
         }
 
         // additional repository values
-        int row = 5;
+        int row = 6;
         for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
@@ -6201,6 +6225,7 @@ exception.printStackTrace();
           // get base data
           data.title                   = widgetTitle.getText().trim();
           data.rootPath                = widgetRootPath.getText().trim();
+          data.comment                 = widgetComment.getText().trim();
           data.ignorePatterns          = widgetIgnorePatterns.getItems();
           data.patchTests              = widgetPatchTests.getItems();
           data.mailSMTPHost            = widgetMailSMTPHost.getText().trim();
@@ -6326,7 +6351,8 @@ exception.printStackTrace();
       }
     });
     Widgets.setNextFocus(widgetTitle,widgetRootPath);
-    Widgets.setNextFocus(widgetRootPath,widgetSave);
+    Widgets.setNextFocus(widgetRootPath,widgetComment);
+    Widgets.setNextFocus(widgetComment,widgetSave);
     Widgets.setNextFocus(widgetPatchMailTo,widgetPatchMailCC);
     Widgets.setNextFocus(widgetPatchMailCC,widgetPatchMailSubject);
     Widgets.setNextFocus(widgetPatchMailSubject,widgetPatchMailText);
@@ -6341,6 +6367,7 @@ exception.printStackTrace();
       // set data
       repositoryTab.setTitle(data.title);
       repositoryTab.repository.rootPath                = data.rootPath;
+      repositoryTab.repository.comment                 = data.comment;
       repositoryTab.repository.setIgnorePatterns(data.ignorePatterns);
       repositoryTab.repository.patchTests              = data.patchTests;
       repositoryTab.repository.mailSMTPHost            = data.mailSMTPHost;
