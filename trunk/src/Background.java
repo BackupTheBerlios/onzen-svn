@@ -79,7 +79,7 @@ class BackgroundTask implements Runnable
     this.backgroundRunnable = backgroundRunnable;
     this.runMethod          = null;
 
-    // find match run-method if possible
+    // find matching run-method if possible
     for (Method method : backgroundRunnable.getClass().getDeclaredMethods())
     {
       // check name
