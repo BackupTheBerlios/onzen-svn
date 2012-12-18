@@ -4548,6 +4548,7 @@ Dprintf.dprintf("NYI");
      */
     class Data
     {
+      Onzen      onzen;
       Repository repository;
       String     repositoryPath;
       String     moduleName;
@@ -4560,13 +4561,14 @@ Dprintf.dprintf("NYI");
 
       Data()
       {
-        this.repository      = lastCheckoutRepository;
-        this.repositoryPath  = lastCheckoutRepositoryPath;
-        this.moduleName      = lastCheckoutModuleName;
-        this.revision        = lastCheckoutRevision;
-        this.userName        = lastCheckoutUserName;
-        this.password        = lastCheckoutPassword;
-        this.destinationPath = lastCheckoutDestinationPath;
+        this.onzen           = null;
+        this.repository      = null;
+        this.repositoryPath  = "";
+        this.moduleName      = "";
+        this.revision        = "";
+        this.userName        = "";
+        this.password        = "";
+        this.destinationPath = "";
         this.comment         = "";
         this.quitFlag        = false;
       }
@@ -4587,6 +4589,15 @@ Dprintf.dprintf("NYI");
     final Text   widgetDestinationPath;
     final Text   widgetComment;
     final Button widgetCheckout;
+
+    data.onzen           = this;
+    data.repository      = lastCheckoutRepository;
+    data.repositoryPath  = lastCheckoutRepositoryPath;
+    data.moduleName      = lastCheckoutModuleName;
+    data.revision        = lastCheckoutRevision;
+    data.userName        = lastCheckoutUserName;
+    data.password        = lastCheckoutPassword;
+    data.destinationPath = lastCheckoutDestinationPath;
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},4));
@@ -4815,6 +4826,9 @@ Dprintf.dprintf("NYI");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          // disable button
+          widgetCheckout.setEnabled(false);
+
           // get data
           data.repositoryPath  = widgetRepository.getText();
           data.moduleName      = widgetModuleName.getText().trim();
@@ -4824,21 +4838,115 @@ Dprintf.dprintf("NYI");
           data.destinationPath = widgetDestinationPath.getText();
           data.comment         = widgetComment.getText();
 
-          // store repository path into checkout history
-          boolean flag = false;
-          for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
+          // checkout
+          setStatusText("Checkout repository '"+
+                        data.repositoryPath+
+                        (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
+                        (!data.revision.isEmpty() ? ":"+data.revision : "")+
+                        "' into '"+
+                        data.destinationPath+
+                        "'"
+                       );
+          BusyDialog busyDialog = new BusyDialog(shell,
+                                                 "Checkout repository",
+                                                 "Checkout repository '"+
+                                                 data.repositoryPath+
+                                                 (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
+                                                 (!data.revision.isEmpty() ? ":"+data.revision : "")+
+                                                 "' into '"+
+                                                 data.destinationPath+
+                                                 "':",
+                                                 BusyDialog.LIST
+                                                );
+          busyDialog.autoAnimate();
+          Background.run(new BackgroundRunnable(data.onzen,busyDialog)
           {
-            flag |= checkoutHistoryPath.equals(data.repositoryPath);
-          }
-          if (!flag)
-          {
-            String[] newCheckoutHistoryPaths = new String[Math.min(Settings.checkoutHistoryPaths.length+1,20)];
-            newCheckoutHistoryPaths[0] = data.repositoryPath;
-            System.arraycopy(Settings.checkoutHistoryPaths,0,newCheckoutHistoryPaths,1,Math.min(Settings.checkoutHistoryPaths.length,20-1));
-            Settings.checkoutHistoryPaths = newCheckoutHistoryPaths;
-          }
+            public void run(final Onzen onzen, final BusyDialog busyDialog)
+            {
+              try
+              {
+                // create directory
+                if (!busyDialog.isAborted())
+                {
+                  File file = new File(data.destinationPath);
+                  if      (!file.exists())
+                  {
+                    if (!file.mkdirs())
+                    {
+                      display.syncExec(new Runnable()
+                      {
+                        public void run()
+                        {
+                          Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryPath);
+                        }
+                      });
+                      return;
+                    }
+                  }
+                  else if (!file.isDirectory())
+                  {
+                    display.syncExec(new Runnable()
+                    {
+                      public void run()
+                      {
+                        Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
+                      }
+                    });
+                    return;
+                  }
+                }
 
-          Dialogs.close(dialog,true);
+                final Repository repository = Repository.newInstance(data.repository.getType(),data.destinationPath,data.comment);
+                repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
+
+                if (!busyDialog.isAborted())
+                {
+                  display.syncExec(new Runnable()
+                  {
+                    public void run()
+                    {
+                      // add repository tab
+                      RepositoryTab repositoryTab = addRepositoryTab(repository);
+
+                      // select repository tab
+                      selectRepositoryTab(repositoryTab);
+                    }
+                  });
+                }
+              }
+              catch (final RepositoryException exception)
+              {
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    Dialogs.error(shell,exception.getExtendedMessage(),"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,exception.getMessage());
+                  }
+                });
+                return;
+              }
+              finally
+              {
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    busyDialog.close();
+                    widgetCheckout.setEnabled(true);
+                  }
+                });
+                clearStatusText();
+              }
+
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Dialogs.close(dialog,true);
+                }
+              });
+            }
+          });
         }
       });
 
@@ -5100,6 +5208,20 @@ Dprintf.dprintf("exception=%s",exception);
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
     {
+      // store repository path into checkout history
+      boolean flag = false;
+      for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
+      {
+        flag |= checkoutHistoryPath.equals(data.repositoryPath);
+      }
+      if (!flag)
+      {
+        String[] newCheckoutHistoryPaths = new String[Math.min(Settings.checkoutHistoryPaths.length+1,20)];
+        newCheckoutHistoryPaths[0] = data.repositoryPath;
+        System.arraycopy(Settings.checkoutHistoryPaths,0,newCheckoutHistoryPaths,1,Math.min(Settings.checkoutHistoryPaths.length,20-1));
+        Settings.checkoutHistoryPaths = newCheckoutHistoryPaths;
+      }
+
       // store last data
       lastCheckoutRepository      = data.repository;
       lastCheckoutRepositoryPath  = data.repositoryPath;
@@ -5108,109 +5230,6 @@ Dprintf.dprintf("exception=%s",exception);
       lastCheckoutUserName        = data.userName;
       lastCheckoutPassword        = data.password;
       lastCheckoutDestinationPath = data.destinationPath;
-
-      // checkout
-      BusyDialog busyDialog = new BusyDialog(shell,
-                                             "Checkout repository",
-                                             "Checkout repository '"+
-                                             data.repositoryPath+
-                                             (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
-                                             (!data.revision.isEmpty() ? ":"+data.revision : "")+
-                                             "' into '"+
-                                             data.destinationPath+
-                                             "':",
-                                             BusyDialog.LIST
-                                            );
-      busyDialog.autoAnimate();
-
-      Background.run(new BackgroundRunnable(this,busyDialog)
-      {
-        public void run(final Onzen onzen, final BusyDialog busyDialog)
-        {
-          setStatusText("Checkout repository '"+
-                        data.repositoryPath+
-                        (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
-                        (!data.revision.isEmpty() ? ":"+data.revision : "")+
-                        "' into '"+
-                        data.destinationPath+
-                        "'"
-                       );
-          try
-          {
-            // create directory
-            if (!busyDialog.isAborted())
-            {
-              File file = new File(data.destinationPath);
-              if      (!file.exists())
-              {
-                if (!file.mkdirs())
-                {
-                  display.syncExec(new Runnable()
-                  {
-                    public void run()
-                    {
-                      Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryPath);
-                    }
-                  });
-                  return;
-                }
-              }
-              else if (!file.isDirectory())
-              {
-                display.syncExec(new Runnable()
-                {
-                  public void run()
-                  {
-                    Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
-                  }
-                });
-                return;
-              }
-            }
-
-            final Repository repository = Repository.newInstance(data.repository.getType(),data.destinationPath,data.comment);
-            repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
-
-            if (!busyDialog.isAborted())
-            {
-              display.syncExec(new Runnable()
-              {
-                public void run()
-                {
-                  // add repository tab
-                  RepositoryTab repositoryTab = addRepositoryTab(repository);
-
-                  // select repository tab
-                  selectRepositoryTab(repositoryTab);
-                }
-              });
-            }
-          }
-          catch (final RepositoryException exception)
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                Dialogs.error(shell,exception.getExtendedMessage(),"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,exception.getMessage());
-              }
-            });
-            return;
-          }
-          finally
-          {
-            display.syncExec(new Runnable()
-            {
-              public void run()
-              {
-                busyDialog.close();
-              }
-            });
-            clearStatusText();
-          }
-        }
-      });
-
     }
   }
 
