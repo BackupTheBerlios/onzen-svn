@@ -140,6 +140,9 @@ class CommitMessage
   public static void init()
     throws SQLException
   {
+    // start message broadcast
+    startBroadcast();
+
     // init database
     historyDatabase = new HistoryDatabase<String[]>(HISTORY_ID,Settings.maxMessageHistory)
     {
@@ -151,9 +154,6 @@ class CommitMessage
 
     // load commit message history from database
     history = historyDatabase.getHistory();
-
-    // start message broadcast
-    startBroadcast();
   }
 
   /** get message history
