@@ -137,6 +137,7 @@ class CommandChangesLog
     Label       label;
     TableColumn tableColumn;
     Menu        menu;
+    MenuItem    menuItem;
     Button      button;
 
     // initialize variables
@@ -154,7 +155,7 @@ class CommandChangesLog
     dialog = Dialogs.open(shell,"Changes log",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(new double[]{0.7,0.3,0.0},1.0));
+    composite.setLayout(new TableLayout(new double[]{0.7,0.0,0.3},1.0));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       // changes log
@@ -206,16 +207,10 @@ class CommandChangesLog
       widgetChangesLog.setMenu(menu);
       widgetChangesLog.setToolTipText("Changes log. Double-click to view revision info.");
 
-      // files
-      widgetFiles = Widgets.newList(composite);
-      widgetFiles.setBackground(Onzen.COLOR_GRAY);
-      Widgets.layout(widgetFiles,1,0,TableLayoutData.NSWE);
-      widgetFiles.setToolTipText("Changed files.");
-
       // find
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0}));
-      Widgets.layout(subComposite,2,0,TableLayoutData.WE);
+      Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Find:",SWT.NONE,Settings.keyFind);
         Widgets.layout(label,0,0,TableLayoutData.W);
@@ -248,6 +243,64 @@ class CommandChangesLog
         });
         widgetFindNext.setToolTipText("Find next occurrence of text  ["+Widgets.acceleratorToText(Settings.keyFindNext)+"].");
       }
+
+      // files
+      widgetFiles = Widgets.newList(composite);
+      widgetFiles.setBackground(Onzen.COLOR_GRAY);
+      Widgets.layout(widgetFiles,2,0,TableLayoutData.NSWE);
+      menu = Widgets.newPopupMenu(dialog);
+      {
+        menuItem = Widgets.addMenuItem(menu,"Revision info\u2026",Settings.keyRevisionInfo);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,repositoryTab,data.fileData,data.selectedLogData1.revision);
+            commandRevisionInfo.run();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Diff\u2026",Settings.keyDiff);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetDiff);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Patch\u2026",Settings.keyDiff);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetPatch);
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Save\u2026",Settings.keyDiff);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.invoke(widgetSave);
+          }
+        });
+      }
+      widgetFiles.setMenu(menu);
+      widgetFiles.setToolTipText("Changed files.");
     }
 
     // buttons
@@ -300,13 +353,12 @@ class CommandChangesLog
       {
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-Dprintf.dprintf("");
           if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
             CommandDiff commandDiff = new CommandDiff(dialog,
                                                       repositoryTab,
                                                       data.fileData,
-                                                      data.selectedLogData0.revision,
+                                                      (data.selectedLogData0 != null) ? data.selectedLogData0.revision : repositoryTab.repository.getFirstRevision(),
                                                       (data.selectedLogData1 != null) ? data.selectedLogData1.revision : null
                                                      );
             commandDiff.run();
@@ -337,12 +389,11 @@ Dprintf.dprintf("");
           if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
             CommandCreatePatch commandCreatePatch;
-/*
             if (data.selectedLogData0 != null)
             {
               commandCreatePatch = new CommandCreatePatch(dialog,
                                                           repositoryTab,
-                                                          fileData.toSet(),
+                                                          data.fileData.toSet(),
                                                           data.selectedLogData0.revision,
                                                           data.selectedLogData1.revision,
                                                           false
@@ -352,14 +403,12 @@ Dprintf.dprintf("");
             {
               commandCreatePatch = new CommandCreatePatch(dialog,
                                                           repositoryTab,
-                                                          fileData.toSet(),
+                                                          data.fileData.toSet(),
                                                           data.selectedLogData1.revision,
                                                           false
                                                          );
             }
             commandCreatePatch.run();
-*/
-Dprintf.dprintf("");
           }
         }
       });
@@ -400,7 +449,6 @@ Dprintf.dprintf("");
         {
           if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
-Dprintf.dprintf("");
             CommandView commandView = new CommandView(dialog,repositoryTab,data.fileData,data.selectedLogData1.revision);
             commandView.run();
           }
@@ -428,12 +476,10 @@ Dprintf.dprintf("");
 
           if ((data.selectedLogData1 != null) && (data.fileData != null))
           {
-/*
             try
             {
               // get file
-Dprintf.dprintf("");
-//              byte[] fileDataBytes =  repositoryTab.repository.getFileBytes(fileData,data.selectedLogData1.revision);
+              byte[] fileDataBytes =  repositoryTab.repository.getFileBytes(data.fileData,data.selectedLogData1.revision);
 
               // save to file
               String fileName = Dialogs.fileSave(dialog,"Save file");
@@ -442,23 +488,20 @@ Dprintf.dprintf("");
                 try
                 {
                   DataOutputStream output = new DataOutputStream(new FileOutputStream(fileName));
-Dprintf.dprintf("");
-//                  output.write(fileDataBytes);
+                  output.write(fileDataBytes);
                   output.close();
                 }
                 catch (IOException exception)
                 {
-Dprintf.dprintf("");
-//                  Dialogs.error(dialog,"Cannot save file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+                  Dialogs.error(dialog,"Cannot save file '%s' (error: %s)",data.fileData.getFileName(),exception.getMessage());
                 }
               }
             }
             catch (RepositoryException exception)
             {
-Dprintf.dprintf("");
-//              Dialogs.error(dialog,"Cannot save file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+              Dialogs.error(dialog,"Cannot save file '%s' (error: %s)",data.fileData.getFileName(),exception.getMessage());
+              Onzen.printStacktrace(exception);
             }
-*/
           }
         }
       });
@@ -503,6 +546,7 @@ Dprintf.dprintf("");
               catch (RepositoryException exception)
               {
                 Dialogs.error(dialog,"Cannot revert file '%s' (error: %s)",fileData.getFileName(),exception.getMessage());
+                Onzen.printStacktrace(exception);
               }
             }
           }
@@ -540,7 +584,7 @@ Dprintf.dprintf("");
         Table       widget     = (Table)mouseEvent.widget;
         TableItem[] tableItems = widgetChangesLog.getSelection();
 
-        if (tableItems.length >= 0)
+        if (tableItems.length > 0)
         {
           // selected revision
           selectRevision((LogData)tableItems[0].getData());
@@ -574,23 +618,28 @@ Dprintf.dprintf("");
       {
       }
     });
-    widgetFiles.addMouseListener(new MouseListener()
+    widgetFiles.addSelectionListener(new SelectionListener()
     {
-      public void mouseDoubleClick(MouseEvent mouseEvent)
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        List     widget    = (List)mouseEvent.widget;
-        String[] fileNames = widgetFiles.getSelection();
+        List     widget    = (List)selectionEvent.widget;
+        String[] fileNames = widget.getSelection();
 
         if ((data.selectedLogData1 != null) && (data.fileData != null))
         {
-          CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(shell,repositoryTab,data.fileData,data.selectedLogData1.revision);
-          commandRevisionInfo.run();
+          CommandDiff commandDiff = new CommandDiff(dialog,
+                                                    repositoryTab,
+                                                    data.fileData,
+                                                    (data.selectedLogData0 != null) ? data.selectedLogData0.revision : repositoryTab.repository.getFirstRevision(),
+                                                    (data.selectedLogData1 != null) ? data.selectedLogData1.revision : null
+                                                   );
+          commandDiff.run();
         }
       }
-      public void mouseDown(MouseEvent mouseEvent)
+      public void widgetSelected(SelectionEvent selectionEvent)
       {
-        List     widget    = (List)mouseEvent.widget;
-        String[] fileNames = widgetFiles.getSelection();
+        List     widget    = (List)selectionEvent.widget;
+        String[] fileNames = widget.getSelection();
 
         if (fileNames.length > 0)
         {
@@ -598,9 +647,6 @@ Dprintf.dprintf("");
 
           Widgets.modified(data);
         }
-      }
-      public void mouseUp(MouseEvent mouseEvent)
-      {
       }
     });
     widgetFiles.addKeyListener(new KeyListener()
@@ -618,6 +664,14 @@ Dprintf.dprintf("");
         else if (Widgets.isAccelerator(keyEvent,Settings.keyFindNext))
         {
           Widgets.invoke(widgetFindNext);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyDiff))
+        {
+          Widgets.invoke(widgetDiff);
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCreatePatch))
+        {
+          Widgets.invoke(widgetPatch);
         }
       }
       public void keyReleased(KeyEvent keyEvent)
@@ -700,7 +754,6 @@ Dprintf.dprintf("");
         }
         else if (Widgets.isAccelerator(keyEvent,SWT.CTRL+'c'))
         {
-Dprintf.dprintf("");
           TableItem[] tableItems = widgetChangesLog.getSelection();
           Widgets.setClipboard(clipboard,tableItems,4);
         }
@@ -806,6 +859,7 @@ Dprintf.dprintf("");
               Dialogs.error(dialog,"Get changes log fail: %s",exceptionMessage);
             }
           });
+          Onzen.printStacktrace(exception);
           return;
         }
         finally
@@ -861,8 +915,10 @@ Dprintf.dprintf("");
     data.selectedLogData0 = logData0;
     data.selectedLogData1 = logData1;
     if (data.selectedLogData0 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData0,COLOR_SELECTED0);
-    if (data.selectedLogData1 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData1,COLOR_SELECTED1);    
+    if (data.selectedLogData1 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData1,COLOR_SELECTED1);
     data.fileData = null;
+Dprintf.dprintf("data.selectedLogData0=%s %s",data.selectedLogData0,COLOR_SELECTED0);
+Dprintf.dprintf("data.selectedLogData1=%s %s",data.selectedLogData1,COLOR_SELECTED1);
 
     if (data.selectedLogData1 != null)
     {
@@ -872,14 +928,7 @@ Dprintf.dprintf("");
         {
           public void run()
           {
-            // set changed files
-            widgetFiles.removeAll();
-            for (String fileName : data.selectedLogData1.fileNames)
-            {
-              widgetFiles.add(fileName);
-            }
-
-            // select table item, show it
+            // select log entry, show it
             TableItem[] tableItems = widgetChangesLog.getItems();
             for (TableItem tableItem : widgetChangesLog.getItems())
             {
@@ -890,12 +939,29 @@ Dprintf.dprintf("");
                 break;
               }
             }
+
+            // set changed files
+            widgetFiles.removeAll();
+            for (String fileName : data.selectedLogData1.fileNames)
+            {
+              widgetFiles.add(fileName);
+            }
+
+            if (data.selectedLogData1.fileNames.length > 0)
+            {
+              // select first file
+              widgetFiles.select(0);
+              data.fileData = new FileData(data.selectedLogData1.fileNames[0]);
+            }
           }
         });
       }
     }
   }
 
+  /** select revision
+   * @param logData log data to select
+   */
   private void selectRevision(LogData logData)
   {
     selectRevision(data.selectedLogData1,logData);
