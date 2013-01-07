@@ -357,7 +357,7 @@ public class Onzen
 
   // stored settingn of last checkout
   private static Repository                 lastCheckoutRepository      = RepositoryCVS.getInstance();
-  private static String                     lastCheckoutRepositoryPath  = "";
+  private static String                     lastCheckoutrepositoryURL   = "";
   private static String                     lastCheckoutModuleName      = "";
   private static String                     lastCheckoutRevision        = "";
   private static String                     lastCheckoutUserName        = "";
@@ -3960,7 +3960,7 @@ exception.printStackTrace();
     class Data
     {
       Repository.Types type;
-      String           repositoryPath;
+      String           repositoryURL;
       String           moduleName;
       String           destinationPath;
       boolean          quitFlag;
@@ -3970,7 +3970,7 @@ exception.printStackTrace();
       Data()
       {
         this.type            = Repository.Types.CVS;
-        this.repositoryPath  = null;
+        this.repositoryURL   = null;
         this.moduleName      = null;
         this.destinationPath = null;
         this.quitFlag        = false;
@@ -4238,7 +4238,7 @@ exception.printStackTrace();
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.repositoryPath  = widgetRepository.getText();
+          data.repositoryURL   = widgetRepository.getText();
           data.moduleName      = widgetModuleName.getText().trim();
           data.destinationPath = widgetDestinationPath.getText();
           data.importPath      = widgetImportPath.getText();
@@ -4293,25 +4293,25 @@ exception.printStackTrace();
       public void run()
       {
         // get repository paths
-        ArrayList<String> repositoryPathArray = new ArrayList<String>();
+        ArrayList<String> repositoryURLArray = new ArrayList<String>();
         for (Repository repository : repositoryList)
         {
-          String repositoryPath = repository.getRepositoryPath();
-          if (!repositoryPath.isEmpty()) repositoryPathArray.add(repositoryPath);
+          String repositoryURL = repository.getRepositoryURL();
+          if (!repositoryURL.isEmpty()) repositoryURLArray.add(repositoryURL);
         }
-        final String[] repositoryPaths = repositoryPathArray.toArray(new String[repositoryPathArray.size()]);
+        final String[] repositoryURLs = repositoryURLArray.toArray(new String[repositoryURLArray.size()]);
 
         // sort
-        Arrays.sort(repositoryPaths);
+        Arrays.sort(repositoryURLs);
 
         // add to widget
         display.syncExec(new Runnable()
         {
           public void run()
           {
-            for (String repositoryPath : repositoryPaths)
+            for (String repositoryURL : repositoryURLs)
             {
-              widgetRepository.add(repositoryPath);
+              widgetRepository.add(repositoryURL);
             }
           }
         });
@@ -4458,7 +4458,7 @@ Dprintf.dprintf("");
     {
       BusyDialog busyDialog = new BusyDialog(shell,
                                              "Create new repository",
-                                             "Create new repository '" + data.repositoryPath + "'...",
+                                             "Create new repository '" + data.repositoryURL + "'...",
                                              BusyDialog.TEXT0
                                             );
       busyDialog.autoAnimate();
@@ -4467,7 +4467,7 @@ Dprintf.dprintf("");
       {
         public void run(final Onzen onzen, final BusyDialog busyDialog)
         {
-          setStatusText("Create new repository '" + data.repositoryPath + "'...");
+          setStatusText("Create new repository '" + data.repositoryURL + "'...");
           try
           {
             // create directory
@@ -4501,7 +4501,7 @@ Dprintf.dprintf("");
             final Repository repository = Repository.newInstance(data.type,data.destinationPath);;
 // ???
 Dprintf.dprintf("NYI");
-            repository.create(data.repositoryPath,data.moduleName,data.importPath);
+            repository.create(data.repositoryURL,data.moduleName,data.importPath);
 
             display.syncExec(new Runnable()
             {
@@ -4519,7 +4519,7 @@ Dprintf.dprintf("NYI");
             {
               public void run()
               {
-                Dialogs.error(shell,"Cannot create new repository '%s' in:\n\n'%s'\n\n(error: %s).",data.moduleName,data.repositoryPath,message);
+                Dialogs.error(shell,"Cannot create new repository '%s' in:\n\n'%s'\n\n(error: %s).",data.moduleName,data.repositoryURL,message);
               }
             });
             return;
@@ -4550,7 +4550,7 @@ Dprintf.dprintf("NYI");
     {
       Onzen      onzen;
       Repository repository;
-      String     repositoryPath;
+      String     repositoryURL;
       String     moduleName;
       String     revision;
       String     userName;
@@ -4563,7 +4563,7 @@ Dprintf.dprintf("NYI");
       {
         this.onzen           = null;
         this.repository      = null;
-        this.repositoryPath  = "";
+        this.repositoryURL   = "";
         this.moduleName      = "";
         this.revision        = "";
         this.userName        = "";
@@ -4592,7 +4592,7 @@ Dprintf.dprintf("NYI");
 
     data.onzen           = this;
     data.repository      = lastCheckoutRepository;
-    data.repositoryPath  = lastCheckoutRepositoryPath;
+    data.repositoryURL   = lastCheckoutrepositoryURL;
     data.moduleName      = lastCheckoutModuleName;
     data.revision        = lastCheckoutRevision;
     data.userName        = lastCheckoutUserName;
@@ -4711,7 +4711,7 @@ Dprintf.dprintf("NYI");
       Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
       {
         widgetRepository = Widgets.newCombo(subComposite);
-        widgetRepository.setText(data.repositoryPath);
+        widgetRepository.setText(data.repositoryURL);
         Widgets.layout(widgetRepository,0,0,TableLayoutData.WE);
         widgetRepository.setToolTipText("Respository path URI.");
 
@@ -4830,7 +4830,7 @@ Dprintf.dprintf("NYI");
           widgetCheckout.setEnabled(false);
 
           // get data
-          data.repositoryPath  = widgetRepository.getText();
+          data.repositoryURL   = widgetRepository.getText();
           data.moduleName      = widgetModuleName.getText().trim();
           data.revision        = widgetRevision.getText().trim();
           data.userName        = widgetUserName.getText();
@@ -4840,7 +4840,7 @@ Dprintf.dprintf("NYI");
 
           // checkout
           setStatusText("Checkout repository '"+
-                        data.repositoryPath+
+                        data.repositoryURL+
                         (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
                         (!data.revision.isEmpty() ? ":"+data.revision : "")+
                         "' into '"+
@@ -4850,7 +4850,7 @@ Dprintf.dprintf("NYI");
           BusyDialog busyDialog = new BusyDialog(shell,
                                                  "Checkout repository",
                                                  "Checkout repository '"+
-                                                 data.repositoryPath+
+                                                 data.repositoryURL+
                                                  (!data.moduleName.isEmpty() ? "/"+data.moduleName : "")+
                                                  (!data.revision.isEmpty() ? ":"+data.revision : "")+
                                                  "' into '"+
@@ -4877,7 +4877,7 @@ Dprintf.dprintf("NYI");
                       {
                         public void run()
                         {
-                          Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryPath);
+                          Dialogs.error(shell,"Cannot create new directory '%s'",data.repositoryURL);
                         }
                       });
                       return;
@@ -4889,7 +4889,7 @@ Dprintf.dprintf("NYI");
                     {
                       public void run()
                       {
-                        Dialogs.error(shell,"'" + data.repositoryPath +"' is not a directory");
+                        Dialogs.error(shell,"'" + data.repositoryURL +"' is not a directory");
                       }
                     });
                     return;
@@ -4897,7 +4897,7 @@ Dprintf.dprintf("NYI");
                 }
 
                 final Repository repository = Repository.newInstance(data.repository.getType(),data.destinationPath,data.comment);
-                repository.checkout(data.repositoryPath,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
+                repository.checkout(data.repositoryURL,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
 
                 if (!busyDialog.isAborted())
                 {
@@ -4920,7 +4920,7 @@ Dprintf.dprintf("NYI");
                 {
                   public void run()
                   {
-                    Dialogs.error(shell,exception.getExtendedMessage(),"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryPath,exception.getMessage());
+                    Dialogs.error(shell,exception.getExtendedMessage(),"Cannot checkout repository\n\n'%s'\n\n(error: %s).",data.repositoryURL,exception.getMessage());
                   }
                 });
                 return;
@@ -4984,7 +4984,7 @@ Dprintf.dprintf("NYI");
 
         synchronized(data)
         {
-          data.repositoryPath = widget.getText().trim();
+          data.repositoryURL = widget.getText().trim();
           data.notifyAll();
         }
       }
@@ -4994,7 +4994,7 @@ Dprintf.dprintf("NYI");
 
         synchronized(data)
         {
-          data.repositoryPath = widget.getText().trim();
+          data.repositoryURL = widget.getText().trim();
           data.notifyAll();
         }
       }
@@ -5056,7 +5056,7 @@ Dprintf.dprintf("NYI");
     {
       boolean    repositoryModifiedFlag = false;
       Repository repository             = RepositoryCVS.getInstance();
-      String     repositoryPath         = "";
+      String     repositoryURL          = "";
       boolean    moduleNameModifiedFlag = false;
       String     moduleName             = "";
 
@@ -5066,7 +5066,7 @@ Dprintf.dprintf("NYI");
       boolean isRepositoryModified()
       {
         return    (repository != data.repository)
-               || !repositoryPath.equals(data.repositoryPath);
+               || !repositoryURL.equals(data.repositoryURL);
       }
 
       /** check if data is modified
@@ -5114,7 +5114,7 @@ Dprintf.dprintf("NYI");
             // update module/branch names
             try
             {
-              final String[] branchNames = repository.getBranchNames(repositoryPath);
+              final String[] branchNames = repository.getBranchNames(repositoryURL);
               if (branchNames != null)
               {
 //Dprintf.dprintf("branchNames.length=%d",branchNames.length);
@@ -5149,7 +5149,7 @@ Dprintf.dprintf("exception=%s",exception);
             // update revisions
             try
             {
-              final String[] revisionNames = repository.getRevisionNames(repositoryPath);
+              final String[] revisionNames = repository.getRevisionNames(repositoryURL);
               if (revisionNames != null)
               {
 //Dprintf.dprintf("revisionNames.length=%d",revisionNames.length);
@@ -5198,7 +5198,7 @@ Dprintf.dprintf("exception=%s",exception);
             repositoryModifiedFlag = isRepositoryModified();
             moduleNameModifiedFlag = isModuleNameModified();
             repository             = data.repository;
-            repositoryPath         = new String(data.repositoryPath);
+            repositoryURL          = new String(data.repositoryURL);
             moduleName             = new String(data.moduleName);
           }
         }
@@ -5212,19 +5212,19 @@ Dprintf.dprintf("exception=%s",exception);
       boolean flag = false;
       for (String checkoutHistoryPath : Settings.checkoutHistoryPaths)
       {
-        flag |= checkoutHistoryPath.equals(data.repositoryPath);
+        flag |= checkoutHistoryPath.equals(data.repositoryURL);
       }
       if (!flag)
       {
         String[] newCheckoutHistoryPaths = new String[Math.min(Settings.checkoutHistoryPaths.length+1,20)];
-        newCheckoutHistoryPaths[0] = data.repositoryPath;
+        newCheckoutHistoryPaths[0] = data.repositoryURL;
         System.arraycopy(Settings.checkoutHistoryPaths,0,newCheckoutHistoryPaths,1,Math.min(Settings.checkoutHistoryPaths.length,20-1));
         Settings.checkoutHistoryPaths = newCheckoutHistoryPaths;
       }
 
       // store last data
       lastCheckoutRepository      = data.repository;
-      lastCheckoutRepositoryPath  = data.repositoryPath;
+      lastCheckoutrepositoryURL   = data.repositoryURL;
       lastCheckoutModuleName      = data.moduleName;
       lastCheckoutRevision        = data.revision;
       lastCheckoutUserName        = data.userName;
@@ -5380,11 +5380,11 @@ Dprintf.dprintf("exception=%s",exception);
         label.setText(repositoryTab.repository.getType().toString());
         Widgets.layout(label,0,1,TableLayoutData.W);
 
-        label = Widgets.newLabel(subComposite,"Repository path:");
+        label = Widgets.newLabel(subComposite,"Root path:");
         Widgets.layout(label,1,0,TableLayoutData.W);
 
         text = Widgets.newStringView(subComposite,SWT.LEFT);
-        text.setText(repositoryTab.repository.getRepositoryPath());
+        text.setText(repositoryTab.repository.getRepositoryURL());
         Widgets.layout(text,1,1,TableLayoutData.W);
         text.addMouseListener(new MouseListener()
         {
@@ -5410,7 +5410,7 @@ Dprintf.dprintf("exception=%s",exception);
         Widgets.layout(widgetTitle,2,1,TableLayoutData.WE);
         widgetTitle.setToolTipText("Repository title.");
 
-        label = Widgets.newLabel(subComposite,"Root path:");
+        label = Widgets.newLabel(subComposite,"Local path:");
         Widgets.layout(label,3,0,TableLayoutData.W);
 
         subSubComposite = Widgets.newComposite(subComposite);
@@ -5420,7 +5420,7 @@ Dprintf.dprintf("exception=%s",exception);
           widgetRootPath = Widgets.newText(subSubComposite);
           widgetRootPath.setText(repositoryTab.repository.rootPath);
           Widgets.layout(widgetRootPath,0,0,TableLayoutData.WE);
-          widgetRootPath.setToolTipText("Repository root path.");
+          widgetRootPath.setToolTipText("Local repository root path.");
 
           button = Widgets.newButton(subSubComposite,Onzen.IMAGE_DIRECTORY);
           Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
