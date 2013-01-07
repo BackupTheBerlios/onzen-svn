@@ -244,11 +244,11 @@ Dprintf.dprintf("TODO: check if lock extension is available?");
   }
 
   /** create new repository module
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param importPath import directory
    */
-  public void create(String repositoryPath, String moduleName, String importPath)
+  public void create(String repositoryURL, String moduleName, String importPath)
     throws RepositoryException
   {
 Dprintf.dprintf("NYI");
@@ -256,7 +256,7 @@ throw new RepositoryException("NYI");
   }
 
   /** checkout repository
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
@@ -264,7 +264,7 @@ throw new RepositoryException("NYI");
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
 Dprintf.dprintf("checkout username, password???");
@@ -277,7 +277,7 @@ Dprintf.dprintf("checkout username, password???");
       command.clear();
       command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
       if (!revision.isEmpty()) command.append("-r",revision);
-      command.append(repositoryPath+File.separator+moduleName,destinationPath);
+      command.append(repositoryURL+File.separator+moduleName,destinationPath);
       exec = new Exec(rootPath,command);
 
       // read output
@@ -532,14 +532,14 @@ Dprintf.dprintf("checkout username, password???");
     return Types.HG;
   }
 
-  /** get repository path
-   * @return repository path
+  /** get repository URL
+   * @return repository URL
    */
-  public String getRepositoryPath()
+  public String getRepositoryURL()
   {
     final Pattern PATTERN_DEFAULT = Pattern.compile("^default\\s+=\\s*(.+)",Pattern.CASE_INSENSITIVE);
 
-    String repositoryPath = "";
+    String repositoryURL = "";
 
     Exec exec = null;
     try
@@ -568,7 +568,7 @@ Dprintf.dprintf("checkout username, password???");
           {
             file = file.getParentFile();
           }
-          repositoryPath = file.getPath();
+          repositoryURL = file.getPath();
         }
       }
 
@@ -584,7 +584,7 @@ Dprintf.dprintf("checkout username, password???");
       if (exec != null) exec.done();
     }
 
-    return repositoryPath;
+    return repositoryURL;
   }
 
   /** get first revision name
@@ -2646,7 +2646,7 @@ throw new Error("NYI");
   public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
-    String repositoryPath = getRepositoryPath();
+    String repositoryURL = getRepositoryURL();
 
     Exec exec = null;
     try
@@ -2656,7 +2656,7 @@ throw new Error("NYI");
       // create branch
       command.clear();
       command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
-      command.append((!rootName.isEmpty()) ? repositoryPath+File.separator+rootName : repositoryPath,repositoryPath+File.separator+branchName);
+      command.append((!rootName.isEmpty()) ? repositoryURL+File.separator+rootName : repositoryURL,repositoryURL+File.separator+branchName);
       exec = new Exec(rootPath,command);
 
       // read output

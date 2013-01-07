@@ -333,10 +333,10 @@ Dprintf.dprintf("checkout username, password???");
     return Types.GIT;
   }
 
-  /** get repository path
-   * @return repository path
+  /** get repository URL
+   * @return repository URL
    */
-  public String getRepositoryPath()
+  public String getRepositoryURL()
   {
     String repositoryPath = "";
 

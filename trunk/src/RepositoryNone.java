@@ -135,10 +135,10 @@ class RepositoryNone extends Repository
     return Types.NONE;
   }
 
-  /** get repository path
-   * @return repository path
+  /** get repository URL
+   * @return repository URL
    */
-  public String getRepositoryPath()
+  public String getRepositoryURL()
   {
     return "";
   }

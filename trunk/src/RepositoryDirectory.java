@@ -135,10 +135,10 @@ class RepositoryDirectory extends Repository
     return Types.DIRECTORY;
   }
 
-  /** get repository path
-   * @return repository path
+  /** get repository URL
+   * @return repository URL
    */
-  public String getRepositoryPath()
+  public String getRepositoryURL()
   {
     return "";
   }

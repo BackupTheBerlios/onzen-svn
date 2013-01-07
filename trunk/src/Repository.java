@@ -2567,10 +2567,10 @@ abstract class Repository implements Serializable
     return Types.UNKNOWN;
   }
 
-  /** get repository path
-   * @return repository path
+  /** get repository URL
+   * @return repository URL
    */
-  public String getRepositoryPath()
+  public String getRepositoryURL()
   {
     return "";
   }
@@ -3306,7 +3306,7 @@ Dprintf.dprintf("fileName=%s",fileName);
   public String[] getBranchNames()
     throws RepositoryException
   {
-    return getBranchNames(getRepositoryPath()+"/"+getDefaultBranchName());
+    return getBranchNames(getRepositoryURL()+"/"+getDefaultBranchName());
   }
 
     /** create new branch

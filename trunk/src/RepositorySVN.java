@@ -101,11 +101,11 @@ class RepositorySVN extends Repository
   }
 
   /** create new repository module
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param importPath import directory
    */
-  public void create(String repositoryPath, String moduleName, String importPath)
+  public void create(String repositoryURL, String moduleName, String importPath)
     throws RepositoryException
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
@@ -116,9 +116,9 @@ class RepositorySVN extends Repository
       int     exitCode;
 
       // get full repository path
-      String path = (PATTERN_URI.matcher(repositoryPath).matches()
-                       ? repositoryPath
-                       : "file://"+repositoryPath
+      String path = (PATTERN_URI.matcher(repositoryURL).matches()
+                       ? repositoryURL
+                       : "file://"+repositoryURL
                     )+"/"+moduleName;
 
       // create repository
@@ -139,7 +139,7 @@ class RepositorySVN extends Repository
   }
 
   /** checkout repository
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
@@ -147,7 +147,7 @@ class RepositorySVN extends Repository
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
@@ -158,9 +158,9 @@ class RepositorySVN extends Repository
       Command command = new Command();
 
       // get full repository path
-      String path = (PATTERN_URI.matcher(repositoryPath).matches()
-                       ? repositoryPath
-                       : "file://"+repositoryPath
+      String path = (PATTERN_URI.matcher(repositoryURL).matches()
+                       ? repositoryURL
+                       : "file://"+repositoryURL
                     )+"/"+moduleName;
 
       // checkout
@@ -483,14 +483,14 @@ class RepositorySVN extends Repository
     return Types.SVN;
   }
 
-  /** get repository path
-   * @return repository path
+  /** get repository URL
+   * @return repository URL
    */
-  public String getRepositoryPath()
+  public String getRepositoryURL()
   {
-    final Pattern PATTERN_REPOSITORTY_PATH = Pattern.compile("^Repository\\s+Root:\\s*(.+)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_REPOSITORTY_URL = Pattern.compile("^URL:\\s*(.+)",Pattern.CASE_INSENSITIVE);
 
-    String repositoryPath = "";
+    String repositoryURL = "";
 
     Exec exec = null;
     try
@@ -511,9 +511,9 @@ class RepositorySVN extends Repository
       {
 //Dprintf.dprintf("line=%s",line);
         // match name, state
-        if      ((matcher = PATTERN_REPOSITORTY_PATH.matcher(line)).matches())
+        if      ((matcher = PATTERN_REPOSITORTY_URL.matcher(line)).matches())
         {
-          repositoryPath = matcher.group(1);
+          repositoryURL = matcher.group(1);
         }
       }
 
@@ -529,7 +529,7 @@ class RepositorySVN extends Repository
       if (exec != null) exec.done();
     }
 
-    return repositoryPath;
+    return repositoryURL;
   }
 
   /** get first revision name
@@ -2076,7 +2076,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
-    String repositoryPath = getRepositoryPath();
+    String repositoryURL = getRepositoryURL();
 
     Exec exec = null;
     try
@@ -2085,7 +2085,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryPath+File.separator+rootName,repositoryPath+File.separator+branchName);
+      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryURL+File.separator+rootName,repositoryURL+File.separator+branchName);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("-F",commitMessage.getFileName());
       exec = new Exec(rootPath,command);
