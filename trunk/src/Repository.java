@@ -2567,12 +2567,20 @@ abstract class Repository implements Serializable
     return Types.UNKNOWN;
   }
 
+  /** get repository root URL
+   * @return repository root URL
+   */
+  public String getRepositoryRootURL()
+  {
+    return "";
+  }
+
   /** get repository URL
    * @return repository URL
    */
   public String getRepositoryURL()
   {
-    return "";
+    return getRepositoryURL();
   }
 
   /** get first revision name

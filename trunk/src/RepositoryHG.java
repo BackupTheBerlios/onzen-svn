@@ -302,7 +302,7 @@ Dprintf.dprintf("checkout username, password???");
         if (exitCode != 0)
         {
          try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
-         throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+         throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
@@ -420,7 +420,7 @@ Dprintf.dprintf("checkout username, password???");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -469,7 +469,7 @@ Dprintf.dprintf("checkout username, password???");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -507,7 +507,7 @@ Dprintf.dprintf("checkout username, password???");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -532,10 +532,10 @@ Dprintf.dprintf("checkout username, password???");
     return Types.HG;
   }
 
-  /** get repository URL
-   * @return repository URL
+  /** get repository root URL
+   * @return repository root URL
    */
-  public String getRepositoryURL()
+  public String getRepositoryRootURL()
   {
     final Pattern PATTERN_DEFAULT = Pattern.compile("^default\\s+=\\s*(.+)",Pattern.CASE_INSENSITIVE);
 
@@ -1714,7 +1714,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             exitCode = exec.waitFor();
             if (exitCode != 0)
             {
-              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+              throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
             }
             exec.done(); exec = null;
           }
@@ -1751,7 +1751,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
               {
                 storedFiles.restore(); storedFiles = null;
               }
-              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+              throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
             }
             exec.done(); exec = null;
 
@@ -1768,7 +1768,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
               {
                 storedFiles.restore(); storedFiles = null;
               }
-              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+              throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
             }
             exec.done(); exec = null;
 
@@ -1784,7 +1784,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
               {
                 storedFiles.restore(); storedFiles = null;
               }
-              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+              throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
             }
             exec.done(); exec = null;
 
@@ -1818,7 +1818,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           exitCode = exec.waitFor();
           if (exitCode != 0)
           {
-            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
           }
           exec.done(); exec = null;
         }
@@ -1831,7 +1831,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           exitCode = exec.waitFor();
           if (exitCode != 0)
           {
-            throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+            throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
           }
           exec.done(); exec = null;
         }
@@ -1851,7 +1851,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
             exitCode = exec.waitFor();
             if (exitCode != 0)
             {
-              throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+              throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
             }
             exec.done(); exec = null;
           }
@@ -1905,7 +1905,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
 
@@ -1948,7 +1948,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
 
@@ -1997,7 +1997,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
 
@@ -2050,7 +2050,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
     }
@@ -2088,7 +2088,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
 
@@ -2204,7 +2204,7 @@ throw new Error("NYI");
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
@@ -2309,7 +2309,7 @@ throw new Error("NYI");
       exitCode = exec.waitFor();
       if (exitCode > 1)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
@@ -2388,7 +2388,7 @@ throw new Error("NYI");
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
     }
@@ -2435,7 +2435,7 @@ throw new Error("NYI");
       }
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
       exec.done(); exec = null;
     }
@@ -2482,7 +2482,7 @@ throw new Error("NYI");
         exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
         }
         exec.done(); exec = null;
       }
@@ -2530,7 +2530,7 @@ throw new Error("NYI");
         exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
         }
         exec.done(); exec = null;
       }
@@ -2564,7 +2564,7 @@ throw new Error("NYI");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -2592,7 +2592,7 @@ throw new Error("NYI");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -2673,7 +2673,7 @@ throw new Error("NYI");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
         }
       }
       else

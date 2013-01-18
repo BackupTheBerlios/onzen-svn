@@ -142,7 +142,7 @@ Dprintf.dprintf("checkout username, password???");
         if (exitCode != 0)
         {
           try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
@@ -267,7 +267,7 @@ Dprintf.dprintf("checkout username, password???");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -308,7 +308,7 @@ Dprintf.dprintf("checkout username, password???");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -333,10 +333,10 @@ Dprintf.dprintf("checkout username, password???");
     return Types.GIT;
   }
 
-  /** get repository URL
-   * @return repository URL
+  /** get repository root URL
+   * @return repository root URL
    */
-  public String getRepositoryURL()
+  public String getRepositoryRootURL()
   {
     String repositoryPath = "";
 
@@ -1281,7 +1281,7 @@ Dprintf.dprintf("");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
         }
       }
       else
@@ -1323,7 +1323,7 @@ Dprintf.dprintf("");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1355,7 +1355,7 @@ Dprintf.dprintf("");
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
       exec.done(); exec = null;
 
@@ -1403,7 +1403,7 @@ Dprintf.dprintf("");
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // immediate commit when message is given
@@ -1453,7 +1453,7 @@ Dprintf.dprintf("");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1673,7 +1673,7 @@ throw new RepositoryException("NYI");
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)

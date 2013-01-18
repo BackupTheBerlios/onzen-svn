@@ -129,7 +129,7 @@ class RepositorySVN extends Repository
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -196,7 +196,7 @@ class RepositorySVN extends Repository
         if (exitCode != 0)
         {
           try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
@@ -458,7 +458,7 @@ class RepositorySVN extends Repository
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -481,6 +481,55 @@ class RepositorySVN extends Repository
   public Types getType()
   {
     return Types.SVN;
+  }
+
+  /** get repository root URL
+   * @return repository root URL
+   */
+  public String getRepositoryRootURL()
+  {
+    final Pattern PATTERN_REPOSITORTY_URL = Pattern.compile("^Repository Root:\\s*(.+)",Pattern.CASE_INSENSITIVE);
+
+    String repositoryURL = "";
+
+    Exec exec = null;
+    try
+    {
+      // get info
+      Command command = new Command();
+      String  line;
+      Matcher matcher;
+
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive","info");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // parse info output
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match name, state
+        if      ((matcher = PATTERN_REPOSITORTY_URL.matcher(line)).matches())
+        {
+          repositoryURL = matcher.group(1);
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return repositoryURL;
   }
 
   /** get repository URL
@@ -1597,11 +1646,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",
-                                        exec.getExtendedErrorMessage(),
-                                        command.toString(),
-                                        exitCode
-                                       );
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
@@ -1644,7 +1689,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1675,7 +1720,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
 
       // immediate commit when message is given
@@ -1719,7 +1764,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // immediate commit when message is given
@@ -1770,7 +1815,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1802,7 +1847,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
 
       // commit
@@ -1818,7 +1863,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         exitCode = new Exec(rootPath,command).waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
         }
       }
     }
@@ -1848,7 +1893,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1933,7 +1978,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1962,7 +2007,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exitCode = new Exec(rootPath,command).waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
     }
     catch (IOException exception)
@@ -1994,7 +2039,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    */
   public String getDefaultBranchName()
   {
-    return DEFAULT_BRANCH_NAME+File.separator;
+    return DEFAULT_BRANCH_NAME+"/";
   }
 
   /** get names of existing branches
@@ -2076,7 +2121,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
-    String repositoryURL = getRepositoryURL();
+    String repositoryURL     = getRepositoryURL();
+    String repositoryRootURL = getRepositoryRootURL();
 
     Exec exec = null;
     try
@@ -2085,7 +2131,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryURL+File.separator+rootName,repositoryURL+File.separator+branchName);
+      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryURL+"/"+rootName,repositoryRootURL+"/"+branchName);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("-F",commitMessage.getFileName());
       exec = new Exec(rootPath,command);
@@ -2104,7 +2150,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s' fail, exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
