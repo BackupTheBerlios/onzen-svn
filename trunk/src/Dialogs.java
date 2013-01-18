@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.BitSet;
 import java.util.List;
 
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -1312,8 +1314,23 @@ class Dialogs
             label.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,4)); row++;
 
             text = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.V_SCROLL|SWT.READ_ONLY);
-            text.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,0,0,SWT.DEFAULT,100)); row++;
             text.setText(StringUtils.join(extendedMessage,text.DELIMITER));
+            text.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,0,0,SWT.DEFAULT,100)); row++;
+            text.addMouseListener(new MouseListener()
+            {
+              public void mouseDoubleClick(MouseEvent mouseEvent)
+              {
+                Text widget = (Text)mouseEvent.widget;
+
+                widget.setSelection(0,widget.getText().length());
+              }
+              public void mouseDown(MouseEvent mouseEvent)
+              {
+              }
+              public void mouseUp(MouseEvent mouseEvent)
+              {
+              }
+            });
           }
 
           if (showAgainFieldFlag != null)
