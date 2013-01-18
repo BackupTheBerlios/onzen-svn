@@ -458,14 +458,15 @@ class CommandCreateBranch
       }
       catch (RepositoryException exception)
       {
-        final String exceptionMessage = exception.getMessage();
+        final String   exceptionMessage = exception.getMessage();
+        final String[] extendedMessage  = exception.getExtendedMessage();
         display.syncExec(new Runnable()
         {
           public void run()
           {
             busyDialog.close();
 
-            Dialogs.error(dialog,"Create branch fail: %s",exceptionMessage);
+            Dialogs.error(dialog,extendedMessage,"Create branch fail:\n%s",exceptionMessage);
           }
         });
         Onzen.printStacktrace(exception);
