@@ -1301,9 +1301,24 @@ class Dialogs
           label.setImage(IMAGE);
           label.setLayoutData(new TableLayoutData(0,0,TableLayoutData.W,0,0,10));
 
-          label = new Label(composite,SWT.LEFT|SWT.WRAP);
-          label.setText(message);
-          label.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+          text = new Text(composite,SWT.LEFT|SWT.WRAP|SWT.READ_ONLY);
+          text.setText(message);
+          text.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
+          text.addMouseListener(new MouseListener()
+          {
+            public void mouseDoubleClick(MouseEvent mouseEvent)
+            {
+              Text widget = (Text)mouseEvent.widget;
+
+              widget.setSelection(0,widget.getText().length());
+            }
+            public void mouseDown(MouseEvent mouseEvent)
+            {
+            }
+            public void mouseUp(MouseEvent mouseEvent)
+            {
+            }
+          });
 
           int row = 1;
 
@@ -1316,21 +1331,6 @@ class Dialogs
             text = new Text(composite,SWT.LEFT|SWT.BORDER|SWT.V_SCROLL|SWT.READ_ONLY);
             text.setText(StringUtils.join(extendedMessage,text.DELIMITER));
             text.setLayoutData(new TableLayoutData(row,1,TableLayoutData.NSWE,0,0,0,0,SWT.DEFAULT,100)); row++;
-            text.addMouseListener(new MouseListener()
-            {
-              public void mouseDoubleClick(MouseEvent mouseEvent)
-              {
-                Text widget = (Text)mouseEvent.widget;
-
-                widget.setSelection(0,widget.getText().length());
-              }
-              public void mouseDown(MouseEvent mouseEvent)
-              {
-              }
-              public void mouseUp(MouseEvent mouseEvent)
-              {
-              }
-            });
           }
 
           if (showAgainFieldFlag != null)
