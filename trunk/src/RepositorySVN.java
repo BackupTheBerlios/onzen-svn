@@ -110,10 +110,10 @@ class RepositorySVN extends Repository
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
 
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // get full repository path
       String path = (PATTERN_URI.matcher(repositoryURL).matches()
@@ -126,15 +126,25 @@ class RepositorySVN extends Repository
       command.append(Settings.svnCommand,"--non-interactive","import",importPath,path,"-m","initial");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1643,6 +1653,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       }
       if ((busyDialog == null) || !busyDialog.isAborted())
       {
+        // wait for termination
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
@@ -1675,10 +1686,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // commit files
       command.clear();
@@ -1686,15 +1697,25 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1706,10 +1727,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // add files
       command.clear();
@@ -1717,11 +1738,17 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
 
       // immediate commit when message is given
       if (commitMessage != null)
@@ -1732,6 +1759,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1761,11 +1792,16 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
 
       // immediate commit when message is given
       if (commitMessage != null)
@@ -1794,10 +1830,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // delete local files
       for (FileData fileData : fileDataSet)
@@ -1812,15 +1848,25 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (recursive) command.append("-R");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1832,10 +1878,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // copy file
       command.clear();
@@ -1844,32 +1890,34 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
 
       // commit
       if (commitMessage != null)
       {
-        // commit rename
-        command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName());
-        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
-        command.append("--");
-        command.append(getFileDataName(fileData));
-        command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-        }
+        HashSet<FileData> fileDataSet = FileData.toSet(getFileDataName(fileData),
+                                                       (!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName
+                                                      );
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1879,10 +1927,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void resolve(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // copy file
       command.clear();
@@ -1890,15 +1938,25 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1964,10 +2022,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void lock(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // copy file
       command.clear();
@@ -1975,15 +2033,25 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1993,10 +2061,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void unlock(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // copy file
       command.clear();
@@ -2004,15 +2072,25 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
