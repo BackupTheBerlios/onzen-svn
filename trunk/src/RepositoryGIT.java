@@ -341,11 +341,12 @@ Dprintf.dprintf("checkout username, password???");
     String repositoryPath = "";
 
     // get root
-    Command command = new Command();
-    Exec    exec;
-    String  line;
+    Exec exec = null;
     try
     {
+      Command command = new Command();
+      String  line;
+
       command.clear();
       command.append(Settings.gitCommand,"rev-parse","--show-toplevel");
       command.append("--");
@@ -359,6 +360,10 @@ Dprintf.dprintf("checkout username, password???");
     catch (IOException exception)
     {
       // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
 
     return repositoryPath;
@@ -652,7 +657,7 @@ Dprintf.dprintf("");
         // check out new revision
         command.clear();
         command.append(Settings.gitCommand,"show");
-        command.append(newRevision+((fileData != null) ? ":"+getFileDataName(fileData) : ""));
+        command.append(newRevision+":"+getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content
@@ -1310,6 +1315,7 @@ Dprintf.dprintf("");
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1320,15 +1326,25 @@ Dprintf.dprintf("");
       command.append(Settings.gitCommand,"commit","-F",commitMessage.getFileName());
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1357,6 +1373,8 @@ Dprintf.dprintf("");
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
 
       // immediate commit when message is given
@@ -1400,11 +1418,16 @@ Dprintf.dprintf("");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
 
       // immediate commit when message is given
       if (commitMessage != null)
@@ -1412,9 +1435,6 @@ Dprintf.dprintf("");
         // commit removed files
         commit(fileDataSet,commitMessage);
       }
-
-      // done
-      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
@@ -1434,6 +1454,7 @@ Dprintf.dprintf("");
   public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1450,15 +1471,25 @@ Dprintf.dprintf("");
       command.append(Settings.gitCommand,"pull");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1670,11 +1701,17 @@ throw new RepositoryException("NYI");
       command.clear();
       command.append(Settings.gitCommand,"branch",branchName);
       command.append("--");
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {

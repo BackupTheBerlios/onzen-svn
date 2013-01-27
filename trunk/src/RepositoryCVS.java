@@ -1026,7 +1026,7 @@ Dprintf.dprintf("unknown %s",line);
         command.clear();
         command.append(Settings.cvsCommand,"up","-p","-r",newRevision);
         command.append("--");
-        if (fileData != null) command.append(getFileDataName(fileData));
+        command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content
@@ -1596,7 +1596,7 @@ Dprintf.dprintf("unknown %s",line);
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else
@@ -1625,25 +1625,35 @@ Dprintf.dprintf("unknown %s",line);
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // commit files
       command.clear();
       command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1655,10 +1665,10 @@ Dprintf.dprintf("unknown %s",line);
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // add files
       command.clear();
@@ -1666,29 +1676,30 @@ Dprintf.dprintf("unknown %s",line);
       if (binaryFlag) command.append("-k","b");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
 
+      // done
+      exec.done(); exec = null;
+
       if (commitMessage != null)
       {
-        // commit added files
-        command.clear();
-        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-        }
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1717,28 +1728,21 @@ Dprintf.dprintf("unknown %s",line);
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-      }
-
-      if (commitMessage != null)
-      {
-        // commit removed files
-        command.clear();
-        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
-        }
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
       exec.done(); exec = null;
+
+      if (commitMessage != null)
+      {
+        commit(fileDataSet,commitMessage);
+      }
     }
     catch (IOException exception)
     {
@@ -1758,10 +1762,10 @@ Dprintf.dprintf("unknown %s",line);
   public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
       // delete local files
       for (FileData fileData : fileDataSet)
@@ -1782,15 +1786,25 @@ Dprintf.dprintf("unknown %s",line);
       }
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1802,6 +1816,7 @@ Dprintf.dprintf("unknown %s",line);
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1837,46 +1852,53 @@ Dprintf.dprintf("unknown %s",line);
       }
       command.append("--");
       command.append(newFile.getName());
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         newFile.renameTo(oldFile);
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
 
       // remove old file
       command.clear();
       command.append(Settings.cvsCommand,"remove");
       command.append("--");
       command.append(oldFile.getName());
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         newFile.renameTo(oldFile);
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
 
+      // done
+      exec.done(); exec = null;
+
       // commit
       if (commitMessage != null)
       {
-        // commit remove/add (=rename) file
-        command.clear();
-        command.append(Settings.cvsCommand,"commit","-F",commitMessage.getFileName());
-        command.append("--");
-        command.append(oldFile.getName());
-        command.append(newFile.getName());
-        command.append((!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName);
-        exitCode = new Exec(rootPath,command).waitFor();
-        if (exitCode != 0)
-        {
-          newFile.renameTo(oldFile);
-          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-        }
+        HashSet<FileData> fileDataSet = FileData.toSet(getFileDataName(fileData),
+                                                       (!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName
+                                                      );
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -1974,6 +1996,7 @@ throw new RepositoryException("NYI");
   public void setFileMode(HashSet<FileData> fileDataSet, FileData.Modes mode, CommitMessage commitMessage)
     throws RepositoryException
   {
+    Exec exec = null;
     try
     {
       Command command = new Command();
@@ -1995,26 +2018,42 @@ throw new RepositoryException("NYI");
       }
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
 
       // update files
       command.clear();
       command.append(Settings.cvsCommand,"update","-d","-A");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
-      exitCode = new Exec(rootPath,command).waitFor();
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
       throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 
@@ -2122,7 +2161,7 @@ throw new RepositoryException("NYI");
         int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
       else

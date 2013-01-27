@@ -1005,7 +1005,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
         command.clear();
         command.append(Settings.hgCommand,"-y","cat","-r",newRevision);
         command.append("--");
-        if (fileData != null) command.append(getFileDataName(fileData));
+        command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
 
         // read content
@@ -1902,11 +1902,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
 
       // immediate push changes when configured
@@ -1945,11 +1949,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
 
       // immediate commit when message is given
@@ -1994,11 +2002,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
 
       // immediate commit when message is given
@@ -2047,11 +2059,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append("--");
       }
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
     }
     catch (IOException exception)
@@ -2085,11 +2101,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.append(fileData.getFileName());
       command.append(newName);
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
 
       // immediate commit when message is given
@@ -2385,11 +2405,15 @@ throw new Error("NYI");
       command.append("--");
       if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
       exec = new Exec(rootPath,command);
+
+      // wait for termination
       exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
       }
+
+      // done
       exec.done(); exec = null;
     }
     catch (IOException exception)
