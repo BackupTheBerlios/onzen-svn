@@ -649,12 +649,13 @@ Dprintf.dprintf("result[0]=%s",result[0]);
     }
     catch (RepositoryException exception)
     {
-      final String exceptionMessage = exception.getMessage();
+      final String   exceptionMessage = exception.getMessage();
+      final String[] extendedMessage  = exception.getExtendedMessage();
       display.syncExec(new Runnable()
       {
         public void run()
         {
-          Dialogs.error(shell,"Cannot commit files (error: %s)",exceptionMessage);
+          Dialogs.error(shell,extendedMessage,"Cannot commit files (error: %s)",exceptionMessage);
         }
       });
       Onzen.printStacktrace(exception);
