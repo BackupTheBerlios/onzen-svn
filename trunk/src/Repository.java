@@ -559,10 +559,14 @@ class FileData
    * @param fileName file name
    * @return file data set
    */
-  static public HashSet<FileData> toSet(String fileName)
+  static public HashSet<FileData> toSet(String fileName, String... otherFileNames)
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
     fileDataSet.add(new FileData(fileName));
+    for (String otherFileName : otherFileNames)
+    {
+      fileDataSet.add(new FileData(otherFileName));
+    }
 
     return fileDataSet;
   }
