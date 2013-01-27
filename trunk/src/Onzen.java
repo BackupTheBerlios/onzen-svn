@@ -4225,7 +4225,7 @@ exception.printStackTrace();
 
     // buttons
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0}));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetCreate = Widgets.newButton(composite,"Create");
@@ -4249,7 +4249,7 @@ exception.printStackTrace();
       });
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
