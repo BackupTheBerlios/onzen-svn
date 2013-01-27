@@ -359,7 +359,7 @@ class Exec
       {
         if (stdout == null)
         {
-          stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+          stdout = new BufferedReader(new InputStreamReader(getStdoutStream()));
         }
 
         if (stdout != null)
@@ -402,7 +402,7 @@ class Exec
       {
         if (stdout == null)
         {
-          stdout = new BufferedReader(new InputStreamReader(process.getInputStream()));
+          stdout = new BufferedReader(new InputStreamReader(getStdoutStream()));
         }
 
         if (stdout != null)
@@ -496,9 +496,9 @@ class Exec
     {
       try
       {
-        if (stdout == null)
+        if (stderr == null)
         {
-          stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+          stderr = new BufferedReader(new InputStreamReader(getStderrStream()));
         }
 
         if (stderr != null)
@@ -541,7 +541,7 @@ class Exec
       {
         if (stderr == null)
         {
-          stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+          stderr = new BufferedReader(new InputStreamReader(getStderrStream()));
         }
 
         if (stderr != null)
@@ -633,7 +633,7 @@ class Exec
 
     if (stdoutBinary != null)
     {
-      stdoutBinary = new DataInputStream(process.getInputStream());
+      stdoutBinary = new DataInputStream(getStdoutStream());
     }
 
     if (stdoutBinary != null)
