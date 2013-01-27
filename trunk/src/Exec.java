@@ -207,7 +207,7 @@ class Command
 
 /** execute external command
  */
-class Exec
+public class Exec
 {
   // --------------------------- constants --------------------------------
 
@@ -344,6 +344,21 @@ class Exec
   public InputStream getStderrStream()
   {
     return process.getErrorStream();
+  }
+
+  /** close stdin stream
+   * @return stream
+   */
+  public void closeStdin()
+  {
+    try
+    {
+      getStdinStream().close();
+    }
+    catch (IOException exception)
+    {
+      //
+    }
   }
 
   /** get next line from stdout
