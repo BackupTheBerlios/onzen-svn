@@ -1303,6 +1303,7 @@ class Dialogs
 
           text = new Text(composite,SWT.LEFT|SWT.WRAP|SWT.READ_ONLY);
           text.setText(message);
+          text.setBackground(composite.getBackground());
           text.setLayoutData(new TableLayoutData(0,1,TableLayoutData.NSWE,0,0,4));
           text.addMouseListener(new MouseListener()
           {
