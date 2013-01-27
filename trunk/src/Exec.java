@@ -252,10 +252,10 @@ class Exec
     else if (path != null)                             workingDirectory = new File(path);
     else                                               workingDirectory = null;
 
-    // start process. Note: set LANG=en_US to force English output
+    // start process. Note: set LANG=en_US.UTF-8 to force English output
     ProcessBuilder processBuilder = new ProcessBuilder(commandArray);
     Map<String, String> environment = processBuilder.environment();
-    environment.put("LANG","en_US");
+    environment.put("LANG","en_US.UTF-8");
     processBuilder.directory(workingDirectory);
     process = processBuilder.start();
     processHash.add(process);
