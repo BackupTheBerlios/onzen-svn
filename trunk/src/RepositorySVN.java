@@ -61,6 +61,10 @@ class RepositorySVN extends Repository
   // --------------------------- variables --------------------------------
   private final static RepositorySVN staticInstance = new RepositorySVN();
 
+  @XmlElement(name = "userName")
+  @RepositoryValue(title = "User name:", tooltip="SVN server user login name.")
+  public String userName;
+
   @XmlElement(name = "logPrefix")
   @RepositoryValue(title = "Log prefix:", defaultValue="/trunk", tooltip="Prefix of repository log path.")
   public String logPrefix;
@@ -123,12 +127,15 @@ class RepositorySVN extends Repository
 
       // create repository
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","import",importPath,path,"-m","initial");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("import",importPath,path,"-m","initial");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
 
       // wait for termination
+      exec.closeStdin();
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
@@ -175,13 +182,16 @@ class RepositorySVN extends Repository
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","checkout");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("checkout");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if ((revision != null) && !revision.isEmpty()) command.append("--revision",revision);
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       if ((password != null) && !password.isEmpty()) command.append("--password",password);
       command.append(path,destinationPath);
       exec = new Exec(destinationPath,command);
+      exec.closeStdin();
 
       // read output
       int n = destinationPath.length();
@@ -261,11 +271,13 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-//        command.append(Settings.svnCommand,"--non-interactive","status","-uvN");
-        command.append(Settings.svnCommand,"--non-interactive","status","-uvN","--xml");
+        command.append(Settings.svnCommand);
+        if (userName != null) command.append("--username",userName);
+        command.append("status","-uvN","--xml");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,directory,command);
+        exec.closeStdin();
 
         try
         {
@@ -511,10 +523,13 @@ class RepositorySVN extends Repository
       Matcher matcher;
 
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","info");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("info");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // parse info output
       while ((line = exec.getStdout()) != null)
@@ -560,10 +575,13 @@ class RepositorySVN extends Repository
       Matcher matcher;
 
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","info");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("info");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // parse info output
       while ((line = exec.getStdout()) != null)
@@ -628,11 +646,14 @@ class RepositorySVN extends Repository
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (name != null) command.append(name);
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // parse revisions in log output
       while ((line = exec.getStdout()) != null)
@@ -702,11 +723,14 @@ class RepositorySVN extends Repository
 
       // get single log entry
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r",revision+":PREV","--verbose");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("log","-r",revision+":PREV","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // parse header
       if (parseLogHeader(exec))
@@ -747,11 +771,14 @@ class RepositorySVN extends Repository
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // parse header
       if (parseLogHeader(exec))
@@ -800,12 +827,15 @@ class RepositorySVN extends Repository
 
       // get file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","cat");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("cat");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // read file data
       while ((line = exec.getStdout()) != null)
@@ -846,12 +876,15 @@ class RepositorySVN extends Repository
 
       // get file data
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","cat");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("cat");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("--revision",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command,true);
+      exec.closeStdin();
 
       // read file bytes into byte array stream
       while ((n = exec.readStdout(buffer)) > 0)
@@ -903,10 +936,13 @@ class RepositorySVN extends Repository
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","status","-uv");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("status","-uv");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // read list
       while ((line = exec.getStdout()) != null)
@@ -1000,11 +1036,14 @@ class RepositorySVN extends Repository
       {
         // check out new revision
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","cat","--revision",newRevision);
+        command.append(Settings.svnCommand);
+        if (userName != null) command.append("--username",userName);
+        command.append("cat","--revision",newRevision);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         if (fileData != null) command.append(getFileDataName(fileData));
         exec = new Exec(rootPath,command);
+        exec.closeStdin();
 
         // read content
         ArrayList<String> newFileLineList = new ArrayList<String>();
@@ -1047,11 +1086,14 @@ class RepositorySVN extends Repository
 
       // diff file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // skip diff header
       while ((line = exec.getStdout()) != null)
@@ -1297,7 +1339,9 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // get patch
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","diff");
+        command.append(Settings.svnCommand);
+        if (userName != null) command.append("--username",userName);
+        command.append("diff");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         if (!Settings.svnDiffCommand.isEmpty())
         {
@@ -1334,6 +1378,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.append("--");
         if (fileDataSet != null) command.append(getFileDataNames(existFileDataSet));
         exec = new Exec(rootPath,command);
+        exec.closeStdin();
 
         // read patch data
         Matcher matcher;
@@ -1460,11 +1505,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get patch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // read patch bytes into byte array stream
       while ((n = exec.readStdout(buffer)) > 0)
@@ -1506,11 +1554,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","log","-r","HEAD:0","--verbose");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileData != null) command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // parse header
       if (parseLogHeader(exec))
@@ -1568,12 +1619,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get annotations
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","blame","-v");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("blame","-v");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("-r",revision);
       command.append("--");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       /* parse annotation output
            Format:
@@ -1629,14 +1683,17 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","--accept","postpone");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("update","--accept","postpone");
       if (fileDataSet != null) command.append("--depth","immediates");
-//      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD");
+//      command.append(Settings.svnCommand,"merge","--dry-run","-r","BASE:HEAD");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
 //      command.append(".");
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // read output
       while (   ((busyDialog == null) || !busyDialog.isAborted())
@@ -1693,11 +1750,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // commit files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","commit","-F",commitMessage.getFileName());
+//      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("commit","-F",commitMessage.getFileName());
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -1734,11 +1795,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // add files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","add");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("add");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -1787,11 +1851,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // remove files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","remove");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("remove");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -1843,12 +1910,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // revert files
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","update","-r",revision);
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("update","-r",revision);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (recursive) command.append("-R");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -1885,12 +1955,15 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","rename");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("rename");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(fileData.getFileName());
       command.append(newName);
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -1934,11 +2007,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","resolve","--accept","working");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("resolve","--accept","working");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -2029,11 +2105,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","lock");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("lock");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -2068,11 +2147,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","unlock");
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("unlock");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
       int exitCode = exec.waitFor();
@@ -2143,10 +2225,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list branches
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","list",pathName);
+        command.append(Settings.svnCommand);
+        if (userName != null) command.append("--username",userName);
+        command.append("list",pathName);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,command);
+        exec.closeStdin();
 
         // read output
         while ((line = exec.getStdout()) != null)
@@ -2159,10 +2244,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list tags
         command.clear();
-        command.append(Settings.svnCommand,"--non-interactive","list",pathName+"/tags");
+        command.append(Settings.svnCommand);
+        if (userName != null) command.append("--username",userName);
+        command.append("list",pathName+"/tags");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,command);
+        exec.closeStdin();
 
         // read output
         while ((line = exec.getStdout()) != null)
@@ -2209,10 +2297,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand,"--non-interactive","copy",repositoryURL+"/"+rootName,repositoryRootURL+"/"+branchName);
+      command.append(Settings.svnCommand);
+      if (userName != null) command.append("--username",userName);
+      command.append("copy",repositoryURL+"/"+rootName,repositoryRootURL+"/"+branchName);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("-F",commitMessage.getFileName());
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // read output
       String line;
