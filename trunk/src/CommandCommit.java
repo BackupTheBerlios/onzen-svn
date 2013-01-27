@@ -619,7 +619,6 @@ class CommandCommit
                                                          fileNames,
                                                          message
                                                         );
-Dprintf.dprintf("result[0]=%s",result[0]);
           }
         });
         if (!result[0]) return;
