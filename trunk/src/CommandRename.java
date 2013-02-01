@@ -11,6 +11,7 @@
 /****************************** Imports ********************************/
 // base
 import java.io.IOException;
+import java.io.File;
 import java.util.AbstractList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -119,7 +120,7 @@ class CommandRename
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       subComposite = Widgets.newComposite(composite);
-      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0}));
       Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
         label = Widgets.newLabel(subComposite,"Old name:");
@@ -134,6 +135,29 @@ class CommandRename
 
         widgetNewFileName = Widgets.newText(subComposite);
         Widgets.layout(widgetNewFileName,1,1,TableLayoutData.WE);
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,1,2,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            File file = new File(repositoryTab.repository.rootPath,widgetNewFileName.getText());
+
+            String newDirectory = Dialogs.directory(shell,
+                                                    "Select directory",
+                                                    file.getParentFile().getPath()
+                                                   );
+            if (newDirectory != null)
+            {
+              File newFile = new File(newDirectory,file.getName());
+              widgetNewFileName.setText(repositoryTab.repository.getFileName(newFile));
+            }
+          }
+        });
       }
 
       label = Widgets.newLabel(composite,"History:");
