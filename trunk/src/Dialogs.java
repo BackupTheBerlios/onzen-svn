@@ -1617,8 +1617,6 @@ class Dialogs
     {
       if (!parentShell.isDisposed())
       {
-        final boolean[] result = new boolean[1];
-
         final Shell dialog = openModal(parentShell,title,300,70);
         dialog.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
 
@@ -1686,6 +1684,7 @@ class Dialogs
         }
 
         return (Boolean)run(dialog,
+                            defaultValue,
                             new DialogRunnable()
                             {
                               public void done(Object result)
