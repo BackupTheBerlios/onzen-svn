@@ -421,19 +421,20 @@ abstract class DialogRunnable
  */
 class BooleanFieldUpdater
 {
-  private Object object;
   private Field  field;
+  private Object object;
 
   /** create boolean field updater
    * @param clazz class with boolean or Boolean field
+   * @param object object instance
    * @param fieldName field name
    */
-  BooleanFieldUpdater(Object object, String fieldName)
+  BooleanFieldUpdater(Class clazz, Object object, String fieldName)
   {
     try
     {
+      this.field  = clazz.getDeclaredField(fieldName);
       this.object = object;
-      this.field  = object.getClass().getDeclaredField(fieldName);
     }
     catch (NoSuchFieldException exception)
     {
@@ -1130,12 +1131,23 @@ class Dialogs
 
   /** create boolean field updater
    * @param clazz class with boolean or Boolean field
+   * @param object object instance
+   * @param fieldName field name
+   * @return boolean field updater
+   */
+  public static BooleanFieldUpdater booleanFieldUpdater(Class clazz, Object object, String fieldName)
+  {
+    return new BooleanFieldUpdater(clazz,object,fieldName);
+  }
+
+  /** create boolean field updater
+   * @param clazz class with boolean or Boolean field
    * @param fieldName field name
    * @return boolean field updater
    */
   public static BooleanFieldUpdater booleanFieldUpdater(Class clazz, String fieldName)
   {
-    return new BooleanFieldUpdater(clazz,fieldName);
+    return booleanFieldUpdater(clazz,null,fieldName);
   }
 
   /** info dialog
