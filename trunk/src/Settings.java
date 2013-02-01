@@ -1192,6 +1192,7 @@ public class Settings
   @SettingComment(text={"","show dialog flags"})
   @SettingValue
   public static Boolean                  showUpdateStatusErrors                 = new Boolean(true);
+  @SettingValue
   public static Boolean                  showRestartAfterConfigChanged          = new Boolean(true);
 
   // debug
