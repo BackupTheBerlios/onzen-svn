@@ -1875,9 +1875,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         commit(fileDataSet,commitMessage);
       }
-
-      // done
-      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
