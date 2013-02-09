@@ -490,22 +490,28 @@ class CommandCommit
   public void run()
   {
     widgetMessage.setFocus();
-    if ((Boolean)Dialogs.run(dialog,false))
+    Dialogs.run(dialog,false,new DialogRunnable()
     {
-      Background.run(new BackgroundRunnable()
+      public void done(Object result)
       {
-        public void run()
+        if ((Boolean)result)
         {
-          commit();
-        }
-      });
+          Background.run(new BackgroundRunnable()
+          {
+            public void run()
+            {
+              commit();
+            }
+          });
 
-      lastMessage = new String[0];
-    }
-    else
-    {
-      lastMessage = data.message;
-    }
+          lastMessage = new String[0];
+        }
+        else
+        {
+          lastMessage = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+        }
+      }
+    });
   }
 
   /** run and wait for dialog
@@ -513,20 +519,22 @@ class CommandCommit
   public boolean execute()
   {
     widgetMessage.setFocus();
-    if ((Boolean)Dialogs.run(dialog,false))
+    return (Boolean)Dialogs.run(dialog,false,new DialogRunnable()
     {
-      commit();
+      public void done(Object result)
+      {
+        if ((Boolean)result)
+        {
+          commit();
 
-      lastMessage = new String[0];
-
-      return true;
-    }
-    else
-    {
-      lastMessage = data.message;
-
-      return false;
-    }
+          lastMessage = new String[0];
+        }
+        else
+        {
+          lastMessage = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
+        }
+      }
+    });
   }
 
   /** convert data to string
