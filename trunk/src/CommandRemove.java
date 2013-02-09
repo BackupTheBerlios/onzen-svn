@@ -227,7 +227,30 @@ class CommandRemove
           int i = widget.getSelectionIndex();
           if (i >= 0)
           {
-            widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
+            String oldMessage = widgetMessage.getText().trim();
+
+            String newMessage;
+            if (!oldMessage.isEmpty())
+            {
+              switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+              {
+                case 0:
+                  newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER)+widgetMessage.DELIMITER;
+                  break;
+                case 1:
+                  newMessage = oldMessage+widgetMessage.DELIMITER+StringUtils.join(history.get(i),widgetMessage.DELIMITER)+widgetMessage.DELIMITER;
+                  break;
+                default:
+                  return;
+              }
+            }
+            else
+            {
+              newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER)+widgetMessage.DELIMITER;
+            }
+
+            widgetMessage.setText(newMessage);
+            Widgets.setFocus(widgetMessage);
           }
         }
       }
@@ -243,8 +266,30 @@ class CommandRemove
           int i = widget.getSelectionIndex();
           if (i >= 0)
           {
-            widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
-            widgetMessage.setFocus();
+            String oldMessage = widgetMessage.getText().trim();
+
+            String newMessage;
+            if (!oldMessage.isEmpty())
+            {
+              switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+              {
+                case 0:
+                  newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER)+widgetMessage.DELIMITER;
+                  break;
+                case 1:
+                  newMessage = oldMessage+widgetMessage.DELIMITER+StringUtils.join(history.get(i),widgetMessage.DELIMITER)+widgetMessage.DELIMITER;
+                  break;
+                default:
+                  return;
+              }
+            }
+            else
+            {
+              newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER)+widgetMessage.DELIMITER;
+            }
+
+            widgetMessage.setText(newMessage);
+            Widgets.setFocus(widgetMessage);
           }
         }
       }
