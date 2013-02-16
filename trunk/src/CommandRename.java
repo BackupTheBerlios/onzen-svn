@@ -273,7 +273,25 @@ class CommandRename
           int i = widget.getSelectionIndex();
           if (i >= 0)
           {
-            widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
+            String oldMessage = widgetMessage.getText().trim();
+            String newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim();
+
+            if (!oldMessage.isEmpty() && !oldMessage.equals(newMessage))
+            {
+              switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+              {
+                case 0:
+                  break;
+                case 1:
+                  newMessage = oldMessage+widgetMessage.DELIMITER+newMessage;
+                  break;
+                default:
+                  return;
+              }
+            }
+
+            widgetMessage.setText(newMessage+widgetMessage.DELIMITER);
+            Widgets.setFocus(widgetMessage);
           }
         }
       }
@@ -289,8 +307,25 @@ class CommandRename
           int i = widget.getSelectionIndex();
           if (i >= 0)
           {
-            widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
-            widgetMessage.setFocus();
+            String oldMessage = widgetMessage.getText().trim();
+            String newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim();
+
+            if (!oldMessage.isEmpty() && !oldMessage.equals(newMessage))
+            {
+              switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+              {
+                case 0:
+                  break;
+                case 1:
+                  newMessage = oldMessage+widgetMessage.DELIMITER+newMessage;
+                  break;
+                default:
+                  return;
+              }
+            }
+
+            widgetMessage.setText(newMessage+widgetMessage.DELIMITER);
+            Widgets.setFocus(widgetMessage);
           }
         }
       }
