@@ -370,6 +370,13 @@ class FileData
     this(file.getPath(),States.UNKNOWN);
   }
 
+  /** get get parent file data
+   */
+  public FileData getParent()
+  {
+    return new FileData(new File(name).getParent());
+  }
+
   /** get absolute file name
    * @param rootPath root path
    * @return file name
