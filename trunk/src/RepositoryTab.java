@@ -2394,6 +2394,8 @@ Dprintf.dprintf("");
       widgetCancel.setFocus();
       if ((Boolean)Dialogs.run(dialog,false))
       {
+              HashSet<FileData> updateFileDataSet = new HashSet<FileData>();
+
         boolean deleteAll  = false;
         boolean skipErrors = false;
         for (FileData fileData : fileDataSet)
@@ -2435,8 +2437,8 @@ Dprintf.dprintf("");
               FileUtils.deleteFile(file);
             }
 
-            // start update file data
-            asyncUpdateFileStates(fileData);
+            updateFileDataSet.add(fileData);
+            updateFileDataSet.add(fileData.getParent());
           }
           catch (IOException exception)
           {
@@ -2461,6 +2463,9 @@ Dprintf.dprintf("");
             }
           }
         }
+
+        // start update file data
+        asyncUpdateFileStates(updateFileDataSet);
       }
     }
   }
@@ -3554,6 +3559,15 @@ Dprintf.dprintf("");
       treeItem.setText(3,fileData.branch);
       treeItem.setForeground(getFileDataForeground(fileData));
       treeItem.setBackground(getFileDataBackground(fileData));
+
+//Dprintf.dprintf("treeItem=%s %d %s %s",treeItem,treeItem.getItemCount(),fileData.type,treeItem.getExpanded());
+/*
+      if ((fileData.type == FileData.Types.DIRECTORY) && !treeItem.getExpanded() && (treeItem.getItemCount() != 1))
+      {
+        treeItem.removeAll();
+        new TreeItem(treeItem,SWT.NONE);
+      }
+*/
     }
   }
 
@@ -3656,7 +3670,7 @@ Dprintf.dprintf("");
         if ((new File(fileData.getFileName(repository.rootPath)).exists()))
         {
           // file exists -> show state
-//Dprintf.dprintf("fileData=%s",fileData);
+Dprintf.dprintf("fileData=%s",fileData);
           final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
           if (treeItem != null)
           {
@@ -3682,7 +3696,20 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                if (!treeItem.isDisposed()) treeItem.dispose();
+                TreeItem parentTreeItem = treeItem.getParentItem();
+
+                if (!treeItem.isDisposed())
+                {
+                  if ((parentTreeItem != null) && (parentTreeItem.getItemCount() <= 1))
+                  {
+                    parentTreeItem.setExpanded(false);
+                  }
+                  treeItem.dispose();
+                  if ((parentTreeItem != null) && (parentTreeItem.getItemCount() <= 0))
+                  {
+                    closeFileTreeItem(parentTreeItem);
+                  }
+                }
               }
             });
           }
@@ -3695,7 +3722,7 @@ Dprintf.dprintf("");
         TreeItem treeItem = fileNameMap.get(newFileData.getFileName());
         if ((treeItem == null) || treeItem.isDisposed())
         {
-//Dprintf.dprintf("newFileData=%s",newFileData);
+//Dprintf.dprintf("newFileData=%s newFileData.getDirectoryName=#%s#",newFileData,newFileData.getDirectoryName());
           // add new tree item
           display.syncExec(new Runnable()
           {
@@ -3710,9 +3737,10 @@ Dprintf.dprintf("");
                   for (TreeItem rootTreeItem : Widgets.getTreeItems(widgetFileTree))
                   {
                     FileData fileData = (FileData)rootTreeItem.getData();
-//Dprintf.dprintf("#%s# - #%s# --- %s",fileData.getFileName(),newFileData.getDirectoryName(),fileData.getFileName().equals(newFileData.getDirectoryName()));
+//if (fileData != null) Dprintf.dprintf("  fileData.getFileName=#%s#",fileData.getFileName());
                     if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
                     {
+//Dprintf.dprintf("    found treeItem=%s fileData=%s",treeItem,fileData);
                       treeItem = rootTreeItem;
                       break;
                     }
