@@ -3670,7 +3670,6 @@ Dprintf.dprintf("");
         if ((new File(fileData.getFileName(repository.rootPath)).exists()))
         {
           // file exists -> show state
-Dprintf.dprintf("fileData=%s",fileData);
           final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
           if (treeItem != null)
           {
