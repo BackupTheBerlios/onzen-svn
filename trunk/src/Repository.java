@@ -2448,7 +2448,7 @@ abstract class Repository implements Serializable
   {
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
 
-    File directory = !subDirectory.isEmpty() ? new File(rootPath,subDirectory) : new File(rootPath);
+    File directory = ((subDirectory != null) && !subDirectory.isEmpty()) ? new File(rootPath,subDirectory) : new File(rootPath);
     File[] files = directory.listFiles();
     if (files != null)
     {
