@@ -97,7 +97,6 @@ class Preferences
   private final Shell         dialog;
 
   // widgets
-  private TabFolder           widgetTabFolder;
   private final Table         widgetKeys;
   private final Table         widgetColors;
   private final Table         widgetFonts;
@@ -260,8 +259,8 @@ class Preferences
 
               if (editColor(name,color))
               {
-                Widgets.setTableEntryColor(widgetColors,color,1,new Color(null,color.foreground));
-                Widgets.setTableEntryColor(widgetColors,color,2,new Color(null,color.background));
+                if (color.foreground != null) Widgets.setTableEntryColor(widgetColors,color,1,new Color(null,color.foreground));
+                if (color.background != null) Widgets.setTableEntryColor(widgetColors,color,2,new Color(null,color.background));
                 widgetColors.deselectAll();
               }
             }
@@ -1818,7 +1817,7 @@ Dprintf.dprintf("");
                                )
                )
             {
-              Widgets.notify(shell,SWT.Close,64);
+              Widgets.notify(shell,SWT.Close,Onzen.EXITCODE_RESTART);
             }
           }
         }
@@ -1915,8 +1914,8 @@ Dprintf.dprintf("");
                 // add entry
                 color = color.clone();
                 Widgets.addTableEntry(widgetColors,color,name.substring(5));   // Note: remove prefix "Color"
-                Widgets.setTableEntryColor(widgetColors,color,1,new Color(null,color.foreground));
-                Widgets.setTableEntryColor(widgetColors,color,2,new Color(null,color.background));
+                if (color.foreground != null) Widgets.setTableEntryColor(widgetColors,color,1,new Color(null,color.foreground));
+                if (color.background != null) Widgets.setTableEntryColor(widgetColors,color,2,new Color(null,color.background));
               }
             }
           }
@@ -2406,11 +2405,14 @@ Dprintf.dprintf("");
       Widgets.layout(subComposite,1,1,TableLayoutData.WE);
       {
         widgetColorForeground = Widgets.newCanvas(subComposite,SWT.BORDER);
-        widgetColorForeground.setForeground(new Color(null,color.foreground));
-        widgetColorForeground.setBackground(new Color(null,color.foreground));
+        widgetColorForeground.setForeground((color.foreground != null) ? new Color(null,color.foreground) : null);
+        widgetColorForeground.setBackground((color.foreground != null) ? new Color(null,color.foreground) : null);
         Widgets.layout(widgetColorForeground,0,0,TableLayoutData.WE,0,0,0,0,60,20);
-        widgetValueForeground = Widgets.newLabel(subComposite,String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue));
-        Widgets.layout(widgetValueForeground,0,1,TableLayoutData.W);
+        String colorName = (color.foreground != null)
+                             ? String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue)
+                             : "";
+        widgetValueForeground = Widgets.newLabel(subComposite,colorName);
+        Widgets.layout(widgetValueForeground,0,1,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
         widgetColorForeground.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -2442,11 +2444,14 @@ Dprintf.dprintf("");
       Widgets.layout(subComposite,2,1,TableLayoutData.WE);
       {
         widgetColorBackground = Widgets.newCanvas(subComposite,SWT.BORDER);
-        widgetColorBackground.setForeground(new Color(null,color.background));
-        widgetColorBackground.setBackground(new Color(null,color.background));
+        widgetColorBackground.setForeground((color.background != null) ? new Color(null,color.background) : null);
+        widgetColorBackground.setBackground((color.background != null) ? new Color(null,color.background) : null);
         Widgets.layout(widgetColorBackground,0,0,TableLayoutData.WE,0,0,0,0,60,20);
-        widgetValueBackground = Widgets.newLabel(subComposite,String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue));
-        Widgets.layout(widgetValueBackground,0,1,TableLayoutData.W);
+        String colorName = (color.background != null)
+                             ? String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue)
+                             : "";
+        widgetValueBackground = Widgets.newLabel(subComposite,colorName);
+        Widgets.layout(widgetValueBackground,0,1,TableLayoutData.W,0,0,0,0,60,SWT.DEFAULT);
         widgetColorBackground.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -2501,12 +2506,16 @@ Dprintf.dprintf("");
         {
           color.foreground = color.DEFAULT_FOREGROUND;
           color.background = color.DEFAULT_BACKGROUND;
-          widgetColorForeground.setForeground(new Color(null,color.foreground));
-          widgetColorForeground.setBackground(new Color(null,color.foreground));
-          widgetColorBackground.setForeground(new Color(null,color.background));
-          widgetColorBackground.setBackground(new Color(null,color.background));
-          widgetValueForeground.setText(String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue));
-          widgetValueBackground.setText(String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue));
+
+          widgetColorForeground.setForeground((color.foreground != null) ? new Color(null,color.foreground) : null);
+          widgetColorForeground.setBackground((color.foreground != null) ? new Color(null,color.foreground) : null);
+          widgetColorBackground.setForeground((color.background != null) ? new Color(null,color.background) : null);
+          widgetColorBackground.setBackground((color.background != null) ? new Color(null,color.background) : null);
+
+          String foregroundColorName = (color.foreground != null) ? String.format("#%02x%02x%02x",color.foreground.red,color.foreground.green,color.foreground.blue) : "";
+          String backgroundColorName = (color.background != null) ? String.format("#%02x%02x%02x",color.background.red,color.background.green,color.background.blue) : "";
+          widgetValueForeground.setText(foregroundColorName);
+          widgetValueBackground.setText(backgroundColorName);
         }
       });
 
