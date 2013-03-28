@@ -280,11 +280,6 @@ public class Settings
       }
       return buffer.toString();
     }
-
-    public boolean equals(FilePattern filePattern0, FilePattern filePattern1)
-    {
-      return filePattern0.string.equals(filePattern1.string);
-    }
   }
 
   /** color
@@ -303,7 +298,7 @@ public class Settings
     Color(RGB foreground, RGB background)
     {
       this.DEFAULT_FOREGROUND = foreground;
-      this.DEFAULT_BACKGROUND = foreground;
+      this.DEFAULT_BACKGROUND = background;
       this.foreground         = foreground;
       this.background         = background;
     }
