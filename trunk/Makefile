@@ -162,8 +162,7 @@ OTHER_SOURCES  = onzen.in \
 OBJECTS        = $(foreach z,$(SOURCES),$(basename $(subst src/,classes/,$z)).class) \
                  classes/Config.class \
 
-JARS           = onzen.jar \
-                 onzen-linux.jar \
+JARS           = onzen-linux.jar \
                  onzen-linux_64.jar \
                  onzen-windows.jar \
                  onzen-windows_64.jar \
@@ -446,7 +445,7 @@ ifneq ($(JAVA),)
 runjar: onzen
 	./onzen
 else
-	@$(ECHO) "ERROR: no 'java' commadn - cannot execute Onzen"
+	@$(ECHO) "ERROR: no 'java' command - cannot execute Onzen"
 endif
 
 .PHONY: install
