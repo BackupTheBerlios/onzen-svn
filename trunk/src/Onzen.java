@@ -1,5 +1,4 @@
 /***********************************************************************\
-/***********************************************************************\
 *
 * $Revision$
 * $Date$
@@ -1747,7 +1746,7 @@ Dprintf.dprintf("");
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           // send close-event to shell
-          Widgets.notify(shell,SWT.Close,0);
+          Widgets.notify(shell,SWT.Close,EXITCODE_OK);
         }
       });
     }
