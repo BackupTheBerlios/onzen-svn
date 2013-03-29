@@ -34,8 +34,9 @@ class Database
   // --------------------------- variables --------------------------------
   private final Connection connection;
 
-  private String          name;
-  private boolean         open;
+  private String           name;
+  private boolean          openFlag;
+static int openCount=0;
 
   // ------------------------ native functions ----------------------------
 
@@ -61,12 +62,31 @@ class Database
       // open database
       connection = DriverManager.getConnection("jdbc:sqlite:"+Settings.ONZEN_DIRECTORY+File.separator+name+".db");
       connection.setAutoCommit(false);
+openCount++;
+Dprintf.dprintf("openCount=%d",openCount);
+new Throwable().printStackTrace();
 
-      this.open = true;
+      this.openFlag = true;
     }
     catch (ClassNotFoundException exception)
     {
       throw new SQLException("SQLite database driver not found");
+    }
+  }
+
+  /** close database access
+   */
+  public void close()
+    throws SQLException
+  {
+    if (openFlag)
+    {
+      connection.setAutoCommit(true);
+      connection.close();
+openCount--;
+Dprintf.dprintf("openCount=%d",openCount);
+
+      openFlag = false;
     }
   }
 
@@ -95,24 +115,9 @@ class Database
   public void commit()
     throws SQLException
   {
-    if (open)
+    if (openFlag)
     {
       connection.commit();
-    }
-  }
-
-
-  /** close database access
-   */
-  public void close()
-    throws SQLException
-  {
-    if (open)
-    {
-      connection.setAutoCommit(true);
-      connection.close();
-
-      open = false;
     }
   }
 
