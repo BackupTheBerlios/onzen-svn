@@ -1,0 +1,48 @@
+NAME
+  onzen - graphical front end for CVS, SVN, HG, GIT
+
+SYNOPSIS
+  onzen [<options>] [--] [<repository list>]
+
+DESCRIPTION
+
+Onzen is a graphical front end for the revision control systems Concurrent Version System [CVS], Apache Subversion [SVN],
+Mercurial [HG], and GIT [GIT]. It represent the files managed by the RCS in a tree-view with detailed information and offers
+functions to e. g. update, commit, add, remove, rename, revert, create diffs, view files and others.
+
+OPTIONS
+
+         -h|--help                                            output this help
+         --debug                                              enable debug mode
+
+EXAMPLES
+Start onzen
+  onzen
+  
+Open onzen repository list
+  onzen onzen
+
+FILES
+$HOME/.onzen/onzen.cfg
+
+  user specific configuration
+
+$HOME/.onzen/history.db
+
+  user specific commit message history database
+
+$HOME/.onzen/patches.db
+
+  user specific patches database
+
+$HOME/.onzen/passwords.db
+
+  user specific password database (optionally encrypted)
+
+$HOME/.onzen/lists
+
+  user specific directory with repository lists
+
+BUGS
+Please report bugs to torsten.rupp@gmx.net. If possible run Onzen with
+option --debug and include the stack trace in the bug report.
