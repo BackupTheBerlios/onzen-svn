@@ -410,7 +410,7 @@ public class Onzen
     System.err.println();
   }
 
-  /** print exception stack trace to stderr
+  /** print exception stack trace to stderr (only in debug mode)
    * @param exception exception to print
    */
   public static void printStacktrace(Throwable throwable)
