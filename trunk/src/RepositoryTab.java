@@ -2547,8 +2547,8 @@ Dprintf.dprintf("");
     }
 
     // store new pattern maps
-    Settings.hiddenFilePatterns      = hiddenFilePatternsMap.entrySet().toArray(new Settings.FilePattern[hiddenFilePatternsMap.size()]);
-    Settings.hiddenDirectoryPatterns = hiddenDirectoryPatternsMap.entrySet().toArray(new Settings.FilePattern[hiddenDirectoryPatternsMap.size()]);
+    Settings.hiddenFilePatterns      = hiddenFilePatternsMap.values().toArray(new Settings.FilePattern[hiddenFilePatternsMap.size()]);
+    Settings.hiddenDirectoryPatterns = hiddenDirectoryPatternsMap.values().toArray(new Settings.FilePattern[hiddenDirectoryPatternsMap.size()]);
 
     // refresh
     asyncUpdateFileStates(fileDataSet);
