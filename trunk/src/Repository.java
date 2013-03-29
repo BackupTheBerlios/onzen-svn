@@ -2377,7 +2377,7 @@ abstract class Repository implements Serializable
   }
 
   /** check if file is hidden
-  * @param directory directory
+   * @param directory directory
    * @param baseName file base name
    * @return true iff hidden
    */
@@ -2458,7 +2458,10 @@ abstract class Repository implements Serializable
         FileData.Types type = getFileType(file);
 
         // add file data
-        if (!isHiddenFile(file,type))
+        if (   !isHiddenFile(file,type)
+            && (subDirectory.isEmpty() || !isHiddenFile(subDirectory+File.separator+file.getName(),type))
+            && !isHiddenFile(directory+File.separator+file.getName(),type)
+           )
         {
           FileData fileData = new FileData((!subDirectory.isEmpty()?subDirectory+File.separator:"")+file.getName(),
                                            type,
