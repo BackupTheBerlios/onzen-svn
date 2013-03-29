@@ -1406,7 +1406,7 @@ Dprintf.dprintf("");
         widgetDateFormat = Widgets.newText(composite);
         widgetDateFormat.setText(Settings.dateFormat);
         Widgets.layout(widgetDateFormat,2,1,TableLayoutData.WE);
-        widgetDateFormat.setToolTipText("Date format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit");
+        widgetDateFormat.setToolTipText("Date format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit\n  E - week day name");
 
         label = Widgets.newLabel(composite,"Time format:");
         Widgets.layout(label,3,0,TableLayoutData.W);
@@ -1420,7 +1420,7 @@ Dprintf.dprintf("");
         widgetDateTimeFormat = Widgets.newText(composite);
         widgetDateTimeFormat.setText(Settings.dateTimeFormat);
         Widgets.layout(widgetDateTimeFormat,4,1,TableLayoutData.WE);
-        widgetDateTimeFormat.setToolTipText("Date/time format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit\n  H - hour digit\n  m - minute digit\n  s - second digit");
+        widgetDateTimeFormat.setToolTipText("Date/time format.\nPatterns:\n  y - year digit\n  M - month digit\n  d - day digit\n  E - week day name\n  H - hour digit\n  m - minute digit\n  s - second digit");
 
 
         label = Widgets.newLabel(composite,"Spaces per TAB:");
