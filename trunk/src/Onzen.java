@@ -288,9 +288,9 @@ public class Onzen
   public static Cursor                 CURSOR_WAIT;
 
   // date/time format
-  public static SimpleDateFormat       DATE_FORMAT     = new SimpleDateFormat(Settings.dateFormat);
-  public static SimpleDateFormat       TIME_FORMAT     = new SimpleDateFormat(Settings.timeFormat);
-  public static SimpleDateFormat       DATETIME_FORMAT = new SimpleDateFormat(Settings.dateTimeFormat);
+  public static SimpleDateFormat       DATE_FORMAT;
+  public static SimpleDateFormat       TIME_FORMAT;
+  public static SimpleDateFormat       DATETIME_FORMAT;
 
   public static MimetypesFileTypeMap   MIMETYPES_FILE_TYPE_MAP = new MimetypesFileTypeMap();
   public static HashMap<String,String> FILE_ASSOCIATION_MAP = new HashMap<String,String>();
@@ -1257,6 +1257,11 @@ Dprintf.dprintf("ex=%s",exception);
 
     // get cursors
     CURSOR_WAIT       = new Cursor(display,SWT.CURSOR_WAIT);
+
+    // date formats
+    DATE_FORMAT       = new SimpleDateFormat(Settings.dateFormat);
+    TIME_FORMAT       = new SimpleDateFormat(Settings.timeFormat);
+    DATETIME_FORMAT   = new SimpleDateFormat(Settings.dateTimeFormat);
   }
 
   /** init loaded classes/JARs watchdog
