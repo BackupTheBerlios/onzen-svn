@@ -283,7 +283,7 @@ public abstract class HistoryDatabase<T>
 
           database.commit();
         }
-        catch (SQLException exception)
+        catch (SQLException unusedException)
         {
           // ignored
         }
@@ -314,12 +314,11 @@ public abstract class HistoryDatabase<T>
           database.commit();
         }
 
-
         database.close(); database = null;
       }
       finally
       {
-        if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
+        if (database != null) try { database.close(); } catch (SQLException unusedException) { /* ignored */ }
       }
     }
   }
@@ -463,8 +462,7 @@ public abstract class HistoryDatabase<T>
 
             if (id >= 0)
             {
-  //Dprintf.dprintf("delete id=%d",id);
-
+//Dprintf.dprintf("delete id=%d",id);
               preparedStatement = database.prepareStatement("DELETE FROM messages WHERE id=?;");
               preparedStatement.setInt(1,id);
               preparedStatement.executeUpdate();
@@ -478,7 +476,7 @@ public abstract class HistoryDatabase<T>
       }
       finally
       {
-        if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
+        if (database != null) try { database.close(); } catch (SQLException unusedException) { /* ignored */ }
       }
     }
   }
@@ -528,7 +526,7 @@ public abstract class HistoryDatabase<T>
       }
       finally
       {
-        if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
+        if (database != null) try { database.close(); } catch (SQLException unusedException) { /* ignored */ }
       }
     }
 
@@ -616,7 +614,7 @@ public abstract class HistoryDatabase<T>
       }
       finally
       {
-        if (database != null) try { database.close(); } catch (SQLException exception) { /* ignored */ }
+        if (database != null) try { database.close(); } catch (SQLException unusedException) { /* ignored */ }
       }
     }
   }
