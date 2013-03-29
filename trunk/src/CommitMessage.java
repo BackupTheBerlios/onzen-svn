@@ -104,7 +104,7 @@ class CommitMessageReceiveBroadcast extends Thread
         // add to history
         CommitMessage.addToHistory(message);
       }
-      catch (IOException exception)
+      catch (IOException unusedException)
       {
         // ignored
       }
@@ -254,7 +254,7 @@ class CommitMessage
         DatagramPacket datagramPacket = new DatagramPacket(data,data.length);
         socket.send(datagramPacket);
       }
-      catch (IOException exception)
+      catch (IOException unusedException)
       {
         // ignored
       }
@@ -360,15 +360,15 @@ class CommitMessage
       commitMessageReceiveBroadcast.setDaemon(true);
       commitMessageReceiveBroadcast.start();
     }
-    catch (UnknownHostException exception)
+    catch (UnknownHostException unusedException)
     {
       // ignored
     }
-    catch (SocketException exception)
+    catch (SocketException unusedException)
     {
       // ignored
     }
-    catch (IOException exception)
+    catch (IOException unusedException)
     {
       // ignored
     }
@@ -461,6 +461,7 @@ class CommitMessage
         catch (SQLException exception)
         {
           Onzen.printWarning("Cannot store message into history database (error: %s)",exception.getMessage());
+exception.printStackTrace();
           return;
         }
       }
