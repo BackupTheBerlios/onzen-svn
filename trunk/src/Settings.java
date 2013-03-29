@@ -347,6 +347,14 @@ public class Settings
                           new RGB((Integer)data[3],(Integer)data[4],(Integer)data[5])
                          );
       }
+      else if (StringParser.parse(string,":%d,%d,%d",data))
+      {
+        color = new Color(null,new RGB((Integer)data[0],(Integer)data[1],(Integer)data[2]));
+      }
+      else if (StringParser.parse(string,"%d,%d,%d:",data))
+      {
+        color = new Color(new RGB((Integer)data[0],(Integer)data[1],(Integer)data[2]),null);
+      }
       else if (StringParser.parse(string,"%d,%d,%d",data))
       {
         color = new Color(new RGB((Integer)data[0],(Integer)data[1],(Integer)data[2]));
@@ -365,14 +373,12 @@ public class Settings
      */
     public String toString(Color color) throws Exception
     {
-      if      (color.foreground != null)
+      if      ((color.foreground != null) && (color.background != null))
       {
-        if      (   (color.background != null)
-                 && (   (color.foreground.red   != color.background.red  )
-                     || (color.foreground.green != color.background.green)
-                     || (color.foreground.blue  != color.background.blue )
-                    )
-                )
+        if (   (color.foreground.red   != color.background.red  )
+            || (color.foreground.green != color.background.green)
+            || (color.foreground.blue  != color.background.blue )
+           )
         {
           return  ((color.foreground != null) ? color.foreground.red+","+color.foreground.green+","+color.foreground.blue : "")
                  +":"
@@ -383,13 +389,17 @@ public class Settings
           return color.foreground.red+","+color.foreground.green+","+color.foreground.blue;
         }
       }
+      else if (color.foreground != null)
+      {
+        return color.foreground.red+","+color.foreground.green+","+color.foreground.blue+":";
+      }
       else if (color.background != null)
       {
-        return color.background.red+","+color.background.green+","+color.background.blue;
+        return ":"+color.background.red+","+color.background.green+","+color.background.blue;
       }
       else
       {
-        return "0,0,0";
+        return "";
       }
     }
   }
@@ -790,7 +800,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryPreferences                    = new Point(500,600);
 
-  @SettingComment(text={"","Colors: <rgb foreground>:<rgb background> or          <rgb foreground>"})
+  @SettingComment(text={"","Colors: <rgb foreground>:<rgb background>, <rgb foreground>:, or :<rgb background>, or <rgb foreground+background>"})
   @SettingValue(type=SettingValueAdapterColor.class)
   public static Color                    colorDiffAdded                         = new Color(null,new RGB(128,255,128));
   @SettingValue(type=SettingValueAdapterColor.class)
