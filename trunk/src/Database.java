@@ -29,14 +29,19 @@ import java.util.StringTokenizer;
 class Database
 {
   // --------------------------- constants --------------------------------
-  public final static int ID_NONE = -1;
+  public  final static int ID_NONE = -1;
+
+  private final int        TIMEOUT = 10; // timeout [s]
 
   // --------------------------- variables --------------------------------
-  private final Connection connection;
+  // use a single connection for all database accesses
+  private static Object     connectionLock  = new Object();
+  private static int        connectionCount = 0;
+  private static Connection connection;
 
   private String           name;
   private boolean          openFlag;
-static int openCount=0;
+//static int openCount=0;
 
   // ------------------------ native functions ----------------------------
 
@@ -60,11 +65,26 @@ static int openCount=0;
       Class.forName("org.sqlite.JDBC");
 
       // open database
-      connection = DriverManager.getConnection("jdbc:sqlite:"+Settings.ONZEN_DIRECTORY+File.separator+name+".db");
-      connection.setAutoCommit(false);
-openCount++;
-Dprintf.dprintf("openCount=%d",openCount);
-new Throwable().printStackTrace();
+      synchronized(connectionLock)
+      {
+        connectionCount++;
+        if (connectionCount == 1)
+        {
+          try
+          {
+            DriverManager.setLoginTimeout(TIMEOUT);
+            connection = DriverManager.getConnection("jdbc:sqlite:"+Settings.ONZEN_DIRECTORY+File.separator+name+".db");
+            connection.setAutoCommit(false);
+          }
+          catch (SQLException exception)
+          {
+            connectionCount--;
+            try { connection.close(); } catch (SQLException unusedException) { /* ignored */ }
+            throw exception;
+          }
+//openCount++; Dprintf.dprintf("open openCount=%d",openCount); new Throwable().printStackTrace();
+        }
+      }
 
       this.openFlag = true;
     }
@@ -81,10 +101,22 @@ new Throwable().printStackTrace();
   {
     if (openFlag)
     {
-      connection.setAutoCommit(true);
-      connection.close();
-openCount--;
-Dprintf.dprintf("openCount=%d",openCount);
+      // close database
+      synchronized(connectionLock)
+      {
+        if (connectionCount <= 0)
+        {
+          throw new Error("Internal error: close database which is not open");
+        }
+
+        connectionCount--;
+        if (connectionCount == 0)
+        {
+          try { connection.setAutoCommit(true); } catch (SQLException unusedException) { /* ignored */ }
+          connection.close();
+//openCount--; Dprintf.dprintf("close openCount=%d",openCount);
+        }
+      }
 
       openFlag = false;
     }
@@ -96,7 +128,10 @@ Dprintf.dprintf("openCount=%d",openCount);
   public Statement createStatement()
     throws java.sql.SQLException
   {
-    return connection.createStatement();
+    Statement statement = connection.createStatement();
+    statement.setQueryTimeout(TIMEOUT);
+
+    return statement;
   }
 
   /** create new prepared statement
@@ -107,7 +142,10 @@ Dprintf.dprintf("openCount=%d",openCount);
     throws java.sql.SQLException
   {
 //Dprintf.dprintf("sqlCommand=%s",sqlCommand);
-    return connection.prepareStatement(sqlCommand);
+    PreparedStatement preparedStatement = connection.prepareStatement(sqlCommand);
+    preparedStatement.setQueryTimeout(TIMEOUT*1000);
+
+    return preparedStatement;
   }
 
   /** commit transaction
