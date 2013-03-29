@@ -269,6 +269,7 @@ public class Onzen
   public static Color                  COLOR_BACKGROUND;
 
   // images
+  public static Image                  IMAGE_PROGRAM_ICON;
   public static Image                  IMAGE_DIRECTORY;
   public static Image                  IMAGE_FILE;
   public static Image                  IMAGE_LINK;
@@ -1225,43 +1226,44 @@ Dprintf.dprintf("ex=%s",exception);
     display = new Display();
 
     // get colors
-    COLOR_BLACK       = display.getSystemColor(SWT.COLOR_BLACK);
-    COLOR_WHITE       = display.getSystemColor(SWT.COLOR_WHITE);
-    COLOR_GREEN       = display.getSystemColor(SWT.COLOR_GREEN);
-    COLOR_DARK_RED    = display.getSystemColor(SWT.COLOR_DARK_RED);
-    COLOR_RED         = display.getSystemColor(SWT.COLOR_RED);
-    COLOR_DARK_BLUE   = display.getSystemColor(SWT.COLOR_DARK_BLUE);
-    COLOR_BLUE        = display.getSystemColor(SWT.COLOR_BLUE);
-    COLOR_DARK_YELLOW = display.getSystemColor(SWT.COLOR_DARK_YELLOW);
-    COLOR_YELLOW      = display.getSystemColor(SWT.COLOR_YELLOW);
-    COLOR_DARK_GRAY   = display.getSystemColor(SWT.COLOR_DARK_GRAY);
-    COLOR_GRAY        = display.getSystemColor(SWT.COLOR_GRAY);
-    COLOR_MAGENTA     = new Color(null,0xFF,0xA0,0xA0);
-    COLOR_BACKGROUND  = display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
+    COLOR_BLACK        = display.getSystemColor(SWT.COLOR_BLACK);
+    COLOR_WHITE        = display.getSystemColor(SWT.COLOR_WHITE);
+    COLOR_GREEN        = display.getSystemColor(SWT.COLOR_GREEN);
+    COLOR_DARK_RED     = display.getSystemColor(SWT.COLOR_DARK_RED);
+    COLOR_RED          = display.getSystemColor(SWT.COLOR_RED);
+    COLOR_DARK_BLUE    = display.getSystemColor(SWT.COLOR_DARK_BLUE);
+    COLOR_BLUE         = display.getSystemColor(SWT.COLOR_BLUE);
+    COLOR_DARK_YELLOW  = display.getSystemColor(SWT.COLOR_DARK_YELLOW);
+    COLOR_YELLOW       = display.getSystemColor(SWT.COLOR_YELLOW);
+    COLOR_DARK_GRAY    = display.getSystemColor(SWT.COLOR_DARK_GRAY);
+    COLOR_GRAY         = display.getSystemColor(SWT.COLOR_GRAY);
+    COLOR_MAGENTA      = new Color(null,0xFF,0xA0,0xA0);
+    COLOR_BACKGROUND   = display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
 
     // get images
-    IMAGE_DIRECTORY   = Widgets.loadImage(display,"directory.png");
-    IMAGE_FILE        = Widgets.loadImage(display,"file.png");
-    IMAGE_LINK        = Widgets.loadImage(display,"link.png");
-    IMAGE_ARROW_UP    = Widgets.loadImage(display,"arrow-up.png");
-    IMAGE_ARROW_DOWN  = Widgets.loadImage(display,"arrow-down.png");
-    IMAGE_ARROW_LEFT  = Widgets.loadImage(display,"arrow-left.png");
-    IMAGE_ARROW_RIGHT = Widgets.loadImage(display,"arrow-right.png");
-    IMAGE_LOCK        = Widgets.loadImage(display,"lock.png");
-    IMAGE_EMPTY       = Widgets.loadImage(display,"empty.png");
+    IMAGE_PROGRAM_ICON = Widgets.loadImage(display,"program-icon.png");
+    IMAGE_DIRECTORY    = Widgets.loadImage(display,"directory.png");
+    IMAGE_FILE         = Widgets.loadImage(display,"file.png");
+    IMAGE_LINK         = Widgets.loadImage(display,"link.png");
+    IMAGE_ARROW_UP     = Widgets.loadImage(display,"arrow-up.png");
+    IMAGE_ARROW_DOWN   = Widgets.loadImage(display,"arrow-down.png");
+    IMAGE_ARROW_LEFT   = Widgets.loadImage(display,"arrow-left.png");
+    IMAGE_ARROW_RIGHT  = Widgets.loadImage(display,"arrow-right.png");
+    IMAGE_LOCK         = Widgets.loadImage(display,"lock.png");
+    IMAGE_EMPTY        = Widgets.loadImage(display,"empty.png");
 
     // fonts
-    FONT_CHANGES      = Widgets.newFont(display,Settings.fontChanges);
-    FONT_DIFF         = Widgets.newFont(display,Settings.fontDiff);
-    FONT_DIFF_LINE    = Widgets.newFont(display,Settings.fontDiffLine);
+    FONT_CHANGES       = Widgets.newFont(display,Settings.fontChanges);
+    FONT_DIFF          = Widgets.newFont(display,Settings.fontDiff);
+    FONT_DIFF_LINE     = Widgets.newFont(display,Settings.fontDiffLine);
 
     // get cursors
-    CURSOR_WAIT       = new Cursor(display,SWT.CURSOR_WAIT);
+    CURSOR_WAIT        = new Cursor(display,SWT.CURSOR_WAIT);
 
     // date formats
-    DATE_FORMAT       = new SimpleDateFormat(Settings.dateFormat);
-    TIME_FORMAT       = new SimpleDateFormat(Settings.timeFormat);
-    DATETIME_FORMAT   = new SimpleDateFormat(Settings.dateTimeFormat);
+    DATE_FORMAT        = new SimpleDateFormat(Settings.dateFormat);
+    TIME_FORMAT        = new SimpleDateFormat(Settings.timeFormat);
+    DATETIME_FORMAT    = new SimpleDateFormat(Settings.dateTimeFormat);
   }
 
   /** init loaded classes/JARs watchdog
@@ -1366,6 +1368,7 @@ Dprintf.dprintf("ex=%s",exception);
     // create window
     shell = new Shell(display,SWT.SHELL_TRIM);
     shell.setText("Onzen");
+    shell.setImage(IMAGE_PROGRAM_ICON);
     shell.setLayout(new TableLayout(new double[]{1.0,0.0,0.0},1.0));
 
     // create tab
