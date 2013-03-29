@@ -2613,6 +2613,7 @@ menuItem.addSelectionListener(new SelectionListener()
     // set window size, manage window
     shell.setSize(Settings.geometryMain.x,Settings.geometryMain.y);
     shell.open();
+    shell.setSize(Settings.geometryMain.x,Settings.geometryMain.y);
 
     // listener
     shell.addListener(SWT.Close,new Listener()
