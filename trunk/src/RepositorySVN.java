@@ -127,7 +127,7 @@ class RepositorySVN extends Repository
 
       // create repository
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("import",importPath,path,"-m","initial");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -182,7 +182,7 @@ class RepositorySVN extends Repository
 
       // checkout
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       if ((password != null) && !password.isEmpty()) command.append("--password",password);
       command.append("checkout");
@@ -270,7 +270,7 @@ class RepositorySVN extends Repository
       {
         // get status
         command.clear();
-        command.append(Settings.svnCommand);
+        command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
         command.append("status","-uvN","--xml");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -522,7 +522,7 @@ class RepositorySVN extends Repository
       Matcher matcher;
 
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("info");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -574,7 +574,7 @@ class RepositorySVN extends Repository
       Matcher matcher;
 
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("info");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -645,7 +645,7 @@ class RepositorySVN extends Repository
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -722,7 +722,7 @@ class RepositorySVN extends Repository
 
       // get single log entry
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("log","-r",revision+":PREV","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -770,7 +770,7 @@ class RepositorySVN extends Repository
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -826,7 +826,7 @@ class RepositorySVN extends Repository
 
       // get file
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("cat");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -875,7 +875,7 @@ class RepositorySVN extends Repository
 
       // get file data
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("cat");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -935,7 +935,7 @@ class RepositorySVN extends Repository
 
       // get list of files which may be updated or which are locally changed
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("status","-uv");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1035,7 +1035,7 @@ class RepositorySVN extends Repository
       {
         // check out new revision
         command.clear();
-        command.append(Settings.svnCommand);
+        command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
         command.append("cat","--revision",newRevision);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1085,7 +1085,7 @@ class RepositorySVN extends Repository
 
       // diff file
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1338,7 +1338,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // get patch
         command.clear();
-        command.append(Settings.svnCommand);
+        command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
         command.append("diff");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1504,7 +1504,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get patch
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1553,7 +1553,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get log
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1618,7 +1618,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // get annotations
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("blame","-v");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1682,11 +1682,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // update files
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("update","--accept","postpone");
       if (fileDataSet != null) command.append("--depth","immediates");
-//      command.append(Settings.svnCommand,"merge","--dry-run","-r","BASE:HEAD");
+//      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
@@ -1749,7 +1749,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // commit files
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("commit","-F",commitMessage.getFileName());
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1793,7 +1793,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // add files
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("add");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1849,7 +1849,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // remove files
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("remove");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1905,7 +1905,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // revert files
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("update","-r",revision);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -1950,7 +1950,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("rename");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -2002,7 +2002,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("resolve","--accept","working");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -2100,7 +2100,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("lock");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -2142,7 +2142,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // copy file
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("unlock");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -2220,7 +2220,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list branches
         command.clear();
-        command.append(Settings.svnCommand);
+        command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
         command.append("list",pathName);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -2239,7 +2239,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
         // list tags
         command.clear();
-        command.append(Settings.svnCommand);
+        command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
         command.append("list",pathName+"/tags");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
@@ -2292,7 +2292,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // create branch
       command.clear();
-      command.append(Settings.svnCommand);
+      command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
       command.append("copy",repositoryURL+"/"+rootName,repositoryRootURL+"/"+branchName);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
