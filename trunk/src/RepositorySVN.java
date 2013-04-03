@@ -133,9 +133,9 @@ class RepositorySVN extends Repository
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
       exec = new Exec(rootPath,command);
+      exec.closeStdin();
 
       // wait for termination
-      exec.closeStdin();
       int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
@@ -223,6 +223,13 @@ class RepositorySVN extends Repository
         // abort
         exec.destroy();
         try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
+      }
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
@@ -666,6 +673,13 @@ class RepositorySVN extends Repository
         }
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -738,6 +752,13 @@ class RepositorySVN extends Repository
         revisionData = parseLogData(exec);
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -791,6 +812,13 @@ class RepositorySVN extends Repository
         }
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -842,6 +870,13 @@ class RepositorySVN extends Repository
         lineList.add(line);
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -889,6 +924,13 @@ class RepositorySVN extends Repository
       while ((n = exec.readStdout(buffer)) > 0)
       {
         output.write(buffer,0,n);
+      }
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
@@ -995,6 +1037,13 @@ class RepositorySVN extends Repository
         }
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -1049,6 +1098,13 @@ class RepositorySVN extends Repository
         while ((line = exec.getStdout()) != null)
         {
           newFileLineList.add(line);
+        }
+
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -1266,6 +1322,13 @@ class RepositorySVN extends Repository
       }
 //Dprintf.dprintf("diffData=%s",diffData);
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -1421,6 +1484,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
           else if (lineList != null) lineList.add(line);
         }
 
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+
         // done
         exec.done(); exec = null;
       }
@@ -1519,6 +1589,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         output.write(buffer,0,n);
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -1578,6 +1655,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
                                      )
                          );
         }
+      }
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
@@ -1653,6 +1737,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         }
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
       // done
       exec.done(); exec = null;
     }
@@ -1720,6 +1811,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         // abort
         exec.destroy();
+      }
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
       }
 
       // done
@@ -2217,6 +2315,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       {
         Command command = new Command();
         String  line;
+        int     exitCode;
 
         // list branches
         command.clear();
@@ -2232,6 +2331,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         while ((line = exec.getStdout()) != null)
         {
           branchNameSet.add("branches/"+StringUtils.trimEnd(line,"/\\"));
+        }
+
+        // wait for termination
+        exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -2251,6 +2357,13 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         while ((line = exec.getStdout()) != null)
         {
           branchNameSet.add("tags/"+StringUtils.trimEnd(line,"/\\"));
+        }
+
+        // wait for termination
+        exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
 
         // done
@@ -2322,6 +2435,14 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         exec.destroy();
       }
 
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
+      // done
       exec.done(); exec = null;
     }
     catch (IOException exception)
