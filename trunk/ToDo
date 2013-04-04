@@ -20,3 +20,4 @@ ToDo
 - save commit message on cancle (multiple)
 - add svn cleanup command
 - date in revision tree wrong? ecal2_plugins ActtiveDataManagementWorkerThread.cpp
+- revert: update file list/status
