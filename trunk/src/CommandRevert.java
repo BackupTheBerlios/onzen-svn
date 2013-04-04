@@ -328,7 +328,14 @@ class CommandRevert
       repositoryTab.repository.revert(fileDataSet,data.revision,data.recursiveFlag);
 
       // update file states
-      repositoryTab.repository.updateStates(fileDataSet);
+      HashSet<FileData> updateFileDataSet = new HashSet<FileData>();
+      for (FileData fileData : fileDataSet)
+      {
+        fileDataSet.add(fileData);
+        fileDataSet.add(fileData.getParent());
+      }
+      repositoryTab.updateFileStates(updateFileDataSet);
+      repositoryTab.repository.updateStates(updateFileDataSet);
       display.syncExec(new Runnable()
       {
         public void run()
