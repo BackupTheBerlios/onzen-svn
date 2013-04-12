@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.LinkedHashSet;
 import java.util.regex.Pattern;
@@ -1262,7 +1263,7 @@ public class Settings
                       try
                       {
                         Class type = field.getType();
-                        if (type.isArray())
+                        if      (type.isArray())
                         {
                           type = type.getComponentType();
                           if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
@@ -1329,6 +1330,77 @@ public class Settings
                           else
                           {
 Dprintf.dprintf("field.getType()=%s",type);
+                          }
+                        }
+                        else if (type == HashSet.class)
+                        {
+                          type = type.getComponentType();
+                          if (type != null)
+                          {
+                            if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
+                            {
+                              // instantiate config adapter class
+                              SettingValueAdapter settingValueAdapter;
+                              Class enclosingClass = settingValue.type().getEnclosingClass();
+                              if (enclosingClass == Settings.class)
+                              {
+                                Constructor constructor = settingValue.type().getDeclaredConstructor(Settings.class);
+                                settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
+                              }
+                              else
+                              {
+                                settingValueAdapter = (SettingValueAdapter)settingValue.type().newInstance();
+                              }
+
+                              // convert to value
+                              Object value = settingValueAdapter.toValue(string);
+                              HashSet<Object> hashSet = (HashSet<Object>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else if (type == Integer.class)
+                            {
+                              int value = Integer.parseInt(string);
+                              HashSet<Integer> hashSet = (HashSet<Integer>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else if (type == Long.class)
+                            {
+                              long value = Long.parseLong(string);
+                              HashSet<Long> hashSet = (HashSet<Long>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else if (type == Boolean.class)
+                            {
+                              boolean value = StringUtils.parseBoolean(string);
+                              HashSet<Boolean> hashSet = (HashSet<Boolean>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else if (type == String.class)
+                            {
+                              String value = StringUtils.unescape(string);
+                              HashSet<String> hashSet = (HashSet<String>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else if (type.isEnum())
+                            {
+                              Enum value = StringUtils.parseEnum(type,string);
+                              HashSet<Enum> hashSet = (HashSet<Enum>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else if (type == EnumSet.class)
+                            {
+                              EnumSet value = StringUtils.parseEnumSet(type,string);
+                              HashSet<EnumSet> hashSet = (HashSet<EnumSet>)field.get(null);
+                              hashSet.add(value);
+                            }
+                            else
+                            {
+Dprintf.dprintf("field.getType()=%s",type);
+                            }
+                          }
+                          else
+                          {
+Dprintf.dprintf("field.getType()=null");
                           }
                         }
                         else
@@ -1506,7 +1578,7 @@ exception.printStackTrace();
               try
               {
                 Class type = field.getType();
-                if (type.isArray())
+                if      (type.isArray())
                 {
                   type = type.getComponentType();
                   if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
@@ -1597,6 +1669,92 @@ exception.printStackTrace();
                   else
                   {
 Dprintf.dprintf("field.getType()=%s",type);
+                  }
+                }
+                else if (type == HashSet.class)
+                {
+                  type = type.getComponentType();
+                  if     (type != null)
+                  {
+                    if      (SettingValueAdapter.class.isAssignableFrom(settingValue.type()))
+                    {
+                      // instantiate config adapter class
+                      SettingValueAdapter settingValueAdapter;
+                      Class enclosingClass = settingValue.type().getEnclosingClass();
+                      if (enclosingClass == Settings.class)
+                      {
+                        Constructor constructor = settingValue.type().getDeclaredConstructor(Settings.class);
+                        settingValueAdapter = (SettingValueAdapter)constructor.newInstance(new Settings());
+                      }
+                      else
+                      {
+                        settingValueAdapter = (SettingValueAdapter)settingValue.type().newInstance();
+                      }
+
+                      // convert to string
+                      HashSet<Object> hashSet = (HashSet<Object>)field.get(null);
+                      for (Object object : hashSet)
+                      {
+                        String value = (String)settingValueAdapter.toString(object);
+                        output.printf("%s = %s\n",name,value);
+                      }
+                    }
+                    else if (type == Integer.class)
+                    {
+                      HashSet<Integer> hashSet = (HashSet<Integer>)field.get(null);
+                      for (int value : hashSet)
+                      {
+                        output.printf("%s = %d\n",name,value);
+                      }
+                    }
+                    else if (type == Long.class)
+                    {
+                      HashSet<Long> hashSet = (HashSet<Long>)field.get(null);
+                      for (long value : hashSet)
+                      {
+                        output.printf("%s = %ld\n",name,value);
+                      }
+                    }
+                    else if (type == Boolean.class)
+                    {
+                      HashSet<Boolean> hashSet = (HashSet<Boolean>)field.get(null);
+                      for (boolean value : hashSet)
+                      {
+                        output.printf("%s = %s\n",name,value ? "yes" : "no");
+                      }
+                    }
+                    else if (type == String.class)
+                    {
+                      HashSet<String> hashSet = (HashSet<String>)field.get(null);
+                      for (String value : hashSet)
+                      {
+                        output.printf("%s = %s\n",name,StringUtils.escape(value));
+                      }
+                    }
+                    else if (type.isEnum())
+                    {
+                      HashSet<Enum> hashSet = (HashSet<Enum>)field.get(null);
+                      for (Enum value : hashSet)
+                      {
+                        output.printf("%s = %s\n",name,value.toString());
+                      }
+                    }
+                    else if (type == EnumSet.class)
+                    {
+                      HashSet<EnumSet> hashSet = (HashSet<EnumSet>)field.get(null);
+                      for (EnumSet enumSet : hashSet)
+                      {
+                        output.printf("%s = %s\n",name,StringUtils.join(enumSet,","));
+                      }
+                    }
+                    else
+                    {
+Dprintf.dprintf("field.getType()=%s",type);
+                    }
+                  }
+                  else
+                  {
+Dprintf.dprintf("type.getComponentType()=null");
                   }
                 }
                 else
