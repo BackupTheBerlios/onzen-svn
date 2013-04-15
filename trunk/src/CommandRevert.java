@@ -331,11 +331,12 @@ class CommandRevert
       HashSet<FileData> updateFileDataSet = new HashSet<FileData>();
       for (FileData fileData : fileDataSet)
       {
-        fileDataSet.add(fileData);
-        fileDataSet.add(fileData.getParent());
+        updateFileDataSet.add(fileData);
+
+        FileData parentFileData = fileData.getParent();
+        if (parentFileData != null) updateFileDataSet.add(parentFileData);
       }
       repositoryTab.updateFileStates(updateFileDataSet);
-      repositoryTab.repository.updateStates(updateFileDataSet);
       display.syncExec(new Runnable()
       {
         public void run()
@@ -346,12 +347,13 @@ class CommandRevert
     }
     catch (RepositoryException exception)
     {
-      final String exceptionMessage = exception.getMessage();
+      final String   exceptionMessage = exception.getMessage();
+      final String[] extendedMessage  = exception.getExtendedMessage();
       display.syncExec(new Runnable()
       {
         public void run()
         {
-          Dialogs.error(shell,"Cannot revert files (error: %s)",exceptionMessage);
+          Dialogs.error(shell,extendedMessage,"Cannot revert files (error: %s)",exceptionMessage);
         }
       });
       Onzen.printStacktrace(exception);
