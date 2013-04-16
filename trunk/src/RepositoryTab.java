@@ -233,6 +233,7 @@ class RepositoryTab
   private final TabFolder     widgetTabFolder;
   public  final Composite     widgetComposite;
   private final Tree          widgetFileTree;
+  private final Menu          menuOpenFileWithCommands;
   private final Menu          menuShellCommands;
 
   // map file name -> tree item
@@ -373,6 +374,39 @@ class RepositoryTab
 
       menu = Widgets.newPopupMenu(shell);
       {
+        menuItem = Widgets.addMenuItem(menu,"Open file\u2026");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+            if (fileData != null)
+            {
+              openFile(fileData);
+            }
+          }
+        });
+
+        menuOpenFileWithCommands = Widgets.addMenu(menu,"Open file with");//,Settings.keyOpenFileWith);
+        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,"\u2026");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            FileData fileData = getSelectedFileData();
+            if (fileData != null)
+            {
+              openFileWith(fileData);
+            }
+          }
+        });
+
         menuShellCommands = Widgets.addMenu(menu,"Shell");
         Widgets.addMenuSeparator(menuShellCommands);
         menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
@@ -665,38 +699,6 @@ Dprintf.dprintf("NYI");
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"Open file\u2026");
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            FileData fileData = getSelectedFileData();
-            if (fileData != null)
-            {
-              openFile(fileData);
-            }
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Open file with\u2026",Settings.keyOpenFileWith);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            FileData fileData = getSelectedFileData();
-            if (fileData != null)
-            {
-              openFileWith(fileData);
-            }
-          }
-        });
-
         menuItem = Widgets.addMenuItem(menu,"New file\u2026",Settings.keyNewFile);
 menuItem.setEnabled(false);
         menuItem.addSelectionListener(new SelectionListener()
@@ -900,10 +902,50 @@ menuItem.setEnabled(false);
     onzen.clearStatusText();
   }
 
+  /** update open-file-with commands in context menu
+   */
+  public void updateOpenFileWithCommands()
+  {
+    MenuItem menuItem;
+
+    if (!menuShellCommands.isDisposed())
+    {
+      // remove old entries in open-file-with command menu
+      MenuItem[] menuItems = menuOpenFileWithCommands.getItems();
+      for (int i = 1; i < menuItems.length; i++)
+      {
+        menuItems[i].dispose();
+      }
+
+      // add new open-file-with commands to menu
+      for (Settings.Editor editor : Settings.editors)
+      {
+        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,editor.name);
+        menuItem.setData(editor);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            MenuItem        widget = (MenuItem)selectionEvent.widget;
+            Settings.Editor editor = (Settings.Editor)widget.getData();
+
+            openFileWith(editor.commandLine);
+          }
+        });
+      }
+    }
+  }
+
   /** update shell commands in context menu
    */
   public void updateShellCommands()
   {
+    MenuItem menuItem;
+Dprintf.dprintf("");
+
     if (!menuShellCommands.isDisposed())
     {
       // remove old entries in shell command menu
@@ -914,7 +956,6 @@ menuItem.setEnabled(false);
       }
 
       // add new shell commands to menu
-      MenuItem menuItem;
       for (Settings.ShellCommand shellCommand : Settings.shellCommands)
       {
         menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
@@ -1706,14 +1747,12 @@ Dprintf.dprintf("NYI");
   }
 
   /** open file with external program
+   * @param commandLine command line
    * @param fileName file name
    * @param lineNumber line number
    */
-  public void openFileWith(String fileName, int lineNumber)
+  public void openFileWith(String commandLine, String fileName, int lineNumber)
   {
-    String commandLine  = getFileOpenCommand(fileName,
-                                             Onzen.getMimeType(fileName)
-                                            );
     if (commandLine != null)
     {
       // expand command
@@ -1803,20 +1842,35 @@ Dprintf.dprintf("NYI");
     }
   }
 
-  /** open file with external prog  /** open file with external program
+  /** open file with external program
    * @param fileName file name
+   * @param lineNumber line number
    */
-  public void openFileWith(String fileName)
+  public void openFileWith(String fileName, int lineNumber)
   {
-    openFileWith(fileName,0);
+    String commandLine = getFileOpenCommand(fileName,
+                                            Onzen.getMimeType(fileName)
+                                           );
+    openFileWith(commandLine,fileName,lineNumber);
   }
 
   /** open file with external program
-   * @param fileData file data
+   * @param commandLine command line
+   * @param fileName file name
    */
-  public void openFileWith(FileData fileData)
+  public void openFileWith(String commandLine, String fileName)
   {
-    openFileWith(fileData.getFileName(repository.rootPath));
+    openFileWith(commandLine,fileName,0);
+  }
+
+  /** open file with external program
+   * @param commandLine command line
+   * @param file file
+   * @param lineNumber line number
+   */
+  public void openFileWith(String commandLine, File file, int lineNumber)
+  {
+    openFileWith(commandLine,file.getPath(),lineNumber);
   }
 
   /** open file with external program
@@ -1829,6 +1883,32 @@ Dprintf.dprintf("NYI");
   }
 
   /** open file with external program
+   * @param commandLine command line
+   * @param fileData file data
+   */
+  public void openFileWith(String commandLine, FileData fileData)
+  {
+    openFileWith(commandLine,fileData.getFileName(repository.rootPath));
+  }
+
+  /** open file with external program
+   * @param fileData file data
+   */
+  public void openFileWith(FileData fileData)
+  {
+    openFileWith(fileData.getFileName(repository.rootPath));
+  }
+
+  /** open file with external program
+   * @param commandLine command line
+   * @param file file
+   */
+  public void openFileWith(String commandLine, File file)
+  {
+    openFileWith(commandLine,file,0);
+  }
+
+  /** open file with external program
    * @param file file
    */
   public void openFileWith(File file)
@@ -1837,10 +1917,23 @@ Dprintf.dprintf("NYI");
   }
 
   /** open file with external program
+   * @param commandLine command line
+   */
+  public void openFileWith(String commandLine)
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      openFileWith(commandLine,fileData);
+    }
+  }
+
+
+  /** open file with external program
    */
   public void openFileWith()
   {
-    final FileData fileData = getSelectedFileData();
+    FileData fileData = getSelectedFileData();
     if (fileData != null)
     {
       openFileWith(fileData);
@@ -3852,6 +3945,7 @@ Dprintf.dprintf("");
      */
     class Data
     {
+      String  name;
       String  mimeType;
       String  fileName;
       String  commandLine;
@@ -3859,6 +3953,7 @@ Dprintf.dprintf("");
 
       Data()
       {
+        this.name          = "";
         this.mimeType      = null;
         this.fileName      = null;
         this.commandLine   = null;
@@ -3899,11 +3994,12 @@ Dprintf.dprintf("");
     {
       widgetEditors = Widgets.newTable(composite);
       Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
-      Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,100,false);
-      Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
-      Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,400,true );
+      Widgets.addTableColumn(widgetEditors,0,"Name",     SWT.LEFT,100,false);
+      Widgets.addTableColumn(widgetEditors,1,"Mime type",SWT.LEFT,100,false);
+      Widgets.addTableColumn(widgetEditors,2,"File name",SWT.LEFT,100,false);
+      Widgets.addTableColumn(widgetEditors,3,"Command",  SWT.LEFT,400,true );
       Widgets.setTableColumnWidth(widgetEditors,Settings.geometryOpenFileColumns.width);
-      widgetEditors.setToolTipText("Changed files.");
+      widgetEditors.setToolTipText("Edit commands.");
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
@@ -4039,6 +4135,7 @@ Dprintf.dprintf("");
           TableItem       tableItem = widgetEditors.getItem(index);
           Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
+          data.name          = "";
           data.mimeType      = null;
           data.fileName      = null;
           data.commandLine   = editor.commandLine;
@@ -4069,12 +4166,13 @@ Dprintf.dprintf("");
     {
       TableItem tableItem = new TableItem(widgetEditors,SWT.NONE);
       tableItem.setData(editor);
-      tableItem.setText(0,editor.mimeType);
-      tableItem.setText(1,editor.fileName);
-      tableItem.setText(2,editor.commandLine);
+      tableItem.setText(0,editor.name);
+      tableItem.setText(1,editor.mimeType);
+      tableItem.setText(2,editor.fileName);
+      tableItem.setText(3,editor.commandLine);
     }
 
-        // show dialog
+    // show dialog
     Dialogs.show(dialog,Settings.geometryOpenFile,Settings.setWindowLocation);
 
     // run
@@ -4088,7 +4186,7 @@ Dprintf.dprintf("");
           if (data.addNewCommand)
           {
             // add editor
-            Settings.Editor editor = new Settings.Editor(data.mimeType,data.fileName,data.commandLine);
+            Settings.Editor editor = new Settings.Editor(data.name,data.mimeType,data.fileName,data.commandLine);
             Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
             Settings.editors[Settings.editors.length-1] = editor;
           }
