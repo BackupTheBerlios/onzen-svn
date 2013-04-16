@@ -212,13 +212,13 @@ public class StringUtils
     int          startIndex,endIndex;
     StringBuffer buffer = new StringBuffer();
 
-    quotedFlag = false;
-    quoteChar  = '\0';
-    startIndex = 0;
-    endIndex   = string.length();
-
     if (string != null)
     {
+      quotedFlag = false;
+      quoteChar  = '\0';
+      startIndex = 0;
+      endIndex   = string.length();
+
       // check for outer quotes
       if ((enclosingQuotes) && (string.length() >= 2))
       {
