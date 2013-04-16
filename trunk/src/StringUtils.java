@@ -25,6 +25,14 @@ public class StringUtils
    */
   public final static String QUOTE_CHARS = "'\"";
 
+  /** default quoting character for string values
+   */
+  public final static char DEFAULT_QUOTE_CHAR = '"';
+
+  /** default quoting character for string values
+   */
+  public final static String DEFAULT_QUOTE_STRING = "\"";
+
   /** white spaces
    */
   public final static String WHITE_SPACES = " \t\f\r\n";
