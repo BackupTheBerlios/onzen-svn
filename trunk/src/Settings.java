@@ -442,6 +442,7 @@ public class Settings
    */
   static class Editor implements Cloneable
   {
+    public String  name;
     public String  mimeType;
     public String  fileName;
     public String  commandLine;
@@ -449,12 +450,14 @@ public class Settings
     public Pattern fileNamePattern;
 
     /** create editor
+     * @param name name
      * @param mimeType glob mime pattern string
      * @param fileName glob fileName pattern string
      * @param commandLine command line
      */
-    Editor(String mimeType, String fileName, String commandLine)
+    Editor(String name, String mimeType, String fileName, String commandLine)
     {
+      this.name            = name;
       this.mimeType        = mimeType;
       this.fileName        = fileName;
       this.commandLine     = commandLine;
@@ -466,7 +469,7 @@ public class Settings
      */
     Editor()
     {
-      this("","","");
+      this("","","","");
     }
 
     /** clone object
@@ -474,7 +477,7 @@ public class Settings
      */
     public Editor clone()
     {
-      return new Editor(mimeType,fileName,commandLine);
+      return new Editor(name,mimeType,fileName,commandLine);
     }
 
     /** convert data to string
@@ -482,7 +485,7 @@ public class Settings
      */
     public String toString()
     {
-      return "Editor {"+mimeType+", file name: "+fileName+", command line: "+commandLine+"}";
+      return "Editor {"+name+", "+mimeType+", file name: "+fileName+", command line: "+commandLine+"}";
     }
   }
 
@@ -498,14 +501,30 @@ public class Settings
     {
       Editor editor = null;
 
-      Object[] data = new Object[3];
-      if      (StringParser.parse(string,"%s,%s:%*s",data))
+      Object[] data = new Object[4];
+      if      (StringParser.parse(string,"%S,%s,%s:%*s",data,StringUtils.QUOTE_CHARS))
       {
-        editor = new Editor(((String)data[0]).trim(),((String)data[1]).trim(),StringUtils.unescape(((String)data[2]).trim()));
+        editor = new Editor(StringUtils.unescape(((String)data[0]).trim()),
+                            ((String)data[1]).trim(),
+                            ((String)data[2]).trim(),
+                            StringUtils.unescape(((String)data[3]).trim())
+                           );
+      }
+      else if (StringParser.parse(string,"%s,%s:%*s",data))
+      {
+        editor = new Editor("",
+                            ((String)data[0]).trim(),
+                            ((String)data[1]).trim(),
+                            StringUtils.unescape(((String)data[2]).trim())
+                           );
       }
       else if (StringParser.parse(string,"%s:%*s",data))
       {
-        editor = new Editor(((String)data[0]).trim(),"",StringUtils.unescape(((String)data[1]).trim()));
+        editor = new Editor("",
+                            ((String)data[0]).trim(),
+                            "",
+                            StringUtils.unescape(((String)data[1]).trim())
+                           );
       }
       else
       {
@@ -521,7 +540,9 @@ public class Settings
      */
     public String toString(Editor editor) throws Exception
     {
-      return editor.mimeType+(!editor.fileName.isEmpty()?","+editor.fileName:"")+":"+StringUtils.escape(editor.commandLine);
+      return StringUtils.escape(editor.name,StringUtils.DEFAULT_QUOTE_CHAR)+","+
+             editor.mimeType+(!editor.fileName.isEmpty() ? ","+editor.fileName : "")+":"+
+             StringUtils.escape(editor.commandLine,StringUtils.DEFAULT_QUOTE_CHAR);
     }
 
     public boolean equals(Editor editor0, Editor editor1)
