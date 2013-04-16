@@ -137,21 +137,24 @@ public class StringUtils
     StringBuilder buffer = new StringBuilder();
 
     if (enclosingQuotes) buffer.append(quoteChar);
-    for (int index = 0; index < string.length(); index++)
+    if (string != null)
     {
-      char ch = string.charAt(index);
+      for (int index = 0; index < string.length(); index++)
+      {
+        char ch = string.charAt(index);
 
-      if      (ch == quoteChar)
-      {
-        buffer.append("\\"+quoteChar);
-      }
-      else if (ch == '\\')
-      {
-        buffer.append("\\\\");
-      }
-      else
-      {
-        buffer.append(ch);
+        if      (ch == quoteChar)
+        {
+          buffer.append("\\"+quoteChar);
+        }
+        else if (ch == '\\')
+        {
+          buffer.append("\\\\");
+        }
+        else
+        {
+          buffer.append(ch);
+        }
       }
     }
     if (enclosingQuotes) buffer.append(quoteChar);
@@ -206,39 +209,42 @@ public class StringUtils
     startIndex = 0;
     endIndex   = string.length();
 
-    // check for outer quotes
-    if ((enclosingQuotes) && (string.length() >= 2))
+    if (string != null)
     {
-      for (int i = 0; i < quoteChars.length(); i++)
+      // check for outer quotes
+      if ((enclosingQuotes) && (string.length() >= 2))
       {
-        quoteChar = quoteChars.charAt(i);
-        if  (   (string.charAt(0) == quoteChar)
-             && (string.charAt(string.length()-1) == quoteChar)
-            )
+        for (int i = 0; i < quoteChars.length(); i++)
         {
-          quotedFlag = true;
-          startIndex = 1;
-          endIndex   = string.length()-1;
-          break;
+          quoteChar = quoteChars.charAt(i);
+          if  (   (string.charAt(0) == quoteChar)
+               && (string.charAt(string.length()-1) == quoteChar)
+              )
+          {
+            quotedFlag = true;
+            startIndex = 1;
+            endIndex   = string.length()-1;
+            break;
+          }
         }
       }
-    }
 
-    // unescape
-    int index = startIndex;
-    while (index < endIndex)
-    {
-      char ch = string.charAt(index);
+      // unescape
+      int index = startIndex;
+      while (index < endIndex)
+      {
+        char ch = string.charAt(index);
 
-      if      ((ch == '\\') && ((index+1) < endIndex))
-      {
-        buffer.append(string.charAt(index+1));
-        index += 2;
-      }
-      else
-      {
-        buffer.append(ch);
-        index += 1;
+        if      ((ch == '\\') && ((index+1) < endIndex))
+        {
+          buffer.append(string.charAt(index+1));
+          index += 2;
+        }
+        else
+        {
+          buffer.append(ch);
+          index += 1;
+        }
       }
     }
 
