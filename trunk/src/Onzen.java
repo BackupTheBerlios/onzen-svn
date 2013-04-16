@@ -338,6 +338,7 @@ public class Onzen
   private MenuItem                          menuItemPushChangesTo;
   private MenuItem                          menuSetFileMode;
 
+  private Menu                              menuOpenFileWithCommands;
   private Menu                              menuShellCommands;
   private Menu                              menuRepositories;
 
@@ -2475,6 +2476,24 @@ Dprintf.dprintf("");
       });
     }
 
+    menuOpenFileWithCommands = Widgets.addMenu(menu,"Open file with");//,Settings.keyOpenFileWith);
+    menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,"\u2026");
+    menuItem.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        FileData fileData = null;//getSelectedFileData();
+        if (fileData != null)
+        {
+Dprintf.dprintf("");
+          selectedRepositoryTab.openFileWith(fileData);
+        }
+      }
+    });
+
     menuShellCommands = Widgets.addMenu(menuBar,"Shell");
     {
       Widgets.addMenuSeparator(menuShellCommands);
@@ -2559,7 +2578,8 @@ menuItem.addSelectionListener(new SelectionListener()
       }
     }
 
-    // update shell commands in menu
+    // update open file with/shell commands in menu
+    updateOpenFileWithCommands();
     updateShellCommands();
   }
 
@@ -2889,10 +2909,55 @@ exception.printStackTrace();
     return password;
   }
 
+  /** update open-file-with commands in context menu
+   */
+  public void updateOpenFileWithCommands()
+  {
+    if (!menuOpenFileWithCommands.isDisposed())
+    {
+      MenuItem menuItem;
+
+      // remove old entries in open-file-with command menu
+      MenuItem[] menuItems = menuOpenFileWithCommands.getItems();
+      for (int i = 1; i < menuItems.length; i++)
+      {
+        menuItems[i].dispose();
+      }
+
+      // add new open-file-with commands to menu
+      for (Settings.Editor editor : Settings.editors)
+      {
+        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,editor.name);
+        menuItem.setData(editor);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            MenuItem        widget = (MenuItem)selectionEvent.widget;
+            Settings.Editor editor = (Settings.Editor)widget.getData();
+
+            selectedRepositoryTab.openFileWith(editor.commandLine);
+          }
+        });
+      }
+    }
+
+    // update context menu in repository tabs
+    for (RepositoryTab repositoryTab : repositoryTabMap.values())
+    {
+      repositoryTab.updateOpenFileWithCommands();
+    }
+  }
+
   /** update shell commands to menu
    */
   private void updateShellCommands()
   {
+      MenuItem menuItem;
+
     if (!menuShellCommands.isDisposed())
     {
       // remove old entries in shell command menu
@@ -2905,7 +2970,7 @@ exception.printStackTrace();
       // add new shell commands to menu
       for (Settings.ShellCommand shellCommand : Settings.shellCommands)
       {
-        MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
+        menuItem = Widgets.addMenuItem(menuShellCommands,shellCommand.name);
         menuItem.setData(shellCommand);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -2922,7 +2987,7 @@ exception.printStackTrace();
         });
       }
       Widgets.addMenuSeparator(menuShellCommands);
-      MenuItem menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
+      menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -3016,6 +3081,7 @@ exception.printStackTrace();
       }
 
       // update context menu in repository tabs
+      repositoryTab.updateOpenFileWithCommands();
       repositoryTab.updateShellCommands();
     }
 
@@ -3120,6 +3186,7 @@ exception.printStackTrace();
     repositoryTabMap.put(repository,repositoryTab);
 
     // update context menu in repository tabs
+    repositoryTab.updateOpenFileWithCommands();
     repositoryTab.updateShellCommands();
 
     // update repository menu entries
@@ -6566,6 +6633,7 @@ exception.printStackTrace();
     preferences.run();
 
     // update shell commands to menu
+    updateOpenFileWithCommands();
     updateShellCommands();
   }
 
