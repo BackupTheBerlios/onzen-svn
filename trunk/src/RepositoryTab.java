@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -912,16 +913,25 @@ menuItem.setEnabled(false);
     {
       // remove old entries in open-file-with command menu
       MenuItem[] menuItems = menuOpenFileWithCommands.getItems();
-      for (int i = 1; i < menuItems.length; i++)
+      for (int i = 0; i < menuItems.length-1; i++)
       {
-        menuItems[i].dispose();
+        menuItems[0].dispose();
       }
 
       // add new open-file-with commands to menu
+      HashMap<String,Settings.Editor> commandMap = new HashMap<String,Settings.Editor>();
       for (Settings.Editor editor : Settings.editors)
       {
-        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,editor.name);
-        menuItem.setData(editor);
+        String name = !editor.name.isEmpty() ? editor.name : editor.commandLine;
+        commandMap.put(name,editor);
+      }
+
+      String[] names = commandMap.keySet().toArray(new String[0]);
+      Arrays.sort(names);
+      for (int i = 0; i < names.length; i++)
+      {
+        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,names[i],i,SWT.NONE);
+        menuItem.setData(commandMap.get(names[i]));
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -944,7 +954,6 @@ menuItem.setEnabled(false);
   public void updateShellCommands()
   {
     MenuItem menuItem;
-Dprintf.dprintf("");
 
     if (!menuShellCommands.isDisposed())
     {
@@ -1896,7 +1905,11 @@ Dprintf.dprintf("NYI");
    */
   public void openFileWith(FileData fileData)
   {
-    openFileWith(fileData.getFileName(repository.rootPath));
+    String fileName = fileData.getFileName(repository.rootPath);
+    String commandLine = getFileOpenCommand(fileName,
+                                            Onzen.getMimeType(fileName)
+                                           );
+    openFileWith(commandLine,fileName);
   }
 
   /** open file with external program
@@ -3983,6 +3996,7 @@ Dprintf.dprintf("");
 
     // create widgets
     final Table  widgetEditors;
+    final Text   widgetName;
     final Text   widgetMimeType;
     final Text   widgetFileName;
     final Text   widgetCommandLine;
@@ -4005,28 +4019,35 @@ Dprintf.dprintf("");
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,1,0,TableLayoutData.WE);
       {
-        label = Widgets.newLabel(subComposite,"Mime type:");
+        label = Widgets.newLabel(subComposite,"Name:");
         Widgets.layout(label,0,0,TableLayoutData.W);
+
+        widgetName = Widgets.newText(subComposite);
+        Widgets.layout(widgetName,0,1,TableLayoutData.WE);
+        widgetName.setToolTipText("Name of editor or empty.\n");
+
+        label = Widgets.newLabel(subComposite,"Mime type:");
+        Widgets.layout(label,1,0,TableLayoutData.W);
 
         widgetMimeType = Widgets.newText(subComposite);
         widgetMimeType.setText(mimeType);
-        Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
+        Widgets.layout(widgetMimeType,1,1,TableLayoutData.WE);
         widgetMimeType.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
 
         label = Widgets.newLabel(subComposite,"File name:");
-        Widgets.layout(label,1,0,TableLayoutData.W);
+        Widgets.layout(label,2,0,TableLayoutData.W);
 
         widgetFileName = Widgets.newText(subComposite);
         if (data.fileName != null) widgetFileName.setText(data.fileName);
-        Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
+        Widgets.layout(widgetFileName,2,1,TableLayoutData.WE);
         widgetFileName.setToolTipText("Simple file file name pattern, e. g. *.pdf.\n");
 
         label = Widgets.newLabel(subComposite,"Command:");
-        Widgets.layout(label,2,0,TableLayoutData.W);
+        Widgets.layout(label,3,0,TableLayoutData.W);
 
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-        Widgets.layout(subSubComposite,2,1,TableLayoutData.WE);
+        Widgets.layout(subSubComposite,3,1,TableLayoutData.WE);
         {
           widgetCommandLine = Widgets.newText(subSubComposite);
           if (data.commandLine != null) widgetCommandLine.setText(data.commandLine);
@@ -4061,7 +4082,7 @@ Dprintf.dprintf("");
         }
 
         widgetAddNewCommand = Widgets.newCheckbox(subComposite,"add as new command");
-        Widgets.layout(widgetAddNewCommand,3,1,TableLayoutData.W);
+        Widgets.layout(widgetAddNewCommand,4,1,TableLayoutData.W);
       }
     }
 
@@ -4080,6 +4101,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
+          data.name          = widgetName.getText().trim();
           data.mimeType      = widgetMimeType.getText().trim();
           data.fileName      = widgetFileName.getText().trim();
           data.commandLine   = widgetCommandLine.getText();
@@ -4135,7 +4157,7 @@ Dprintf.dprintf("");
           TableItem       tableItem = widgetEditors.getItem(index);
           Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
-          data.name          = "";
+          data.name          = editor.name;
           data.mimeType      = null;
           data.fileName      = null;
           data.commandLine   = editor.commandLine;
@@ -4186,7 +4208,11 @@ Dprintf.dprintf("");
           if (data.addNewCommand)
           {
             // add editor
-            Settings.Editor editor = new Settings.Editor(data.name,data.mimeType,data.fileName,data.commandLine);
+            Settings.Editor editor = new Settings.Editor(data.name,
+                                                         data.mimeType,
+                                                         data.fileName,
+                                                         data.commandLine
+                                                        );
             Settings.editors = Arrays.copyOf(Settings.editors,Settings.editors.length+1);
             Settings.editors[Settings.editors.length-1] = editor;
           }

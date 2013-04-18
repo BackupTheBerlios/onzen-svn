@@ -327,9 +327,10 @@ class Preferences
       {
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetEditors,0,"Mime type",SWT.LEFT,200,false);
-        Widgets.addTableColumn(widgetEditors,1,"File name",SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,2,"Command",  SWT.LEFT,300,true );
+        Widgets.addTableColumn(widgetEditors,0,"Name",     SWT.LEFT,100,false);
+        Widgets.addTableColumn(widgetEditors,1,"Mime type",SWT.LEFT,200,false);
+        Widgets.addTableColumn(widgetEditors,2,"File name",SWT.LEFT,100,false);
+        Widgets.addTableColumn(widgetEditors,3,"Command",  SWT.LEFT,300,true );
         widgetEditors.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -343,7 +344,7 @@ class Preferences
 
               if (editEditor(editor,"Edit editor","Save"))
               {
-                Widgets.updateTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.commandLine);
+                Widgets.updateTableEntry(widgetEditors,editor,editor.name,editor.mimeType,editor.fileName,editor.commandLine);
               }
             }
           }
@@ -354,7 +355,7 @@ class Preferences
         widgetEditors.setToolTipText("Editor list.");
         for (Settings.Editor editor : Settings.editors)
         {
-          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.mimeType,editor.fileName,editor.commandLine);
+          Widgets.addTableEntry(widgetEditors,editor.clone(),editor.name,editor.mimeType,editor.fileName,editor.commandLine);
         }
 
         subComposite = Widgets.newComposite(composite);
@@ -374,7 +375,7 @@ class Preferences
 
               if (editEditor(editor,"Add editor","Add"))
               {
-                Widgets.addTableEntry(widgetEditors,editor,editor.mimeType,editor.fileName,editor.commandLine);
+                Widgets.addTableEntry(widgetEditors,editor,editor.name,editor.mimeType,editor.fileName,editor.commandLine);
               }
             }
           });
@@ -2540,6 +2541,8 @@ Dprintf.dprintf("");
 
   /** edit editor command
    * @param editor editor command
+   * @param title title text
+   * @param buttonText button text
    * @return true if edit OK, false on cancel
    */
   private boolean editEditor(final Settings.Editor editor, String title, String buttonText)
@@ -2549,8 +2552,9 @@ Dprintf.dprintf("");
     Button    button;
 
     // add editor dialog
-    final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+    final Shell dialog = Dialogs.openModal(this.dialog,title,500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
+    final Text   widgetName;
     final Text   widgetMimeType;
     final Text   widgetFileName;
     final Text   widgetCommandLine;
@@ -2560,28 +2564,36 @@ Dprintf.dprintf("");
     composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
     Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Mime type:");
+      label = Widgets.newLabel(composite,"Name:");
       Widgets.layout(label,0,0,TableLayoutData.W);
+
+      widgetName = Widgets.newText(composite);
+      widgetName.setText(editor.name);
+      Widgets.layout(widgetName,0,1,TableLayoutData.WE);
+      widgetName.setToolTipText("Name of editor or empty.\n");
+
+      label = Widgets.newLabel(composite,"Mime type:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
 
       widgetMimeType = Widgets.newText(composite);
       widgetMimeType.setText(editor.mimeType);
-      Widgets.layout(widgetMimeType,0,1,TableLayoutData.WE);
+      Widgets.layout(widgetMimeType,1,1,TableLayoutData.WE);
       widgetMimeType.setToolTipText("Mime type pattern. Format: <type>/<sub-type>\n");
 
       label = Widgets.newLabel(composite,"File name:");
-      Widgets.layout(label,1,0,TableLayoutData.W);
+      Widgets.layout(label,2,0,TableLayoutData.W);
 
       widgetFileName = Widgets.newText(composite);
       widgetFileName.setText(editor.fileName);
-      Widgets.layout(widgetFileName,1,1,TableLayoutData.WE);
+      Widgets.layout(widgetFileName,2,1,TableLayoutData.WE);
       widgetFileName.setToolTipText("Simple file file name pattern, e. g. *.pdf.\n");
 
       label = Widgets.newLabel(composite,"Command:");
-      Widgets.layout(label,2,0,TableLayoutData.W);
+      Widgets.layout(label,3,0,TableLayoutData.W);
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,2,1,TableLayoutData.WE,0,0,4);
+      Widgets.layout(subComposite,3,1,TableLayoutData.WE);
       {
         widgetCommandLine = Widgets.newText(subComposite);
         widgetCommandLine.setText(editor.commandLine);
@@ -2626,9 +2638,10 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          editor.mimeType    = widgetMimeType.getText();
-          editor.fileName    = widgetFileName.getText();
-          editor.commandLine = widgetCommandLine.getText();
+          editor.name        = widgetName.getText().trim();
+          editor.mimeType    = widgetMimeType.getText().trim();
+          editor.fileName    = widgetFileName.getText().trim();
+          editor.commandLine = widgetCommandLine.getText().trim();
 
           Dialogs.close(dialog,true);
         }
@@ -2649,12 +2662,13 @@ Dprintf.dprintf("");
     }
 
     // listeners
+    Widgets.setNextFocus(widgetName,widgetMimeType);
     Widgets.setNextFocus(widgetMimeType,widgetFileName);
     Widgets.setNextFocus(widgetFileName,widgetCommandLine);
     Widgets.setNextFocus(widgetCommandLine,widgetAddSave);
 
     // run dialog
-    Widgets.setFocus(widgetMimeType);
+    Widgets.setFocus(widgetName);
     return (Boolean)Dialogs.run(dialog,false);
   }
 

@@ -450,7 +450,7 @@ public class Settings
     public Pattern fileNamePattern;
 
     /** create editor
-     * @param name name
+     * @param name name (some text)
      * @param mimeType glob mime pattern string
      * @param fileName glob fileName pattern string
      * @param commandLine command line
@@ -504,27 +504,24 @@ public class Settings
       Object[] data = new Object[4];
       if      (StringParser.parse(string,"%S,%s,%s:%*s",data,StringUtils.QUOTE_CHARS))
       {
-        editor = new Editor(StringUtils.unescape(((String)data[0]).trim()),
-                            ((String)data[1]).trim(),
-                            ((String)data[2]).trim(),
-                            StringUtils.unescape(((String)data[3]).trim())
-                           );
+        String name        = StringUtils.unescape(((String)data[0]).trim());
+        String mimeType    = ((String)data[1]).trim();
+        String fileName    = ((String)data[2]).trim();
+        String commandLine = StringUtils.unescape(((String)data[3]).trim());
+        editor = new Editor(name,mimeType,fileName,commandLine);
       }
       else if (StringParser.parse(string,"%s,%s:%*s",data))
       {
-        editor = new Editor("",
-                            ((String)data[0]).trim(),
-                            ((String)data[1]).trim(),
-                            StringUtils.unescape(((String)data[2]).trim())
-                           );
+        String mimeType    = ((String)data[0]).trim();
+        String fileName    = ((String)data[1]).trim();
+        String commandLine = StringUtils.unescape(((String)data[2]).trim());
+        editor = new Editor("",mimeType,fileName,commandLine);
       }
       else if (StringParser.parse(string,"%s:%*s",data))
       {
-        editor = new Editor("",
-                            ((String)data[0]).trim(),
-                            "",
-                            StringUtils.unescape(((String)data[1]).trim())
-                           );
+        String mimeType    = ((String)data[0]).trim();
+        String commandLine = StringUtils.unescape(((String)data[1]).trim());
+        editor = new Editor("",mimeType,"",commandLine);
       }
       else
       {
@@ -541,7 +538,8 @@ public class Settings
     public String toString(Editor editor) throws Exception
     {
       return StringUtils.escape(editor.name,StringUtils.DEFAULT_QUOTE_CHAR)+","+
-             editor.mimeType+(!editor.fileName.isEmpty() ? ","+editor.fileName : "")+":"+
+             editor.mimeType+","+
+             editor.fileName+":"+
              StringUtils.escape(editor.commandLine,StringUtils.DEFAULT_QUOTE_CHAR);
     }
 

@@ -4682,26 +4682,46 @@ private static void printTree(Tree tree)
   /** add new menu item
    * @param menu menu
    * @param text menu item text
+   * @param index index [0..n-1] or -1
+   * @param accelerator accelerator key or SWT.NONE
+   * @return new menu item
+   */
+  public static MenuItem addMenuItem(Menu menu, String text, int index, int accelerator)
+  {
+    if (accelerator != SWT.NONE)
+    {
+      char key = (char)(accelerator & SWT.KEY_MASK);
+      int acceleratorIndex = text.indexOf(key);
+      if (acceleratorIndex >= 0)
+      {
+        text = text.substring(0,acceleratorIndex)+'&'+text.substring(acceleratorIndex);
+      }
+      text = text+"\t"+menuAcceleratorToText(accelerator);
+    }
+    MenuItem menuItem;
+    if (index >= 0)
+    {
+      menuItem = new MenuItem(menu,SWT.DROP_DOWN,index);
+    }
+    else
+    {
+      menuItem = new MenuItem(menu,SWT.DROP_DOWN);
+    }
+    menuItem.setText(text);
+    if (accelerator != SWT.NONE) menuItem.setAccelerator(accelerator);
+
+    return menuItem;
+  }
+
+  /** add new menu item
+   * @param menu menu
+   * @param text menu item text
    * @param accelerator accelerator key or SWT.NONE
    * @return new menu item
    */
   public static MenuItem addMenuItem(Menu menu, String text, int accelerator)
   {
-    if (accelerator != SWT.NONE)
-    {
-      char key = (char)(accelerator & SWT.KEY_MASK);
-      int index = text.indexOf(key);
-      if (index >= 0)
-      {
-        text = text.substring(0,index)+'&'+text.substring(index);
-      }
-      text = text+"\t"+menuAcceleratorToText(accelerator);
-    }
-    MenuItem menuItem = new MenuItem(menu,SWT.DROP_DOWN);
-    menuItem.setText(text);
-    if (accelerator != SWT.NONE) menuItem.setAccelerator(accelerator);
-
-    return menuItem;
+    return addMenuItem(menu,text,-1,accelerator);
   }
 
   /** add new menu item
@@ -4720,18 +4740,19 @@ private static void printTree(Tree tree)
    * @param data data structure to store checkbox value or null
    * @param field field name in data structure to set on selection
    * @param value value for checkbox button
+   * @param index index [0..n-1] or -1
    * @param accelerator accelerator key or SWT.NONE
    * @return new menu item
    */
-  public static MenuItem addMenuCheckbox(Menu menu, String text, final Object data, final String field, final Object value, int accelerator)
+  public static MenuItem addMenuCheckbox(Menu menu, String text, final Object data, final String field, final Object value, int index, int accelerator)
   {
     if (accelerator != SWT.NONE)
     {
       char key = (char)(accelerator & SWT.KEY_MASK);
-      int index = text.indexOf(key);
-      if (index >= 0)
+      int acceleratorIndex = text.indexOf(key);
+      if (acceleratorIndex >= 0)
       {
-        text = text.substring(0,index)+'&'+text.substring(index);
+        text = text.substring(0,acceleratorIndex)+'&'+text.substring(acceleratorIndex);
       }
       text = text+"\t"+menuAcceleratorToText(accelerator);
     }
@@ -4755,6 +4776,20 @@ private static void printTree(Tree tree)
     if (accelerator != 0) menuItem.setAccelerator(accelerator);
 
     return menuItem;
+  }
+
+  /** add new menu item
+   * @param menu menu
+   * @param text menu item text
+   * @param data data structure to store checkbox value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for checkbox button
+   * @param accelerator accelerator key or SWT.NONE
+   * @return new menu item
+   */
+  public static MenuItem addMenuCheckbox(Menu menu, String text, final Object data, final String field, final Object value, int accelerator)
+  {
+    return addMenuCheckbox(menu,text,data,field,value,-1,accelerator);
   }
 
   /** add new menu item
@@ -4800,18 +4835,19 @@ private static void printTree(Tree tree)
    * @param data data structure to store radio value or null
    * @param field field name in data structure to set on selection
    * @param value value for radio button
+   * @param index index [0..n-1] or -1
    * @param accelerator accelerator key or SWT.NONE
    * @return new menu item
    */
-  public static MenuItem addMenuRadio(Menu menu, String text, final Object data, final String field, final Object value, int accelerator)
+  public static MenuItem addMenuRadio(Menu menu, String text, final Object data, final String field, final Object value, int index, int accelerator)
   {
     if (accelerator != SWT.NONE)
     {
       char key = (char)(accelerator & SWT.KEY_MASK);
-      int index = text.indexOf(key);
-      if (index >= 0)
+      int acceleratorIndex = text.indexOf(key);
+      if (acceleratorIndex >= 0)
       {
-        text = text.substring(0,index)+'&'+text.substring(index);
+        text = text.substring(0,acceleratorIndex)+'&'+text.substring(acceleratorIndex);
       }
       text = text+"\t"+menuAcceleratorToText(accelerator);
     }
@@ -4835,6 +4871,20 @@ private static void printTree(Tree tree)
     if (accelerator != SWT.NONE) menuItem.setAccelerator(accelerator);
 
     return menuItem;
+  }
+
+  /** add new menu item
+   * @param menu menu
+   * @param text menu item text
+   * @param data data structure to store radio value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for radio button
+   * @param accelerator accelerator key or SWT.NONE
+   * @return new menu item
+   */
+  public static MenuItem addMenuRadio(Menu menu, String text, final Object data, final String field, final Object value, int accelerator)
+  {
+    return addMenuRadio(menu,text,data,field,value,-1,accelerator);
   }
 
   /** add new menu item

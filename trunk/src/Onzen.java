@@ -2319,7 +2319,8 @@ Dprintf.dprintf("NYI");
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Open file with\u2026",Settings.keyOpenFileWith);
+      menuOpenFileWithCommands = Widgets.addMenu(menu,"Open file with");
+      menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,"\u2026",Settings.keyOpenFileWith);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2475,24 +2476,6 @@ Dprintf.dprintf("");
         }
       });
     }
-
-    menuOpenFileWithCommands = Widgets.addMenu(menu,"Open file with");//,Settings.keyOpenFileWith);
-    menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,"\u2026");
-    menuItem.addSelectionListener(new SelectionListener()
-    {
-      public void widgetDefaultSelected(SelectionEvent selectionEvent)
-      {
-      }
-      public void widgetSelected(SelectionEvent selectionEvent)
-      {
-        FileData fileData = null;//getSelectedFileData();
-        if (fileData != null)
-        {
-Dprintf.dprintf("");
-          selectedRepositoryTab.openFileWith(fileData);
-        }
-      }
-    });
 
     menuShellCommands = Widgets.addMenu(menuBar,"Shell");
     {
@@ -2919,16 +2902,25 @@ exception.printStackTrace();
 
       // remove old entries in open-file-with command menu
       MenuItem[] menuItems = menuOpenFileWithCommands.getItems();
-      for (int i = 1; i < menuItems.length; i++)
+      for (int i = 0; i < menuItems.length-1; i++)
       {
-        menuItems[i].dispose();
+        menuItems[0].dispose();
       }
 
       // add new open-file-with commands to menu
+      HashMap<String,Settings.Editor> commandMap = new HashMap<String,Settings.Editor>();
       for (Settings.Editor editor : Settings.editors)
       {
-        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,editor.name);
-        menuItem.setData(editor);
+        String name = !editor.name.isEmpty() ? editor.name : editor.commandLine;
+        commandMap.put(name,editor);
+      }
+
+      String[] names = commandMap.keySet().toArray(new String[0]);
+      Arrays.sort(names);
+      for (int i = 0; i < names.length; i++)
+      {
+        menuItem = Widgets.addMenuItem(menuOpenFileWithCommands,names[i],i,SWT.NONE);
+        menuItem.setData(commandMap.get(names[i]));
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
