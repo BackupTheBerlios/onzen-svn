@@ -5181,8 +5181,8 @@ Dprintf.dprintf("NYI");
             // update module/branch names
             try
             {
-              final String[] branchNames = repository.getBranchNames(repositoryURL);
-              if (branchNames != null)
+              final String[] branchTagNames = repository.getBranchTagNames(repositoryURL);
+              if (branchTagNames != null)
               {
 //Dprintf.dprintf("branchNames.length=%d",branchNames.length);
                 if (!dialog.isDisposed())
@@ -5193,9 +5193,9 @@ Dprintf.dprintf("NYI");
                     {
                       widgetModuleName.removeAll();
                       widgetModuleName.add("");
-                      for (String branchName : branchNames)
+                      for (String branchTagName : branchTagNames)
                       {
-                        widgetModuleName.add(branchName);
+                        widgetModuleName.add(branchTagName);
                       }
                       if      (!selectedModuleName.isEmpty()) widgetModuleName.setText(selectedModuleName);
                       else if (repository.getDefaultRootName() != null) widgetModuleName.setText(repository.getDefaultRootName());
