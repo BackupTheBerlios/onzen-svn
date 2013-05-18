@@ -3,7 +3,7 @@
 * $Revision: 800 $
 * $Date: 2012-01-28 10:49:16 +0100 (Sat, 28 Jan 2012) $
 * $Author: trupp $
-* Contents: command create branch
+* Contents: command create branch/tag
 * Systems: all
 *
 \***********************************************************************/
@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Widget;
 
 /****************************** Classes ********************************/
 
-/** create branch command
+/** create branch/tag command
  */
 class CommandCreateBranch
 {
@@ -47,17 +47,17 @@ class CommandCreateBranch
    */
   class Data
   {
-    String[] branchNames;
+    String[] branchTagNames;
     String   rootName;
-    String   branchName;
+    String   branchTagName;
     String[] message;
     boolean  immediateCommitFlag;
 
     Data()
     {
-      this.branchNames         = null;
+      this.branchTagNames      = null;
       this.rootName            = null;
-      this.branchName          = null;
+      this.branchTagName       = null;
       this.message             = null;
       this.immediateCommitFlag = Settings.immediateCommit;
     }
@@ -79,7 +79,7 @@ class CommandCreateBranch
 
   // widgets
   private final Text                 widgetRootName;
-  private final Combo                widgetBranchName;
+  private final Combo                widgetBranchTagNames;
   private final List                 widgetHistory;
   private final Text                 widgetMessage;
   private final Button               widgetImmediateCommit;
@@ -99,9 +99,9 @@ class CommandCreateBranch
     Label     label;
     Button    button;
 
-    // get default root/branch name
-    String defaultRootName   = repositoryTab.repository.getDefaultRootName();
-    String defaultBranchName = repositoryTab.repository.getDefaultBranchName();
+    // get default root, branch/tag name
+    String defaultRootName      = repositoryTab.repository.getDefaultRootName();
+    String defaultBranchTagName = repositoryTab.repository.getDefaultBranchTagName();
 
     // initialize variables
     this.repositoryTab = repositoryTab;
@@ -114,7 +114,7 @@ class CommandCreateBranch
     history = CommitMessage.getHistory();
 
     // add files dialog
-    dialog = Dialogs.openModal(shell,"Create new branch",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Create new branch/tag",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,0.0,1.0,0.0},1.0,4));
@@ -132,15 +132,15 @@ class CommandCreateBranch
           widgetRootName = Widgets.newText(subComposite);
           if (defaultRootName != null) widgetRootName.setText(defaultRootName);
           Widgets.layout(widgetRootName,0,1,TableLayoutData.WE);
-          widgetRootName.setToolTipText("Root for the new branch. For SVN, HG and GIT this is usually the main development fork 'trunk' or some directory name, usually below 'branches'.");
+          widgetRootName.setToolTipText("Root for the new branch/tag. For SVN, HG and GIT this is usually the main development fork 'trunk' or some directory name, usually below 'branches' or 'tags'.");
 
           label = Widgets.newLabel(subComposite,"Branch name:");
           Widgets.layout(label,1,0,TableLayoutData.W);
 
-          widgetBranchName = Widgets.newCombo(subComposite);
-          if (defaultBranchName != null) widgetBranchName.setText(defaultBranchName);
-          Widgets.layout(widgetBranchName,1,1,TableLayoutData.WE);
-          widgetBranchName.setToolTipText("Branch name. For CVS this is a tag name, for SVN, HG and GIT this is a directory name, usually below 'branches'.\n\nNote: HG use the term 'branch' different. Nevertheless a 'branch' follow here the common understanding: a branch is a fork of the checked-in files.");
+          widgetBranchTagNames = Widgets.newCombo(subComposite);
+          if (defaultBranchTagName != null) widgetBranchTagNames.setText(defaultBranchTagName);
+          Widgets.layout(widgetBranchTagNames,1,1,TableLayoutData.WE);
+          widgetBranchTagNames.setToolTipText("Branch name. For CVS this is a tag name, for SVN, HG and GIT this is a directory name, usually below 'branches' or 'tags'.\n\nNote: HG use the term 'branch' different. Nevertheless a 'branch' follow here the common understanding: a branch is a fork of the checked-in files.");
         }
         else
         {
@@ -149,9 +149,9 @@ class CommandCreateBranch
           label = Widgets.newLabel(subComposite,"Branch name:");
           Widgets.layout(label,0,0,TableLayoutData.W);
 
-          widgetBranchName = Widgets.newCombo(subComposite);
-          widgetBranchName.setText(defaultBranchName);
-          Widgets.layout(widgetBranchName,0,1,TableLayoutData.WE);
+          widgetBranchTagNames = Widgets.newCombo(subComposite);
+          widgetBranchTagNames.setText(defaultBranchTagName);
+          Widgets.layout(widgetBranchTagNames,0,1,TableLayoutData.WE);
         }
       }
 
@@ -176,7 +176,7 @@ class CommandCreateBranch
           if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
         }
       });
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to create branch.");
+      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to create a branch/tag.");
 
       widgetImmediateCommit = Widgets.newCheckbox(composite,"immediate commit");
       widgetImmediateCommit.setSelection(Settings.immediateCommit);
@@ -211,19 +211,20 @@ class CommandCreateBranch
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.rootName            = (widgetRootName != null) ? widgetRootName.getText().trim() : null;
-          data.branchName          = widgetBranchName.getText().trim();
+          data.branchTagName       = widgetBranchTagNames.getText().trim();
           data.message             = widgetMessage.getText().trim().split(widgetMessage.DELIMITER);
           data.immediateCommitFlag = widgetImmediateCommit.getSelection();
 
-          createBranch();
+          if (createBranchTag())
+          {
+            Settings.geometryCreateBranch = dialog.getSize();
+            Settings.immediateCommit      = widgetImmediateCommit.getSelection();
 
-          Settings.geometryCreateBranch = dialog.getSize();
-          Settings.immediateCommit      = widgetImmediateCommit.getSelection();
-
-          Dialogs.close(dialog,true);
+            Dialogs.close(dialog,true);
+          }
         }
       });
-      widgetCreateBranch.setToolTipText("Create new branch.");
+      widgetCreateBranch.setToolTipText("Create new branch/tag.");
 
       button = Widgets.newButton(composite,"Cancel");
       Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
@@ -242,8 +243,8 @@ class CommandCreateBranch
     }
 
     // listeners
-    if (widgetRootName != null) Widgets.setNextFocus(widgetRootName,widgetBranchName);
-    widgetBranchName.addModifyListener(new ModifyListener()
+    if (widgetRootName != null) Widgets.setNextFocus(widgetRootName,widgetBranchTagNames);
+    widgetBranchTagNames.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
@@ -252,7 +253,7 @@ class CommandCreateBranch
         widgetCreateBranch.setEnabled(!widget.getText().trim().isEmpty());
       }
     });
-    Widgets.setNextFocus(widgetBranchName,widgetMessage);
+    Widgets.setNextFocus(widgetBranchTagNames,widgetMessage);
     widgetHistory.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -368,7 +369,7 @@ class CommandCreateBranch
         repositoryTab.setStatusText("Get branch names...");
         try
         {
-          data.branchNames = repositoryTab.repository.getBranchNames();
+          data.branchTagNames = repositoryTab.repository.getBranchTagNames();
         }
         catch (RepositoryException exception)
         {
@@ -394,9 +395,9 @@ class CommandCreateBranch
         {
           public void run()
           {
-            for (String branchName : data.branchNames)
+            for (String branchTagName : data.branchTagNames)
             {
-              widgetBranchName.add(branchName);
+              widgetBranchTagNames.add(branchTagName);
             }
           }
         });
@@ -410,7 +411,7 @@ class CommandCreateBranch
    */
   public void run()
   {
-    Widgets.setFocus(widgetBranchName);
+    Widgets.setFocus(widgetBranchTagNames);
     Dialogs.run(dialog);
   }
 
@@ -425,21 +426,22 @@ class CommandCreateBranch
   //-----------------------------------------------------------------------
 
   /** create branch
+   * @return true iff branch/tag created
    */
-  private void createBranch()
+  private boolean createBranchTag()
   {
-    if (!data.branchName.trim().isEmpty())
+    if (!data.branchTagName.trim().isEmpty())
     {
       final BusyDialog busyDialog = new BusyDialog(dialog,
-                                                   "Create new branch",
-                                                   "Create new branch '"+
-                                                   data.branchName.trim()+
+                                                   "Create new branch/tag",
+                                                   "Create new branch/tag '"+
+                                                   data.branchTagName.trim()+
                                                    "':",
                                                    BusyDialog.TEXT0
                                                   );
       busyDialog.autoAnimate();
 
-      repositoryTab.setStatusText("Create branch '"+data.branchName.trim()+"'...");
+      repositoryTab.setStatusText("Create branch/tag '"+data.branchTagName.trim()+"'...");
       CommitMessage commitMessage = null;
       try
       {
@@ -451,7 +453,7 @@ class CommandCreateBranch
         }
 
         // create new branch
-        repositoryTab.repository.newBranch(data.rootName,data.branchName,commitMessage,busyDialog);
+        repositoryTab.repository.newBranch(data.rootName,data.branchTagName,commitMessage,busyDialog);
 
         // free resources
         commitMessage.done(); commitMessage = null;
@@ -466,11 +468,11 @@ class CommandCreateBranch
           {
             busyDialog.close();
 
-            Dialogs.error(dialog,extendedMessage,"Create branch fail:\n%s",exceptionMessage);
+            Dialogs.error(dialog,extendedMessage,"Create branch/tag fail:\n%s",exceptionMessage);
           }
         });
         Onzen.printStacktrace(exception);
-        return;
+        return false;
       }
       finally
       {
@@ -485,6 +487,8 @@ class CommandCreateBranch
         repositoryTab.clearStatusText();
       }
     }
+
+    return true;
   }
 }
 
