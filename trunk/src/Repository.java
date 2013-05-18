@@ -363,18 +363,19 @@ class FileData
   }
 
   /** create file data
-   * @param name file name
+   * @param file file
    */
   public FileData(File file)
   {
-    this(file.getPath(),States.UNKNOWN);
+    this(file.getPath());
   }
 
   /** get get parent file data
    */
   public FileData getParent()
   {
-    return new FileData(new File(name).getParent());
+    String parentName = new File(name).getParent();
+    return (parentName != null) ? new FileData(parentName) : null;
   }
 
   /** get absolute file name
@@ -3310,25 +3311,25 @@ Dprintf.dprintf("fileName=%s",fileName);
    */
   abstract public String getDefaultRootName();
 
-  /** get default branch name
-   * @return default branch name
+  /** get default branch/tag name
+   * @return default branch/tag name
    */
-  abstract public String getDefaultBranchName();
+  abstract public String getDefaultBranchTagName();
 
-  /** get names of existing branches
+  /** get names of existing branches/tags
    * @param pathName path name
-   * @return array with branch names
+   * @return array with branch/tag names
    */
-  abstract public String[] getBranchNames(String pathName)
+  abstract public String[] getBranchTagNames(String pathName)
     throws RepositoryException;
 
-  /** get names of existing branches
-   * @return array with branch names
+  /** get names of existing branches/tags
+   * @return array with branch/tag names
    */
-  public String[] getBranchNames()
+  public String[] getBranchTagNames()
     throws RepositoryException
   {
-    return getBranchNames(getRepositoryURL()+"/"+getDefaultBranchName());
+    return getBranchTagNames(getRepositoryURL()+"/"+getDefaultBranchTagName());
   }
 
     /** create new branch
