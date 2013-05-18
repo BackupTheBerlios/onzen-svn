@@ -158,7 +158,7 @@ class CommitMessage
 
   /** get message history
    * @param shell shell (for error dialog) or null
-   * @return message history array
+   * @return message history array (as a copy!)
    */
   public static LinkedList<String[]> getHistory(Shell shell)
   {
@@ -182,7 +182,7 @@ class CommitMessage
       }
     }
 
-    return history;
+    return (LinkedList<String[]>)history.clone();
   }
 
   /** get message history
