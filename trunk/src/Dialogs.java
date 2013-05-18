@@ -1351,7 +1351,7 @@ class Dialogs
             widgetShowAgain = new Button(composite,SWT.CHECK);
             widgetShowAgain.setText("show again");
             widgetShowAgain.setSelection(true);
-            widgetShowAgain.setLayoutData(new TableLayoutData(1,1,TableLayoutData.W));
+            widgetShowAgain.setLayoutData(new TableLayoutData(row,1,TableLayoutData.W)); row++;
           }
           else
           {
