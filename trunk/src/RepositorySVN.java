@@ -2287,26 +2287,26 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     return DEFAULT_ROOT_NAME;
   }
 
-  /** get default branch name
-   * @return default branch name
+  /** get default branch/tag name
+   * @return default branch/tag name
    */
-  public String getDefaultBranchName()
+  public String getDefaultBranchTagName()
   {
     return DEFAULT_BRANCH_NAME+"/";
   }
 
-  /** get names of existing branches
+  /** get names of existing branches/tags
    * @param pathName path name
-   * @return array with branch names
+   * @return array with branch/tag names
    */
-  public String[] getBranchNames(String pathName)
+  public String[] getBranchTagNames(String pathName)
     throws RepositoryException
   {
-    HashSet<String> branchNameSet = new HashSet<String>();
+    HashSet<String> branchTagNameSet = new HashSet<String>();
 
     for (String branchName : DEFAULT_BRANCH_NAMES)
     {
-      branchNameSet.add(branchName);
+      branchTagNameSet.add(branchName);
     }
     if (!pathName.isEmpty())
     {
@@ -2330,7 +2330,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         // read output
         while ((line = exec.getStdout()) != null)
         {
-          branchNameSet.add("branches/"+StringUtils.trimEnd(line,"/\\"));
+          branchTagNameSet.add("branches/"+StringUtils.trimEnd(line,"/\\"));
         }
 
         // wait for termination
@@ -2356,7 +2356,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         // read output
         while ((line = exec.getStdout()) != null)
         {
-          branchNameSet.add("tags/"+StringUtils.trimEnd(line,"/\\"));
+          branchTagNameSet.add("tags/"+StringUtils.trimEnd(line,"/\\"));
         }
 
         // wait for termination
@@ -2380,10 +2380,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
 
     // convert to array and sort
-    String[] branchNames = branchNameSet.toArray(new String[branchNameSet.size()]);
-    Arrays.sort(branchNames);
+    String[] branchTagNames = branchTagNameSet.toArray(new String[branchTagNameSet.size()]);
+    Arrays.sort(branchTagNames);
 
-    return branchNames;
+    return branchTagNames;
   }
 
   /** create new branch

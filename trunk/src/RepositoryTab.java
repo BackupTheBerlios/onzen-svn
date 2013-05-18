@@ -1095,6 +1095,7 @@ menuItem.setEnabled(false);
       clearStatusText();
     }
 
+    // start update file data
     asyncUpdateFileStates(fileDataSet);
   }
 
@@ -1270,6 +1271,8 @@ Dprintf.dprintf("NYI");
            if (subFileData != null) updateFileDataSet.add(subFileData);
         }
       }
+
+      // start update file data
       asyncUpdateFileStates(updateFileDataSet);
     }
   }
@@ -1436,6 +1439,7 @@ Dprintf.dprintf("NYI");
         clearStatusText();
       }
 
+      // start update file data
       asyncUpdateFileStates(fileDataSet);
     }
   }
@@ -1462,6 +1466,7 @@ Dprintf.dprintf("NYI");
         clearStatusText();
       }
 
+      // start update file data
       asyncUpdateFileStates(fileDataSet);
     }
   }
@@ -2543,8 +2548,10 @@ Dprintf.dprintf("");
               FileUtils.deleteFile(file);
             }
 
+            // store for refresh
             updateFileDataSet.add(fileData);
-            updateFileDataSet.add(fileData.getParent());
+            FileData parentFileData = fileData.getParent();
+            if (parentFileData != null) updateFileDataSet.add(parentFileData);
           }
           catch (IOException exception)
           {
@@ -3209,7 +3216,7 @@ Dprintf.dprintf("");
                                          FileData.Types.DIRECTORY
                                         );
     TreeItem rootTreeItem = Widgets.addTreeItem(widgetFileTree,rootFileData,true);
-    rootTreeItem.setText("/");
+    rootTreeItem.setText(repository.rootPath);
     rootTreeItem.setImage(Onzen.IMAGE_DIRECTORY);
     widgetFileTree.addTreeListener(new TreeListener()
     {
@@ -3731,7 +3738,6 @@ Dprintf.dprintf("");
       // update tree items: status update in progress
       for (final FileData fileData : fileDataSet)
       {
-//Dprintf.dprintf("fileData=%s",fileData);
         final TreeItem treeItem = fileNameMap.get(fileData.getFileName());
         if (treeItem != null)
         {
@@ -3762,7 +3768,11 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                Dialogs.error(shell,Dialogs.booleanFieldUpdater(Settings.class,"showUpdateStatusErrors"),exception.getExtendedMessage(),"Getting file states fail.");
+                Dialogs.error(shell,
+                              Dialogs.booleanFieldUpdater(Settings.class,"showUpdateStatusErrors"),
+                              exception.getExtendedMessage(),
+                              "Getting file states fail."
+                             );
               }
             });
           }
@@ -4142,6 +4152,7 @@ Dprintf.dprintf("");
           TableItem       tableItem = widgetEditors.getItem(index);
           Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
+          widgetName.setText(editor.name);
           widgetFileName.setText(editor.fileName);
           widgetCommandLine.setText(editor.commandLine);
         }

@@ -453,18 +453,18 @@ throw new RepositoryException("NYI");
     return null;
   }
 
-  /** get default branch name
-   * @return default branch name
+  /** get default branch/tag name
+   * @return default branch/tag name
    */
-  public String getDefaultBranchName()
+  public String getDefaultBranchTagName()
   {
     return "";
   }
 
-  /** get names of existing branches
-   * @return array with branch names
+  /** get names of existing branches/tags
+   * @return array with branch/tag names
    */
-  public String[] getBranchNames(String pathName)
+  public String[] getBranchTagNames(String pathName)
     throws RepositoryException
   {
     return new String[0];

@@ -2643,19 +2643,19 @@ throw new Error("NYI");
     return DEFAULT_ROOT_NAME;
   }
 
-  /** get default branch name
-   * @return default branch name
+  /** get default branch/tag name
+   * @return default branch/tag name
    */
-  public String getDefaultBranchName()
+  public String getDefaultBranchTagName()
   {
     return DEFAULT_BRANCHES_NAME;
   }
 
-  /** get names of existing branches
+  /** get names of existing branches/tags
    * @param pathName path name
-   * @return array with branch names
+   * @return array with branch/tag names
    */
-  public String[] getBranchNames(String pathName)
+  public String[] getBranchTagNames(String pathName)
     throws RepositoryException
   {
     return new String[0];
