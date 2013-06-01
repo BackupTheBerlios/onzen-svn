@@ -2678,7 +2678,7 @@ Dprintf.dprintf("");
    */
   private boolean editShellCommand(final Settings.ShellCommand shellCommand, String title, String buttonText)
   {
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Button    button;
 
@@ -2703,10 +2703,40 @@ Dprintf.dprintf("");
 
       label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,1,0,TableLayoutData.W);
-      widgetCommandLine = Widgets.newText(composite);
-      widgetCommandLine.setText(shellCommand.commandLine);
-      Widgets.layout(widgetCommandLine,1,1,TableLayoutData.WE);
-      widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %n% - line number\n  %% - %");
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.WE);
+      {
+        widgetCommandLine = Widgets.newText(subComposite);
+        widgetCommandLine.setText(shellCommand.commandLine);
+        Widgets.layout(widgetCommandLine,0,0,TableLayoutData.WE);
+        widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %n% - line number\n  %% - %");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String command = Dialogs.fileOpen(shell,
+                                              "Select command",
+                                              widgetCommandLine.getText(),
+                                              new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
+                                                           "Scripts",    "*.sh",
+                                                           "Batch files","*.cmd",
+                                                           "Executables","*.exe"
+                                                          }
+                                             );
+            if (command != null)
+            {
+              widgetCommandLine.setText(command);
+            }
+          }
+        });
+      }
 
       label = Widgets.newLabel(composite,"Valid exitcode:");
       Widgets.layout(label,2,0,TableLayoutData.W);
