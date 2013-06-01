@@ -100,7 +100,7 @@ class CommandCreateBranch
     Button    button;
 
     // get default root, branch/tag name
-    String defaultRootName      = repositoryTab.repository.getDefaultRootName();
+    String defaultRootName      = "";
     String defaultBranchTagName = repositoryTab.repository.getDefaultBranchTagName();
 
     // initialize variables
@@ -378,7 +378,7 @@ class CommandCreateBranch
           {
             public void run()
             {
-              Dialogs.error(dialog,String.format("Getting branch names fail: %s",exceptionMessage));
+              Dialogs.error(dialog,String.format("Getting branch/tag names fail: %s",exceptionMessage));
             }
           });
           Onzen.printStacktrace(exception);
@@ -390,7 +390,7 @@ class CommandCreateBranch
           Widgets.resetCursor(dialog);
         }
 
-        // add to widget
+        // add branch names to widget
         display.syncExec(new Runnable()
         {
           public void run()
@@ -403,8 +403,6 @@ class CommandCreateBranch
         });
       }
     });
-
-    // update
   }
 
   /** run dialog
