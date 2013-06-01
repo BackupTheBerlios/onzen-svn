@@ -2321,7 +2321,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
-        command.append("list",pathName);
+        command.append("list",pathName+"/branches");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
         exec = new Exec(rootPath,command);
@@ -2499,15 +2499,18 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
    */
   private FileData.States parseState(String string)
   {
-    if      (string.equalsIgnoreCase("normal"  )) return FileData.States.OK;
-    else if (string.equalsIgnoreCase("update"  )) return FileData.States.UPDATE;
-    else if (string.equalsIgnoreCase("modified")) return FileData.States.MODIFIED;
-    else if (string.equalsIgnoreCase("added"   )) return FileData.States.ADDED;
-    else if (string.equalsIgnoreCase("conflict")) return FileData.States.CONFLICT;
-    else if (string.equalsIgnoreCase("removed" )) return FileData.States.REMOVED;
-    else if (string.equalsIgnoreCase("merge"   )) return FileData.States.MERGE;
-    else if (string.equalsIgnoreCase("checkout")) return FileData.States.CHECKOUT;
-    else                                          return FileData.States.UNKNOWN;
+    if      (string.equalsIgnoreCase("normal"    )) return FileData.States.OK;
+    else if (string.equalsIgnoreCase("update"    )) return FileData.States.UPDATE;
+    else if (string.equalsIgnoreCase("modified"  )) return FileData.States.MODIFIED;
+    else if (string.equalsIgnoreCase("added"     )) return FileData.States.ADDED;
+    else if (string.equalsIgnoreCase("conflict"  )) return FileData.States.CONFLICT;
+    else if (string.equalsIgnoreCase("conflicted")) return FileData.States.CONFLICT;
+    else if (string.equalsIgnoreCase("removed"   )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("deleted"   )) return FileData.States.REMOVED;
+    else if (string.equalsIgnoreCase("merge"     )) return FileData.States.MERGE;
+    else if (string.equalsIgnoreCase("checkout"  )) return FileData.States.CHECKOUT;
+    else if (string.equalsIgnoreCase("missing"   )) return FileData.States.CHECKOUT;
+    else                                            return FileData.States.UNKNOWN;
   }
 
   /** parse SVN diff index
