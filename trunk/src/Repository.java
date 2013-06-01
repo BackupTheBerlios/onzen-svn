@@ -2595,7 +2595,7 @@ abstract class Repository implements Serializable
    */
   public String getRepositoryURL()
   {
-    return getRepositoryURL();
+    return "";
   }
 
   /** get first revision name
@@ -3329,7 +3329,7 @@ Dprintf.dprintf("fileName=%s",fileName);
   public String[] getBranchTagNames()
     throws RepositoryException
   {
-    return getBranchTagNames(getRepositoryURL()+"/"+getDefaultBranchTagName());
+    return getBranchTagNames(getRepositoryRootURL());
   }
 
     /** create new branch
