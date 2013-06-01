@@ -958,20 +958,20 @@ exception.printStackTrace();
     class Data
     {
      String name;
-     String command;
+     String commandLine;
      int    validExitcode;
 
       Data()
       {
         this.name          = null;
-        this.command       = null;
+        this.commandLine   = null;
         this.validExitcode = 0;
       }
     };
 
     final Data data = new Data();
 
-    Composite composite;
+    Composite composite,subComposite;
     Label     label;
     Button    button;
 
@@ -979,7 +979,7 @@ exception.printStackTrace();
     final Shell dialog = Dialogs.openModal(shell,"Add shell command",300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text    widgetName;
-    final Text    widgetCommand;
+    final Text    widgetCommandLine;
     final Spinner widgetValidExitcode;
     final Button  widgetAddSave;
 
@@ -995,9 +995,39 @@ exception.printStackTrace();
 
       label = Widgets.newLabel(composite,"Command:");
       Widgets.layout(label,1,0,TableLayoutData.W);
-      widgetCommand = Widgets.newText(composite);
-      Widgets.layout(widgetCommand,1,1,TableLayoutData.WE);
-      widgetCommand.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %% - %");
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.WE);
+      {
+        widgetCommandLine = Widgets.newText(subComposite);
+        Widgets.layout(widgetCommandLine,0,0,TableLayoutData.WE);
+        widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %% - %");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String command = Dialogs.fileOpen(shell,
+                                              "Select command",
+                                              widgetCommandLine.getText(),
+                                              new String[]{"All files",  Onzen.ALL_FILE_EXTENSION,
+                                                           "Scripts",    "*.sh",
+                                                           "Batch files","*.cmd",
+                                                           "Executables","*.exe"
+                                                          }
+                                             );
+            if (command != null)
+            {
+              widgetCommandLine.setText(command);
+            }
+          }
+        });
+      }
 
       label = Widgets.newLabel(composite,"Valid exitcode:");
       Widgets.layout(label,2,0,TableLayoutData.W);
@@ -1022,7 +1052,7 @@ exception.printStackTrace();
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           data.name          = widgetName.getText().trim();
-          data.command       = widgetCommand.getText();
+          data.commandLine   = widgetCommandLine.getText();
           data.validExitcode = widgetValidExitcode.getSelection();
 
           Dialogs.close(dialog,true);
@@ -1048,13 +1078,13 @@ exception.printStackTrace();
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        widgetCommand.setFocus();
+        widgetCommandLine.setFocus();
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
       }
     });
-    widgetCommand.addSelectionListener(new SelectionListener()
+    widgetCommandLine.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
@@ -1072,7 +1102,7 @@ exception.printStackTrace();
       // add shell command
       Settings.ShellCommand[] newShellCommands = new Settings.ShellCommand[Settings.shellCommands.length+1];
       System.arraycopy(Settings.shellCommands,0,newShellCommands,0,Settings.shellCommands.length);
-      newShellCommands[newShellCommands.length-1] = new Settings.ShellCommand(data.name,data.command,data.validExitcode);
+      newShellCommands[newShellCommands.length-1] = new Settings.ShellCommand(data.name,data.commandLine,data.validExitcode);
       Settings.shellCommands = newShellCommands;
 
       // sort
@@ -3728,7 +3758,6 @@ exception.printStackTrace();
             if (rootPath != null)
             {
               Repository repository = openRepository(rootPath);
-
               widgetList.add(repository.title);
             }
           }
@@ -3750,8 +3779,8 @@ exception.printStackTrace();
               RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
               if (editRepository(repositoryTab))
               {
-                widgetList.setItem(index,repositoryTab.repository.title);
                 repositoryTab.updateStates();
+                widgetList.setItem(index,repositoryTab.repository.title);
               }
             }
           }
@@ -3772,6 +3801,7 @@ exception.printStackTrace();
             {
               RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
               closeRepository(repositoryTab);
+              widgetList.remove(index);
             }
           }
         });
@@ -3868,6 +3898,7 @@ exception.printStackTrace();
         {
           RepositoryTab repositoryTab = repositoryTabMap.get(repositoryList.get(index));
           editRepository(repositoryTab);
+          widgetList.setItem(index,repositoryTab.repository.title);
         }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
