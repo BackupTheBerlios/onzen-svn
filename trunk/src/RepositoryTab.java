@@ -1055,8 +1055,16 @@ menuItem.setEnabled(false);
         {
           File fromFile = new File(fileData.getFileName(repository));
           File toFile   = new File(directory);
-//Dprintf.dprintf("fromFile=%s\n",fromFile);
-//Dprintf.dprintf("toFile=%s\n",toFile);
+
+          File newFile = new File(toFile,fromFile.getName());
+          if (newFile.exists())
+          {
+            if (!Dialogs.confirm(shell,"Confirmation",String.format("File\n\n'%s'\n\nexists - overwrite?",newFile.getPath())))
+            {
+              return;
+            }
+          }
+
           FileUtils.copyFile(fromFile,toFile);
         }
         catch (IOException exception)
@@ -2921,7 +2929,7 @@ Dprintf.dprintf("");
       Data()
       {
         this.convertTABs               = true;
-        this.spacesPerTAB              = 8;
+        this.spacesPerTAB              = Settings.convertSpacesPerTAB;
         this.removeTrailingWhitespaces = true;
         this.convertAll                = false;
       }
@@ -3855,7 +3863,7 @@ Dprintf.dprintf("");
 //if (fileData != null) Dprintf.dprintf("  fileData.getFileName=#%s#",fileData.getFileName());
                     if ((fileData != null) && fileData.getFileName().equals(newFileData.getDirectoryName()))
                     {
-//Dprintf.dprintf("    found treeItem=%s fileData=%s",treeItem,fileData);
+//Dprintf.dprintf("    found treeItem=%s fileData=%s",rootTreeItem,fileData);
                       treeItem = rootTreeItem;
                       break;
                     }
