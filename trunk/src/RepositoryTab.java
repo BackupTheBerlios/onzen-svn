@@ -1653,7 +1653,7 @@ Dprintf.dprintf("NYI");
               stderrList.add(line);
             }
 
-            // wait for exot
+            // wait for exit
             final int exitCode = process.waitFor();
             if (exitCode != 0)
             {
@@ -1808,7 +1808,7 @@ Dprintf.dprintf("NYI");
               stderrList.add(line);
             }
 
-            // wait for exot
+            // wait for exit
             final int exitCode = process.waitFor();
             if (exitCode != 0)
             {
@@ -3169,40 +3169,77 @@ Dprintf.dprintf("");
         Command command = new Command(macro);
 
         // run command
-        Exec exec = null;
-        try
+        Background.run(new BackgroundRunnable(command)
         {
-          exec = new Exec(command);
-
-          int exitcode = exec.waitFor();
-          if (exitcode > shellCommand.validExitcode)
+          public void run(final Command command)
           {
-            Dialogs.error(shell,
-                          (exec != null) ? exec.getExtendedErrorMessage() : null,
-                          "Execute external command fail: \n\n'%s'\n\n (exit code: %s)",
-                          command,
-                          exitcode
-                         );
-            return;
-          }
+            try
+            {
+              // start process (Note: use Runtime.exec() because it is a background process without i/o here)
+              Process process = Runtime.getRuntime().exec(command.getCommandArray());
 
-          // done
-          exec.done(); exec = null;
-        }
-        catch (IOException exception)
-        {
-          Dialogs.error(shell,
-                        (exec != null) ? exec.getExtendedErrorMessage() : null,
-                        "Execute external command fail: \n\n'%s'\n\n (error: %s)",
-                        command,
-                        exception.getMessage()
-                       );
-          return;
-        }
-        finally
-        {
-          if (exec != null) exec.done();
-        }
+              // collect stderr output
+              BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+              final ArrayList<String> stderrList = new ArrayList<String>();
+              String line;
+              while ((line = stderr.readLine()) != null)
+              {
+                stderrList.add(line);
+              }
+
+              // wait for exit
+              final int exitCode = process.waitFor();
+              if (exitCode != 0)
+              {
+                display.syncExec(new Runnable()
+                {
+                  public void run()
+                  {
+                    Dialogs.error(shell,
+                                  stderrList,
+                                  "Execute external shell command fail: \n\n'%s'\n\n (exitcode: %d)",
+                                  command,
+                                  exitCode
+                                 );
+                  }
+                });
+                return;
+              }
+            }
+            catch (InterruptedException exception)
+            {
+              final String message = exception.getMessage();
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Dialogs.error(shell,
+                                "Execute external shell command fail: \n\n'%s'\n\n (error: %s)",
+                                command,
+                                message
+                               );
+                }
+              });
+              return;
+            }
+            catch (IOException exception)
+            {
+              final String message = exception.getMessage();
+              display.syncExec(new Runnable()
+              {
+                public void run()
+                {
+                  Dialogs.error(shell,
+                                "Execute external shell command fail: \n\n'%s'\n\n (error: %s)",
+                                command,
+                                message
+                               );
+                }
+              });
+              return;
+            }
+          }
+        });
       }
     }
   }
