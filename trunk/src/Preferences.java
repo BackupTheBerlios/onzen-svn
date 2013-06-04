@@ -179,12 +179,13 @@ class Preferences
    */
   Preferences(final Shell shell, final Onzen onzen)
   {
-    TabFolder tabFolder;
-    Composite composite,subComposite,subSubComposite,subSubSubComposite;
-    Label     label;
-    Button    button;
-    Listener  listener;
-    TableItem tableItem;
+    TabFolder   tabFolder;
+    Composite   composite,subComposite,subSubComposite,subSubSubComposite;
+    Label       label;
+    Button      button;
+    Listener    listener;
+    TableItem   tableItem;
+    TableColumn tableColumn;
 
     // initialize variables
     this.shell = shell;
@@ -205,8 +206,10 @@ class Preferences
       {
         widgetKeys = Widgets.newTable(composite);
         Widgets.layout(widgetKeys,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetKeys,0,"Name",SWT.LEFT,200,true);
-        Widgets.addTableColumn(widgetKeys,1,"Key", SWT.LEFT,100,true);
+        tableColumn = Widgets.addTableColumn(widgetKeys,0,"Name",SWT.LEFT,200,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetKeys,1,"Key", SWT.LEFT,100,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
         widgetKeys.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -241,9 +244,10 @@ class Preferences
       {
         widgetColors = Widgets.newTable(composite);
         Widgets.layout(widgetColors,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetColors,0,"Name", SWT.LEFT,320,true);
-        Widgets.addTableColumn(widgetColors,1,"Foreground",SWT.LEFT,100,true);
-        Widgets.addTableColumn(widgetColors,2,"Background",SWT.LEFT,100,true);
+        tableColumn = Widgets.addTableColumn(widgetColors,0,"Name", SWT.LEFT,320,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetColors,1,"Foreground",SWT.LEFT,100,true);
+        tableColumn = Widgets.addTableColumn(widgetColors,2,"Background",SWT.LEFT,100,true);
         widgetColors.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -282,8 +286,9 @@ class Preferences
       {
         widgetFonts = Widgets.newTable(composite);
         Widgets.layout(widgetFonts,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetFonts,0,"Name",SWT.LEFT,200,true);
-        Widgets.addTableColumn(widgetFonts,1,"Font",SWT.LEFT,100,true);
+        tableColumn = Widgets.addTableColumn(widgetFonts,0,"Name",SWT.LEFT,200,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetFonts,1,"Font",SWT.LEFT,100,true);
         widgetFonts.addMouseListener(new MouseListener()
         {
           public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -327,10 +332,14 @@ class Preferences
       {
         widgetEditors = Widgets.newTable(composite);
         Widgets.layout(widgetEditors,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetEditors,0,"Name",     SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,1,"Mime type",SWT.LEFT,200,false);
-        Widgets.addTableColumn(widgetEditors,2,"File name",SWT.LEFT,100,false);
-        Widgets.addTableColumn(widgetEditors,3,"Command",  SWT.LEFT,300,true );
+        tableColumn = Widgets.addTableColumn(widgetEditors,0,"Name",     SWT.LEFT,100,false);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetEditors,1,"Mime type",SWT.LEFT,200,false);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetEditors,2,"File name",SWT.LEFT,100,false);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetEditors,3,"Command",  SWT.LEFT,300,true );
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
         widgetEditors.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -404,9 +413,12 @@ class Preferences
       {
         widgetShellCommands = Widgets.newTable(composite);
         Widgets.layout(widgetShellCommands,0,0,TableLayoutData.NSWE);
-        Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT, 200,true);
-        Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT, 200,true);
-        Widgets.addTableColumn(widgetShellCommands,2,"Exitcode",SWT.RIGHT, 20,true);
+        tableColumn = Widgets.addTableColumn(widgetShellCommands,0,"Name",    SWT.LEFT, 200,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetShellCommands,1,"Command", SWT.LEFT, 200,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+        tableColumn = Widgets.addTableColumn(widgetShellCommands,2,"Exitcode",SWT.RIGHT, 20,true);
+        tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_INT);
         widgetShellCommands.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -455,8 +467,50 @@ class Preferences
               }
             }
           });
-          button = Widgets.newButton(subComposite,"Remove");
+          button = Widgets.newButton(subComposite,"Edit");
           Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetShellCommands.getSelectionIndex();
+              if (index >= 0)
+              {
+                Settings.ShellCommand shellCommand = (Settings.ShellCommand)(widgetShellCommands.getItem(index).getData());
+
+                if (editShellCommand(shellCommand,"Edit shell commands","Save"))
+                {
+                  Widgets.updateTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine,Integer.toString(shellCommand.validExitcode));
+                }
+              }
+            }
+          });
+          button = Widgets.newButton(subComposite,"Clone");
+          Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+          button.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+              int index = widgetShellCommands.getSelectionIndex();
+              if (index >= 0)
+              {
+                Settings.ShellCommand shellCommand = ((Settings.ShellCommand)(widgetShellCommands.getItem(index).getData())).clone();
+
+                if (editShellCommand(shellCommand,"Add shell command","Add"))
+                {
+                  Widgets.addTableEntry(widgetShellCommands,shellCommand,shellCommand.name,shellCommand.commandLine,Integer.toString(shellCommand.validExitcode));
+                }
+              }
+            }
+          });
+          button = Widgets.newButton(subComposite,"Remove");
+          Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
           button.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
