@@ -209,12 +209,11 @@ Dprintf.dprintf("checkout username, password???");
         while ((line = exec.getStdout()) != null)
         {
 //Dprintf.dprintf("line=%s",line);
-          // check if one entry is complete
-          // match name, state
+          // match state, name
           if      ((matcher = PATTERN_STATUS.matcher(line)).matches())
           {
             state = parseState(matcher.group(1));
-            name  = matcher.group(2);
+            name  = StringUtils.unescape(matcher.group(2));
 
             FileData fileData;
             fileData = findFileData(fileDataSet,name);
