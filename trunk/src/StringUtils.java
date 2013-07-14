@@ -243,9 +243,14 @@ public class StringUtils
       {
         char ch = string.charAt(index);
 
-        if      ((ch == '\\') && ((index+1) < endIndex))
+        if      ((ch == '\\') && ((index+1) < endIndex) && quotedFlag && (string.charAt(index+1) == quoteChar))
         {
-          buffer.append(string.charAt(index+1));
+          buffer.append(quoteChar);
+          index += 2;
+        }
+        else if ((ch == '\\') && ((index+1) < endIndex) && (string.charAt(index+1) == '\\'))
+        {
+          buffer.append('\\');
           index += 2;
         }
         else
