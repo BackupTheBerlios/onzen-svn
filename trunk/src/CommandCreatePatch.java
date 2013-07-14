@@ -653,13 +653,19 @@ class CommandCreatePatch
           if (containTABs || containTrailingWhitespaces)
           {
             final boolean[] result = new boolean[1];
+            final String message;
+            if      (containTABs && containTrailingWhitespaces) message = "The following file contain TABs and trailing whitespaces:\n\n"+fileName;
+            else if (containTABs)                               message = "The following file contain TABs or:\n\n"+fileName;
+            else /*if (containTrailingWhitespaces)*/            message = "The following file contain trailing whitespaces:\n\n"+fileName;
             display.syncExec(new Runnable()
             {
               public void run()
               {
                 result[0] = repositoryTab.convertWhitespaces(fileName,
                                                              fileNames,
-                                                             "File '"+fileName+"' contain TABs or trailing whitespaces."
+                                                             message,
+                                                             containTABs,
+                                                             containTrailingWhitespaces
                                                             );
               }
             });
