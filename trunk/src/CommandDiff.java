@@ -510,7 +510,7 @@ class CommandDiff
       });
       widgetChangedWhitespaces.setToolTipText("Show lines with whitespace changes.");
 
-      widgetRevision = Widgets.newSelect(composite);
+      widgetRevision = Widgets.newOptionMenu(composite);
       widgetRevision.setEnabled(false);
       Widgets.layout(widgetRevision,0,5,TableLayoutData.WE);
       widgetRevision.setToolTipText("Revisions to show.");
