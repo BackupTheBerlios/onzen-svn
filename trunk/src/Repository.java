@@ -117,62 +117,20 @@ class FileData
     {
       States state;
 
-      if      (string.equalsIgnoreCase("ok"))
-      {
-        state = States.OK;
-      }
-      else if (string.equalsIgnoreCase("unknown"))
-      {
-        state = States.UNKNOWN;
-      }
-      else if (string.equalsIgnoreCase("modified"))
-      {
-        state = States.MODIFIED;
-      }
-      else if (string.equalsIgnoreCase("checkout"))
-      {
-        state = States.CHECKOUT;
-      }
-      else if (string.equalsIgnoreCase("update"))
-      {
-        state = States.UPDATE;
-      }
-      else if (string.equalsIgnoreCase("merge"))
-      {
-        state = States.MERGE;
-      }
-      else if (string.equalsIgnoreCase("conflict"))
-      {
-        state = States.CONFLICT;
-      }
-      else if (string.equalsIgnoreCase("added"))
-      {
-        state = States.ADDED;
-      }
-      else if (string.equalsIgnoreCase("removed"))
-      {
-        state = States.REMOVED;
-      }
-      else if (string.equalsIgnoreCase("renamed"))
-      {
-        state = States.RENAMED;
-      }
-      else if (string.equalsIgnoreCase("not exists"))
-      {
-        state = States.NOT_EXISTS;
-      }
-      else if (string.equalsIgnoreCase("waiting"))
-      {
-        state = States.WAITING;
-      }
-      else if (string.equalsIgnoreCase("error"))
-      {
-        state = States.ERROR;
-      }
-      else
-      {
-        state = States.OK;
-      }
+      if      (string.equalsIgnoreCase("ok")        ) state = States.OK;
+      else if (string.equalsIgnoreCase("unknown")   ) state = States.UNKNOWN;
+      else if (string.equalsIgnoreCase("modified")  ) state = States.MODIFIED;
+      else if (string.equalsIgnoreCase("checkout")  ) state = States.CHECKOUT;
+      else if (string.equalsIgnoreCase("update")    ) state = States.UPDATE;
+      else if (string.equalsIgnoreCase("merge")     ) state = States.MERGE;
+      else if (string.equalsIgnoreCase("conflict")  ) state = States.CONFLICT;
+      else if (string.equalsIgnoreCase("added")     ) state = States.ADDED;
+      else if (string.equalsIgnoreCase("removed")   ) state = States.REMOVED;
+      else if (string.equalsIgnoreCase("renamed")   ) state = States.RENAMED;
+      else if (string.equalsIgnoreCase("not exists")) state = States.NOT_EXISTS;
+      else if (string.equalsIgnoreCase("waiting")   ) state = States.WAITING;
+      else if (string.equalsIgnoreCase("error")     ) state = States.ERROR;
+      else                                            state = States.OK;
 
       return state;
     }
@@ -787,36 +745,18 @@ class DiffData
 
     /** parse type string
      * @param string state string
-     * @return state
+     * @return block type
      */
     static Types parse(String string)
     {
       Types type;
 
-      if      (string.equalsIgnoreCase("keep"))
-      {
-        type = Types.KEEP;
-      }
-      else if (string.equalsIgnoreCase("added"))
-      {
-        type = Types.ADDED;
-      }
-      else if (string.equalsIgnoreCase("deleted"))
-      {
-        type = Types.DELETED;
-      }
-      else if (string.equalsIgnoreCase("changed"))
-      {
-        type = Types.CHANGED;
-      }
-      else if (string.equalsIgnoreCase("changedWhitespaces"))
-      {
-        type = Types.CHANGED_WHITESPACES;
-      }
-      else
-      {
-        type = Types.UNKNOWN;
-      }
+      if      (string.equalsIgnoreCase("keep")              ) type = Types.KEEP;
+      else if (string.equalsIgnoreCase("added")             ) type = Types.ADDED;
+      else if (string.equalsIgnoreCase("deleted")           ) type = Types.DELETED;
+      else if (string.equalsIgnoreCase("changed")           ) type = Types.CHANGED;
+      else if (string.equalsIgnoreCase("changedWhitespaces")) type = Types.CHANGED_WHITESPACES;
+      else                                                    type = Types.UNKNOWN;
 
       return type;
     }
@@ -1785,7 +1725,136 @@ class StoredFiles
 
 // ------------------------------------------------------------------------
 
-/** config value annotation
+/** store local files into database
+ */
+class RepositoryURL implements Cloneable
+{
+  enum Types
+  {
+    NONE,
+    AUTO,
+    MANUAL,
+    UNKNOWN;
+
+    /** parse string
+     * @param string string
+     * @return repository URL add type
+     */
+    public static Types parse(String string)
+    {
+      Types type;
+
+      if      (string.equalsIgnoreCase("none")  ) type = NONE;
+      else if (string.equalsIgnoreCase("auto")  ) type = AUTO;
+      else if (string.equalsIgnoreCase("manual")) type = MANUAL;
+      else                                        type = UNKNOWN;
+
+      return type;
+    }
+
+    /** convert to string
+     * @return string
+     */
+    public String toString()
+    {
+      switch (this)
+      {
+        case NONE:   return "none";
+        case AUTO:   return "auto";
+        case MANUAL: return "manual";
+        default:     return "unknown";
+      }
+    }
+  };
+
+  public Types            addType;
+  public Repository.Types repositoryType;
+  public String           path;
+  public String           moduleName;
+  public String           userName;
+
+  /** create repository URL
+   * @param addType add type
+   * @param repositoryType repository type
+   * @param path path
+   * @param moduleName module name
+   * @param userName user name
+   */
+  RepositoryURL(Types addType, Repository.Types repositoryType, String path, String moduleName, String userName)
+  {
+    this.addType        = addType;
+    this.repositoryType = repositoryType;
+    this.path           = path;
+    this.moduleName     = moduleName;
+    this.userName       = userName;
+  }
+
+  /** create repository URL
+   * @param addType add type
+   * @param repositoryType repository type
+   * @param path path
+   */
+  RepositoryURL(Types addType, Repository.Types repositoryType, String path)
+  {
+    this(addType,repositoryType,path,"","");
+  }
+
+  /** create repository URL
+   * @param repositoryType repository type
+   * @param path path
+   */
+  RepositoryURL(Repository.Types repositoryType, String path)
+  {
+    this(Types.NONE,repositoryType,path);
+  }
+
+  /** create repository URL
+   * @param path path
+   */
+  RepositoryURL(String path)
+  {
+    this(Repository.Types.NONE,path);
+  }
+
+  /** create repository URL
+   */
+  RepositoryURL()
+  {
+    this(Types.UNKNOWN,Repository.Types.UNKNOWN,"");
+  }
+
+  /** clone object
+   * @return cloned object
+   */
+  public RepositoryURL clone()
+  {
+    return new RepositoryURL(addType,repositoryType,path,moduleName,userName);
+  }
+
+  /** check if repository URL is equal
+   * @return true iff equals
+   */
+  public boolean equals(Object object)
+  {
+    RepositoryURL repositoryURL = (RepositoryURL)object;
+
+    return    (repositoryURL.repositoryType == repositoryType)
+           && repositoryURL.path.equals(path)
+           && repositoryURL.userName.equals(userName);
+  }
+
+  /** convert data to string
+   * @return string
+   */
+  public String toString()
+  {
+    return "RepositoryURL {"+addType+", "+repositoryType+", path: "+path+", user name: "+userName+"}";
+  }
+}
+
+// ------------------------------------------------------------------------
+
+/** config value annotation for repository
  */
 @Target({TYPE,FIELD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -1809,10 +1878,11 @@ class StoredFiles
 /** repository
  */
 @XmlType(propOrder={"title",
+                    "selected",
                     "rootPath",
                     "comment",
                     "openDirectories",
-                    "ignorePatterns",
+                    "ignoreFilePatterns",
 
                     "patchTests",
 
@@ -1918,7 +1988,43 @@ abstract class Repository implements Serializable
     HG,
     GIT,
 
-    UNKNOWN
+    UNKNOWN;
+
+    /** parse string
+     * @param string string
+     * @return repository type
+     */
+    public static Types parse(String string)
+    {
+      Types type;
+
+      if      (string.equalsIgnoreCase("none")     ) type = NONE;
+      else if (string.equalsIgnoreCase("directory")) type = DIRECTORY;
+      else if (string.equalsIgnoreCase("cvs")      ) type = CVS;
+      else if (string.equalsIgnoreCase("svn")      ) type = SVN;
+      else if (string.equalsIgnoreCase("hg")       ) type = HG;
+      else if (string.equalsIgnoreCase("git")      ) type = GIT;
+      else                                           type = UNKNOWN;
+
+      return type;
+    }
+
+    /** convert to string
+     * @return string
+     */
+    public String toString()
+    {
+      switch (this)
+      {
+        case NONE:      return "none";
+        case DIRECTORY: return "DIRECTORY";
+        case CVS:       return "CVS";
+        case SVN:       return "SVN";
+        case HG:        return "HG";
+        case GIT:       return "GIT";
+        default:        return "unknown";
+      }
+    }
   };
 
   // --------------------------- variables --------------------------------
@@ -1937,9 +2043,9 @@ abstract class Repository implements Serializable
   @XmlElement(name = "path")
   private HashSet<String> openDirectories;
 
-  @XmlElementWrapper(name = "ignorePatterns")
+  @XmlElementWrapper(name = "ignoreFilePatterns")
   @XmlElement(name = "pattern")
-  private HashSet<String> ignorePatterns;
+  private HashSet<String> ignoreFilePatterns;
 
   @XmlElementWrapper(name = "patchTests")
   @XmlElement(name = "patchTests", defaultValue = "")
@@ -2066,7 +2172,17 @@ abstract class Repository implements Serializable
   public static Repository newInstance(Types type, String rootPath)
     throws RepositoryException
   {
-    return newInstance(Repository.getType(rootPath),rootPath,"");
+    return newInstance(type,rootPath,"");
+  }
+
+  /** create new repository instance
+   * @param type repository type; see Repository.Types
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(Types type)
+    throws RepositoryException
+  {
+    return newInstance(type,"");
   }
 
   /** create new repository instance
@@ -2086,10 +2202,10 @@ abstract class Repository implements Serializable
   {
     int z;
 
-    this.title           = rootPath;
-    this.rootPath        = rootPath;
-    this.openDirectories = new HashSet<String>();
-    this.ignorePatterns  = new HashSet<String>();
+    this.title              = rootPath;
+    this.rootPath           = rootPath;
+    this.openDirectories    = new HashSet<String>();
+    this.ignoreFilePatterns = new HashSet<String>();
   }
 
   /** create repository
@@ -2203,51 +2319,51 @@ abstract class Repository implements Serializable
     }
   }
 
-  /** get ignore patterns
+  /** get ignore file patterns
    * @return ignore patterns array
    */
-  public String[] getIgnorePatterns()
+  public String[] getIgnoreFilePatterns()
   {
-    synchronized(ignorePatterns)
+    synchronized(ignoreFilePatterns)
     {
-      return ignorePatterns.toArray(new String[ignorePatterns.size()]);
+      return ignoreFilePatterns.toArray(new String[ignoreFilePatterns.size()]);
     }
   }
 
-  /** set ignore patterns
-   * @param patterns ignore patterns array
+  /** set ignore file patterns
+   * @param filePatterns ignore patterns array
    */
-  public void setIgnorePatterns(String[] patterns)
+  public void setIgnoreFilePatterns(String[] filePatterns)
   {
-    synchronized(ignorePatterns)
+    synchronized(ignoreFilePatterns)
     {
-      ignorePatterns.clear();
-      for (String pattern : patterns)
+      ignoreFilePatterns.clear();
+      for (String filePattern : filePatterns)
       {
-        ignorePatterns.add(pattern);
+        ignoreFilePatterns.add(filePattern);
       }
     }
   }
 
-  /** remove ignore pattern
-   * @param pattern pattern to add
+  /** remove ignore file pattern
+   * @param filePattern file pattern to add
    */
-  public void addIgnorePattern(String pattern)
+  public void addIgnoreFilePattern(String filePattern)
   {
-    synchronized(ignorePatterns)
+    synchronized(ignoreFilePatterns)
     {
-      ignorePatterns.add(pattern);
+      ignoreFilePatterns.add(filePattern);
     }
   }
 
-  /** remove ignore pattern
-   * @param pattern pattern to remove
+  /** remove ignore file pattern
+   * @param filePattern file pattern to remove
    */
-  public void removeIgnorePattern(String pattern)
+  public void removeIgnoreFilePattern(String filePattern)
   {
-    synchronized(ignorePatterns)
+    synchronized(ignoreFilePatterns)
     {
-      ignorePatterns.remove(pattern);
+      ignoreFilePatterns.remove(filePattern);
     }
   }
 
@@ -2394,12 +2510,12 @@ abstract class Repository implements Serializable
    */
   public boolean isIgnoreFile(String fileName)
   {
-    synchronized(ignorePatterns)
+    synchronized(ignoreFilePatterns)
     {
-      for (String ignorePattern : ignorePatterns)
+      for (String ignoreFilePattern : ignoreFilePatterns)
       {
-        if (   fileName.equals(ignorePattern)
-            || fileName.matches(StringUtils.globToRegex(ignorePattern))
+        if (   fileName.equals(ignoreFilePattern)
+            || fileName.matches(StringUtils.globToRegex(ignoreFilePattern))
            )
         {
           return true;
@@ -2596,6 +2712,14 @@ abstract class Repository implements Serializable
   public String getRepositoryURL()
   {
     return "";
+  }
+
+  /** get master repository URL
+   * @return masterRepository master repository URL or null
+   */
+  public RepositoryURL getMasterRepositoryURL()
+  {
+    return null;
   }
 
   /** get first revision name
