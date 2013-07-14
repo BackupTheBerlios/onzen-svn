@@ -240,6 +240,9 @@ class RepositoryTab
   // map file name -> tree item
   private WeakHashMap<String,TreeItem> fileNameMap = new WeakHashMap<String,TreeItem>();
 
+  // last push/pull repository URL
+  private RepositoryURL lastRepositoryURL = new RepositoryURL();
+
   // last copy destination directory
   private static String       lastDirectory = "";
 
@@ -1350,7 +1353,8 @@ Dprintf.dprintf("NYI");
    */
   public void incomingChanges()
   {
-    incomingChanges(((RepositoryHG)repository).masterRepository);
+//TODO
+    incomingChanges(repository.getMasterRepositoryURL().path);
   }
 
   /** show outgoing changes
@@ -1366,7 +1370,8 @@ Dprintf.dprintf("NYI");
    */
   public void outgoingChanges()
   {
-    outgoingChanges(((RepositoryHG)repository).masterRepository);
+//TODO
+    outgoingChanges(repository.getMasterRepositoryURL().path);
   }
 
   /** pull changes
@@ -1377,6 +1382,12 @@ Dprintf.dprintf("NYI");
     setStatusText("Pull changes...");
     try
     {
+      RepositoryURL repositoryURL = new RepositoryURL(RepositoryURL.Types.MANUAL,
+                                                      repository.getType(),
+                                                      masterRepository
+                                                     );
+      Settings.repositoryURLs = ArrayUtils.insertUnique(Settings.repositoryURLs,repositoryURL,0,20);
+
       repository.pullChanges(masterRepository);
     }
     catch (RepositoryException exception)
@@ -1394,7 +1405,173 @@ Dprintf.dprintf("NYI");
    */
   public void pullChanges()
   {
-    pullChanges(((RepositoryHG)repository).masterRepository);
+    /** dialog data
+     */
+    class Data
+    {
+      ArrayList<RepositoryURL> repositoryURLList;
+      String                   path;
+
+      Data()
+      {
+        this.repositoryURLList = new ArrayList<RepositoryURL>();
+        this.path              = null;
+
+        repositoryURLList.add(new RepositoryURL("file://"));
+        repositoryURLList.add(new RepositoryURL("ssh://"));
+        repositoryURLList.add(new RepositoryURL("http://"));
+        repositoryURLList.add(new RepositoryURL("https://"));
+        repositoryURLList.add(new RepositoryURL("rsync://"));
+        for (RepositoryURL repositoryURL : Settings.repositoryHistoryURLs)
+        {
+    //TODO
+        repositoryURLList.add(repositoryURL);
+        }
+        for (RepositoryURL repositoryURL : Settings.additionalRepositoryURLs)
+        {
+     //TODO
+          repositoryURLList.add(repositoryURL);
+        }
+        for (RepositoryURL repositoryURL : Settings.repositoryURLs)
+        {
+          repositoryURLList.add(repositoryURL);
+        }
+      }
+    }
+
+    Composite composite,subComposite;
+    Label     label;
+    Button    button;
+
+    final Data  data   = new Data();
+    final Shell dialog = Dialogs.openModal(shell,"Select repository for pull changes",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Combo  widgetRepositoryPath;
+    final Button widgetPullChanges;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Repository:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+      {
+        widgetRepositoryPath = Widgets.newCombo(subComposite);
+        Widgets.layout(widgetRepositoryPath,0,0,TableLayoutData.WE);
+        widgetRepositoryPath.setToolTipText("Respository path URI.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                            "Select repository path",
+                                            widgetRepositoryPath.getText()
+                                           );
+            if (path != null)
+            {
+              widgetRepositoryPath.setText(path);
+            }
+          }
+        });
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetPullChanges = Widgets.newButton(composite,"Pull changes");
+      widgetPullChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+      Widgets.layout(widgetPullChanges,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetPullChanges.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.path = widgetRepositoryPath.getText().trim();
+
+          lastRepositoryURL = new RepositoryURL(data.path);
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetRepositoryPath.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetPullChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+      }
+    });
+    widgetRepositoryPath.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.path = widget.getText().trim();
+          data.notifyAll();
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.path = widget.getText().trim();
+          data.notifyAll();
+        }
+      }
+    });
+
+    Widgets.setNextFocus(widgetRepositoryPath,widgetPullChanges);
+
+    // add repository URLs
+    for (RepositoryURL repositoryURL : data.repositoryURLList)
+    {
+      widgetRepositoryPath.add(repositoryURL.path);
+    }
+    widgetRepositoryPath.setText(lastRepositoryURL.path);
+
+    // run dialog
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      if (data.path != null)
+      {
+        pullChanges(data.path);
+      }
+    }
   }
 
   /** push changes
@@ -1405,6 +1582,12 @@ Dprintf.dprintf("NYI");
     setStatusText("Push changes...");
     try
     {
+      RepositoryURL repositoryURL = new RepositoryURL(RepositoryURL.Types.MANUAL,
+                                                      repository.getType(),
+                                                      masterRepository
+                                                     );
+      Settings.repositoryURLs = ArrayUtils.insertUnique(Settings.repositoryURLs,repositoryURL,0,20);
+
       repository.pushChanges(masterRepository);
     }
     catch (RepositoryException exception)
@@ -1422,7 +1605,173 @@ Dprintf.dprintf("NYI");
    */
   public void pushChanges()
   {
-    pushChanges(((RepositoryHG)repository).masterRepository);
+    /** dialog data
+     */
+    class Data
+    {
+      ArrayList<RepositoryURL> repositoryURLList;
+      String                   path;
+
+      Data()
+      {
+        this.repositoryURLList = new ArrayList<RepositoryURL>();
+        this.path              = null;
+
+        repositoryURLList.add(new RepositoryURL("file://"));
+        repositoryURLList.add(new RepositoryURL("ssh://"));
+        repositoryURLList.add(new RepositoryURL("http://"));
+        repositoryURLList.add(new RepositoryURL("https://"));
+        repositoryURLList.add(new RepositoryURL("rsync://"));
+        for (RepositoryURL repositoryURL : Settings.repositoryHistoryURLs)
+        {
+    //TODO
+        repositoryURLList.add(repositoryURL);
+        }
+        for (RepositoryURL repositoryURL : Settings.additionalRepositoryURLs)
+        {
+     //TODO
+          repositoryURLList.add(repositoryURL);
+        }
+        for (RepositoryURL repositoryURL : Settings.repositoryURLs)
+        {
+          repositoryURLList.add(repositoryURL);
+        }
+      }
+    }
+
+    Composite composite,subComposite;
+    Label     label;
+    Button    button;
+
+    final Data  data   = new Data();
+    final Shell dialog = Dialogs.openModal(shell,"Select repository for push changes",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Combo  widgetRepositoryPath;
+    final Button widgetPushChanges;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Repository:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+      {
+        widgetRepositoryPath = Widgets.newCombo(subComposite);
+        Widgets.layout(widgetRepositoryPath,0,0,TableLayoutData.WE);
+        widgetRepositoryPath.setToolTipText("Respository path URI.");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                            "Select repository path",
+                                            widgetRepositoryPath.getText()
+                                           );
+            if (path != null)
+            {
+              widgetRepositoryPath.setText(path);
+            }
+          }
+        });
+      }
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,new double[]{0.0,0.0,0.0,1.0}));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetPushChanges = Widgets.newButton(composite,"Push changes");
+      widgetPushChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+      Widgets.layout(widgetPushChanges,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetPushChanges.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.path = widgetRepositoryPath.getText().trim();
+
+          lastRepositoryURL = new RepositoryURL(data.path);
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,4,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    widgetRepositoryPath.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetPushChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+      }
+    });
+    widgetRepositoryPath.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.path = widget.getText().trim();
+          data.notifyAll();
+        }
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        Combo widget = (Combo)selectionEvent.widget;
+
+        synchronized(data)
+        {
+          data.path = widget.getText().trim();
+          data.notifyAll();
+        }
+      }
+    });
+
+    Widgets.setNextFocus(widgetRepositoryPath,widgetPushChanges);
+
+    // add repository URLs
+    for (RepositoryURL repositoryURL : data.repositoryURLList)
+    {
+      widgetRepositoryPath.add(repositoryURL.path);
+    }
+    widgetRepositoryPath.setText(lastRepositoryURL.path);
+
+    // run dialog
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      if (data.path != null)
+      {
+        pushChanges(data.path);
+      }
+    }
   }
 
   /** lock file
@@ -2622,7 +2971,7 @@ Dprintf.dprintf("");
     // add files
     for (FileData fileData : fileDataSet)
     {
-      repository.addIgnorePattern(fileData.getFileName(repository));
+      repository.addIgnoreFilePattern(fileData.getFileName(repository));
     }
 
     // refresh
@@ -2875,8 +3224,9 @@ Dprintf.dprintf("");
             try
             {
               convertWhitespaces(fileName,
-                                 data.convertTABs ? data.spacesPerTAB : 0,
-                                 data.removeTrailingWhitespaces
+                                 data.convertTABs,
+                                 data.removeTrailingWhitespaces,
+                                 data.spacesPerTAB
                                 );
             }
             catch (IOException exception)
@@ -2915,7 +3265,7 @@ Dprintf.dprintf("");
    * @param fileNames all file names
    * @return true iff OK, false for abort
    */
-  public boolean convertWhitespaces(String fileName, String[] fileNames, String message)
+  public boolean convertWhitespaces(String fileName, String[] fileNames, String message, boolean convertTabs, boolean removeTrailingWhitespaces)
   {
     /** dialog data
      */
@@ -2965,19 +3315,27 @@ Dprintf.dprintf("");
       Widgets.layout(subComposite,1,0,TableLayoutData.W);
       {
         widgetConvertTABs = Widgets.newCheckbox(subComposite,"Convert TABs to spaces:");
-        widgetConvertTABs.setSelection(data.spacesPerTAB > 0);
+        if (convertTabs)
+        {
+          widgetConvertTABs.setSelection(data.spacesPerTAB > 0);
+        }
+        else
+        {
+          widgetConvertTABs.setEnabled(false);
+        }
         Widgets.layout(widgetConvertTABs,0,0,TableLayoutData.W);
 
         widgetSpacesPerTAB = Widgets.newSpinner(subComposite);
         widgetSpacesPerTAB.setMinimum(1);
         widgetSpacesPerTAB.setMaximum(255);
-        widgetSpacesPerTAB.setEnabled(data.spacesPerTAB > 0);
         widgetSpacesPerTAB.setSelection(data.spacesPerTAB);
+        widgetSpacesPerTAB.setEnabled(convertTabs && (data.spacesPerTAB > 0));
         Widgets.layout(widgetSpacesPerTAB,0,1,TableLayoutData.W,0,0,0,0,80,SWT.DEFAULT);
       }
 
       widgetRemoveTrailingWhitespaces = Widgets.newCheckbox(composite,"Remove trailing whitespaces");
       widgetRemoveTrailingWhitespaces.setSelection(data.removeTrailingWhitespaces);
+      widgetRemoveTrailingWhitespaces.setEnabled(removeTrailingWhitespaces);
       Widgets.layout(widgetRemoveTrailingWhitespaces,2,0,TableLayoutData.W);
     }
 
@@ -3101,8 +3459,9 @@ Dprintf.dprintf("");
         try
         {
           convertWhitespaces(fileNames,
-                             data.convertTABs ? data.spacesPerTAB : 0,
-                             data.removeTrailingWhitespaces
+                             data.convertTABs,
+                             data.removeTrailingWhitespaces,
+                             data.spacesPerTAB
                             );
         }
         catch (IOException exception)
@@ -3118,8 +3477,9 @@ Dprintf.dprintf("");
         try
         {
           convertWhitespaces(fileName,
-                             data.convertTABs ? data.spacesPerTAB : 0,
-                             data.removeTrailingWhitespaces
+                             data.convertTABs,
+                             data.removeTrailingWhitespaces,
+                             data.spacesPerTAB
                             );
         }
         catch (IOException exception)
@@ -3154,7 +3514,7 @@ Dprintf.dprintf("");
   /** execute shell command
    * @param fileDataSet files for shell command
    */
-  public void executeShellCommand(Settings.ShellCommand shellCommand, HashSet<FileData> fileDataSet)
+  public void executeShellCommand(final Settings.ShellCommand shellCommand, HashSet<FileData> fileDataSet)
   {
     if (fileDataSet != null)
     {
@@ -3163,8 +3523,12 @@ Dprintf.dprintf("");
         // expand command
         Macro macro = new Macro(StringUtils.split(shellCommand.commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
         if (!macro.contains("file") && !macro.contains("directory")) macro.add("file");
-        macro.expand("file",     fileData.getFileName(repository.rootPath));
-        macro.expand("directory",fileData.getDirectoryName(repository.rootPath));
+        macro.expand("file",      fileData.getFileName(repository.rootPath));
+        macro.expand("f",         fileData.getFileName(repository.rootPath));
+        macro.expand("directory", fileData.getDirectoryName(repository.rootPath));
+        macro.expand("d",         fileData.getDirectoryName(repository.rootPath));
+        macro.expand("rootPath",  repository.rootPath);
+        macro.expand("r",         repository.rootPath);
         macro.expand("",         "%");
         Command command = new Command(macro);
 
@@ -4130,7 +4494,7 @@ Dprintf.dprintf("");
                                                 );
               if (fileName != null)
               {
-                widgetCommandLine.setText(fileName);
+                widgetCommandLine.setText(FileUtils.escape(fileName));
               }
             }
           });
@@ -4371,10 +4735,11 @@ Dprintf.dprintf("");
 
   /** convert whitespaces in files
    * @param fileNames file name array
-   * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
+   * @param convertTabs TRUE iff TABs could be converted
    * @param removeTrailingWhitespaces TRUE iff trailing white spaces should be removed
+   * @param spacesPerTAB number of spaces per TAB
    */
-  private void convertWhitespaces(String[] fileNames, int spacesPerTAB, boolean removeTrailingWhitespaces)
+  private void convertWhitespaces(String[] fileNames, boolean convertTabs, boolean removeTrailingWhitespaces, int spacesPerTAB)
     throws IOException
   {
     if (   removeTrailingWhitespaces
@@ -4420,7 +4785,7 @@ Dprintf.dprintf("");
             for (int z = 0; z < n; z++)
             {
               char ch = line.charAt(z);
-              if ((spacesPerTAB > 0) && (ch == '\t'))
+              if (convertTabs && (spacesPerTAB > 0) && (ch == '\t'))
               {
                 for (int i = 0; i < spacesPerTAB; i++)
                 {
@@ -4486,13 +4851,14 @@ Dprintf.dprintf("");
 
   /** convert whitespaces in file
    * @param fileName file name
-   * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
+   * @param convertTabs TRUE iff TABs could be converted
    * @param removeTrailingWhitespaces TRUE iff trailing white spaces should be removed
+   * @param spacesPerTAB number of spaces per TAB; 0 for not converting TABs
    */
-  private void convertWhitespaces(String fileName, int spacesPerTAB, boolean removeTrailingWhitespaces)
+  private void convertWhitespaces(String fileName, boolean convertTabs, boolean removeTrailingWhitespaces, int spacesPerTAB)
     throws IOException
   {
-    convertWhitespaces(new String[]{fileName},spacesPerTAB,removeTrailingWhitespaces);
+    convertWhitespaces(new String[]{fileName},convertTabs,removeTrailingWhitespaces,spacesPerTAB);
   }
 }
 
