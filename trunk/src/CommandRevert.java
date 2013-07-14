@@ -119,7 +119,7 @@ class CommandRevert
         label = Widgets.newLabel(subComposite,"Revision:");
         Widgets.layout(label,0,0,TableLayoutData.W);
 
-        widgetRevision = Widgets.newSelect(subComposite);
+        widgetRevision = Widgets.newOptionMenu(subComposite);
         widgetRevision.setEnabled(false);
         Widgets.layout(widgetRevision,0,1,TableLayoutData.WE);
         widgetRevision.setToolTipText("Revision to revert to.");
