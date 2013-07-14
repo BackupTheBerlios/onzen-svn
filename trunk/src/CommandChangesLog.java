@@ -578,16 +578,30 @@ class CommandChangesLog
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
       {
+        Table widget = (Table)mouseEvent.widget;
+
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
+        {
+          selectRevision(widget.getItem(index).getText(0));
+
+          CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(dialog,
+                                                                            repositoryTab,
+                                                                            data.fileData,
+                                                                            (data.selectedLogData0 != null) ? data.selectedLogData0.revision : repositoryTab.repository.getFirstRevision()
+                                                                           );
+          commandRevisionInfo.run();
+        }
       }
       public void mouseDown(MouseEvent mouseEvent)
       {
-        Table       widget     = (Table)mouseEvent.widget;
-        TableItem[] tableItems = widgetChangesLog.getSelection();
+        Table widget = (Table)mouseEvent.widget;
 
-        if (tableItems.length > 0)
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
         {
           // selected revision
-          selectRevision((LogData)tableItems[0].getData());
+          selectRevision(widget.getItem(index).getText(0));
 
           // notify modification
           Widgets.modified(data);
@@ -917,8 +931,8 @@ class CommandChangesLog
     if (data.selectedLogData0 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData0,COLOR_SELECTED0);
     if (data.selectedLogData1 != null) Widgets.setTableEntryColor(widgetChangesLog,data.selectedLogData1,COLOR_SELECTED1);
     data.fileData = null;
-Dprintf.dprintf("data.selectedLogData0=%s %s",data.selectedLogData0,COLOR_SELECTED0);
-Dprintf.dprintf("data.selectedLogData1=%s %s",data.selectedLogData1,COLOR_SELECTED1);
+//Dprintf.dprintf("data.selectedLogData0=%s %s",data.selectedLogData0,COLOR_SELECTED0);
+//Dprintf.dprintf("data.selectedLogData1=%s %s",data.selectedLogData1,COLOR_SELECTED1);
 
     if (data.selectedLogData1 != null)
     {
