@@ -2816,7 +2816,7 @@ class Dialogs
 
         button = new Button(composite,SWT.CENTER);
         button.setText(cancelText);
-        button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,60,SWT.DEFAULT));
+        button.setLayoutData(new TableLayoutData(0,1,TableLayoutData.E));
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
