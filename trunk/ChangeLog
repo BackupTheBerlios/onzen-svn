@@ -1,4 +1,4 @@
-2012-xx-xx 0.04
+2013-07-xx 0.04
   * added default root and branch name in new branch dialog
   * improved find files dialog
   * support file lock/unlock (SVN, HG with extension)
@@ -12,7 +12,12 @@
   * fixed creating JARs
   * do not add SVN option --username is no name is given
   * many clean-ups
-  
+  * run shell commands in background
+  * improved preferences dialog
+  * added repository history list
+  * improved support for GIT
+  * improved checkout-dialog
+  * many, many other small improvements!
 
 2012-04-14 0.03
   * add sort buttons to tests list
