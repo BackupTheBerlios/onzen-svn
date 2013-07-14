@@ -432,6 +432,7 @@ class CommandCommit
         {
           // get patch without whitespace change
           data.patchLinesNoWhitespaces = repositoryTab.repository.getPatchLines(fileDataSet,true);
+//Dprintf.dprintf("data.patchLinesNoWhitespaces=%d",data.patchLinesNoWhitespaces.length);
 
           // show
           if (!dialog.isDisposed())
@@ -632,39 +633,38 @@ class CommandCommit
       final String[] fileNames = FileData.toSortedFileNameArray(fileDataSet,repositoryTab.repository);
 
       // check for TABs/trailing whitespaces in files and convert/remove
-      String fileNameWithWhitespaces = null;
       for (final String fileName : fileNames)
       {
         if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileName))
         {
           // check for TABs/trailing whitespaces in file
-          if (   (Settings.checkTABs                && repositoryTab.containTABs(fileName)               )
-              || (Settings.checkTrailingWhitespaces && repositoryTab.containTrailingWhitespaces(fileName))
-             )
-          {
-            fileNameWithWhitespaces = fileName;
-            break;
-          }
-        }
-      }
+          final boolean containTABs                = Settings.checkTABs                && repositoryTab.containTABs(fileName);
+          final boolean containTrailingWhitespaces = Settings.checkTrailingWhitespaces && repositoryTab.containTrailingWhitespaces(fileName);
 
-      // convert TABs, remove trailing whitespaces
-      if (fileNameWithWhitespaces != null)
-      {
-        final boolean[] result   = new boolean[1];
-        final String    fileName = fileNameWithWhitespaces;
-        final String    message  = "File '"+fileNameWithWhitespaces+"' contain TABs or trailing whitespaces.";
-        display.syncExec(new Runnable()
-        {
-          public void run()
+          // convert TABs, remove trailing whitespaces
+          if (containTABs || containTrailingWhitespaces)
           {
-            result[0] = repositoryTab.convertWhitespaces(fileName,
-                                                         fileNames,
-                                                         message
-                                                        );
+            final boolean[] result = new boolean[1];
+            final String message;
+            if      (containTABs && containTrailingWhitespaces) message = "The following file contain TABs and trailing whitespaces:\n\n"+fileName;
+            else if (containTABs)                               message = "The following file contain TABs or:\n\n"+fileName;
+            else /*if (containTrailingWhitespaces)*/            message = "The following file contain trailing whitespaces:\n\n"+fileName;
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                result[0] = repositoryTab.convertWhitespaces(fileName,
+                                                             fileNames,
+                                                             message,
+                                                             containTABs,
+                                                             containTrailingWhitespaces
+                                                            );
+              }
+            });
+            if (!result[0]) return;
           }
-        });
-        if (!result[0]) return;
+
+        }
       }
 
       // create message
