@@ -13,10 +13,14 @@
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 // graphics
@@ -32,6 +36,8 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
@@ -48,6 +54,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -621,6 +628,36 @@ class WidgetModifyListener
 
   /** modified handler
    * Note: required because it can be overwritten by specific handler
+   * @param button button to notify about modified variable
+   * @param variable variable
+   */
+  void modified(Button button, WidgetVariable variable)
+  {
+    modified((Widget)button,variable);
+  }
+
+  /** modified handler
+   * Note: required because it can be overwritten by specific handler
+   * @param combo combo to notify about modified variable
+   * @param variable variable
+   */
+  void modified(Combo combo, WidgetVariable variable)
+  {
+    modified((Widget)combo,variable);
+  }
+
+  /** modified handler
+   * Note: required because it can be overwritten by specific handler
+   * @param text text to notify about modified variable
+   * @param variable variable
+   */
+  void modified(Text text, WidgetVariable variable)
+  {
+    modified((Widget)text,variable);
+  }
+
+  /** modified handler
+   * Note: required because it can be overwritten by specific handler
    * @param menuItem menu item to notify about modified variable
    * @param variable variable
    */
@@ -629,7 +666,7 @@ class WidgetModifyListener
     modified((Widget)menuItem,variable);
   }
 
-  /** set text or selection fo widget according to value of variable
+  /** set text or selection for widget according to value of variable
    * @param widget widget to notify about modified variable
    * @param variables variables
    */
@@ -641,7 +678,7 @@ class WidgetModifyListener
     }
   }
 
-  /** set text or selection fo widget according to value of variable
+  /** set text or selection for widget according to value of variable
    * @param control control to notify about modified variable
    * @param variables variables
    */
@@ -653,7 +690,34 @@ class WidgetModifyListener
     }
   }
 
-  /** set text or selection fo widget according to value of variable
+  /** set text or selection for widget according to value of variable
+   * @param button button to notify about modified variable
+   * @param variables variables
+   */
+  void modified(Button button, WidgetVariable[] variables)
+  {
+    modified((Widget)button,variables);
+  }
+
+  /** set text or selection for widget according to value of variable
+   * @param combo combo to notify about modified variable
+   * @param variables variables
+   */
+  void modified(Combo combo, WidgetVariable[] variables)
+  {
+    modified((Widget)combo,variables);
+  }
+
+  /** set text or selection for widget according to value of variable
+   * @param text text to notify about modified variable
+   * @param variables variables
+   */
+  void modified(Text text, WidgetVariable[] variables)
+  {
+    modified((Widget)text,variables);
+  }
+
+  /** set text or selection for widget according to value of variable
    * @param menuItem menu item to notify about modified variable
    * @param variables variables
    */
@@ -713,6 +777,16 @@ class WidgetModifyListener
    * Note: required because it can be overwritten by specific handler
    * @param button button to notify
    */
+  void modified(Button button)
+  {
+    modified((Control)button);
+  }
+
+
+  /** notify modify variable
+   * Note: required because it can be overwritten by specific handler
+   * @param button button to notify
+   */
   void modified(Combo combo)
   {
     modified((Control)combo);
@@ -720,11 +794,11 @@ class WidgetModifyListener
 
   /** notify modify variable
    * Note: required because it can be overwritten by specific handler
-   * @param button button to notify
+   * @param text text to notify
    */
-  void modified(Button button)
+  void modified(Text text)
   {
-    modified((Control)button);
+    modified((Control)text);
   }
 
   /** notify modify variable
@@ -740,13 +814,25 @@ class WidgetModifyListener
    */
   public void modified()
   {
-    if (widget instanceof Control)
+    if      (widget instanceof Button)
     {
-      modified((Control)widget);
+      modified((Button)widget);
+    }
+    else if (widget instanceof Combo)
+    {
+      modified((Combo)widget);
+    }
+    else if (widget instanceof Text)
+    {
+      modified((Text)widget);
     }
     else if (widget instanceof MenuItem)
     {
       modified((MenuItem)widget);
+    }
+    else if (widget instanceof Control)
+    {
+      modified((Control)widget);
     }
     else
     {
@@ -876,6 +962,36 @@ class WidgetEventListener
   }
 }
 
+/** combo box data entry
+ */
+class ComboItem
+{
+  String text;
+  Object data;
+
+  ComboItem(String text, Object data)
+  {
+    this.text = text;
+    this.data = data;
+  }
+}
+
+/** list data entry
+ */
+class ListItem
+{
+  String text;
+  Object data;
+
+  ListItem(String text, Object data)
+  {
+    this.text = text;
+    this.data = data;
+  }
+}
+
+/** Widgets class
+ */
 class Widgets
 {
   //-----------------------------------------------------------------------
@@ -1481,6 +1597,7 @@ class Widgets
       else if (keyCode == SWT.KEYPAD_EQUAL   ) keyCode = '=';
       else if (keyCode == SWT.KEYPAD_CR      ) keyCode = SWT.CR;
 
+      keyCode = Character.toLowerCase(keyCode);
       if ((accelerator & SWT.MODIFIER_MASK) != 0)
       {
         // accelerator has a modified -> match modifier+key code
@@ -1578,22 +1695,13 @@ class Widgets
   {
     if (!control.isDisposed())
     {
-      control.setFocus();
-      if      (control instanceof Text)
+      control.forceFocus();
+      if      (control instanceof Button)
       {
-        Text   widget = (Text)control;
-        String text   = widget.getText();
-        widget.setSelection(text.length(),text.length());
-      }
-      else if (control instanceof StyledText)
-      {
-        StyledText widget = (StyledText)control;
-        String     text   = widget.getText();
-        widget.setSelection(text.length(),text.length());
       }
       else if (control instanceof Combo)
       {
-        Combo  widget = (Combo)control;
+        Combo widget = (Combo)control;
 
 /* do not work correct?
         // no setSelection(n,m)-method, thus send key "end" event
@@ -1605,49 +1713,159 @@ class Widgets
         display.post(event);
         display.update();
 */
+widget.setSelection(new Point(0,1));
+      }
+      else if (control instanceof Spinner)
+      {
+      }
+      else if (control instanceof Text)
+      {
+        Text   widget = (Text)control;
+        String text   = widget.getText();
+        widget.setSelection(text.length(),text.length());
+      }
+      else if (control instanceof StyledText)
+      {
+        StyledText widget = (StyledText)control;
+        String     text   = widget.getText();
+        widget.setSelection(text.length(),text.length());
+      }
+      else if (control instanceof Table)
+      {
+      }
+      else if (control instanceof Tree)
+      {
+      }
+      else if (control instanceof DateTime)
+      {
+      }
+      else
+      {
+        throw new Error("Internal error: unknown control in setFocus(): "+control);
       }
     }
   }
 
-  /** set next focus for control
-   * @param control control
-   * @param nextControl next control to focus on RETURN
+  /** set next focus for controls
+   * @param controls controls
    */
-  public static void setNextFocus(Control control, final Control nextControl)
+  public static void setNextFocus(final Control... controls)
   {
-    if (!control.isDisposed())
+    // add selection listeners
+    for (int i = 0; i < controls.length-1; i++)
     {
-      SelectionListener selectionListener = new SelectionListener()
+      if (!controls[i].isDisposed())
       {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        final Control nextControl = controls[i+1];
+        SelectionListener selectionListener = new SelectionListener()
         {
-          Widgets.setFocus(nextControl);
-        }
-        public void widgetSelected(SelectionEvent selectionEvent)
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+            Widgets.setFocus(nextControl);
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+          }
+        };
+        if      (controls[i] instanceof Button)
         {
+          ((Button)controls[i]).addSelectionListener(selectionListener);
         }
-      };
+        else if (controls[i] instanceof Combo)
+        {
+          ((Combo)controls[i]).addSelectionListener(selectionListener);
+        }
+        else if (controls[i] instanceof Spinner)
+        {
+          ((Spinner)controls[i]).addSelectionListener(selectionListener);
+        }
+        else if (controls[i] instanceof Text)
+        {
+          ((Text)controls[i]).addSelectionListener(selectionListener);
+        }
+        else if (controls[i] instanceof StyledText)
+        {
+          ((StyledText)controls[i]).addSelectionListener(selectionListener);
+        }
+        else if (controls[i] instanceof Table)
+        {
+          ((Table)controls[i]).addSelectionListener(selectionListener);
+        }
+        else if (controls[i] instanceof Tree)
+        {
+          ((Tree)controls[i]).addSelectionListener(selectionListener);
+        }
+        else if (controls[i] instanceof DateTime)
+        {
+          ((DateTime)controls[i]).addSelectionListener(selectionListener);
+        }
+        else
+        {
+          throw new Error("Internal error: unknown control in setNextFocus(): "+controls[i]);
+        }
+      }
+    }
 
-      if      (control instanceof Button)
+    // set tab traversal
+    LinkedList<Control> controlList = new LinkedList<Control>();
+    for (Control control : controls)
+    {
+      controlList.add(control);
+    }
+    while (controlList.size() > 1)
+    {
+      int n = controlList.size();
+//Dprintf.dprintf("controls %d:",controlList.size()); for (Control control : controlList) { Dprintf.dprintf("  %s",control); } Dprintf.dprintf("");
+
+      // find most left and deepest control
+      int i        = 0;
+      int maxLevel = 0;
+      for (int j = 0; j < controlList.size(); j++)
       {
-        ((Button)control).addSelectionListener(selectionListener);
+        Control control = controlList.get(j);
+
+        int level = 0;
+        while (control.getParent() != null)
+        {
+          level++;
+          control = control.getParent();
+        }
+        if (level > maxLevel)
+        {
+          i        = j;
+          maxLevel = level;
+        }
       }
-      else if (control instanceof Combo)
+
+      // get parent composite
+      Composite parentComposite = controlList.get(i).getParent();
+
+      if ((i < controlList.size()-1) && (controlList.get(i+1).getParent() == parentComposite))
       {
-        ((Combo)control).addSelectionListener(selectionListener);
-      }
-      else if (control instanceof Spinner)
-      {
-        ((Spinner)control).addSelectionListener(selectionListener);
-      }
-      else if (control instanceof Text)
-      {
-        ((Text)control).addSelectionListener(selectionListener);
+        // get all consecutive controls with same parent composite
+        ArrayList<Control> tabControlList = new ArrayList<Control>();
+        tabControlList.add(controlList.get(i)); controlList.remove(i);
+        while ((i < controlList.size()) && (controlList.get(i).getParent() == parentComposite))
+        {
+          tabControlList.add(controlList.get(i)); controlList.remove(i);
+        }
+
+        // set tab control
+        Control[] tabControls = tabControlList.toArray(new Control[tabControlList.size()]);
+        parentComposite.setTabList(tabControls);
+//Dprintf.dprintf("  tabControls: %d",tabControls.length); for (Control control : tabControls) { Dprintf.dprintf("    %s",control); } Dprintf.dprintf("");
+
+        // replace by parent composite
+        controlList.add(i,parentComposite);
       }
       else
       {
-        throw new Error("Internal error: unknown control");
+//Dprintf.dprintf("  remove: %s",controlList.get(i));
+        controlList.remove(i);
       }
+//Dprintf.dprintf("---");
+
+      assert controlList.size() < n;
     }
   }
 
@@ -1663,18 +1881,47 @@ class Widgets
       {
         public void run()
         {
-          control.setCursor(cursor);
+          if (!control.isDisposed())
+          {
+            control.setCursor(cursor);
+          }
         }
       });
     }
   }
 
-    /** resset cursor for control to default cursor
+  /** reset cursor for control to default cursor
    * @param control control
    */
   public static void resetCursor(Control control)
   {
     setCursor(control,null);
+  }
+
+  /** check if widget is child of composite
+   * @param composite composite
+   * @param widget widget to check
+   * @return true iff widget is child of composite
+   */
+  public static boolean isChildOf(Composite composite, Widget widget)
+  {
+    if (widget instanceof Control)
+    {
+      Control control = (Control)widget;
+      while (   (control != null)
+             && (composite != control)
+             && (composite != control.getParent())
+            )
+      {
+        control = control.getParent();
+      }
+
+      return (control != null);
+    }
+    else
+    {
+      return false;
+    }
   }
 
   /** set field in data structure
@@ -1780,7 +2027,7 @@ class Widgets
 
     if (accelerator != SWT.NONE)
     {
-      char key = (char)(accelerator & SWT.KEY_MASK);
+      char key = Character.toLowerCase((char)(accelerator & SWT.KEY_MASK));
       int index = text.toLowerCase().indexOf(key);
       if (index >= 0)
       {
@@ -1993,7 +2240,7 @@ class Widgets
 
     if (accelerator != SWT.NONE)
     {
-      char key = (char)(accelerator & SWT.KEY_MASK);
+      char key = Character.toLowerCase((char)(accelerator & SWT.KEY_MASK));
       int index = text.toLowerCase().indexOf(key);
       if (index >= 0)
       {
@@ -2082,7 +2329,7 @@ class Widgets
 
     if (accelerator != SWT.NONE)
     {
-      char key = (char)(accelerator & SWT.KEY_MASK);
+      char key = Character.toLowerCase((char)(accelerator & SWT.KEY_MASK));
       int index = text.toLowerCase().indexOf(key);
       if (index >= 0)
       {
@@ -2528,6 +2775,269 @@ class Widgets
 
   //-----------------------------------------------------------------------
 
+  /** create new date input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for date input field
+   * @param style text style
+   * @return new date/time widget
+   */
+  public static DateTime newDate(Composite composite, final Object data, final String field, Date value, int style)
+  {
+    DateTime dateTime;
+
+    dateTime = new DateTime(composite,style|SWT.BORDER|SWT.DATE|SWT.DROP_DOWN);
+    if      (value != null)
+    {
+      setDate(dateTime,value);
+      setField(data,field,value);
+    }
+    else if (getField(data,field) != null)
+    {
+      setDate(dateTime,value);
+    }
+
+    dateTime.addSelectionListener(new SelectionListener()
+    {
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        DateTime widget = (DateTime)selectionEvent.widget;
+        setField(data,field,getDate(widget));
+      }
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    dateTime.addFocusListener(new FocusListener()
+    {
+      public void focusGained(FocusEvent focusEvent)
+      {
+      }
+      public void focusLost(FocusEvent focusEvent)
+      {
+        DateTime widget = (DateTime)focusEvent.widget;
+        setField(data,field,getDate(widget));
+      }
+    });
+
+    return dateTime;
+  }
+
+  /** create new date input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for date input field
+   * @return new date/time widget
+   */
+  public static DateTime newDate(Composite composite, final Object data, final String field, Date value)
+  {
+    return newDate(composite,data,field,value,SWT.NONE);
+  }
+
+  /** create new date input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @param style text style
+   * @return new date/time widget
+   */
+  public static DateTime newDate(Composite composite, final Object data, final String field, int style)
+  {
+    return newDate(composite,data,field,null,style);
+  }
+
+  /** create new date input widget
+   * @param composit        setField(data,field,getTime(widget));
+e composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @return new date/time widget
+   */
+  public static DateTime newDate(Composite composite, final Object data, final String field)
+  {
+    return newDate(composite,data,field,null,SWT.NONE);
+  }
+
+  /** create new password input widget (single line)
+   * @param composite composite widget
+   * @param style text style
+   * @return new date/time widget
+   */
+  public static DateTime newDate(Composite composite, int style)
+  {
+    return newDate(composite,null,null,style);
+  }
+
+  /** create new date input widget
+   * @param composite composite widget
+   * @return new date/time widget
+   */
+  public static DateTime newDate(Composite composite)
+  {
+    return newDate(composite,SWT.NONE);
+  }
+
+  /** get date from date/time widget
+   * @param dateTime date/time widget
+   * @return date
+   */
+  public static Date getDate(DateTime dateTime)
+  {
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(dateTime.getYear(),dateTime.getMonth(),dateTime.getDay());
+
+    return calendar.getTime();
+  }
+
+  /** set date in date/time widget
+   * @param dateTime date/time widget
+   * @param date date
+   */
+  public static void setDate(DateTime dateTime, Date date)
+  {
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(date);
+
+    dateTime.setDay  (calendar.get(Calendar.DAY_OF_MONTH));
+    dateTime.setMonth(calendar.get(Calendar.MONTH       ));
+    dateTime.setYear (calendar.get(Calendar.YEAR        ));
+  }
+
+  //-----------------------------------------------------------------------
+
+  /** create new time input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for time input field
+   * @param style text style
+   * @return new date/time widget
+   */
+  public static DateTime newTime(Composite composite, final Object data, final String field, Date value, int style)
+  {
+    DateTime dateTime;
+
+    dateTime = new DateTime(composite,style|SWT.TIME);
+    if      (value != null)
+    {
+      setTime(dateTime,value);
+      setField(data,field,value);
+    }
+    else if (getField(data,field) != null)
+    {
+      setTime(dateTime,(Date)getField(data,field));
+    }
+
+    dateTime.addSelectionListener(new SelectionListener()
+    {
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        DateTime widget = (DateTime)selectionEvent.widget;
+        setField(data,field,getTime(widget));
+      }
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+    });
+    dateTime.addFocusListener(new FocusListener()
+    {
+      public void focusGained(FocusEvent focusEvent)
+      {
+      }
+      public void focusLost(FocusEvent focusEvent)
+      {
+        DateTime widget = (DateTime)focusEvent.widget;
+        setField(data,field,getTime(widget));
+      }
+    });
+
+    return dateTime;
+  }
+
+  /** create new time input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @param value value for time input field
+   * @return new date/time widget
+   */
+  public static DateTime newTime(Composite composite, final Object data, final String field, Date value)
+  {
+    return newTime(composite,data,field,value,SWT.NONE);
+  }
+
+  /** create new time input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @param style text style
+   * @return new date/time widget
+   */
+  public static DateTime newTime(Composite composite, final Object data, final String field, int style)
+  {
+    return newTime(composite,data,field,null,style);
+  }
+
+  /** create new time input widget
+   * @param composite composite widget
+   * @param data data structure to store text value or null
+   * @param field field name in data structure to set on selection
+   * @return new date/time widget
+   */
+  public static DateTime newTime(Composite composite, final Object data, final String field)
+  {
+    return newTime(composite,data,field,null,SWT.NONE);
+  }
+
+  /** create new time input widget
+   * @param composite composite widget
+   * @param style text style
+   * @return new date/time widget
+   */
+  public static DateTime newTime(Composite composite, int style)
+  {
+    return newTime(composite,null,null,style);
+  }
+
+  /** create new time input widget
+   * @param composite composite widget
+   * @return new date/time widget
+   */
+  public static DateTime newTime(Composite composite)
+  {
+    return newTime(composite,SWT.NONE);
+  }
+
+  /** get date from date/time widget
+   * @param dateTime date/time widget
+   * @return date
+   */
+  public static Date getTime(DateTime dateTime)
+  {
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(0,0,0,dateTime.getHours(),dateTime.getMinutes(),dateTime.getSeconds());
+
+    return calendar.getTime();
+  }
+
+  /** set date in date/time widget
+   * @param dateTime date/time widget
+   * @param date date
+   */
+  public static void setTime(DateTime dateTime, Date date)
+  {
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(date);
+
+    dateTime.setHours  (calendar.get(Calendar.HOUR  ));
+    dateTime.setMinutes(calendar.get(Calendar.MINUTE));
+    dateTime.setSeconds(calendar.get(Calendar.SECOND));
+  }
+
+  //-----------------------------------------------------------------------
+
   /** create new list widget
    * @param composite composite widget
    * @param style style
@@ -2538,6 +3048,7 @@ class Widgets
     List list;
 
     list = new List(composite,style);
+    list.setData(new ArrayList<ListItem>());
 
     return list;
   }
@@ -2555,22 +3066,404 @@ class Widgets
    * @param list list
    * @param comparator list data comparator
    */
-  public static void sortList(List list, Comparator comparator)
+  public static void sortList(List list, Comparator<ListItem> comparator)
   {
     if (!list.isDisposed())
     {
-      String[] texts = list.getItems();
-      Arrays.sort(texts,comparator);
-      list.setItems(texts);
+      ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+      Collections.sort(listItems,comparator);
+      for (int i = 0; i < listItems.size(); i++)
+      {
+        list.setItem(i,listItems.get(i).text);
+      }
     }
   }
 
-  /** sort list
+  /** sort list by text
+
    * @param list list
    */
   public static void sortList(List list)
   {
-    sortList(list,String.CASE_INSENSITIVE_ORDER);
+    sortList(list,new Comparator<ListItem>()
+    {
+      public int compare(ListItem listItem1, ListItem listItem2)
+      {
+        return listItem1.text.compareTo(listItem2.text);
+      }
+    });
+  }
+
+  /** get insert position in sorted list
+   * @param list list
+   * @param comparator table data comparator
+   * @param data data
+   * @return index in list
+   */
+  public static int getListIndex(List list, Comparator comparator, Object data)
+  {
+    int index = 0;
+
+    if (!list.isDisposed())
+    {
+      ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+      // find insert index
+      boolean foundFlag = false;
+      while ((index < listItems.size()) && !foundFlag)
+      {
+        if (comparator != String.CASE_INSENSITIVE_ORDER)
+          foundFlag = (comparator.compare(listItems.get(index).data,data) > 0);
+        else
+          foundFlag = (comparator.compare(listItems.get(index).text,data) > 0);
+        if (!foundFlag) index++;
+      }
+    }
+
+    return index;
+  }
+
+  /** insert list entry
+   * @param list table
+   * @param comparator list entry comperator
+   * @param list entry data
+   * @param text list text
+   */
+  public static void insertListEntry(final List list, final int index, final Object data, final String text)
+  {
+    if (!list.isDisposed())
+    {
+      list.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+          ListItem listItem = new ListItem(text,data);
+          if (index >= 0)
+          {
+            list.add(text,index);
+            listItems.add(index,listItem);
+          }
+          else
+          {
+            list.add(text);
+            listItems.add(listItem);
+          }
+        }
+      });
+    }
+  }
+
+  /** insert list entry
+   * @param list list
+   * @param comparator list entry comperator
+   * @param list entry data
+   * @param text list text
+   */
+  public static void insertListEntry(final List list, final Comparator comparator, final Object data, final String text)
+  {
+    if (!list.isDisposed())
+    {
+      list.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+          int index = getListIndex(list,comparator,data);
+          list.add(text,index);
+          listItems.add(index,new ListItem(text,data));
+        }
+      });
+    }
+  }
+
+  /** add list entry
+   * @param list list
+   * @param list entry data
+   * @param text list text
+   */
+  public static void addListEntry(List list, Object data, String text)
+  {
+    insertListEntry(list,-1,data,text);
+  }
+
+  /** update list entry
+   * @param list list
+   * @param data entry data
+   * @param text entry text
+   * @param true if updated, false if not found
+   */
+  public static boolean updateListEntry(final List list, final Object data, final String text)
+  {
+    /** list update runnable
+     */
+    class ListRunnable implements Runnable
+    {
+      boolean updatedFlag = false;
+
+      public void run()
+      {
+        if (!list.isDisposed())
+        {
+          list.getDisplay().syncExec(new Runnable()
+          {
+            public void run()
+            {
+              ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+              for (int i = 0; i < listItems.size(); i++)
+              {
+                ListItem listItem = listItems.get(i);
+                if (listItem.data == data)
+                {
+                  listItem.text = text;
+                  list.setItem(i,text);
+                  updatedFlag = true;
+                  break;
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+
+    ListRunnable listRunnable = new ListRunnable();
+    if (!list.isDisposed())
+    {
+      list.getDisplay().syncExec(listRunnable);
+    }
+
+    return listRunnable.updatedFlag;
+  }
+
+  /** swap list items
+   * @param list list
+   * @param i,j indizes of list items to swap
+   */
+  private static void swapListItems(List list, int i, int j)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+    String text0 = list.getItem(i);
+    String text1 = list.getItem(j);
+    list.setItem(i,text1);
+    list.setItem(j,text0);
+
+    ListItem listItem0 = listItems.get(i);
+    ListItem listItem1 = listItems.get(j);
+    listItems.set(i,listItem1);
+    listItems.set(j,listItem0);
+
+  }
+
+  /** move list entry
+   * @param list list
+   * @param data entry data
+   * @param offset move offset
+   */
+  public static void moveListEntry(final List list, final int index, final int offset)
+  {
+    if (!list.isDisposed())
+    {
+      list.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!list.isDisposed())
+          {
+            ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+            int i = index;
+            int n = offset;
+
+            // move item down
+            while ((n > 0) && (i < listItems.size()-1))
+            {
+              swapListItems(list,i,i+1);
+              i++;
+              n--;
+            }
+
+            // move item up
+            while ((n < 0) && (i > 0))
+            {
+              swapListItems(list,i,i-1);
+              i--;
+              n++;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** move list entry
+   * @param list list
+   * @param data entry data
+   * @param offset move offset
+   */
+  public static void moveListEntry(List list, Object data, int offset)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+    int                 i         = 0;
+    while ((i < listItems.size()) && (listItems.get(i).data != data))
+    {
+      i++;
+    }
+
+    if (i >= 0)
+    {
+      moveListEntry(list,i,offset);
+    }
+  }
+
+  /** move list entry
+   * @param list list
+   * @param data entry data
+   * @param offset move offset
+   */
+  public static void moveListEntry(List list, ListItem listItem, int offset)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+    for (int i = 0; i < listItems.size(); i++)
+    {
+      if (listItems.get(i) == listItem)
+      {
+        moveListEntry(list,i,offset);
+        break;
+      }
+    }
+  }
+
+  /** remove list entry
+   * @param list list
+   * @param list entry data
+   */
+  public static void removeListEntry(final List list, final int index)
+  {
+    if (!list.isDisposed())
+    {
+      list.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!list.isDisposed())
+          {
+            ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+            list.remove(index);
+            listItems.remove(index);
+          }
+        }
+      });
+    }
+  }
+
+  /** remove list entry
+   * @param list list
+   * @param list entry data
+   */
+  public static void removeListEntry(final List list, final Object data)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+    for (int i = 0; i < listItems.size(); i++)
+    {
+      if (listItems.get(i).data == data)
+      {
+        removeListEntry(list,i);
+        break;
+      }
+    }
+  }
+
+  /** remove list entry
+   * @param list list
+   * @param listItem list item to remove
+   */
+  public static void removeListEntry(final List list, final ListItem listItem)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+    for (int i = 0; i < listItems.size(); i++)
+    {
+      if (listItems.get(i) == listItem)
+      {
+        removeListEntry(list,i);
+        break;
+      }
+    }
+  }
+
+  /** remove list entries
+   * @param list list
+   * @param listItems list items to remove
+   */
+  public static void removeListEntries(List list, ListItem[] listItems)
+  {
+    for (ListItem listItem : listItems)
+    {
+      removeListEntry(list,listItem);
+    }
+  }
+
+  /** remove all list entries
+   * @param list list
+   */
+  public static void removeAllListEntries(final List list)
+  {
+    if (!list.isDisposed())
+    {
+      list.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!list.isDisposed())
+          {
+            list.removeAll();
+            ((ArrayList<ListItem>)list.getData()).clear();
+          }
+        }
+      });
+    }
+  }
+
+  /** get list entry
+   * @param list list
+   * @param index index
+   * @return entry
+   */
+  public static Object getListEntry(List list, int index)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+    if ((index < 0) || (index >= listItems.size()))
+    {
+      throw new IndexOutOfBoundsException();
+    }
+
+    return listItems.get(index).data;
+  }
+
+  /** get list entries
+   * @param list list
+   * @param entries array
+   * @return entries array
+   */
+  public static <T> T[] getListEntries(List list, T[] array)
+  {
+    ArrayList<ListItem> listItems = (ArrayList<ListItem>)list.getData();
+
+    if (array.length != listItems.size())
+    {
+      array = Arrays.copyOf(array,listItems.size());
+    }
+
+    for (int i = 0; i < listItems.size(); i++)
+    {
+      array[i] = (T)(listItems.get(i).data);
+    }
+
+    return array;
   }
 
   //-----------------------------------------------------------------------
@@ -2597,6 +3490,7 @@ class Widgets
     {
       combo.setText((String)getField(data,field));
     }
+    combo.setData(new ArrayList<ComboItem>());
 
     combo.addSelectionListener(new SelectionListener()
     {
@@ -2667,6 +3561,207 @@ class Widgets
     return newCombo(composite,SWT.BORDER);
   }
 
+  /** add combo entry
+   * @param combo combo
+   * @param combo entry data
+   * @param text combo text
+   */
+  public static void addComboEntry(final Combo combo, final Object data, final String text)
+  {
+    if (!combo.isDisposed())
+    {
+      combo.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+
+          ComboItem comboItem = new ComboItem(text,data);
+          combo.add(text);
+          comboItems.add(comboItem);
+        }
+      });
+    }
+  }
+
+  /** update combo entry
+   * @param combo combo
+   * @param data entry data
+   * @param text entry text
+   * @param true if updated, false if not found
+   */
+  public static boolean updateComboEntry(final Combo combo, final Object data, final String text)
+  {
+    /** combo update runnable
+     */
+    class ComboRunnable implements Runnable
+    {
+      boolean updatedFlag = false;
+
+      public void run()
+      {
+        if (!combo.isDisposed())
+        {
+          combo.getDisplay().syncExec(new Runnable()
+          {
+            public void run()
+            {
+              ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+
+              for (int i = 0; i < comboItems.size(); i++)
+              {
+                ComboItem comboItem = comboItems.get(i);
+                if (comboItem.data == data)
+                {
+                  comboItem.text = text;
+                  combo.setItem(i,text);
+                  updatedFlag = true;
+                  break;
+                }
+              }
+            }
+          });
+        }
+      }
+    }
+
+    ComboRunnable comboRunnable = new ComboRunnable();
+    if (!combo.isDisposed())
+    {
+      combo.getDisplay().syncExec(comboRunnable);
+    }
+
+    return comboRunnable.updatedFlag;
+  }
+
+  /** remove combo entry
+   * @param combo combo
+   * @param combo entry data
+   */
+  public static void removeComboEntry(final Combo combo, final int index)
+  {
+    if (!combo.isDisposed())
+    {
+      combo.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!combo.isDisposed())
+          {
+            ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+            combo.remove(index);
+            comboItems.remove(index);
+          }
+        }
+      });
+    }
+  }
+
+  /** remove combo entry
+   * @param combo combo
+   * @param combo entry data
+   */
+  public static void removeComboEntry(final Combo combo, final Object data)
+  {
+    ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+    for (int i = 0; i < comboItems.size(); i++)
+    {
+      if (comboItems.get(i).data == data)
+      {
+        removeComboEntry(combo,i);
+        break;
+      }
+    }
+  }
+
+  /** remove combo entry
+   * @param combo combo
+   * @param comboItem combo item to remove
+   */
+  public static void removeComboEntry(final Combo combo, final ComboItem comboItem)
+  {
+    ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+    for (int i = 0; i < comboItems.size(); i++)
+    {
+      if (comboItems.get(i) == comboItem)
+      {
+        removeComboEntry(combo,i);
+        break;
+      }
+    }
+  }
+
+  /** remove combo entries
+   * @param combo combo
+   * @param comboItems combo items to remove
+   */
+  public static void removeComboEntries(Combo combo, ComboItem[] comboItems)
+  {
+    for (ComboItem comboItem : comboItems)
+    {
+      removeComboEntry(combo,comboItem);
+    }
+  }
+
+  /** remove all combo entries
+   * @param combo combo
+   */
+  public static void removeAllComboEntries(final Combo combo)
+  {
+    if (!combo.isDisposed())
+    {
+      combo.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!combo.isDisposed())
+          {
+            combo.removeAll();
+            ((ArrayList<ComboItem>)combo.getData()).clear();
+          }
+        }
+      });
+    }
+  }
+
+  /** get combo entry
+   * @param combo combo
+   * @param index index
+   * @return entry
+   */
+  public static Object getComboEntry(Combo combo, int index)
+  {
+    ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+    if ((index < 0) || (index >= comboItems.size()))
+    {
+      throw new IndexOutOfBoundsException();
+    }
+
+    return comboItems.get(index).data;
+  }
+
+  /** get combo entries
+   * @param combo combo
+   * @param entries array
+   * @return entries array
+   */
+  public static <T> T[] getComboEntries(Combo combo, T[] array)
+  {
+    ArrayList<ComboItem> comboItems = (ArrayList<ComboItem>)combo.getData();
+
+    if (array.length != comboItems.size())
+    {
+      array = Arrays.copyOf(array,comboItems.size());
+    }
+
+    for (int i = 0; i < comboItems.size(); i++)
+    {
+      array[i] = (T)(comboItems.get(i).data);
+    }
+
+    return array;
+  }
+
   //-----------------------------------------------------------------------
 
   /** new combo widget
@@ -2676,7 +3771,7 @@ class Widgets
    * @param value value for checkbox
    * @return new select widget
    */
-  public static Combo newSelect(Composite composite, final Object data, final String field, String value)
+  public static Combo newEnumSelect(Composite composite, Class enumClass, final Object data, final String field, String value)
   {
     Combo combo;
 
@@ -2708,22 +3803,24 @@ class Widgets
 
   /** new combo widget
    * @param composite composite widget
+   * @param enumClass enum-class
    * @param data data structure to store select value or null
    * @param field field name in data structure to set on selection
    * @return new select widget
    */
-  public static Combo newSelect(Composite composite, final Object data, final String field)
+  public static Combo newEnumSelect(Composite composite, Class enumClass, Object data, String field)
   {
-    return newSelect(composite,data,field,null);
+    return newEnumSelect(composite,enumClass,data,field,null);
   }
 
-  /** new combo widget
+  /** new enum select widget
    * @param composite composite widget
+   * @param enumClass enum-class
    * @return new select widget
    */
-  public static Combo newSelect(Composite composite)
+  public static Combo newEnumSelect(Composite composite, Class enumClass)
   {
-    return newSelect(composite,null,null);
+    return newEnumSelect(composite,enumClass,null,null);
   }
 
   //-----------------------------------------------------------------------
@@ -2753,7 +3850,7 @@ class Widgets
   {
     Spinner spinner;
 
-    spinner = new Spinner(composite,style);
+    spinner = new Spinner(composite,style|SWT.RIGHT);
     spinner.setMinimum(min);
     spinner.setMaximum(max);
 
@@ -2830,7 +3927,7 @@ class Widgets
   {
     TableColumn tableColumn = new TableColumn(table,style);
     tableColumn.setText(title);
-    tableColumn.setData(new TableLayoutData(0,0,0,0,0,0,0,width,0,resizable ? SWT.DEFAULT : width,resizable ? SWT.DEFAULT : width));
+    tableColumn.setData(new TableLayoutData(0,0,0,0,0,0,0,width,0,((width == SWT.DEFAULT) || resizable) ? SWT.DEFAULT : width,((width == SWT.DEFAULT) || resizable) ? SWT.DEFAULT : width));
     tableColumn.setWidth(width);
     tableColumn.setResizable(resizable);
     if (width <= 0) tableColumn.pack();
@@ -2856,11 +3953,24 @@ class Widgets
    * @param columnNb column number
    * @param title column title
    * @param style style
+   * @param width width of column
+   * @return new table column
+   */
+  public static TableColumn addTableColumn(Table table, int columnNb, String title, int style, int width)
+  {
+    return addTableColumn(table,columnNb,title,style,width,(width == SWT.DEFAULT) ? true : false);
+  }
+
+  /** add column to table widget
+   * @param table table widget
+   * @param columnNb column number
+   * @param title column title
+   * @param style style
    * @return new table column
    */
   public static TableColumn addTableColumn(Table table, int columnNb, String title, int style)
   {
-    return addTableColumn(table,columnNb,title,style,true);
+    return addTableColumn(table,columnNb,title,style,SWT.DEFAULT);
   }
 
   /** add column to table widget
@@ -2880,12 +3990,24 @@ class Widgets
    * @param table table widget
    * @param columnNb column number
    * @param style style
+   * @param resizable TRUE iff resizable column
+   * @return new table column
+   */
+  public static TableColumn addTableColumn(Table table, int columnNb, int style, boolean resizable)
+  {
+    return addTableColumn(table,columnNb,style,SWT.DEFAULT,resizable);
+  }
+
+  /** add column to table widget
+   * @param table table widget
+   * @param columnNb column number
+   * @param style style
    * @param width width of column
    * @return new table column
    */
   public static TableColumn addTableColumn(Table table, int columnNb, int style, int width)
   {
-    return addTableColumn(table,columnNb,style,width,true);
+    return addTableColumn(table,columnNb,style,width,(width == SWT.DEFAULT) ? true : false);
   }
 
   /** add column to table widget
@@ -3376,9 +4498,47 @@ class Widgets
 
   /** update table entry
    * @param table table
+   * @param tableItem table item to update
    * @param data entry data
    * @param values values list
    * @param true if updated, false if not found
+   */
+  public static void updateTableEntry(final Table table, final TableItem tableItem, final Object data, final Object... values)
+  {
+    if (!table.isDisposed())
+    {
+      table.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!table.isDisposed())
+          {
+            tableItem.setData(data);
+            for (int i = 0; i < values.length; i++)
+            {
+              if (values[i] != null)
+              {
+                if      (values[i] instanceof String)
+                {
+                  tableItem.setText(i,(String)values[i]);
+                }
+                else if (values[i] instanceof Image)
+                {
+                  tableItem.setImage(i,(Image)values[i]);
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** update table entry
+   * @param table table
+   * @param data entry data
+   * @param values values list
+   * @return true if updated, false if not found
    */
   public static boolean updateTableEntry(final Table table, final Object data, final Object... values)
   {
@@ -3695,7 +4855,7 @@ class Widgets
 
   /** remove table entry
    * @param table table
-   * @param table entry data
+   * @param data entry data
    */
   public static void removeTableEntry(final Table table, final Object data)
   {
@@ -3910,7 +5070,7 @@ class Widgets
     return treeItem;
   }
 
-  /** add sub-tree item ad end
+  /** add sub-tree item at end
    * @param parentTreeItem parent tree item
    * @param data data
    * @param folderFlag TRUE iff foler
@@ -3919,6 +5079,101 @@ class Widgets
   public static TreeItem addTreeItem(TreeItem parentTreeItem, Object data, boolean folderFlag)
   {
     return addTreeItem(parentTreeItem,0,data,folderFlag);
+  }
+
+  /** remove sub-tree item
+   * @param tree tree
+   * @param data entry data
+   */
+  public static void removeTreeEntry(final Tree tree, final Object data)
+  {
+    if (!tree.isDisposed())
+    {
+      tree.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!tree.isDisposed())
+          {
+            for (TreeItem treeItem : tree.getItems())
+            {
+              if (treeItem.getData() == data)
+              {
+                TreeItem parentTreeItem = treeItem.getParentItem();
+                treeItem.dispose();
+                if ((parentTreeItem != null) && (parentTreeItem.getItemCount() <= 0))
+                {
+                  parentTreeItem.setExpanded(false);
+                  new TreeItem(parentTreeItem,SWT.NONE);
+                }
+                break;
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** remove sub-tree item
+   * @param tree tree
+   * @param treeItem tree item to remove
+   */
+  public static void removeTreeEntry(final Tree tree, final TreeItem treeItem)
+  {
+    if (!tree.isDisposed())
+    {
+      tree.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!tree.isDisposed())
+          {
+            TreeItem parentTreeItem = treeItem.getParentItem();
+            treeItem.dispose();
+            if ((parentTreeItem != null) && (parentTreeItem.getItemCount() <= 0))
+            {
+              parentTreeItem.setExpanded(false);
+              new TreeItem(parentTreeItem,SWT.NONE);
+            }
+          }
+        }
+      });
+    }
+  }
+
+  /** remove tree entries
+   * @param tree tree
+   * @param treeItems tree items to remove
+   */
+  public static void removeTableEntries(Tree tree, TreeItem[] treeItems)
+  {
+    for (TreeItem treeItem : treeItems)
+    {
+      removeTreeEntry(tree,treeItem);
+    }
+  }
+
+  /** remove all tree entries
+   * @param tree tree
+   */
+  public static void removeAllTreeEntries(final Tree tree, final TreeItem treeItem)
+  {
+    if (!tree.isDisposed())
+    {
+      tree.getDisplay().syncExec(new Runnable()
+      {
+        public void run()
+        {
+          if (!tree.isDisposed())
+          {
+            treeItem.removeAll();
+            new TreeItem(treeItem,SWT.NONE);
+            treeItem.setExpanded(false);
+          }
+        }
+      });
+    }
   }
 
 /*
@@ -4682,7 +5937,6 @@ private static void printTree(Tree tree)
   /** add new menu item
    * @param menu menu
    * @param text menu item text
-   * @param index index [0..n-1] or -1
    * @param accelerator accelerator key or SWT.NONE
    * @return new menu item
    */
@@ -5354,7 +6608,6 @@ private static void printTree(Tree tree)
       {
         if (((keyEvent.stateMask & SWT.CTRL) != 0) && (keyEvent.keyCode == 'c'))
         {
-//Dprintf.dprintf("control=%s",control);
           if      (control instanceof Text)
           {
             setClipboard(clipboard,(Text)control);
