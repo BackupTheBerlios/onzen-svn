@@ -243,6 +243,14 @@ Dprintf.dprintf("TODO: check if lock extension is available?");
            || (commitMessage.getMessage(", ").length() <= Settings.hgSingleLineMaxCommitMessageLength);
   }
 
+  /** get master repository URL
+   * @return masterRepository master repository URL or null
+   */
+  public RepositoryURL getMasterRepositoryURL()
+  {
+    return new RepositoryURL(Types.GIT,masterRepository);
+  }
+
   /** create new repository module
    * @param repositoryURL repository server URL
    * @param moduleName module name
@@ -412,7 +420,7 @@ Dprintf.dprintf("checkout username, password???");
           else
           {
             // unknown line
-            Onzen.printWarning("No match for line '%s'",line);
+            Onzen.printWarning("No match for update states line '%s'",line);
           }
         }
 
@@ -935,7 +943,6 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
       while ((line = exec.getStdout()) != null)
       {
 //Dprintf.dprintf("line=%s",line);
-        // check if one entry is complete
         // match name, state
         if      ((matcher = PATTERN_STATUS.matcher(line)).matches())
         {
@@ -959,7 +966,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for changed files line '%s'",line);
         }
       }
 
@@ -986,7 +993,8 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
   public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
-    final Pattern PATTERN_DIFF_START  = Pattern.compile("^\\+\\+\\+.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_START1 = Pattern.compile("^\\-\\-\\-.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_START2 = Pattern.compile("^\\+\\+\\+.*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_DIFF        = Pattern.compile("^@@\\s+\\-([\\d,]*)\\s+\\+([\\d,]*)\\s+@@$",Pattern.CASE_INSENSITIVE);
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
@@ -1222,7 +1230,7 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for diff line '%s'",line);
         }
       }
 
@@ -1656,7 +1664,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for annotations line '%s'",line);
         }
       }
 
