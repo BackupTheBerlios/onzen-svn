@@ -284,6 +284,7 @@ class RepositorySVN extends Repository
         command.append("--");
         exec = new Exec(rootPath,directory,command);
         exec.closeStdin();
+//Dprintf.dprintf("command=%s directory=%s",command,directory);
 
         try
         {
@@ -306,6 +307,7 @@ class RepositorySVN extends Repository
 
             name = entryElement.getAttribute("path");
             fileName = (!directory.isEmpty() ? directory+File.separator : "")+name;
+//Dprintf.dprintf("fileName=%s",fileName);
 
             nodeList = entryElement.getElementsByTagName("wc-status");
             if (nodeList.getLength() > 0)
@@ -313,6 +315,7 @@ class RepositorySVN extends Repository
               Element wcStatusElement = (Element)nodeList.item(0);
 
               state = parseState(wcStatusElement.getAttribute("item"));
+//Dprintf.dprintf("state=%s %s",state,wcStatusElement.getAttribute("item"));
               workingRevision = wcStatusElement.getAttribute("revision");
 
               nodeList = wcStatusElement.getElementsByTagName("commit");
@@ -1033,7 +1036,7 @@ class RepositorySVN extends Repository
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for changed files line '%s'",line);
         }
       }
 
@@ -1304,7 +1307,7 @@ class RepositorySVN extends Repository
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for diff line '%s'",line);
         }
       }
 
@@ -1733,7 +1736,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for annotations line '%s'",line);
         }
       }
 
