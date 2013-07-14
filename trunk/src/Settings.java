@@ -681,6 +681,63 @@ public class Settings
     }
   }
 
+  /** config value adapter String <-> repository URL
+   */
+  class SettingValueAdapterRepositoryURL extends SettingValueAdapter<String,RepositoryURL>
+  {
+    /** convert to value
+     * @param string string
+     * @return value
+     */
+    public RepositoryURL toValue(String string) throws Exception
+    {
+      RepositoryURL repositoryURL = null;
+
+      Object[] data = new Object[5];
+      if      (StringParser.parse(string,"%s %s %S %S %S",data,StringParser.QUOTE_CHARS))
+      {
+        repositoryURL = new RepositoryURL(RepositoryURL.Types.parse((String)data[0]),
+                                          Repository.Types.parse((String)data[1]),
+                                          StringUtils.unescape(((String)data[2]).trim()),
+                                          StringUtils.unescape(((String)data[3]).trim()),
+                                          StringUtils.unescape(((String)data[4]).trim())
+                                         );
+      }
+      else
+      {
+        throw new Exception(String.format("Cannot parse repository URL definition '%s'",string));
+      }
+
+      return repositoryURL;
+    }
+
+    /** convert to string
+     * @param value value
+     * @return string
+     */
+    public String toString(RepositoryURL repositoryURL) throws Exception
+    {
+      return repositoryURL.addType.toString()+" "+
+             repositoryURL.repositoryType.toString()+" "+
+             StringUtils.escape(repositoryURL.path)+" "+
+             StringUtils.escape(repositoryURL.moduleName)+" "+
+             StringUtils.escape(repositoryURL.userName);
+    }
+
+    /** compare entries
+     * @param repositoryURL0,repositoryURL1 shell commands to compare
+     * @return TRUE iff equal
+     */
+    public boolean equals(RepositoryURL repositoryURL0, RepositoryURL repositoryURL1)
+    {
+      return    repositoryURL0.addType == repositoryURL1.addType
+             && repositoryURL0.repositoryType == repositoryURL1.repositoryType
+             && repositoryURL0.path.equals(repositoryURL1.path)
+             && repositoryURL0.moduleName.equals(repositoryURL1.moduleName)
+             && repositoryURL0.userName.equals(repositoryURL1.userName);
+    }
+  }
+
   // --------------------------- constants --------------------------------
   public static final String ONZEN_DIRECTORY = System.getProperty("user.home")+File.separator+".onzen";
 
@@ -880,7 +937,7 @@ public class Settings
 
   @SettingComment(text={"","Shown diff types"})
   @SettingValue(type=DiffData.Types.class)
-  public static EnumSet<DiffData.Types> diffShowTypes                           = EnumSet.allOf(DiffData.Types.class);
+  public static EnumSet<DiffData.Types>  diffShowTypes                          = EnumSet.allOf(DiffData.Types.class);
 
   @SettingComment(text={"","Shown file states in changed file list"})
   @SettingValue(type=FileData.States.class)
@@ -1040,11 +1097,11 @@ public class Settings
 
   @SettingComment(text={"","Editors: <mime type>:<command>","Macros:","  %file% - file name","  %n% - line number"})
   @SettingValue(type=SettingValueAdapterEditor.class)
-  public static Editor[]         editors                                        = new Editor[0];
+  public static Editor[]                 editors                                = new Editor[0];
 
   @SettingComment(text={"","Shell: <name>:<command>","Macros:","  %file% - file name"})
   @SettingValue(type=SettingValueAdapterShellCommand.class)
-  public static ShellCommand[]   shellCommands                                  = new ShellCommand[0];
+  public static ShellCommand[]           shellCommands                          = new ShellCommand[0];
 
   @SettingComment(text={"","Default mail settings"})
   @SettingValue
@@ -1196,9 +1253,17 @@ public class Settings
   @SettingValue
   public static int                      maxMessageHistory                      = 50;
 
-  @SettingComment(text={"","checkout repository path history"})
-  @SettingValue
-  public static String[]                 checkoutHistoryPaths                   = new String[0];
+  @SettingComment(text={"","repository history URLs"})
+  @SettingValue(name="repositoryHistoryURL", type=SettingValueAdapterRepositoryURL.class)
+  public static RepositoryURL[]          repositoryHistoryURLs                  = new RepositoryURL[0];
+
+  @SettingComment(text={"","repository URLs"})
+  @SettingValue(name="repositoryURL", type=SettingValueAdapterRepositoryURL.class)
+  public static RepositoryURL[]          repositoryURLs                         = new RepositoryURL[0];
+
+  @SettingComment(text={"","additional repository URLs"})
+  @SettingValue(name="additionalRepositoryURL", type=SettingValueAdapterRepositoryURL.class)
+  public static RepositoryURL[]          additionalRepositoryURLs               = new RepositoryURL[0];
 
   @SettingComment(text={"","UDP commit message broadcasting"})
   @SettingValue
@@ -1348,7 +1413,7 @@ public class Settings
                           }
                           else
                           {
-Dprintf.dprintf("field.getType()=%s",type);
+Dprintf.dprintf("field=%s, type=%s",field,type);
                           }
                         }
                         else if (type == HashSet.class)
@@ -1414,7 +1479,7 @@ Dprintf.dprintf("field.getType()=%s",type);
                             }
                             else
                             {
-Dprintf.dprintf("field.getType()=%s",type);
+Dprintf.dprintf("field=%s, type=%s",field,type);
                             }
                           }
                           else
@@ -1492,7 +1557,7 @@ Dprintf.dprintf("field.getType()=null");
                           }
                           else
                           {
-Dprintf.dprintf("field.getType()=%s",type);
+Dprintf.dprintf("field=%s, type=%s",field,type);
                           }
                         }
                       }
@@ -1687,7 +1752,7 @@ exception.printStackTrace();
                   }
                   else
                   {
-Dprintf.dprintf("field.getType()=%s",type);
+Dprintf.dprintf("field=%s, type=%s",field,type);
                   }
                 }
                 else if (type == HashSet.class)
@@ -1768,7 +1833,7 @@ Dprintf.dprintf("field.getType()=%s",type);
                     }
                     else
                     {
-Dprintf.dprintf("field.getType()=%s",type);
+Dprintf.dprintf("field=%s, type=%s",field,type);
                     }
                   }
                   else
@@ -1844,7 +1909,7 @@ Dprintf.dprintf("type.getComponentType()=null");
                   }
                   else
                   {
-Dprintf.dprintf("field.getType()=%s",type);
+Dprintf.dprintf("field=%s, type=%s",field,type);
                   }
                 }
               }
