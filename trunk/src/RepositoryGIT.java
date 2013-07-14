@@ -30,6 +30,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 /****************************** Classes ********************************/
 
 /** Git repository
@@ -38,14 +45,18 @@ class RepositoryGIT extends Repository
 {
   // --------------------------- constants --------------------------------
   public final static String[] DEFAULT_REVISION_NAMES = new String[]{"HEAD"};
-  public final static String[] DEFAULT_BRANCH_NAMES   = new String[]{"trunk","branches"};
-  public final static String   DEFAULT_ROOT_NAME      = "trunk";
+  public final static String[] DEFAULT_BRANCH_NAMES   = new String[]{"master","branches"};
+  public final static String   DEFAULT_ROOT_NAME      = "master";
   public final static String   DEFAULT_BRANCHES_NAME  = "branches";
   public final static String   FIRST_REVISION_NAME    = "0";
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
   private final static RepositoryGIT staticInstance = new RepositoryGIT();
+
+  @XmlElement(name = "userName")
+  @RepositoryValue(title = "User name:", tooltip="GIT server user login name.")
+  public String userName;
 
   // ------------------------ native functions ----------------------------
 
@@ -74,6 +85,14 @@ class RepositoryGIT extends Repository
     this(null);
   }
 
+  /** check if repository support pull/push commands
+   * @return true iff pull/push commands are supported
+   */
+  public boolean supportPullPush()
+  {
+    return true;
+  }
+
   /** create new repository module
    * @param repositoryPath repository server
    * @param moduleName module name
@@ -98,29 +117,83 @@ throw new RepositoryException("NYI");
   public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
-    final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI1 = Pattern.compile("^([^:/]+)://([^:]*):([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI2 = Pattern.compile("^([^:/]+)://([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI3 = Pattern.compile("^([^:/]+)://(.*)",Pattern.CASE_INSENSITIVE);
 
-Dprintf.dprintf("checkout username, password???");
-    Exec exec = null;
+    File tmpDirectory = null;
+    Exec exec         = null;
     try
     {
       Command command = new Command();
 
-      // get full repository path
-      String path = (PATTERN_URI.matcher(repositoryPath).matches()
-                       ? repositoryPath
-                       : "file://"+repositoryPath
-                    )+"/"+moduleName;
+      // create temporary directory
+      tmpDirectory = FileUtils.createTempDirectory("git",".tmp",new File(destinationPath).getParentFile());
 
       // checkout
       command.clear();
       command.append(Settings.gitCommand,"clone","--verbose","--progress");
       if ((revision != null) && !revision.isEmpty()) command.append("--branch",revision);
-      command.append(path,destinationPath);
-      exec = new Exec(destinationPath,command);
+      Matcher matcher;
+      if      ((matcher = PATTERN_URI1.matcher(repositoryPath)).matches())
+      {
+        command.appendConcat(matcher.group(1),
+                             "://",
+                             matcher.group(2),
+                             ":",
+                             command.hidden(matcher.group(3)),
+                             "@",
+                             matcher.group(4),
+                             "/",
+                             moduleName
+                            );
+      }
+      else if ((matcher = PATTERN_URI2.matcher(repositoryPath)).matches())
+      {
+        if (password.isEmpty())
+        {
+          throw new RepositoryException("no password given");
+        }
+        command.appendConcat(matcher.group(1),
+                             "://",
+                             matcher.group(2),
+                             ":",
+                             command.hidden(password),
+                             "@",
+                             matcher.group(3),
+                             "/",
+                             moduleName
+                            );
+      }
+      else if ((matcher = PATTERN_URI3.matcher(repositoryPath)).matches())
+      {
+        if (userName.isEmpty())
+        {
+          userName = System.getProperty("user.name");
+        }
+        if (password.isEmpty())
+        {
+          throw new RepositoryException("no password given");
+        }
+        command.appendConcat(matcher.group(1),
+                             "://",
+                             userName,
+                             ":",
+                             command.hidden(password),
+                             "@",
+                             matcher.group(2),
+                             "/",
+                             moduleName
+                            );
+      }
+      else
+      {
+        command.append("file://"+repositoryPath+"/"+moduleName);
+      }
+      command.append(tmpDirectory);
+      exec = new Exec(destinationPath,command,10*1000);
 
       // read output
-      int n = destinationPath.length();
       while (   ((busyDialog == null) || !busyDialog.isAborted())
              && !exec.isTerminated()
             )
@@ -138,10 +211,28 @@ Dprintf.dprintf("checkout username, password???");
       if ((busyDialog == null) || !busyDialog.isAborted())
       {
         // wait for termination
+Dprintf.dprintf("");
         int exitCode = exec.waitFor();
-        if (exitCode != 0)
+Dprintf.dprintf("");
+        if (exitCode == 0)
         {
-          try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
+          try
+          {
+Dprintf.dprintf("");
+            if (busyDialog != null) busyDialog.updateList("Move files into '"+destinationPath+"'...");
+Dprintf.dprintf("");
+            FileUtils.moveDirectoryTree(tmpDirectory,new File(destinationPath));
+Dprintf.dprintf("");
+          }
+          catch (IOException exception)
+          {
+Dprintf.dprintf("");
+            throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          }
+        }
+        else
+        {
+Dprintf.dprintf("");
           throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
         }
       }
@@ -149,7 +240,6 @@ Dprintf.dprintf("checkout username, password???");
       {
         // abort
         exec.destroy();
-        try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
       }
 
       // done
@@ -163,6 +253,7 @@ Dprintf.dprintf("checkout username, password???");
     finally
     {
       if (exec != null) exec.done();
+      if (tmpDirectory != null) try { FileUtils.deleteDirectoryTree(tmpDirectory); } catch (IOException ignoredException) { /* ignored */ }
     }
   }
 
@@ -258,7 +349,7 @@ Dprintf.dprintf("checkout username, password???");
           else
           {
             // unknown line
-            Onzen.printWarning("No match for line '%s'",line);
+            Onzen.printWarning("No match for update states line '%s'",line);
           }
         }
 
@@ -626,8 +717,73 @@ Dprintf.dprintf("checkout username, password???");
   public HashSet<FileData> getChangedFiles(EnumSet<FileData.States> stateSet)
     throws RepositoryException
   {
-Dprintf.dprintf("");
-    return null;
+    final Pattern PATTERN_STATUS         = Pattern.compile("^\\s*(\\S+)\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_CURRENT_BRANCH = Pattern.compile("^\\*\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
+
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+
+    Exec exec = null;
+    try
+    {
+      Command         command            = new Command();
+      String          line;
+      Matcher         matcher;
+      String          name               = null;
+      FileData.States state              = FileData.States.UNKNOWN;
+      String          workingRevision    = "";
+      String          repositoryRevision = "";
+      String          author             = "";
+
+      // get list of files which may be updated or which are locally changed
+      command.clear();
+      command.append(Settings.gitCommand,"status","-s","--porcelain","--untracked-files=all");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // read list
+      while ((line = exec.getStdout()) != null)
+      {
+//Dprintf.dprintf("line=%s",line);
+        // match name, state
+        if      ((matcher = PATTERN_STATUS.matcher(line)).matches())
+        {
+          state = parseState(matcher.group(1));
+          name  = StringUtils.unescape(matcher.group(2));
+
+          File file = new File(rootPath,name);
+          if (   !isIgnoreFile(file)
+              && file.isFile()
+              && stateSet.contains(state)
+             )
+          {
+            fileDataSet.add(new FileData(name,
+                                         state,
+                                         FileData.Modes.BINARY,
+                                         false
+                                        )
+                           );
+          }
+        }
+        else
+        {
+          // unknown line
+          Onzen.printWarning("No match for changed files line '%s'",line);
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return fileDataSet;
   }
 
   /** get diff of file
@@ -638,8 +794,12 @@ Dprintf.dprintf("");
   public DiffData[] getDiff(FileData fileData, String oldRevision, String newRevision)
     throws RepositoryException
   {
-    final Pattern PATTERN_DIFF_START  = Pattern.compile("^\\+\\+\\+.*",Pattern.CASE_INSENSITIVE);
-    final Pattern PATTERN_DIFF        = Pattern.compile("^@@\\s+\\-([\\d,]*)\\s+\\+([\\d,]*)\\s+@@$",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_START1   = Pattern.compile("^\\-\\-\\-.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_START2   = Pattern.compile("^\\+\\+\\+.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_OLD_MODE = Pattern.compile("^old mode\\s+.*$",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_NEW_MODE = Pattern.compile("^new mode\\s+.*$",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF_INDEX    = Pattern.compile("^index\\s+.*$",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_DIFF          = Pattern.compile("^@@\\s+\\-([\\d,]*)\\s+\\+([\\d,]*)\\s+@@(.*)$",Pattern.CASE_INSENSITIVE);
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
@@ -724,13 +884,9 @@ Dprintf.dprintf("");
       command.append(getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
-      /* skip diff header (3 lines)
-           diff -r ...
-           --- ...
-           +++ ...
+      /* skip diff header (1 line)
+           diff ...
       */
-      exec.getStdout();
-      exec.getStdout();
       exec.getStdout();
 
       /* parse diff output
@@ -745,12 +901,35 @@ Dprintf.dprintf("");
       String[]          lines;
       while ((line = exec.getStdout()) != null)
       {
-        if      ((matcher = PATTERN_DIFF.matcher(line)).matches())
+        if      ((matcher = PATTERN_DIFF_START1.matcher(line)).matches())
+        {
+          // skipped
+        }
+        else if ((matcher = PATTERN_DIFF_START2.matcher(line)).matches())
+        {
+          // skipped
+        }
+        else if ((matcher = PATTERN_DIFF_OLD_MODE.matcher(line)).matches())
+        {
+          // skipped
+        }
+        else if ((matcher = PATTERN_DIFF_NEW_MODE.matcher(line)).matches())
+        {
+          // skipped
+        }
+        else if ((matcher = PATTERN_DIFF_INDEX.matcher(line)).matches())
+        {
+          // skipped
+        }
+        else if ((matcher = PATTERN_DIFF.matcher(line)).matches())
         {
           int[] oldIndex = parseDiffIndex(matcher.group(1));
           int[] newIndex = parseDiffIndex(matcher.group(2));
 //Dprintf.dprintf("oldIndex=%d,%d",oldIndex[0],oldIndex[1]);
 //Dprintf.dprintf("newIndex=%d,%d",newIndex[0],newIndex[1]);
+
+          // git is odd: the first line of the diff is appended to the diff-header line...
+          exec.ungetStdout(matcher.group(3));
 
           // read until @@ is found
           while (   ((line = exec.peekStdout()) != null)
@@ -873,7 +1052,7 @@ Dprintf.dprintf("");
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for diff line '%s'",line);
         }
       }
 
@@ -1221,7 +1400,7 @@ Dprintf.dprintf("");
         else
         {
           // unknown line
-          Onzen.printWarning("No match for line '%s'",line);
+          Onzen.printWarning("No match for annotations line '%s'",line);
         }
       }
 
@@ -1465,22 +1644,25 @@ Dprintf.dprintf("");
         new File(fileData.getFileName(rootPath)).delete();
       }
 
-      // revert files
-      command.clear();
-      command.append(Settings.gitCommand,"pull");
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
-
-      // wait for termination
-      exitCode = exec.waitFor();
-      if (exitCode != 0)
+      if (fileDataSet.size() > 0)
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-      }
+        // revert files
+        command.clear();
+        command.append(Settings.gitCommand,"checkout");
+        command.append("--");
+        command.append(getFileDataNames(fileDataSet));
+        exec = new Exec(rootPath,command);
 
-      // done
-      exec.done(); exec = null;
+        // wait for termination
+        exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
     }
     catch (IOException exception)
     {
@@ -1500,8 +1682,44 @@ Dprintf.dprintf("");
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
-Dprintf.dprintf("NYI");
-throw new RepositoryException("NYI");
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // rename file
+      command.clear();
+      command.append(Settings.gitCommand,"mv");
+      command.append("--");
+      command.append(fileData.getFileName());
+      command.append(newName);
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+
+      // immediate commit when message is given
+      if (commitMessage != null)
+      {
+        commit(fileData,commitMessage);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** set conflicts resolved
@@ -1550,8 +1768,36 @@ throw new RepositoryException("NYI");
   public void pullChanges(String masterRepository)
     throws RepositoryException
   {
-Dprintf.dprintf("NYI");
-throw new RepositoryException("NYI");
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      command.clear();
+      command.append(Settings.gitCommand,"pull");
+      command.append("--");
+      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** push changes
@@ -1560,8 +1806,40 @@ throw new RepositoryException("NYI");
   public void pushChanges(String masterRepository)
     throws RepositoryException
   {
-Dprintf.dprintf("NYI");
-throw new RepositoryException("NYI");
+    final Pattern PATTERN_ABORT = Pattern.compile("^\\s*abort:.*",Pattern.CASE_INSENSITIVE);
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+      String  line;
+      Matcher matcher;
+
+      command.clear();
+      command.append(Settings.gitCommand,"push");
+      command.append("--");
+      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 
   /** apply patches
@@ -1751,6 +2029,7 @@ throw new RepositoryException("NYI");
     final Pattern PATTERN_COMMIT = Pattern.compile("^commit\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_AUTHOR = Pattern.compile("^Author:\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_DATE   = Pattern.compile("^Date:\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_MERGE  = Pattern.compile("^Merge:\\s+(.*)\\s+(.*)\\s*",Pattern.CASE_INSENSITIVE);
 
     RevisionData       revisionData      = null;
 
@@ -1780,6 +2059,9 @@ throw new RepositoryException("NYI");
       else if ((matcher = PATTERN_DATE.matcher(line)).matches())
       {
         date = parseDate(matcher.group(1));
+      }
+      else if ((matcher = PATTERN_MERGE.matcher(line)).matches())
+      {
       }
       else if (line.isEmpty())
       {
@@ -1827,7 +2109,7 @@ throw new RepositoryException("NYI");
       else
       {
         // unknown line
-        Onzen.printWarning("No match for line '%s'",line);
+        Onzen.printWarning("No match for log line '%s'",line);
       }
     }
 //Dprintf.dprintf("revisionData=%s",revisionData);
