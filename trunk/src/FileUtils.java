@@ -19,11 +19,13 @@ import java.util.LinkedList;
 
 /****************************** Classes ********************************/
 
+/** file utility functions
+ */
 public class FileUtils
 {
   /** copy file
-   * @param fromFile - from file
-   * @param toFile   - to file
+   * @param fromFile from file
+   * @param toFile to file
    */
   public static void copyFile(File fromFile, File toFile)
     throws IOException
@@ -76,12 +78,99 @@ public class FileUtils
     }
   }
 
+  /** copy file
+   * @param fromFileName from file name
+   * @param toFileName to file name
+   */
+  public static void copyFile(String fromFileName, String toFileName)
+    throws IOException
+  {
+    copyFile(new File(fromFileName),new File(toFileName));
+  }
+
+  /** copy directory tree
+   * @param fromDirectory from directory
+   * @param toDirectory to directory
+   */
+  public static void copyDirectoryTree(File fromDirectory, File toDirectory)
+    throws IOException
+  {
+    File[] files = fromDirectory.listFiles();
+    if (files != null)
+    {
+      for (File file : files)
+      {
+        if (file.isDirectory())
+        {
+          copyDirectoryTree(new File(fromDirectory,file.getName()),toDirectory);
+        }
+        else
+        {
+          copyFile(file,new File(toDirectory,file.getName()));
+        }
+      }
+    }
+  }
+
+  /** copy directory tree
+   * @param fromDirectory from directory
+   * @param toDirectory to directory
+   */
+  public static void copyDirectoryTree(String fromPathName, String toPathName)
+    throws IOException
+  {
+    copyDirectoryTree(new File(fromPathName),new File(toPathName));
+  }
+
+  /** move file
+   * @param fromFile - from file
+   * @param toFile   - to file
+   */
+  public static void moveFile(File fromFile, File toFile)
+    throws IOException
+  {
+    copyFile(fromFile,toFile);
+    deleteFile(fromFile);
+  }
+
+   /** move file
+   * @param fromFileName from file
+   * @param toFileName to file
+   */
+  public static void moveFile(String fromFileName, String toFileName)
+    throws IOException
+  {
+    moveFile(new File(fromFileName),new File(toFileName));
+  }
+
+  /** move directory tree
+   * @param fromDirectory from directory
+   * @param toDirectory to directory
+   */
+  public static void moveDirectoryTree(File fromDirectory, File toDirectory)
+    throws IOException
+  {
+    copyDirectoryTree(fromDirectory,toDirectory);
+    deleteDirectoryTree(fromDirectory);
+  }
+
+  /** move directory tree
+   * @param fromPath from directory
+   * @param toPath to directory
+   */
+  public static void moveDirectoryTree(String fromPathName, String toPathName)
+    throws IOException
+  {
+    moveDirectoryTree(new File(fromPathName),new File(toPathName));
+  }
+
   /** delete file or direcotry
    * @param file file/directory to delete
    */
   public static void deleteFile(File file)
     throws IOException
   {
+//Dprintf.dprintf("deleteFile=%s",file);
     if (!file.delete())
     {
       if (file.canWrite())
@@ -93,6 +182,15 @@ public class FileUtils
         throw new IOException("delete "+file.getName()+" fail: write protected");
       }
     }
+  }
+
+  /** delete file or direcotry
+   * @param fileName file/directory to delete
+   */
+  public static void deleteFile(String fileName)
+    throws IOException
+  {
+    deleteFile(new File(fileName));
   }
 
   /** delete directory tree
@@ -127,6 +225,57 @@ public class FileUtils
     throws IOException
   {
     deleteDirectoryTree(new File(pathName));
+  }
+
+  /** create temporary directory
+   * @param prefix prefix of name
+   * @param suffix suffix of name
+   * @param directory directory to create new temporary directory
+   */
+  public static File createTempDirectory(String prefix, String suffix, File directory)
+  {
+    File tmpDirectory = null;
+
+    if (suffix == null) suffix = ".tmp";
+
+    long    n           = System.currentTimeMillis();
+    boolean createdFlag = false;
+    while (!createdFlag)
+    {
+      tmpDirectory = new File(directory,String.format("%s%08x%s",prefix,n,suffix));
+      createdFlag = tmpDirectory.mkdir();
+      n++;
+    }
+Dprintf.dprintf("createTempDirectory=%s",tmpDirectory);
+
+    return tmpDirectory;
+  }
+
+  /** create temporary directory
+   * @param prefix prefix of name
+   * @param suffix suffix of name
+   */
+  public static File createTempDirectory(String prefix, String suffix)
+  {
+    return createTempDirectory(prefix,suffix,new File(System.getProperty("java.io.tmpdir")));
+  }
+
+  /** escape file name
+   * @param name name
+   * @return escaped name
+   */
+  public static String escape(String name)
+  {
+    return (name.indexOf(' ') >= 0) ? StringUtils.escape(name,true,'"') : name;
+  }
+
+  /** unescape file name
+   * @param name escaped name
+   * @return name
+   */
+  public static String unescape(String name)
+  {
+    return StringUtils.unescape(name,true,"\"");
   }
 }
 
