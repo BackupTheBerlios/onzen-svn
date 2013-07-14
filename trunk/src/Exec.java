@@ -9,9 +9,10 @@
 \***********************************************************************/
 
 /****************************** Imports ********************************/
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.PrintWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,6 +26,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Stack;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /****************************** Classes ********************************/
 
@@ -37,13 +40,24 @@ class Command
   class Hidden
   {
     private String string;
+    private String printableString;
+
+    /** create hidden string
+     * @param string string
+     * @param printableString printable string
+     */
+    Hidden(String string, String printableString)
+    {
+      this.string          = string;
+      this.printableString = printableString;
+    }
 
     /** create hidden string
      * @param string string
      */
     Hidden(String string)
     {
-      this.string = string;
+      this(string,null);
     }
 
     /** convert to string
@@ -56,6 +70,7 @@ class Command
   };
 
   // --------------------------- constants --------------------------------
+  private final String HIDDEN = "********";
 
   // --------------------------- variables --------------------------------
   private ArrayList<String> commandLine;           // command line arguments
@@ -144,7 +159,7 @@ class Command
       commandLine.add(object.toString());
       if (object instanceof Hidden)
       {
-        printableCommandLine.add("'********'");
+        printableCommandLine.add(HIDDEN);
       }
       else
       {
@@ -162,6 +177,94 @@ class Command
     {
       commandLine.add(string);
       printableCommandLine.add(string);
+    }
+  }
+
+  /** concat arguments to last entry in command array
+   * @param strings strings to concat
+   */
+  public void concat(Object... arguments)
+  {
+    for (Object object : arguments)
+    {
+      if (commandLine.size() > 0)
+      {
+        commandLine.set(commandLine.size()-1,
+                        commandLine.get(commandLine.size()-1).concat(object.toString())
+                       );
+      }
+      else
+      {
+        commandLine.add(object.toString());
+      }
+      if (printableCommandLine.size() > 0)
+      {
+        printableCommandLine.set(printableCommandLine.size()-1,
+                                 printableCommandLine.get(printableCommandLine.size()-1).concat((object instanceof Hidden) ? HIDDEN : object.toString())
+                                );
+      }
+      else
+      {
+        printableCommandLine.add((object instanceof Hidden) ? HIDDEN : object.toString());
+      }
+    }
+  }
+
+  /** concat arguments to last entry in command array
+   * @param strings strings to concat
+   */
+  public void concat(String[] strings)
+  {
+    for (String string : strings)
+    {
+      if (commandLine.size() > 0)
+      {
+        commandLine.set(commandLine.size()-1,
+                        commandLine.get(commandLine.size()-1).concat(string)
+                       );
+      }
+      else
+      {
+        commandLine.add(string);
+      }
+      if (commandLine.size() > 0)
+      {
+        printableCommandLine.add(string);
+      }
+      else
+      {
+        printableCommandLine.add(string);
+      }
+    }
+  }
+
+  /** append first argument and concat other arguments to command array
+   * @param strings strings to concat
+   */
+  public void appendConcat(Object... arguments)
+  {
+    if (arguments.length > 0)
+    {
+      append(arguments[0]);
+      for (int i = 1; i < arguments.length; i++)
+      {
+        concat(arguments[i]);
+      }
+    }
+  }
+
+  /** append first argument and concat other arguments to command array
+   * @param strings strings to concat
+   */
+  public void appendConcat(String[] strings)
+  {
+    if (strings.length > 0)
+    {
+      append(strings[0]);
+      for (int i = 1; i < strings.length; i++)
+      {
+        concat(strings[i]);
+      }
     }
   }
 
@@ -193,7 +296,7 @@ class Command
       if (buffer.length() > 0) buffer.append(' ');
       if (string.isEmpty() || string.indexOf(' ') >= 0)
       {
-        buffer.append(StringUtils.escape(string,'\''));
+        buffer.append(StringUtils.escape(string,'"'));
       }
       else
       {
@@ -210,19 +313,20 @@ class Command
 public class Exec
 {
   // --------------------------- constants --------------------------------
+  public final static long WAIT_FOREVER = -1;
 
   // --------------------------- variables --------------------------------
   private static HashSet<Process> processHash = new HashSet<Process>();
 
-  private BufferedWriter      stdin = null;
+  private Process             process;
+  private long                timeout;
+  private PrintWriter         stdin = null;
   private BufferedReader      stdout = null;
   private DataInputStream     stdoutBinary = null;;
   private BufferedReader      stderr = null;
   private final Stack<String> stdoutStack = new Stack<String>();
   private final Stack<String> stderrStack = new Stack<String>();
 
-  private Process             process;
-  private int                 pid;
   private ArrayList<String>   stdoutList = new ArrayList<String>();
   private ArrayList<String>   stderrList = new ArrayList<String>();
   private int                 exitCode = -1;
@@ -236,11 +340,15 @@ public class Exec
    * @param subDirectory working subdirectory or null
    * @param commandArray command line array
    * @param printableCommandLine printable command line
+   * @param timeout timeoout [ms] or WAIT_FOREVER
    * @param binaryFlag true to read stdout in binary mode
    */
-  public Exec(String path, String subDirectory, String[] commandArray, String printableCommandLine, boolean binaryFlag)
+  public Exec(String path, String subDirectory, String[] commandArray, String printableCommandLine, long timeout, boolean binaryFlag)
     throws IOException
   {
+    // initialise variables
+    this.timeout = timeout;
+
     if (Settings.debugFlag)
     {
       System.err.println("DEBUG execute "+path+((subDirectory != null) ? File.separator+subDirectory : "")+": "+printableCommandLine);
@@ -259,6 +367,36 @@ public class Exec
     processBuilder.directory(workingDirectory);
     process = processBuilder.start();
     processHash.add(process);
+
+    /*
+    TODO: timeout for exec
+    if (timeout != WAIT_FOREVER)
+    {
+      Timer timer = new Timer();
+      timer.schedule(new TimerTask()
+        {
+          public void run()
+          {
+Dprintf.dprintf("");
+process.destroy();
+          }
+        },
+        timeout);
+    }
+    */
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param subDirectory working subdirectory or null
+   * @param command command to execute
+   * @param timeout timeoout [ms] or WAIT_FOREVER
+   * @param binaryFlag true to read stdout in binary mode
+   */
+  public Exec(String path, String subDirectory, Command command, long timeout, boolean binaryFlag)
+    throws IOException
+  {
+    this(path,subDirectory,command.getCommandArray(),command.toString(),timeout,binaryFlag);
   }
 
   /** execute external command
@@ -270,7 +408,19 @@ public class Exec
   public Exec(String path, String subDirectory, Command command, boolean binaryFlag)
     throws IOException
   {
-    this(path,subDirectory,command.getCommandArray(),command.toString(),binaryFlag);
+    this(path,subDirectory,command.getCommandArray(),command.toString(),WAIT_FOREVER,binaryFlag);
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param command command to execute
+   * @param timeout timeoout [ms] or WAIT_FOREVER
+   * @param binaryFlag true to read stdout in binary mode
+   */
+  public Exec(String path, Command command, long timeout, boolean binaryFlag)
+    throws IOException
+  {
+    this(path,null,command,timeout,binaryFlag);
   }
 
   /** execute external command
@@ -288,6 +438,18 @@ public class Exec
    * @param path working directory or null
    * @param subDirectory working subdirectory or null
    * @param command command to execute
+   * @param timeout timeoout [ms] or WAIT_FOREVER
+   */
+  public Exec(String path, String subDirectory, Command command, long timeout)
+    throws IOException
+  {
+    this(path,subDirectory,command,timeout,false);
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param subDirectory working subdirectory or null
+   * @param command command to execute
    */
   public Exec(String path, String subDirectory, Command command)
     throws IOException
@@ -298,11 +460,32 @@ public class Exec
   /** execute external command
    * @param path working directory or null
    * @param command command to execute
+   * @param timeout timeoout [ms] or WAIT_FOREVER
+   */
+  public Exec(String path, Command command, long timeout)
+    throws IOException
+  {
+    this(path,command,timeout,false);
+  }
+
+  /** execute external command
+   * @param path working directory or null
+   * @param command command to execute
    */
   public Exec(String path, Command command)
     throws IOException
   {
     this(path,command,false);
+  }
+
+  /** execute external command
+   * @param command command to execute
+   * @param timeout timeoout [ms] or WAIT_FOREVER
+   */
+  public Exec(Command command, long timeout)
+    throws IOException
+  {
+    this(null,command,timeout);
   }
 
   /** execute external command
@@ -346,6 +529,16 @@ public class Exec
     return process.getErrorStream();
   }
 
+  public void putStdin(String format, Object... arguments)
+  {
+    if (stdin == null)
+    {
+      stdin = new PrintWriter(getStdinStream());
+    }
+
+    stdin.println(String.format(format,arguments));
+  }
+
   /** close stdin stream
    * @return stream
    */
@@ -357,7 +550,7 @@ public class Exec
     }
     catch (IOException exception)
     {
-      //
+      // ignored
     }
   }
 
@@ -523,7 +716,7 @@ public class Exec
       }
       catch (IOException exception)
       {
-        /* ignored => no input */
+        // ignored => no input
       }
     }
     else
@@ -593,7 +786,7 @@ public class Exec
       }
       catch (IOException exception)
       {
-        /* ignored => no input */
+        // ignored => no input
       }
     }
     else
@@ -659,7 +852,7 @@ public class Exec
       }
       catch (IOException exception)
       {
-        /* ignored => no input */
+        // ignored => no input
       }
     }
 
