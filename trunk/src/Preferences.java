@@ -141,7 +141,8 @@ class Preferences
 
   private final Text          widgetGitCommand;
 
-  private final List          widgetCheckoutHistoryPaths;
+  private final List          widgetRepositoryHistoryURLs;
+  private final List          widgetAdditionalRepositoryURLs;
 
   private final Button        widgetEOLAuto;
   private final Button        widgetEOLUnix;
@@ -1059,92 +1060,166 @@ class Preferences
       }
 
       composite = Widgets.addTab(tabFolder,"History");
-      composite.setLayout(new TableLayout(new double[]{0.0,1.0,0.0},1.0,2));
+      composite.setLayout(new TableLayout(1.0,new double[]{0.0,1.0},2));
       Widgets.layout(composite,0,5,TableLayoutData.NSWE);
       {
-        label = Widgets.newLabel(composite,"Repository paths:");
-        Widgets.layout(label,0,0,TableLayoutData.W);
-
-        widgetCheckoutHistoryPaths = Widgets.newList(composite);
-        Widgets.layout(widgetCheckoutHistoryPaths,1,0,TableLayoutData.NSWE);
-        widgetCheckoutHistoryPaths.setToolTipText("Repository path history list.");
-        widgetCheckoutHistoryPaths.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-            List widget = (List)selectionEvent.widget;
-
-            int index = widget.getSelectionIndex();
-            if (index >= 0)
-            {
-              String path = Dialogs.path(dialog,"Add repository path","Path:",widget.getItem(index));
-              if (path != null)
-              {
-                widget.setItem(index,path.trim());
-              }
-            }
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-          }
-        });
-        for (String path : Settings.checkoutHistoryPaths)
-        {
-          widgetCheckoutHistoryPaths.add(path.trim());
-        }
+        label = Widgets.newLabel(composite,"Repository history:");
+        Widgets.layout(label,0,0,TableLayoutData.NW);
 
         subComposite = Widgets.newComposite(composite);
-        subComposite.setLayout(new TableLayout(null,null));
-        Widgets.layout(subComposite,2,0,TableLayoutData.E);
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
         {
-          button = Widgets.newButton(subComposite,"Add");
-          Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
+          widgetRepositoryHistoryURLs = Widgets.newList(subComposite);
+          Widgets.layout(widgetRepositoryHistoryURLs,0,0,TableLayoutData.NSWE);
+          widgetRepositoryHistoryURLs.setToolTipText("Repository URL history list.");
+          widgetRepositoryHistoryURLs.addSelectionListener(new SelectionListener()
           {
             public void widgetDefaultSelected(SelectionEvent selectionEvent)
             {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              String path = Dialogs.path(dialog,"Add repository path","Path:");
-              if (path != null)
-              {
-                widgetCheckoutHistoryPaths.add(path.trim());
-              }
-            }
-          });
+              List widget = (List)selectionEvent.widget;
 
-          button = Widgets.newButton(subComposite,"Remove");
-          Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
-            }
-            public void widgetSelected(SelectionEvent selectionEvent)
-            {
-              int index = widgetCheckoutHistoryPaths.getSelectionIndex();
+              int index = widget.getSelectionIndex();
               if (index >= 0)
               {
-                widgetCheckoutHistoryPaths.remove(index);
+                RepositoryURL repositoryURL = (RepositoryURL)Widgets.getListEntry(widget,index);
+                if (editRepositoryURL(repositoryURL,"Edit repository URL","Save"))
+                {
+                  Widgets.updateListEntry(widget,repositoryURL,repositoryURL.path);
+                }
               }
-            }
-          });
-
-          button = Widgets.newButton(subComposite,"Sort");
-          Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-          button.addSelectionListener(new SelectionListener()
-          {
-            public void widgetDefaultSelected(SelectionEvent selectionEvent)
-            {
             }
             public void widgetSelected(SelectionEvent selectionEvent)
             {
-              String paths[] = widgetCheckoutHistoryPaths.getItems();
-              Arrays.sort(paths);
-              widgetCheckoutHistoryPaths.setItems(paths);
             }
           });
+          for (RepositoryURL repositoryURL : Settings.repositoryHistoryURLs)
+          {
+            Widgets.addListEntry(widgetRepositoryHistoryURLs,repositoryURL,repositoryURL.path);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
+          {
+            button = Widgets.newButton(subSubComposite,"Remove");
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetRepositoryHistoryURLs.getSelectionIndex();
+                if (index >= 0)
+                {
+                  Widgets.removeListEntry(widgetRepositoryHistoryURLs,index);
+                }
+              }
+            });
+
+            button = Widgets.newButton(subSubComposite,"Sort");
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Widgets.sortList(widgetRepositoryHistoryURLs);
+              }
+            });
+          }
+        }
+
+        label = Widgets.newLabel(composite,"Additional repositories:");
+        Widgets.layout(label,1,0,TableLayoutData.NW);
+
+        subComposite = Widgets.newComposite(composite);
+        subComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
+        Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+        {
+          widgetAdditionalRepositoryURLs = Widgets.newList(subComposite);
+          Widgets.layout(widgetAdditionalRepositoryURLs,0,0,TableLayoutData.NSWE);
+          widgetAdditionalRepositoryURLs.setToolTipText("Additional repository path list.");
+          widgetAdditionalRepositoryURLs.addSelectionListener(new SelectionListener()
+          {
+            public void widgetDefaultSelected(SelectionEvent selectionEvent)
+            {
+              List widget = (List)selectionEvent.widget;
+
+              int index = widget.getSelectionIndex();
+              if (index >= 0)
+              {
+                RepositoryURL repositoryURL = (RepositoryURL)Widgets.getListEntry(widget,index);
+                if (editRepositoryURL(repositoryURL,"Edit repository URL","Save"))
+                {
+                  Widgets.updateListEntry(widget,repositoryURL,repositoryURL.path);
+                }
+              }
+            }
+            public void widgetSelected(SelectionEvent selectionEvent)
+            {
+            }
+          });
+          for (RepositoryURL repositoryURL : Settings.additionalRepositoryURLs)
+          {
+            Widgets.addListEntry(widgetAdditionalRepositoryURLs,repositoryURL,repositoryURL.path);
+          }
+
+          subSubComposite = Widgets.newComposite(subComposite);
+          subSubComposite.setLayout(new TableLayout(null,null));
+          Widgets.layout(subSubComposite,1,0,TableLayoutData.E);
+          {
+            button = Widgets.newButton(subSubComposite,"Add");
+            Widgets.layout(button,0,0,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                RepositoryURL repositoryURL = new RepositoryURL();
+                if (editRepositoryURL(repositoryURL,"Add repository URL","Add"))
+                {
+                  Widgets.addListEntry(widgetAdditionalRepositoryURLs,repositoryURL,repositoryURL.path);
+                }
+              }
+            });
+
+            button = Widgets.newButton(subSubComposite,"Remove");
+            Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                int index = widgetAdditionalRepositoryURLs.getSelectionIndex();
+                if (index >= 0)
+                {
+                  Widgets.removeListEntry(widgetAdditionalRepositoryURLs,index);
+                }
+              }
+            });
+
+            button = Widgets.newButton(subSubComposite,"Sort");
+            Widgets.layout(button,0,2,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+            button.addSelectionListener(new SelectionListener()
+            {
+              public void widgetDefaultSelected(SelectionEvent selectionEvent)
+              {
+              }
+              public void widgetSelected(SelectionEvent selectionEvent)
+              {
+                Widgets.sortList(widgetAdditionalRepositoryURLs);
+              }
+            });
+          }
         }
       }
 
@@ -1750,7 +1825,8 @@ Dprintf.dprintf("");
           Settings.maxBackgroundTasks                     = Integer.parseInt(widgetMaxBackgroundTasks.getText());
           Settings.maxMessageHistory                      = Integer.parseInt(widgetMaxMessageHistory.getText());
 
-          Settings.checkoutHistoryPaths                   = widgetCheckoutHistoryPaths.getItems();
+          Settings.repositoryHistoryURLs                  = Widgets.getListEntries(widgetRepositoryHistoryURLs,new RepositoryURL[0]);
+          Settings.additionalRepositoryURLs               = Widgets.getListEntries(widgetAdditionalRepositoryURLs,new RepositoryURL[0]);
 
           if      (widgetEOLAuto.getSelection()   ) Settings.eolType = Settings.EOLTypes.AUTO;
           else if (widgetEOLUnix.getSelection()   ) Settings.eolType = Settings.EOLTypes.UNIX;
@@ -2764,7 +2840,7 @@ Dprintf.dprintf("");
         widgetCommandLine = Widgets.newText(subComposite);
         widgetCommandLine.setText(shellCommand.commandLine);
         Widgets.layout(widgetCommandLine,0,0,TableLayoutData.WE);
-        widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %n% - line number\n  %% - %");
+        widgetCommandLine.setToolTipText("Command to run.\nMacros:\n  %file% - file name\n  %directory% - directory name\n  %rootPath% - root path\n  %% - %");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -2795,6 +2871,7 @@ Dprintf.dprintf("");
       label = Widgets.newLabel(composite,"Valid exitcode:");
       Widgets.layout(label,2,0,TableLayoutData.W);
       widgetValidExitcode = Widgets.newSpinner(composite);
+      widgetValidExitcode.setSelection(shellCommand.validExitcode);
       widgetValidExitcode.setMinimum(0);
       widgetValidExitcode.setMaximum(255);
       Widgets.layout(widgetValidExitcode,2,1,TableLayoutData.W);
@@ -2863,6 +2940,300 @@ Dprintf.dprintf("");
     return (Boolean)Dialogs.run(dialog,false);
   }
 
+  /** edit repository URL
+   * @param repositoryURL repository URL
+   * @return true if edit OK, false on cancel
+   */
+  private boolean editRepositoryURL(final RepositoryURL repositoryURL, String title, String buttonText)
+  {
+    /** dialog data
+     */
+    class Data
+    {
+      Repository.Types type;
+      String           path;
+      String           moduleName;
+      String           userName;
+      String           password;
+
+      Data()
+      {
+        this.type       = Repository.Types.NONE;
+        this.path       = "";
+        this.moduleName = "";
+        this.userName   = "";
+        this.password   = "";
+      }
+    }
+
+    Composite composite,subComposite;
+    Label     label;
+    Button    button;
+
+    final Data  data   = new Data();
+    final Shell dialog = Dialogs.openModal(this.dialog,title,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
+
+    final Text   widgetPath;
+    final Text   widgetModuleName;
+    final Text   widgetUserName;
+    final Text   widgetPassword;
+    final Button widgetAddSave;
+
+    data.type       = repositoryURL.repositoryType;
+    data.path       = repositoryURL.path;
+    data.moduleName = repositoryURL.moduleName;
+    data.userName   = repositoryURL.userName;
+//    data.password   = repositoryURL.password;
+
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0},4));
+    Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
+    {
+      label = Widgets.newLabel(composite,"Type:");
+      Widgets.layout(label,0,0,TableLayoutData.W);
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,null));
+      Widgets.layout(subComposite,0,1,TableLayoutData.WE);
+      {
+        button = Widgets.newRadio(subComposite,"CVS");
+        button.setSelection(data.type == Repository.Types.CVS);
+        Widgets.layout(button,0,0,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.type = Repository.Types.CVS;
+                Widgets.modified(data);
+              }
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"SVN");
+        button.setSelection(data.type == Repository.Types.SVN);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.type = Repository.Types.SVN;
+                Widgets.modified(data);
+              }
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"HG");
+        button.setSelection(data.type == Repository.Types.HG);
+        Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.type = Repository.Types.HG;
+                Widgets.modified(data);
+              }
+            }
+          }
+        });
+
+        button = Widgets.newRadio(subComposite,"GIT");
+        button.setSelection(data.type == Repository.Types.GIT);
+        Widgets.layout(button,0,3,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Button widget = (Button)selectionEvent.widget;
+
+            if (widget.getSelection())
+            {
+              synchronized(data)
+              {
+                data.type = Repository.Types.GIT;
+                Widgets.modified(data);
+              }
+            }
+          }
+        });
+      }
+
+      label = Widgets.newLabel(composite,"Path:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
+      Widgets.layout(subComposite,1,1,TableLayoutData.WE);
+      {
+        widgetPath = Widgets.newText(subComposite);
+        widgetPath.setText(data.path);
+        Widgets.layout(widgetPath,0,0,TableLayoutData.WE);
+        widgetPath.setToolTipText("Path to repository");
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            Text widget = (Text)selectionEvent.widget;
+
+            String path = Dialogs.path(dialog,"Edit repository path","Path:",widget.getText());
+            if (path != null)
+            {
+              widget.setText(path.trim());
+            }
+          }
+        });
+      }
+
+      label = Widgets.newLabel(composite,"Module:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+      widgetModuleName = Widgets.newText(composite);
+      widgetModuleName.setText(data.moduleName);
+      Widgets.layout(widgetModuleName,2,1,TableLayoutData.WE);
+      widgetModuleName.setToolTipText("Branch name");
+
+      label = Widgets.newLabel(composite,"User name:");
+      Widgets.layout(label,3,0,TableLayoutData.W);
+      widgetUserName = Widgets.newText(composite);
+      widgetUserName.setText(data.userName);
+      Widgets.layout(widgetUserName,3,1,TableLayoutData.WE);
+      widgetUserName.setToolTipText("User name");
+
+      /*
+      label = Widgets.newLabel(composite,"Password:");
+      Widgets.layout(label,4,0,TableLayoutData.W);
+      widgetPassword = Widgets.newText(composite);
+//      widgetPassword.setText(data.name);
+      Widgets.layout(widgetPassword,4,1,TableLayoutData.WE);
+      widgetPassword.setToolTipText("Repository access password.");
+      */
+    }
+
+    // buttons
+    composite = Widgets.newComposite(dialog);
+    composite.setLayout(new TableLayout(0.0,1.0));
+    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    {
+      widgetAddSave = Widgets.newButton(composite,buttonText);
+      widgetAddSave.setEnabled(   (data.type != Repository.Types.NONE)
+                               && !data.path.isEmpty()
+                              );
+      Widgets.layout(widgetAddSave,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetAddSave.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          data.path       = widgetPath.getText().trim();
+          data.moduleName = widgetModuleName.getText().trim();
+          data.userName   = widgetUserName.getText().trim();
+//          data.password   = widgetPassword.getText();
+
+          Dialogs.close(dialog,true);
+        }
+      });
+
+      button = Widgets.newButton(composite,"Cancel");
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      button.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Dialogs.close(dialog,false);
+        }
+      });
+    }
+
+    // listeners
+    Widgets.addModifyListener(new WidgetModifyListener(widgetAddSave,data)
+    {
+      public void modified(Control control)
+      {
+        control.setEnabled(   (data.type != Repository.Types.NONE)
+                           && !widgetPath.getText().trim().isEmpty()
+                          );
+      }
+    });
+    widgetPath.addModifyListener(new ModifyListener()
+    {
+      public void modifyText(ModifyEvent modifyEvent)
+      {
+        widgetAddSave.setEnabled(   (data.type != Repository.Types.NONE)
+                                 && !widgetPath.getText().trim().isEmpty()
+                                );
+      }
+    });
+    Widgets.setNextFocus(widgetPath,widgetModuleName);
+    Widgets.setNextFocus(widgetModuleName,widgetUserName);
+    Widgets.setNextFocus(widgetUserName,widgetAddSave);
+
+    // run dialog
+    Widgets.setFocus(widgetPath);
+    if ((Boolean)Dialogs.run(dialog,false))
+    {
+      repositoryURL.repositoryType = data.type;
+      repositoryURL.path           = data.path;
+      repositoryURL.moduleName     = data.moduleName;
+      repositoryURL.userName       = data.userName;
+//      repositoryURL.password = data.type;
+
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+
+  /** send test mail to mail server
+   * @param mailSMTPHost mail server name
+   * @param mailSMTPPort mail server port number
+   * @param mailSMTPSSL true iff SSL encrypted connection
+   * @param mailLogin login name
+   * @param mailPassword login password
+   * @param mailFrom mail from-address
+   * @param toAddress mail to-address
+   * @return true if edit OK, false on cancel
+   */
   private void sendTestMail(String        mailSMTPHost,
                             int           mailSMTPPort,
                             boolean       mailSMTPSSL,
