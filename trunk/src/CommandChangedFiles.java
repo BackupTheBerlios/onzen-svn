@@ -123,6 +123,7 @@ class CommandChangedFiles
     TableColumn tableColumn;
     Menu        menu;
     MenuItem    menuItem;
+    Menu        menuShellCommands;
 
     // initialize variables
     this.repositoryTab = repositoryTab;
@@ -150,6 +151,7 @@ class CommandChangedFiles
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       widgetFiles = Widgets.newTable(composite);
+      widgetFiles.setLayout(new TableLayout(0.0,new double[]{1.0,0.1}));
       Widgets.layout(widgetFiles,0,0,TableLayoutData.NSWE);
       SelectionListener selectionListener = new SelectionListener()
       {
@@ -165,12 +167,18 @@ class CommandChangedFiles
           Widgets.sortTableColumn(widgetFiles,tableColumn,data.fileDataComparator);
         }
       };
-      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",  SWT.LEFT);
+      tableColumn = Widgets.addTableColumn(widgetFiles,0,"Name",  SWT.LEFT,true );
       tableColumn.addSelectionListener(selectionListener);
-      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT);
+      tableColumn = Widgets.addTableColumn(widgetFiles,1,"Status",SWT.LEFT,true);
       tableColumn.addSelectionListener(selectionListener);
       Widgets.sortTableColumn(widgetFiles,0,data.fileDataComparator);
       Widgets.setTableColumnWidth(widgetFiles,Settings.geometryChangedFilesColumns.width);
+Dprintf.dprintf("Settings.geometryChangedFilesColumns=%s",Settings.geometryChangedFilesColumns);
+Settings.ColumnSizes x = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));;
+Dprintf.dprintf("x=%s",x);
+//widgetFiles.pack(true);
+//x = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));;
+Dprintf.dprintf("x2=%s",x);
       widgetFiles.setToolTipText("Changed files.");
 
       menu = Widgets.newPopupMenu(dialog);
@@ -233,6 +241,32 @@ class CommandChangedFiles
             {
               repositoryTab.openFileWith(fileData);
             }
+          }
+        });
+
+        menuShellCommands = Widgets.addMenu(menu,"Shell");
+        Widgets.addMenuSeparator(menuShellCommands);
+        menuItem = Widgets.addMenuItem(menuShellCommands,"Add new command\u2026");
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            repositoryTab.onzen.addShellCommand();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Copy to\u2026",Settings.keyCopyFilesTo);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            repositoryTab.copyFilesTo();
           }
         });
 
@@ -1248,6 +1282,7 @@ Dprintf.dprintf("");
         {
           Settings.geometryChangedFiles        = dialog.getSize();
           Settings.geometryChangedFilesColumns = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));
+Dprintf.dprintf("Settings.geometryChangedFilesColumns=%s",Settings.geometryChangedFilesColumns);
           Settings.changedFilesShowStates      = data.showStates;
         }
       });
