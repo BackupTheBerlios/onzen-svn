@@ -53,6 +53,8 @@ public class RepositoryList implements Iterable<Repository>
 
   @XmlElement(name = "repository")
   private LinkedList<Repository> repositoryList;    // list of repositories
+  @XmlAttribute(name = "inactive")
+  private boolean inactive;
 
   // ------------------------ native functions ----------------------------
 
@@ -74,10 +76,10 @@ public class RepositoryList implements Iterable<Repository>
     this(null);
   }
 
-  /** get sorted list of names with repository lists
+  /** get sorted list of names with active repository lists
    * @return name list array
    */
-  public static String[] listNames()
+  public static String[] getNames()
   {
     ArrayList<String> nameList = new ArrayList<String>();
 
@@ -90,7 +92,84 @@ public class RepositoryList implements Iterable<Repository>
       {
         if (file.isFile())
         {
-          nameList.add(file.getName());
+          try
+          {
+            // create JAXB context and instantiate unmarshaller
+            JAXBContext jaxbContext = JAXBContext.newInstance(RepositoryList.class);
+            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+
+            // read xml file
+            RepositoryList repositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(file));
+
+            if (!repositoryList.inactive)
+            {
+              // add name
+              nameList.add(file.getName());
+            }
+          }
+          catch (FileNotFoundException exception)
+          {
+            // ignored
+          }
+          catch (JAXBException exception)
+          {
+            if (Settings.debugFlag)
+            {
+              throw new Error(exception);
+            }
+            // ignored
+          }
+        }
+      }
+    }
+
+    // create sorted array
+    String[] names = nameList.toArray(new String[nameList.size()]);
+    Arrays.sort(names);
+
+    return names;
+  }
+
+  /** get sorted list of names with all repository lists
+   * @return name list array
+   */
+  public static String[] getAllNames()
+  {
+    ArrayList<String> nameList = new ArrayList<String>();
+
+    // read file names
+    File directory = new File(Settings.ONZEN_DIRECTORY,LISTS_SUB_DIRECOTRY);
+    File[] files = directory.listFiles();
+    if (files != null)
+    {
+      for (File file : files)
+      {
+        if (file.isFile())
+        {
+          try
+          {
+            // create JAXB context and instantiate unmarshaller
+            JAXBContext jaxbContext = JAXBContext.newInstance(RepositoryList.class);
+            Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+
+            // read xml file
+            RepositoryList repositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(file));
+
+            // add name
+            nameList.add(file.getName());
+          }
+          catch (FileNotFoundException exception)
+          {
+            // ignored
+          }
+          catch (JAXBException exception)
+          {
+            if (Settings.debugFlag)
+            {
+              throw new Error(exception);
+            }
+            // ignored
+          }
         }
       }
     }
