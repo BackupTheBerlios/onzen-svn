@@ -396,11 +396,12 @@ menuItem.setEnabled(false);
               try
               {
                 repositoryTab.repository.resolve(fileDataSet);
-                Widgets.notify(dialog,USER_EVENT_FILTER);
+                dialog.setActive();
+                updateChangedFiles();
               }
               catch (RepositoryException exception)
               {
-                Dialogs.error(shell,"Update fail: %s",exception.getMessage());
+                Dialogs.error(shell,"Set resolve fail: %s",exception.getMessage());
                 Onzen.printStacktrace(exception);
                 return;
               }
@@ -419,7 +420,6 @@ menuItem.setEnabled(false);
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             FileData fileData = getSelectedFileData();
-
             if (fileData != null)
             {
               repositoryTab.renameLocalFile(fileData);
