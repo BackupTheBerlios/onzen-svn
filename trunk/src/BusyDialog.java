@@ -691,6 +691,15 @@ class BusyDialog
     }
   }
 
+  /** update busy dialog list
+   * @param string string
+   * @return true if update done, false otherwise
+   */
+  public boolean updateList(final String string)
+  {
+    return updateList("%s",string);
+  }
+
   /** set animate interval
    * @param interval animate time interval [ms]
    */
