@@ -652,8 +652,8 @@ class CommandCreatePatch
           // convert TABs, remove trailing whitespaces
           if (containTABs || containTrailingWhitespaces)
           {
-            final boolean[] result = new boolean[1];
-            final String message;
+            final RepositoryTab.ConvertWhitespacesResult[] result = new RepositoryTab.ConvertWhitespacesResult[1];
+            final String                                   message;
             if      (containTABs && containTrailingWhitespaces) message = "The following file contain TABs and trailing whitespaces:\n\n"+fileName;
             else if (containTABs)                               message = "The following file contain TABs or:\n\n"+fileName;
             else /*if (containTrailingWhitespaces)*/            message = "The following file contain trailing whitespaces:\n\n"+fileName;
@@ -669,7 +669,8 @@ class CommandCreatePatch
                                                             );
               }
             });
-            if (!result[0])
+
+            if (result[0] == RepositoryTab.ConvertWhitespacesResult.ABORTED)
             {
               Dialogs.close(dialog,false);
               return;
