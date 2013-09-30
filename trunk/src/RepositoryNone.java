@@ -384,17 +384,23 @@ class RepositoryNone extends Repository
   }
 
   /** pull changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pullChanges(String masterRepository)
+  public void pullChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
   }
 
   /** push changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pushChanges(String masterRepository)
+  public void pushChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
   }
