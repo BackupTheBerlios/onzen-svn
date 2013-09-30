@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -47,20 +48,27 @@ class CommandSetFileMode
   class Data
   {
     HashSet<FileData> fileDataSet;
-    String[]          message;
-    boolean           immediateCommitFlag;
+    String[]          message;              // commit message
+    String            lastMessage;          // last set commit message
+    boolean           messageEdited;        // true iff commit message edited
+    boolean           immediateCommitFlag;  // true for immediate commit
     FileData.Modes    mode;
 
     Data()
     {
       this.fileDataSet         = new HashSet<FileData>();
       this.message             = null;
+      this.lastMessage         = "";
+      this.messageEdited       = false;
       this.immediateCommitFlag = false;
       this.mode                = FileData.Modes.UNKNOWN;
     }
   };
 
   // --------------------------- constants --------------------------------
+  // user events
+  private final int USER_EVENT_NEW_MESSAGE         = 0xFFFF+0;
+  private final int USER_EVENT_ADD_REPLACE_MESSAGE = 0xFFFF+1;
 
   // --------------------------- variables --------------------------------
 
@@ -141,7 +149,11 @@ class CommandSetFileMode
           if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
         }
       });
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to add files.");
+      widgetMessage.setToolTipText("Commit message. Use\n"+
+                                   Widgets.acceleratorToText(Settings.keyPrevCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyLastCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyFirstCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyLastCommitMessage)+"to select message from history,\n"+
+                                   Widgets.acceleratorToText(Settings.keyFormatCommitMessage)+" to format message,\n"+
+                                   Widgets.acceleratorToText(Settings.keyCommitMessageDone)+" to set mode of files."
+                                  );
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,0.0,0.0,1.0}));
@@ -225,6 +237,25 @@ class CommandSetFileMode
     }
 
     // listeners
+    widgetHistory.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        List widget = (List)selectionEvent.widget;
+
+        if (data.immediateCommitFlag)
+        {
+          int i = widget.getSelectionIndex();
+          if (i >= 0)
+          {
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim());
+          }
+        }
+      }
+    });
     widgetHistory.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -234,8 +265,7 @@ class CommandSetFileMode
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
-          widgetMessage.setFocus();
+          Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim());
         }
       }
       public void mouseDown(MouseEvent mouseEvent)
@@ -249,70 +279,122 @@ class CommandSetFileMode
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        if ((keyEvent.stateMask & SWT.CTRL) != 0)
-        {
-          int i = widgetHistory.getSelectionIndex();
-          if (i < 0) i = history.size();
+        int i = widgetHistory.getSelectionIndex();
+        if (i < 0) i = history.size();
 
-          if (keyEvent.keyCode == SWT.ARROW_DOWN)
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyPrevCommitMessage))
+        {
+          // previous history entry
+          if (i > 0)
           {
-            // next history entry
-            if (i < history.size()-1)
-            {
-              widgetHistory.setSelection(i+1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.get(i+1),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(i-1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i-1),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.ARROW_UP)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyNextCommitMessage))
+        {
+          // next history entry
+          if (i < history.size()-1)
           {
-            // previous history entry
-            if (i > 0)
-            {
-              widgetHistory.setSelection(i-1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.get(i-1),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(i+1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i+1),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.HOME)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFirstCommitMessage))
+        {
+          // first history entry
+          if (history.size() > 0)
           {
-            // first history entry
-            if (history.size() > 0)
-            {
-              widgetHistory.setSelection(0);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.getFirst(),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(0);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.getFirst(),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.END)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyLastCommitMessage))
+        {
+          // last history entry
+          if (history.size() > 0)
           {
-            // last history entry
-            if (history.size() > 0)
-            {
-              widgetHistory.setSelection(history.size()-1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.getLast(),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(history.size()-1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.getLast(),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.character == SWT.CR)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFormatCommitMessage))
+        {
+          // format message
+          String oldMessage = widgetMessage.getText().trim();
+          String newMessage = CommitMessage.format(oldMessage,widgetMessage.DELIMITER);
+          if (!newMessage.equals(oldMessage))
           {
-            // invoke commit-button
-            Widgets.invoke(widgetSetFileMode);
+            widgetMessage.setText(newMessage);
+            Widgets.setFocus(widgetMessage);
           }
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommitMessageDone))
+        {
+          // invoke set file mode-button
+          Widgets.invoke(widgetSetFileMode);
         }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
       }
     });
+    Listener listener = new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        String  currentMessage = widgetMessage.getText().trim();
+
+        String newMessage;
+        if (   (!currentMessage.isEmpty() && !currentMessage.equals(data.lastMessage))
+            || (!currentMessage.isEmpty() && (event.type == USER_EVENT_ADD_REPLACE_MESSAGE))
+            || data.messageEdited
+           )
+        {
+Dprintf.dprintf("lastMessage=#%s#",data.lastMessage);
+Dprintf.dprintf("currentMessage=#%s#",currentMessage);
+Dprintf.dprintf("event.text=#%s#",event.text);
+          switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+          {
+            case 0:
+              // replace
+              newMessage         = event.text;
+              data.lastMessage   = newMessage;
+              data.messageEdited = false;
+              break;
+            case 1:
+              // add
+              newMessage         = CommitMessage.format(currentMessage+widgetMessage.DELIMITER+event.text,widgetMessage.DELIMITER);
+              data.messageEdited = true;
+              break;
+            default:
+              return;
+          }
+        }
+        else
+        {
+          newMessage       = event.text;
+          data.lastMessage = newMessage;
+        }
+
+        widgetMessage.setText(newMessage);
+        Widgets.setFocus(widgetMessage);
+      }
+    };
+    dialog.addListener(USER_EVENT_NEW_MESSAGE,listener);
+    dialog.addListener(USER_EVENT_ADD_REPLACE_MESSAGE,listener);
 
     // show dialog
     Dialogs.show(dialog,Settings.geometrySetFileMode,Settings.setWindowLocation);
