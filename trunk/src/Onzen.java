@@ -337,6 +337,7 @@ public class Onzen
   private MenuItem                          menuItemPullChangesFrom;
   private MenuItem                          menuItemPushChanges;
   private MenuItem                          menuItemPushChangesTo;
+  private Menu                              menuSpecial;
   private MenuItem                          menuSetFileMode;
 
   private Menu                              menuOpenFileWithCommands;
@@ -345,15 +346,15 @@ public class Onzen
 
   private TabFolder                         widgetTabFolder;
 
-  private Button                            widgetButtonUpdate;
-  private Button                            widgetButtonCommit;
-  private Button                            widgetButtonCreatePatch;
-  private Button                            widgetButtonAdd;
-  private Button                            widgetButtonRemove;
-  private Button                            widgetButtonRevert;
-  private Button                            widgetButtonDiff;
-  private Button                            widgetButtonRevisions;
-  private Button                            widgetButtonSolve;
+  private Button                            widgetUpdate;
+  private Button                            widgetCommit;
+  private Button                            widgetCreatePatch;
+  private Button                            widgetAdd;
+  private Button                            widgetRemove;
+  private Button                            widgetRevert;
+  private Button                            widgetDiff;
+  private Button                            widgetRevisions;
+  private Button                            widgetSolve;
 
   private Label                             widgetStatus;
 
@@ -488,7 +489,10 @@ Dprintf.dprintf("d=%s",d);
 
       if (repositoryListName != null)
       {
-        // run
+//CommitMessage commitMessage = new CommitMessage(new String[]{"xxxx"});
+//commitMessage.addToHistory();
+
+      // run
         exitcode = run();
       }
       else
@@ -615,13 +619,11 @@ exception.printStackTrace();
     Database database = null;
     try
     {
-      Statement         statement;
       ResultSet         resultSet;
       PreparedStatement preparedStatement;
 
       database = openPasswordDatabase();
 
-      statement = database.createStatement();
       resultSet = null;
       try
       {
@@ -634,7 +636,7 @@ exception.printStackTrace();
           // read and decode password
           do
           {
-            password = decodePassword((masterPassword != null)?masterPassword:"",resultSet.getBytes("data"));
+            password = decodePassword((masterPassword != null) ? masterPassword : "",resultSet.getBytes("data"));
             if (password == null)
             {
               if (masterPassword == null)
@@ -730,7 +732,7 @@ exception.printStackTrace();
   {
 
     // get encoded password
-    byte[] encodedPassword = encodePassword((masterPassword != null)?masterPassword:"",password);
+    byte[] encodedPassword = encodePassword((masterPassword != null) ? masterPassword:"",password);
     if (encodedPassword == null) return;
 
     // store password into password database
@@ -775,6 +777,89 @@ exception.printStackTrace();
   public void setPassword(String login, String host, String password)
   {
     setPassword(login+"@"+host,password);
+  }
+
+  /** get all password names
+   * @return password names <name>@<host>
+   */
+  public String[] getPasswordNames()
+  {
+    ArrayList<String> passwordNamesList = new ArrayList<String>();
+
+    Database database = null;
+    try
+    {
+      PreparedStatement preparedStatement;
+      ResultSet         resultSet;
+
+      database = openPasswordDatabase();
+
+      resultSet = null;
+      try
+      {
+        preparedStatement = database.prepareStatement("SELECT name FROM passwords;");
+        resultSet = preparedStatement.executeQuery();
+
+        while (resultSet.next())
+        {
+          passwordNamesList.add(resultSet.getString("name"));
+        }
+
+        resultSet.close(); resultSet = null;
+      }
+      finally
+      {
+        if (resultSet != null) resultSet.close();
+      }
+
+      // close datbase
+      closePasswordDatabase(database); database = null;
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+      return null;
+    }
+    finally
+    {
+      if (database != null) closePasswordDatabase(database);
+    }
+
+    return passwordNamesList.toArray(new String[passwordNamesList.size()]);
+  }
+
+  /** remove password
+   * @param name name
+   */
+  public void removePassword(String name)
+  {
+    ArrayList<String> passwordNamesList = new ArrayList<String>();
+
+    Database database = null;
+    try
+    {
+      PreparedStatement preparedStatement;
+
+      database = openPasswordDatabase();
+
+      // delete password
+      preparedStatement = database.prepareStatement("DELETE FROM passwords WHERE name=?;");
+      preparedStatement.setString(1,name);
+      preparedStatement.executeUpdate();
+
+      // close datbase
+      closePasswordDatabase(database); database = null;
+    }
+    catch (SQLException exception)
+    {
+Dprintf.dprintf("exception=%s",exception);
+exception.printStackTrace();
+    }
+    finally
+    {
+      if (database != null) closePasswordDatabase(database);
+    }
   }
 
   /** set new master password
@@ -1466,9 +1551,9 @@ Dprintf.dprintf("ex=%s",exception);
     composite.setLayout(new TableLayout(0.0,1.0,2));
     Widgets.layout(composite,1,0,TableLayoutData.WE);
     {
-      widgetButtonUpdate = Widgets.newButton(composite,"Update",Settings.keyUpdate);
-      Widgets.layout(widgetButtonUpdate,0,0,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonUpdate.addSelectionListener(new SelectionListener()
+      widgetUpdate = Widgets.newButton(composite,"Update",Settings.keyUpdate);
+      Widgets.layout(widgetUpdate,0,0,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetUpdate.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1481,11 +1566,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonUpdate.setToolTipText("Update selected entries with revisions from repository.");
+      widgetUpdate.setToolTipText("Update selected entries with revisions from repository.");
 
-      widgetButtonCommit = Widgets.newButton(composite,"Commit",Settings.keyCommit);
-      Widgets.layout(widgetButtonCommit,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonCommit.addSelectionListener(new SelectionListener()
+      widgetCommit = Widgets.newButton(composite,"Commit",Settings.keyCommit);
+      Widgets.layout(widgetCommit,0,1,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetCommit.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1498,11 +1583,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonCommit.setToolTipText("Commit selected entries.");
+      widgetCommit.setToolTipText("Commit selected entries.");
 
-      widgetButtonCreatePatch = Widgets.newButton(composite,"Patch",Settings.keyCreatePatch);
-      Widgets.layout(widgetButtonCreatePatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonCreatePatch.addSelectionListener(new SelectionListener()
+      widgetCreatePatch = Widgets.newButton(composite,"Patch",Settings.keyCreatePatch);
+      Widgets.layout(widgetCreatePatch,0,2,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetCreatePatch.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1515,11 +1600,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonCreatePatch.setToolTipText("Create patch for selected entries.");
+      widgetCreatePatch.setToolTipText("Create patch for selected entries.");
 
-      widgetButtonAdd = Widgets.newButton(composite,"Add",Settings.keyAdd);
-      Widgets.layout(widgetButtonAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonAdd.addSelectionListener(new SelectionListener()
+      widgetAdd = Widgets.newButton(composite,"Add",Settings.keyAdd);
+      Widgets.layout(widgetAdd,0,3,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetAdd.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1532,11 +1617,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonAdd.setToolTipText("Add selected entries to repository.");
+      widgetAdd.setToolTipText("Add selected entries to repository.");
 
-      widgetButtonRemove = Widgets.newButton(composite,"Remove",Settings.keyRemove);
-      Widgets.layout(widgetButtonRemove,0,4,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonRemove.addSelectionListener(new SelectionListener()
+      widgetRemove = Widgets.newButton(composite,"Remove",Settings.keyRemove);
+      Widgets.layout(widgetRemove,0,4,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetRemove.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1550,11 +1635,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonRemove.setToolTipText("Remove selected entries from repository.");
+      widgetRemove.setToolTipText("Remove selected entries from repository.");
 
-      widgetButtonRevert = Widgets.newButton(composite,"Revert",Settings.keyRevert);
-      Widgets.layout(widgetButtonRevert,0,5,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonRevert.addSelectionListener(new SelectionListener()
+      widgetRevert = Widgets.newButton(composite,"Revert",Settings.keyRevert);
+      Widgets.layout(widgetRevert,0,5,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetRevert.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1567,11 +1652,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonRevert.setToolTipText("Revert local changes of selected entires.");
+      widgetRevert.setToolTipText("Revert local changes of selected entires.");
 
-      widgetButtonDiff = Widgets.newButton(composite,"Diff",Settings.keyDiff);
-      Widgets.layout(widgetButtonDiff,0,6,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonDiff.addSelectionListener(new SelectionListener()
+      widgetDiff = Widgets.newButton(composite,"Diff",Settings.keyDiff);
+      Widgets.layout(widgetDiff,0,6,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetDiff.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1584,11 +1669,11 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonDiff.setToolTipText("Show differences of selected entry with revision in repository.");
+      widgetDiff.setToolTipText("Show differences of selected entry with revision in repository.");
 
-      widgetButtonRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
-      Widgets.layout(widgetButtonRevisions,0,7,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT);
-      widgetButtonRevisions.addSelectionListener(new SelectionListener()
+      widgetRevisions = Widgets.newButton(composite,"Revisions",Settings.keyRevisions);
+      Widgets.layout(widgetRevisions,0,7,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT,SWT.DEFAULT,SWT.DEFAULT);
+      widgetRevisions.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1601,13 +1686,13 @@ Dprintf.dprintf("ex=%s",exception);
           }
         }
       });
-      widgetButtonRevisions.setToolTipText("Show revisions of selected entry.");
+      widgetRevisions.setToolTipText("Show revisions of selected entry.");
 
-      widgetButtonSolve = Widgets.newButton(composite,"Resolve",Settings.keyResolve);
+      widgetSolve = Widgets.newButton(composite,"Resolve",Settings.keyResolve);
 // NYI
-widgetButtonSolve.setEnabled(false);
-      Widgets.layout(widgetButtonSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
-      widgetButtonSolve.addSelectionListener(new SelectionListener()
+widgetSolve.setEnabled(false);
+      Widgets.layout(widgetSolve,0,8,TableLayoutData.WE,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
+      widgetSolve.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -1617,7 +1702,7 @@ widgetButtonSolve.setEnabled(false);
 Dprintf.dprintf("");
         }
       });
-      widgetButtonSolve.setToolTipText("NYI");
+      widgetSolve.setToolTipText("NYI");
     }
 
     // create status line
@@ -1816,7 +1901,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonUpdate);
+          Widgets.invoke(widgetUpdate);
         }
       });
 
@@ -1843,7 +1928,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonCommit);
+          Widgets.invoke(widgetCommit);
         }
       });
 
@@ -1885,7 +1970,7 @@ Dprintf.dprintf("");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonRevert);
+          Widgets.invoke(widgetRevert);
         }
       });
 
@@ -2078,8 +2163,14 @@ menuItem.setEnabled(false);
         {
           if (selectedRepositoryTab != null)
           {
-//TODO
-            selectedRepositoryTab.pullChanges(selectedRepositoryTab.repository.getMasterRepositoryURL().path);
+            RepositoryURL repositoryURL = selectedRepositoryTab.repository.getMasterRepositoryURL();
+            String        password      = getPassword(repositoryURL.path,repositoryURL.userName,false);
+
+            selectedRepositoryTab.pullChanges(repositoryURL.path,
+                                              repositoryURL.moduleName,
+                                              repositoryURL.userName,
+                                              password
+                                             );
           }
         }
       });
@@ -2111,8 +2202,14 @@ menuItem.setEnabled(false);
         {
           if (selectedRepositoryTab != null)
           {
-//TODO
-            selectedRepositoryTab.pushChanges(selectedRepositoryTab.repository.getMasterRepositoryURL().path);
+            RepositoryURL repositoryURL = selectedRepositoryTab.repository.getMasterRepositoryURL();
+            String        password      = getPassword(repositoryURL.path,repositoryURL.userName,false);
+
+            selectedRepositoryTab.pushChanges(repositoryURL.path,
+                                              repositoryURL.moduleName,
+                                              repositoryURL.userName,
+                                              password
+                                             );
           }
         }
       });
@@ -2133,6 +2230,10 @@ menuItem.setEnabled(false);
         }
       });
 
+      menuSpecial = Widgets.addMenu(menu,"Special");
+      {
+      }
+
       Widgets.addMenuSeparator(menu);
 
       menuItem = Widgets.addMenuItem(menu,"Add\u2026",Settings.keyAdd);
@@ -2143,7 +2244,7 @@ menuItem.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonAdd);
+          Widgets.invoke(widgetAdd);
         }
       });
 
@@ -2155,7 +2256,7 @@ menuItem.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonRemove);
+          Widgets.invoke(widgetRemove);
         }
       });
 
@@ -2192,7 +2293,7 @@ menuItem.setEnabled(false);
 
       Widgets.addMenuSeparator(menu);
 
-      menuItem = Widgets.addMenuItem(menu,"New branch\u2026",Settings.keyNewBranch);
+      menuItem = Widgets.addMenuItem(menu,"New branch/tag\u2026",Settings.keyNewBranchTag);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2202,7 +2303,7 @@ menuItem.setEnabled(false);
         {
           if (selectedRepositoryTab != null)
           {
-            selectedRepositoryTab.newBranch();
+            selectedRepositoryTab.newBranchTag();
           }
         }
       });
@@ -2233,7 +2334,7 @@ menuItem.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonRevisions);
+          Widgets.invoke(widgetRevisions);
         }
       });
 
@@ -2260,7 +2361,7 @@ menuItem.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonDiff);
+          Widgets.invoke(widgetDiff);
         }
       });
 
@@ -2304,7 +2405,7 @@ menuItem.setEnabled(false);
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          Widgets.invoke(widgetButtonSolve);
+          Widgets.invoke(widgetSolve);
         }
       });
 
@@ -2618,6 +2719,8 @@ menuItem.addSelectionListener(new SelectionListener()
     }
     catch (SQLException exception)
     {
+Dprintf.dprintf("");
+exception.printStackTrace();
       Dialogs.warning(shell,"Cannot load commit message history from database (error: %s)",exception.getMessage());
     }
   }
@@ -3291,9 +3394,7 @@ exception.printStackTrace();
      */
     class Data
     {
-      String[] names;
-      String[] allNames;
-      String   name;
+      String name;
 
       Data()
       {
@@ -3305,18 +3406,24 @@ exception.printStackTrace();
     final Shell dialog;
     Composite   composite,subComposite;
     Label       label;
+    TableColumn tableColumn;
     Button      button;
-
-    // get names
-    data.names    = RepositoryList.getNames();
-    data.allNames = RepositoryList.getAllNames();
+    Menu        menu;
+    MenuItem    menuItem;
+    final ArrayComparator comparatorTableItemName = new ArrayComparator<TableItem>()
+    {
+      public boolean equals(TableItem tableItem, Object name)
+      {
+        return ((String)tableItem.getData()).equals((String)name);
+      }
+    };
 
     // name dialog
     dialog = Dialogs.openModal(shell,title,300,300,new double[]{1.0,0.0},1.0);
 
-    final List   widgetNames;
+    final Table  widgetNames,widgetAllNames;
     final Text   widgetNewName;
-    final Button widgetAllNames;
+    final Button widgetShowAllNames;
     final Button widgetOpen;
     final Button widgetNew;
     final Button widgetDelete;
@@ -3324,10 +3431,24 @@ exception.printStackTrace();
     composite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      widgetNames = Widgets.newList(composite);
+      widgetNames = Widgets.newTable(composite);
       widgetNames.setBackground(Onzen.COLOR_GRAY);
+      widgetNames.setHeaderVisible(false);
+      widgetNames.setLinesVisible(false);
       Widgets.layout(widgetNames,0,0,TableLayoutData.NSWE);
+      tableColumn = Widgets.addTableColumn(widgetNames,0,"Name",SWT.LEFT,200,false);
+      tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
       widgetNames.setToolTipText("Repository list names.");
+
+      widgetAllNames = Widgets.newTable(composite,SWT.CHECK);
+      widgetAllNames.setHeaderVisible(false);
+      widgetAllNames.setVisible(false);
+      widgetAllNames.setBackground(Onzen.COLOR_GRAY);
+      widgetAllNames.setLinesVisible(false);
+      Widgets.layout(widgetAllNames,0,0,TableLayoutData.NSWE);
+      tableColumn = Widgets.addTableColumn(widgetAllNames,0,"Name",SWT.LEFT,200,false);
+      tableColumn.addSelectionListener(Widgets.DEFAULT_TABLE_SELECTION_LISTENER_STRING);
+      widgetAllNames.setToolTipText("Repository list names.");
 
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0}));
@@ -3340,9 +3461,9 @@ exception.printStackTrace();
         Widgets.layout(widgetNewName,0,1,TableLayoutData.WE);
         widgetNewName.setToolTipText("Name of repository list to create.");
 
-        widgetAllNames = Widgets.newCheckbox(subComposite,"All");
-        Widgets.layout(widgetAllNames,0,2,TableLayoutData.E);
-        widgetAllNames.setToolTipText("Show active or all repository lists.");
+        widgetShowAllNames = Widgets.newCheckbox(subComposite,"All");
+        Widgets.layout(widgetShowAllNames,0,2,TableLayoutData.E);
+        widgetShowAllNames.setToolTipText("Show active or all repository lists.");
       }
     }
 
@@ -3367,10 +3488,10 @@ exception.printStackTrace();
           {
             Button widget = (Button)selectionEvent.widget;
 
-            int index = widgetNames.getSelectionIndex();
-            if (index >= 0)
+            TableItem[] tableItems = widgetShowAllNames.getSelection() ? widgetAllNames.getSelection() : widgetNames.getSelection();
+            if (tableItems.length > 0)
             {
-              data.name = data.names[index];
+              data.name = (String)tableItems[0].getData();
 
               Settings.geometryRepositoryList = dialog.getSize();
 
@@ -3417,27 +3538,21 @@ exception.printStackTrace();
         {
           Button widget = (Button)selectionEvent.widget;
 
-          int index = widgetNames.getSelectionIndex();
-          if (index >= 0)
+          TableItem[] tableItems = widgetShowAllNames.getSelection() ? widgetAllNames.getSelection() : widgetNames.getSelection();
+          if (tableItems.length > 0)
           {
-            if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",data.names[index])))
+            String name = (String)tableItems[0].getData();
+
+            if (Dialogs.confirm(dialog,String.format("Really delete repository list '%s'?",name)))
             {
               try
               {
                 // delete repository list
-                RepositoryList.delete(data.names[index]);
-
-                // remove name from array
-                String[] newNames = new String[data.names.length-1];
-                System.arraycopy(data.names,0,newNames,0,index);
-                System.arraycopy(data.names,index+1,newNames,0,data.names.length-1-index);
-                data.names = newNames;
+                RepositoryList.delete(name);
 
                 // update widgets
-                widgetNames.remove(index);
-                if (openButton) widgetOpen.setEnabled(false);
-                widgetNew.setEnabled(false);
-                widgetDelete.setEnabled(false);
+                Widgets.removeTableEntry(widgetNames,tableItems[0]);
+                Widgets.modified(data);
               }
               catch (IOException exception)
               {
@@ -3466,15 +3581,108 @@ exception.printStackTrace();
       column++;
     }
 
+    // popup menu
+    menu = Widgets.newPopupMenu(dialog);
+    {
+      menuItem = Widgets.addMenuItem(menu,"Open\u2026");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetOpen);
+        }
+      });
+      menuItem = Widgets.addMenuItem(menu,"Rename\u2026");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          TableItem[] tableItems = widgetShowAllNames.getSelection() ? widgetAllNames.getSelection() : widgetNames.getSelection();
+          if (tableItems.length > 0)
+          {
+            String name = (String)tableItems[0].getData();
+
+            String newName = Dialogs.string(dialog,"Rename repository list","New name:",name,"Rename","Cancel");
+            if ((newName != null) && !newName.equals(name))
+            {
+              // check if already exists, confirm overwrite
+              if (ArrayUtils.contains(widgetAllNames.getItems(),newName,comparatorTableItemName))
+              {
+                if (!Dialogs.confirm(dialog,"Confirmation","Repository list '"+newName+"' already exists - overwrite?","Overwrite"))
+                {
+                  return;
+                }
+              }
+
+              // rename repository list
+Dprintf.dprintf("");
+              try
+              {
+                // rename repository list
+                RepositoryList.rename(name,newName);
+Dprintf.dprintf("");
+
+                // update widgets
+                ArrayUtils.forEach(widgetNames.getItems(),newName,comparatorTableItemName,new ArrayRunnable<TableItem,String>()
+                {
+                  public boolean run(TableItem tableItem, String newName)
+                  {
+                    tableItem.setData(newName);
+                    Widgets.updateTableEntry(widgetNames,tableItem,newName,newName);
+                    return false;
+                  }
+                });
+                ArrayUtils.forEach(widgetAllNames.getItems(),newName,comparatorTableItemName,new ArrayRunnable<TableItem,String>()
+                {
+                  public boolean run(TableItem tableItem, String newName)
+                  {
+                    tableItem.setData(newName);
+                    Widgets.updateTableEntry(widgetAllNames,tableItem,newName,newName);
+                    return false;
+                  }
+                });
+Dprintf.dprintf("");
+                Widgets.modified(data);
+              }
+              catch (IOException exception)
+              {
+                Dialogs.error(dialog,"Cannot rename repository list (error: %s)",exception.getMessage());
+              }
+            }
+          }
+            //          Widgets.invoke(widgetRename);
+        }
+      });
+      menuItem = Widgets.addMenuItem(menu,"Delete\u2026");
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          Widgets.invoke(widgetDelete);
+        }
+      });
+    }
+    widgetNames.setMenu(menu);
+
     // listeners
-    widgetNames.addSelectionListener(new SelectionListener()
+    SelectionListener selectionListener = new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        List widget = (List)selectionEvent.widget;
+        Table widget = (Table)selectionEvent.widget;
 
-        int index = widget.getSelectionIndex();
-        if (index >= 0)
+        // enable/disable open button
+        TableItem[] tableItems = widgetShowAllNames.getSelection() ? widgetAllNames.getSelection() : widget.getSelection();
+        if (tableItems.length > 0)
         {
           if (openButton)
           {
@@ -3482,13 +3690,12 @@ exception.printStackTrace();
           }
           else
           {
-            if (openButton) widgetOpen.setEnabled(true);
-            if (data.names[index] != null) widgetNewName.setText(data.names[index]);
+            widgetNewName.setText((String)tableItems[0].getData());
             Widgets.setFocus(widgetNewName);
 
-            String  newName = widgetNewName.getText().trim();
-            boolean newNameEmptyFlag = newName.isEmpty();
-            boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+            String  newName           = widgetNewName.getText().trim();
+            boolean newNameEmptyFlag  = newName.isEmpty();
+            boolean newNameExistsFlag = ArrayUtils.contains(widgetAllNames.getItems(),newName,comparatorTableItemName);
             widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
             widgetDelete.setEnabled(newNameExistsFlag);
           }
@@ -3500,18 +3707,19 @@ exception.printStackTrace();
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
-        List widget = (List)selectionEvent.widget;
+        Table widget = (Table)selectionEvent.widget;
 
-        int index = widget.getSelectionIndex();
-        if (index >= 0)
+        // enable/disable open button
+        TableItem[] tableItems = widgetShowAllNames.getSelection() ? widgetAllNames.getSelection() : widget.getSelection();
+        if (tableItems.length > 0)
         {
           if (openButton) widgetOpen.setEnabled(true);
-          if (data.names[index] != null) widgetNewName.setText(data.names[index]);
+          widgetNewName.setText((String)tableItems[0].getData());
           Widgets.setFocus(widgetNewName);
 
-          String  newName = widgetNewName.getText().trim();
-          boolean newNameEmptyFlag = newName.isEmpty();
-          boolean newNameExistsFlag = Arrays.asList(widgetNames.getItems()).contains(newName);
+          String  newName           = widgetNewName.getText().trim();
+          boolean newNameEmptyFlag  = newName.isEmpty();
+          boolean newNameExistsFlag = ArrayUtils.contains(widgetAllNames.getItems(),newName,comparatorTableItemName);
           widgetNew.setEnabled(!newNameEmptyFlag && !newNameExistsFlag);
           widgetDelete.setEnabled(newNameExistsFlag);
         }
@@ -3519,8 +3727,41 @@ exception.printStackTrace();
         {
           if (openButton) widgetOpen.setEnabled(false);
         }
+
+        if (widgetShowAllNames.getSelection())
+        {
+          // activate/deactivate repository list
+          TableItem tableItem = (TableItem)selectionEvent.item;
+          String    name      = (String)tableItem.getData();
+          try
+          {
+            RepositoryList.setEnabled(name,tableItem.getChecked());
+            if (tableItem.getChecked())
+            {
+              Widgets.insertTableEntry(widgetNames,String.CASE_INSENSITIVE_ORDER,name,name);
+            }
+            else
+            {
+              ArrayUtils.forEach(widgetNames.getItems(),name,comparatorTableItemName,new ArrayRunnable<TableItem,String>()
+              {
+                public boolean run(TableItem tableItem, String name)
+                {
+                  Widgets.removeTableEntry(widgetNames,tableItem);
+                  return false;
+                }
+              });
+            }
+          }
+          catch (IOException exception)
+          {
+            Dialogs.error(dialog,"Error","Cannot activate/deactivate repository list");
+            tableItem.setChecked(!tableItem.getChecked());
+          }
+        }
       }
-    });
+    };
+    widgetNames.addSelectionListener(selectionListener);
+    widgetAllNames.addSelectionListener(selectionListener);
     widgetNames.addMouseWheelListener(new MouseWheelListener()
     {
       public void mouseScrolled(MouseEvent mouseEvent)
@@ -3532,12 +3773,12 @@ Dprintf.dprintf("does not work?");
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
-        int index = widgetNames.getSelectionIndex();
-        if (index >= 0)
+        TableItem[] tableItems = widgetShowAllNames.getSelection() ? widgetAllNames.getSelection() : widgetNames.getSelection();
+        if (tableItems.length > 0)
         {
           if (openButton)
           {
-            data.name = data.names[index];
+            data.name = (String)tableItems[0].getData();
           }
           else
           {
@@ -3622,7 +3863,7 @@ Dprintf.dprintf("does not work?");
         widgetDelete.setEnabled(newNameExistsFlag);
       }
     });
-    widgetAllNames.addSelectionListener(new SelectionListener()
+    widgetShowAllNames.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
@@ -3630,19 +3871,16 @@ Dprintf.dprintf("does not work?");
       public void widgetSelected(SelectionEvent selectionEvent)
       {
         Button widget = (Button)selectionEvent.widget;
-Dprintf.dprintf("");
 
-        synchronized(data)
+        if (widget.getSelection())
         {
-          data.names = widget.getSelection() ? RepositoryList.getAllNames() : RepositoryList.getNames();
-
-          widgetNames.removeAll();
-          for (String name : data.names)
-          {
-            widgetNames.add(name);
-          }
-
-          Widgets.modified(data);
+          widgetNames.setVisible(false);
+          widgetAllNames.setVisible(true);
+        }
+        else
+        {
+          widgetNames.setVisible(true);
+          widgetAllNames.setVisible(false);
         }
       }
     });
@@ -3651,7 +3889,7 @@ Dprintf.dprintf("");
       public void modified(Button button)
       {
         String  newName           = widgetNewName.getText().trim();
-        boolean newNameExistsFlag = ArrayUtils.contains(data.allNames,newName);
+        boolean newNameExistsFlag = ArrayUtils.contains(widgetAllNames.getItems(),newName,comparatorTableItemName);
         button.setEnabled(   (widgetNames.getItemCount() > 0)
                           && (newName.isEmpty() || newNameExistsFlag)
                          );
@@ -3662,7 +3900,7 @@ Dprintf.dprintf("");
       public void modified(Button button)
       {
         String  newName           = widgetNewName.getText().trim();
-        boolean newNameExistsFlag = ArrayUtils.contains(data.allNames,newName);
+        boolean newNameExistsFlag = ArrayUtils.contains(widgetAllNames.getItems(),newName,comparatorTableItemName);
         button.setEnabled(!newName.isEmpty() && !newNameExistsFlag);
       }
     });
@@ -3671,7 +3909,7 @@ Dprintf.dprintf("");
       public void modified(Button button)
       {
         String  newName           = widgetNewName.getText().trim();
-        boolean newNameExistsFlag = ArrayUtils.contains(data.allNames,newName);
+        boolean newNameExistsFlag = ArrayUtils.contains(widgetAllNames.getItems(),newName,comparatorTableItemName);
         button.setEnabled(newNameExistsFlag);
       }
     });
@@ -3680,9 +3918,16 @@ Dprintf.dprintf("");
     Dialogs.show(dialog,Settings.geometryRepositoryList,Settings.setWindowLocation);
 
     // add names
-    for (String name : data.names)
+    String[] names    = RepositoryList.getNames();
+    String[] allNames = RepositoryList.getAllNames();
+    for (String name : names)
     {
-      widgetNames.add(name);
+      Widgets.addTableEntry(widgetNames,name,name);
+    }
+    for (String name : allNames)
+    {
+      TableItem tableItem = Widgets.addTableEntry(widgetAllNames,name,name);
+      tableItem.setChecked(ArrayUtils.contains(names,name));
     }
 
     // run
@@ -4490,9 +4735,12 @@ Dprintf.dprintf("");
                                );
       }
     });
-    Widgets.setNextFocus(widgetPath,widgetModuleName);
-    Widgets.setNextFocus(widgetModuleName,widgetDestinationPath);
-    Widgets.setNextFocus(widgetDestinationPath,widgetCreate);
+
+    // focus traversal
+    Widgets.setNextFocus(widgetPath,
+                         widgetModuleName,
+                         widgetCreate
+                        );
 
     // add existing repository paths
     Background.run(new BackgroundRunnable()
@@ -4804,7 +5052,7 @@ Dprintf.dprintf("NYI");
     data.revision        = lastCheckoutRevision;
     data.userName        = lastCheckoutUserName;
     data.password        = lastCheckoutPassword;
-    data.destinationPath = lastCheckoutDestinationPath;
+    data.destinationPath = !lastCheckoutDestinationPath.isEmpty() ? lastCheckoutDestinationPath : System.getProperty("user.dir");
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0},new double[]{0.0,1.0},4));
@@ -5319,13 +5567,15 @@ Dprintf.dprintf("NYI");
       }
     });
 
-    Widgets.setNextFocus(widgetPath,widgetModuleName);
-    Widgets.setNextFocus(widgetModuleName,widgetUserName);
-    Widgets.setNextFocus(widgetUserName,widgetPassword);
-    Widgets.setNextFocus(widgetPassword,widgetRevision);
-    Widgets.setNextFocus(widgetRevision,widgetDestinationPath);
-    Widgets.setNextFocus(widgetDestinationPath,widgetComment);
-    Widgets.setNextFocus(widgetComment,widgetCheckout);
+    // focus traversal
+    Widgets.setNextFocus(widgetPath,
+                         widgetModuleName,
+                         widgetUserName,
+                         widgetPassword,
+                         widgetRevision,
+                         widgetDestinationPath,
+                         widgetComment
+                        );
 
     // set type, add checkout history paths
     Widgets.addComboEntry(widgetPath,new RepositoryURL("file://" ),"file://" );
@@ -5333,11 +5583,11 @@ Dprintf.dprintf("NYI");
     Widgets.addComboEntry(widgetPath,new RepositoryURL("http://" ),"http://" );
     Widgets.addComboEntry(widgetPath,new RepositoryURL("https://"),"https://");
     Widgets.addComboEntry(widgetPath,new RepositoryURL("rsync://"),"rsync://");
-    for (RepositoryURL repositoryURL : Settings.repositoryHistoryURLs)
+    for (RepositoryURL repositoryURL : RepositoryURL.getHistoryURLs())
     {
       Widgets.addComboEntry(widgetPath,repositoryURL,repositoryURL.path);
     }
-    for (RepositoryURL repositoryURL : Settings.additionalRepositoryURLs)
+    for (RepositoryURL repositoryURL : Settings.repositoryURLs)
     {
       Widgets.addComboEntry(widgetPath,repositoryURL,repositoryURL.path);
     }
@@ -5503,8 +5753,11 @@ Dprintf.dprintf("exception=%s",exception);
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
     {
+      RepositoryURL repositoryURL = new RepositoryURL(data.type,data.path,data.moduleName,data.userName);
+      repositoryURL.addToHistory();
+
       // store repository path into URL history
-      Settings.repositoryHistoryURLs = ArrayUtils.insertUnique(Settings.repositoryHistoryURLs,new RepositoryURL(data.path),0,20);
+//      Settings.repositoryHistoryURLs = ArrayUtils.insertUnique(Settings.repositoryHistoryURLs,repositoryURL,0,20);
       /*
       boolean flag = false;
       for (String checkoutHistoryPath : Settings.repositoryHistoryURLs)
@@ -6667,12 +6920,15 @@ exception.printStackTrace();
       {
       }
     });
-    Widgets.setNextFocus(widgetTitle,widgetRootPath);
-    Widgets.setNextFocus(widgetRootPath,widgetComment);
-    Widgets.setNextFocus(widgetComment,widgetSave);
-    Widgets.setNextFocus(widgetPatchMailTo,widgetPatchMailCC);
-    Widgets.setNextFocus(widgetPatchMailCC,widgetPatchMailSubject);
-    Widgets.setNextFocus(widgetPatchMailSubject,widgetPatchMailText);
+
+    // focus traversal
+    Widgets.setNextFocus(widgetTitle,
+                         widgetRootPath,
+                         widgetComment,
+                         widgetPatchMailTo,
+                         widgetPatchMailCC,
+                         widgetPatchMailSubject
+                        );
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryEditRepository,Settings.setWindowLocation);
@@ -6783,6 +7039,37 @@ exception.printStackTrace();
       menuItemPushChanges.setEnabled(repositoryTab.repository.supportPullPush());
       menuItemPushChangesTo.setEnabled(repositoryTab.repository.supportPullPush());
       menuSetFileMode.setEnabled(repositoryTab.repository.supportSetFileMode());
+
+      // update special menu
+      MenuItem[] menuItems = menuSpecial.getItems();
+      for (int i = 0; i < menuItems.length; i++)
+      {
+        menuItems[i].dispose();
+      }
+      for (final Repository.SpecialCommand specialCommand : repositoryTab.repository.getSpecialCommands())
+      {
+        MenuItem menuItem = Widgets.addMenuItem(menuSpecial,specialCommand.title);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            try
+            {
+              specialCommand.run();
+            }
+            catch (RepositoryException exception)
+            {
+              Dialogs.error(shell,"Cannot execute special command '%s' (error: %s).",specialCommand.title,exception.getMessage());
+            }
+            finally
+            {
+            }
+          }
+        });
+      }
     }
     else
     {
@@ -6800,6 +7087,13 @@ exception.printStackTrace();
       menuItemPushChanges.setEnabled(false);
       menuItemPushChangesTo.setEnabled(false);
       menuSetFileMode.setEnabled(false);
+
+      // clear special menu
+      MenuItem[] menuItems = menuSpecial.getItems();
+      for (int i = 0; i < menuItems.length; i++)
+      {
+        menuItems[i].dispose();
+      }
     }
     selectedRepositoryTab = repositoryTab;
   }
@@ -6944,9 +7238,12 @@ exception.printStackTrace();
     }
 
     // listeners
-    Widgets.setNextFocus(widgetOldMasterPassword,widgetNewMasterPassword1);
-    Widgets.setNextFocus(widgetNewMasterPassword1,widgetNewMasterPassword2);
-    Widgets.setNextFocus(widgetNewMasterPassword2,widgetSetPassword);
+
+    // focus traversal
+    Widgets.setNextFocus(widgetOldMasterPassword,
+                         widgetNewMasterPassword1,
+                         widgetSetPassword
+                        );
 
     // run dialog
     Widgets.setFocus(widgetOldMasterPassword);
