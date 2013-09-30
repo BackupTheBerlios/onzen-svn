@@ -279,49 +279,100 @@ Dprintf.dprintf("checkout username, password???");
     Exec exec = null;
     try
     {
-      Command command = new Command();
+      Command  command              = new Command();
+      int      exitCode             = -1;
+      String[] extendedErrorMessage = null;
 
-      // checkout
-      command.clear();
-      command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
-      if (!revision.isEmpty()) command.append("-r",revision);
-      command.append(repositoryURL+File.separator+moduleName,destinationPath);
-      exec = new Exec(rootPath,command);
-
-      // read output
-      while (   ((busyDialog == null) || !busyDialog.isAborted())
-             && !exec.isTerminated()
-            )
+      if (exitCode != 0)
       {
-        String line;
+        // checkout
+        command.clear();
+        command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
+        if (!revision.isEmpty()) command.append("-r",revision);
+        command.append(repositoryURL+"/"+moduleName,destinationPath);
+        exec = new Exec(rootPath,command);
 
-        // read stdout
-        line = exec.pollStdout();
-        if ((line != null) && line.startsWith("getting "))
+        // read output
+        while (   ((busyDialog == null) || !busyDialog.isAborted())
+               && !exec.isTerminated()
+              )
         {
+          String line;
+
+          // read stdout
+          line = exec.pollStdout();
+          if ((line != null) && line.startsWith("getting "))
+          {
 //Dprintf.dprintf("out: %s",line);
-          if (busyDialog != null) busyDialog.updateList(line);
+            if (busyDialog != null) busyDialog.updateList(line);
+          }
         }
+        if ((busyDialog == null) || !busyDialog.isAborted())
+        {
+          // wait for termination
+          exitCode             = exec.waitFor();
+          extendedErrorMessage = exec.getExtendedErrorMessage();
+        }
+        else
+        {
+          // abort
+          exec.destroy();
+          try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
+        }
+
+        // done
+        exec.done(); exec = null;
       }
+
+      if (exitCode != 0)
+      {
+        // checkout insecure
+        command.clear();
+        command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","--insecure","-v");
+        if (!revision.isEmpty()) command.append("-r",revision);
+        command.append(repositoryURL+"/"+moduleName,destinationPath);
+        exec = new Exec(rootPath,command);
+
+        // read output
+        while (   ((busyDialog == null) || !busyDialog.isAborted())
+               && !exec.isTerminated()
+              )
+        {
+          String line;
+
+          // read stdout
+          line = exec.pollStdout();
+          if ((line != null) && line.startsWith("getting "))
+          {
+//Dprintf.dprintf("out: %s",line);
+            if (busyDialog != null) busyDialog.updateList(line);
+          }
+        }
+        if ((busyDialog == null) || !busyDialog.isAborted())
+        {
+          // wait for termination
+          exitCode             = exec.waitFor();
+          extendedErrorMessage = exec.getExtendedErrorMessage();
+        }
+        else
+        {
+          // abort
+          exec.destroy();
+          try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
+
       if ((busyDialog == null) || !busyDialog.isAborted())
       {
-        // wait for termination
-        int exitCode = exec.waitFor();
         if (exitCode != 0)
         {
-         try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
-         throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+          try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
+          throw new RepositoryException("'%s', exit code: %d",extendedErrorMessage,command.toString(),exitCode);
         }
       }
-      else
-      {
-        // abort
-        exec.destroy();
-        try { FileUtils.deleteDirectoryTree(destinationPath); } catch (IOException ignoredException) { /* ignored */ }
-      }
-
-      // done
-      exec.done(); exec = null;
     }
     catch (IOException exception)
     {
@@ -1138,7 +1189,14 @@ Dprintf.dprintf("parent not found %s",parentData.revision2);
                    && (line.isEmpty() || line.startsWith(" "))
                   )
             {
-              keepLinesList.add(newFileLines[lineNb-1]);
+              if (lineNb <= newFileLines.length)
+              {
+                keepLinesList.add(newFileLines[lineNb-1]);
+              }
+              else
+              {
+                keepLinesList.add("???");
+              }
               lineNb++;
             }
             exec.ungetStdout(line);
@@ -2397,9 +2455,12 @@ throw new Error("NYI");
   }
 
   /** pull changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pullChanges(String masterRepository)
+  public void pullChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
     Exec exec = null;
@@ -2435,9 +2496,12 @@ throw new Error("NYI");
   }
 
   /** push changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pushChanges(String masterRepository)
+  public void pushChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
     final Pattern PATTERN_ABORT = Pattern.compile("^\\s*abort:.*",Pattern.CASE_INSENSITIVE);
@@ -2671,11 +2735,11 @@ throw new Error("NYI");
 
   /** create new branch
    * @param rootName root name (source)
-   * @param branchName branch name
+   * @param branchTagName branch name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
+  public void newBranch(String rootName, String branchTagName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
     String repositoryURL = getRepositoryURL();
@@ -2688,7 +2752,7 @@ throw new Error("NYI");
       // create branch
       command.clear();
       command.append(Settings.hgCommand,(Settings.hgUseForestExtension) ? "fclone" : "clone","-v");
-      command.append((!rootName.isEmpty()) ? repositoryURL+File.separator+rootName : repositoryURL,repositoryURL+File.separator+branchName);
+      command.append((!rootName.isEmpty()) ? repositoryURL+"/"+rootName : repositoryURL,repositoryURL+"/"+branchTagName);
       exec = new Exec(rootPath,command);
 
       // read output
