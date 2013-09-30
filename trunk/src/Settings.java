@@ -981,7 +981,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keySetFileMode                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyNewBranch                           = SWT.NONE;
+  public static int                      keyNewBranchTag                        = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRevert                              = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
@@ -1066,6 +1066,18 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyQuit                                = SWT.CTRL+'Q';
 
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyPrevCommitMessage                   = SWT.CTRL+SWT.ARROW_UP;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyNextCommitMessage                   = SWT.CTRL+SWT.ARROW_DOWN;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFirstCommitMessage                  = SWT.CTRL+SWT.HOME;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyLastCommitMessage                   = SWT.CTRL+SWT.END;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyFormatCommitMessage                 = SWT.CTRL+'F';
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyCommitMessageDone                   = SWT.CTRL+SWT.CR;
 
 /*
   @SettingComment(text={"Geometry (<width>x<height>)")
@@ -1253,23 +1265,19 @@ public class Settings
   @SettingValue
   public static int                      maxMessageHistory                      = 50;
 
-  @SettingComment(text={"","repository history URLs"})
-  @SettingValue(name="repositoryHistoryURL", type=SettingValueAdapterRepositoryURL.class)
-  public static RepositoryURL[]          repositoryHistoryURLs                  = new RepositoryURL[0];
-
   @SettingComment(text={"","repository URLs"})
   @SettingValue(name="repositoryURL", type=SettingValueAdapterRepositoryURL.class)
   public static RepositoryURL[]          repositoryURLs                         = new RepositoryURL[0];
-
-  @SettingComment(text={"","additional repository URLs"})
-  @SettingValue(name="additionalRepositoryURL", type=SettingValueAdapterRepositoryURL.class)
-  public static RepositoryURL[]          additionalRepositoryURLs               = new RepositoryURL[0];
 
   @SettingComment(text={"","UDP commit message broadcasting"})
   @SettingValue
   public static String                   messageBroadcastAddress                = "230.0.95.83";
   @SettingValue
   public static int                      messageBroadcastPort                   = 9583;
+
+  @SettingComment(text={"","format prefix for multiple commmit message lines"})
+  @SettingValue
+  public static String                   autoCommitMessagePrefix                = "-";
 
   @SettingComment(text={"","auto-summary patterns"})
   @SettingValue
