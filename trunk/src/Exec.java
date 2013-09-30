@@ -529,6 +529,10 @@ process.destroy();
     return process.getErrorStream();
   }
 
+  /** print line to process stdin
+   * @param format format string
+   * @param arguments optional arguments
+   */
   public void putStdin(String format, Object... arguments)
   {
     if (stdin == null)
@@ -565,19 +569,34 @@ process.destroy();
     {
       try
       {
+        // init stdout/stderr
         if (stdout == null)
         {
           stdout = new BufferedReader(new InputStreamReader(getStdoutStream()));
         }
+        if (stderr == null)
+        {
+          stderr = new BufferedReader(new InputStreamReader(getStderrStream()));
+        }
 
+        // read stdout
         if (stdout != null)
         {
           line = stdout.readLine();
         }
+
+        // read and store stderr
+        if (stderr != null)
+        {
+          while (stderr.ready() && (line = stderr.readLine()) != null)
+          {
+            stderrStack.push(line);
+          }
+        }
       }
       catch (IOException exception)
       {
-        /* ignored => no input */
+        // ignored => no input
       }
     }
     else
@@ -608,11 +627,17 @@ process.destroy();
     {
       try
       {
+        // init stdout/stderr
         if (stdout == null)
         {
           stdout = new BufferedReader(new InputStreamReader(getStdoutStream()));
         }
+        if (stderr == null)
+        {
+          stderr = new BufferedReader(new InputStreamReader(getStderrStream()));
+        }
 
+        // read stdout
         if (stdout != null)
         {
           if (stdout.ready())
@@ -644,10 +669,19 @@ process.destroy();
             }
           }
         }
+
+        // read and store stderr
+        if (stderr != null)
+        {
+          while (stderr.ready() && (line = stderr.readLine()) != null)
+          {
+            stderrStack.push(line);
+          }
+        }
       }
       catch (IOException exception)
       {
-        /* ignored => no input */
+        // ignored => no input
       }
     }
     else
@@ -704,14 +738,29 @@ process.destroy();
     {
       try
       {
+        // init stdout/stderr
+        if (stdout == null)
+        {
+          stdout = new BufferedReader(new InputStreamReader(getStdoutStream()));
+        }
         if (stderr == null)
         {
           stderr = new BufferedReader(new InputStreamReader(getStderrStream()));
         }
 
+        // read stderr
         if (stderr != null)
         {
           line = stderr.readLine();
+        }
+
+        // read and store stdout
+        if (stdout != null)
+        {
+          while (stdout.ready() && (line = stdout.readLine()) != null)
+          {
+            stdoutStack.push(line);
+          }
         }
       }
       catch (IOException exception)
@@ -747,11 +796,17 @@ process.destroy();
     {
       try
       {
+        // init stdout/stderr
+        if (stdout == null)
+        {
+          stdout = new BufferedReader(new InputStreamReader(getStdoutStream()));
+        }
         if (stderr == null)
         {
           stderr = new BufferedReader(new InputStreamReader(getStderrStream()));
         }
 
+        // read stderr
         if (stderr != null)
         {
           if (stderr.ready())
@@ -781,6 +836,15 @@ process.destroy();
             {
               line = stderr.readLine();
             }
+          }
+        }
+
+        // read and store stdout
+        if (stdout != null)
+        {
+          while (stdout.ready() && (line = stdout.readLine()) != null)
+          {
+            stdoutStack.push(line);
           }
         }
       }
