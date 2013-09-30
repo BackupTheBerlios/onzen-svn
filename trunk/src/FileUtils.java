@@ -32,35 +32,35 @@ public class FileUtils
   {
     File fromDirectory = fromFile.getParentFile();
 
-    LinkedList<String> fileNameList = new LinkedList<String>();
-    fileNameList.add(fromFile.getName());
+    LinkedList<File> fileList = new LinkedList<File>();
+    fileList.add(fromFile);
 
-    while (!fileNameList.isEmpty())
+    while (!fileList.isEmpty())
     {
-      String fileName = fileNameList.removeFirst();
-
-      File file = new File(fromDirectory,fileName);
-      if (file.isDirectory())
+      fromFile = fileList.removeFirst();
+      if (fromFile.isDirectory())
       {
-        String[] subFileNames = file.list();
-        if (subFileNames != null)
+        // add sub-files
+        File[] subFiles = fromFile.listFiles();
+        if (subFiles != null)
         {
-          for (String subFileName : subFileNames)
+          for (File subFile : subFiles)
           {
-            fileNameList.add(fileName + File.separator + subFileName);
+            fileList.add(subFile);
           }
         }
       }
       else
       {
-        File newDirectory = new File(toFile,fileName).getParentFile();
+        // copy file data
+        File newDirectory = new File(toFile,fromFile.getName()).getParentFile();
         if (!newDirectory.exists())
         {
           newDirectory.mkdirs();
         }
 
-        FileInputStream  input  = new FileInputStream(file);
-        FileOutputStream output = new FileOutputStream(new File(toFile,fileName));
+        FileInputStream  input  = new FileInputStream(fromFile);
+        FileOutputStream output = new FileOutputStream(new File(toFile,fromFile.getName()));
         byte[]           buffer = new byte[64*1024];
 
         int n;
@@ -69,11 +69,12 @@ public class FileUtils
           output.write(buffer,0,n);
         }
 
-        toFile.setExecutable(fromFile.canExecute());
-        toFile.setWritable(fromFile.canWrite());
-
         output.close();
         input.close();
+
+        // set file permissions
+        toFile.setExecutable(fromFile.canExecute());
+        toFile.setWritable(fromFile.canWrite());
       }
     }
   }
