@@ -19,6 +19,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -1725,10 +1730,13 @@ class StoredFiles
 
 // ------------------------------------------------------------------------
 
-/** store local files into database
+/** store repository URLs into database
  */
 class RepositoryURL implements Cloneable
 {
+  private static final String REPOSITORY_URLS_DATABASE_NAME    = "repositoryURLsoooo";
+  private static final int    REPOSITORY_URLS_DATABASE_VERSION = 1;
+
   enum Types
   {
     NONE,
@@ -1802,10 +1810,31 @@ class RepositoryURL implements Cloneable
   /** create repository URL
    * @param repositoryType repository type
    * @param path path
+   * @param moduleName module name
+   * @param userName user name
+   */
+  RepositoryURL(Repository.Types repositoryType, String path, String moduleName, String userName)
+  {
+    this(Types.NONE,repositoryType,path,moduleName,userName);
+  }
+
+  /** create repository URL
+   * @param repositoryType repository type
+   * @param path path
    */
   RepositoryURL(Repository.Types repositoryType, String path)
   {
-    this(Types.NONE,repositoryType,path);
+    this(repositoryType,path,"","");
+  }
+
+  /** create repository URL
+   * @param path path
+   * @param moduleName module name
+   * @param userName user name
+   */
+  RepositoryURL(String path, String moduleName, String userName)
+  {
+    this(Repository.Types.NONE,path,moduleName,userName);
   }
 
   /** create repository URL
@@ -1813,7 +1842,7 @@ class RepositoryURL implements Cloneable
    */
   RepositoryURL(String path)
   {
-    this(Repository.Types.NONE,path);
+    this(path,"","");
   }
 
   /** create repository URL
@@ -1843,14 +1872,198 @@ class RepositoryURL implements Cloneable
            && repositoryURL.userName.equals(userName);
   }
 
+  /** get repository URL history
+   * @return repository URL history list
+   */
+  public static RepositoryURL[] getHistoryURLs()
+  {
+    LinkedList<RepositoryURL> repositoryURLList = new LinkedList<RepositoryURL>();
+
+    HistoryDatabase historyDatabase = null;
+    try
+    {
+      // open database
+      historyDatabase = openHistoryDatabase();
+//historyDatabase.add(new RepositoryURL(Repository.Types.GIT,"x1","x2","x3"));
+
+      // get history
+      repositoryURLList = historyDatabase.getHistory();
+
+      // close database
+      historyDatabase.close(); historyDatabase = null;
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot get repository URLs from database (error: %s)",exception.getMessage());
+      return new RepositoryURL[0];
+    }
+    finally
+    {
+      try { if (historyDatabase != null) closeHistoryDatabase(historyDatabase); } catch (SQLException exception) { /* ignored */ }
+    }
+
+    return repositoryURLList.toArray(new RepositoryURL[repositoryURLList.size()]);
+  }
+
+  /** set repository URL history
+   * @param repositoryURLs repository URL history list
+   */
+  public static void setHistoryURLs(RepositoryURL[] repositoryURLs)
+  {
+    HistoryDatabase historyDatabase = null;
+    try
+    {
+      // open database
+      historyDatabase = openHistoryDatabase();
+
+      // set history
+      historyDatabase.setHistory(repositoryURLs);
+
+      // close database
+      closeHistoryDatabase(historyDatabase); historyDatabase = null;
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot set repository URLs from database (error: %s)",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      try { if (historyDatabase != null) closeHistoryDatabase(historyDatabase); } catch (SQLException exception) { /* ignored */ }
+    }
+  }
+
+  /** add repository URL to history
+   */
+  public void addToHistory()
+  {
+    HistoryDatabase historyDatabase = null;
+    try
+    {
+      // open database
+      historyDatabase = openHistoryDatabase();
+
+      // add repository URL
+      historyDatabase.add(this);
+
+      // close database
+      closeHistoryDatabase(historyDatabase); historyDatabase = null;
+    }
+    catch (SQLException exception)
+    {
+      Onzen.printWarning("Cannot store repository URL into database (error: %s)",exception.getMessage());
+      return;
+    }
+    finally
+    {
+      try { if (historyDatabase != null) closeHistoryDatabase(historyDatabase); } catch (SQLException exception) { /* ignored */ }
+    }
+  }
+
   /** convert data to string
    * @return string
    */
   public String toString()
   {
-    return "RepositoryURL {"+addType+", "+repositoryType+", path: "+path+", user name: "+userName+"}";
+    return "RepositoryURL {"+addType+", "+repositoryType+", module: "+moduleName+", path: "+path+", user name: "+userName+"}";
+  }
+
+  /** open repository URL history database
+   * @return history database
+   */
+  private static HistoryDatabase openHistoryDatabase()
+    throws SQLException
+  {
+    return new HistoryDatabase<RepositoryURL>("repositoryURLs",
+                                              20,
+                                              HistoryDatabase.Directions.SORTED
+                                             )
+    {
+      public PreparedStatement prepareInit(Database database)
+        throws SQLException
+      {
+        PreparedStatement preparedStatement = database.prepareStatement("CREATE TABLE IF NOT EXISTS repositoryURLs ( "+
+                                                                        "  id         INTEGER PRIMARY KEY, "+
+                                                                        "  datetime   INTEGER DEFAULT (DATETIME('now')), "+
+                                                                        "  type       INTEGER, "+
+                                                                        "  path       TEXT, "+
+                                                                        "  moduleName TEXT, "+
+                                                                        "  userName   TEXT "+
+                                                                        ");"
+                                                                       );
+        return preparedStatement;
+      }
+      public PreparedStatement prepareInsert(Database database, RepositoryURL repositoryURL)
+        throws SQLException
+      {
+        PreparedStatement preparedStatement = database.prepareStatement("INSERT INTO repositoryURLs (type,path,moduleName,userName) VALUES (?,?,?,?);");
+        preparedStatement.setInt(1,repositoryURL.repositoryType.toOrdinal());
+        preparedStatement.setString(2,repositoryURL.path);
+        preparedStatement.setString(3,repositoryURL.moduleName);
+        preparedStatement.setString(4,repositoryURL.userName);
+        return preparedStatement;
+      }
+      public PreparedStatement prepareDelete(Database database, int id)
+        throws SQLException
+      {
+        PreparedStatement preparedStatement = database.prepareStatement("DELETE FROM repositoryURLs WHERE id=?;");
+        preparedStatement.setInt(1,id);
+        return preparedStatement;
+      }
+      public RepositoryURL getResult(ResultSet resultSet)
+        throws SQLException
+      {
+        Repository.Types repositoryType = Repository.Types.toEnum(resultSet.getInt("type"));
+        String           path           = resultSet.getString("path"); if (path == null) path = "";
+        String           moduleName     = resultSet.getString("moduleName"); if (moduleName == null) moduleName = "";
+        String           userName       = resultSet.getString("userName"); if (userName == null) userName = "";
+
+        return new RepositoryURL(repositoryType,path,moduleName,userName);
+      }
+      public int dataCompareTo(RepositoryURL repositoryURL0, RepositoryURL repositoryURL1)
+      {
+        int result;
+
+        if      (repositoryURL0.repositoryType.toOrdinal() < repositoryURL1.repositoryType.toOrdinal())
+        {
+          result = -1;
+        }
+        else if (repositoryURL0.repositoryType.toOrdinal() > repositoryURL1.repositoryType.toOrdinal())
+        {
+          result = 1;
+        }
+        else
+        {
+          result =repositoryURL0.path.compareTo(repositoryURL1.path);
+          if (result == 0)
+          {
+            result =repositoryURL0.moduleName.compareTo(repositoryURL1.moduleName);
+            if (result == 0)
+            {
+              result =repositoryURL0.userName.compareTo(repositoryURL1.userName);
+            }
+          }
+        }
+//Dprintf.dprintf("repositoryURL0=%s",repositoryURL0);
+//Dprintf.dprintf("repositoryURL1=%s",repositoryURL1);
+//Dprintf.dprintf("result=%s",result);
+
+        return result;
+      }
+    };
+  }
+
+  /** close repository URL history database
+   * @param historyDatabase history database
+   */
+  private static void closeHistoryDatabase(HistoryDatabase historyDatabase)
+    throws SQLException
+  {
+    historyDatabase.close();
   }
 }
+
+// ------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------
 
@@ -1914,6 +2127,27 @@ class RepositoryURL implements Cloneable
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
 {
+  /** special commands
+   */
+  abstract class SpecialCommand
+  {
+    // menu title
+    String title;
+
+    /** create special command
+     * @param title menu title
+     */
+    SpecialCommand(String title)
+    {
+      this.title = title;
+    }
+
+    /** execute special command
+     */
+    public abstract void run()
+      throws RepositoryException;
+  }
+
   /** store local changes into into a temporary patch file
    */
   class StoredChanges
@@ -2007,6 +2241,41 @@ abstract class Repository implements Serializable
       else                                           type = UNKNOWN;
 
       return type;
+    }
+
+    /** convert ordinal value to enum
+     * @param value ordinal value
+     * @return enum
+     */
+    static Types toEnum(int value)
+    {
+      switch (value)
+      {
+        case 0:  return NONE;
+        case 1:  return DIRECTORY;
+        case 2:  return CVS;
+        case 3:  return SVN;
+        case 4:  return HG;
+        case 5:  return GIT;
+        default: return NONE;
+      }
+    }
+
+    /** convert to ordinal value
+     * @return ordinal value
+     */
+    public int toOrdinal()
+    {
+      switch (this)
+      {
+        case NONE:      return 0;
+        case DIRECTORY: return 1;
+        case CVS:       return 2;
+        case SVN:       return 3;
+        case HG:        return 4;
+        case GIT:       return 5;
+        default:        return 0;
+      }
     }
 
     /** convert to string
@@ -2261,6 +2530,14 @@ abstract class Repository implements Serializable
   public boolean supportPostReview()
   {
     return false;
+  }
+
+  /** get special commands for repository
+   * @return array with special commands
+   */
+  public SpecialCommand[] getSpecialCommands()
+  {
+    return new SpecialCommand[0];
   }
 
   /** check if commit message is valid and acceptable
@@ -3375,18 +3652,33 @@ Dprintf.dprintf("fileName=%s",fileName);
     throws RepositoryException;
 
   /** pull changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  abstract public void pullChanges(String masterRepository)
+  abstract public void pullChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException;
 
   /** push changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  abstract public void pushChanges(String masterRepository)
+  abstract public void pushChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException;
 
-  /** apply patch queue patches
+  /** push changes
+   * @param masterRepositoryPath master repository path
+   */
+  public void pushChanges(String masterRepositoryPath)
+    throws RepositoryException
+  {
+    pushChanges(masterRepositoryPath,"","","");
+  }
+
+    /** apply patch queue patches
    */
   abstract public void applyPatches()
     throws RepositoryException;
