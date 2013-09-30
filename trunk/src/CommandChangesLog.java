@@ -159,7 +159,7 @@ class CommandChangesLog
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
       // changes log
-      widgetChangesLog = Widgets.newTable(composite,SWT.H_SCROLL|SWT.V_SCROLL);
+      widgetChangesLog = Widgets.newTable(composite,SWT.H_SCROLL|SWT.V_SCROLL|SWT.SINGLE);
       widgetChangesLog.setBackground(Onzen.COLOR_WHITE);
       Widgets.layout(widgetChangesLog,0,0,TableLayoutData.NSWE,0,0,4);
       SelectionListener selectionListener = new SelectionListener()
@@ -583,12 +583,12 @@ class CommandChangesLog
         int index = widget.getSelectionIndex();
         if (index >= 0)
         {
-          selectRevision(widget.getItem(index).getText(0));
+          LogData logData = (LogData)widget.getItem(index).getData();
 
           CommandRevisionInfo commandRevisionInfo = new CommandRevisionInfo(dialog,
                                                                             repositoryTab,
                                                                             data.fileData,
-                                                                            (data.selectedLogData0 != null) ? data.selectedLogData0.revision : repositoryTab.repository.getFirstRevision()
+                                                                            logData.revision
                                                                            );
           commandRevisionInfo.run();
         }
