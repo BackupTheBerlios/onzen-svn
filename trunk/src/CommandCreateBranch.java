@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -49,9 +50,11 @@ class CommandCreateBranch
   {
     String[] branchTagNames;
     String   rootName;
-    String   branchTagName;
-    String[] message;
-    boolean  immediateCommitFlag;
+    String   branchTagName;             // branch/tag name
+    String[] message;                   // commit message
+    String   lastMessage;               // last set commit message
+    boolean  messageEdited;             // true iff commit message edited
+    boolean  immediateCommitFlag;       // true for immediate commit
 
     Data()
     {
@@ -59,11 +62,16 @@ class CommandCreateBranch
       this.rootName            = null;
       this.branchTagName       = null;
       this.message             = null;
+      this.lastMessage         = "";
+      this.messageEdited       = false;
       this.immediateCommitFlag = Settings.immediateCommit;
     }
   };
 
   // --------------------------- constants --------------------------------
+  // user events
+  private final int USER_EVENT_NEW_MESSAGE         = 0xFFFF+0;
+  private final int USER_EVENT_ADD_REPLACE_MESSAGE = 0xFFFF+1;
 
   // --------------------------- variables --------------------------------
 
@@ -124,35 +132,29 @@ class CommandCreateBranch
       subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0}));
       Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
+        int row = 0;
         if (defaultRootName != null)
         {
           label = Widgets.newLabel(subComposite,"Root:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
+          Widgets.layout(label,row,0,TableLayoutData.W);
           widgetRootName = Widgets.newText(subComposite);
           if (defaultRootName != null) widgetRootName.setText(defaultRootName);
-          Widgets.layout(widgetRootName,0,1,TableLayoutData.WE);
+          Widgets.layout(widgetRootName,row,1,TableLayoutData.WE);
           widgetRootName.setToolTipText("Root for the new branch/tag. For SVN, HG and GIT this is usually the main development fork 'trunk' or some directory name, usually below 'branches' or 'tags'.");
-
-          label = Widgets.newLabel(subComposite,"Branch name:");
-          Widgets.layout(label,1,0,TableLayoutData.W);
-
-          widgetBranchTagNames = Widgets.newCombo(subComposite);
-          if (defaultBranchTagName != null) widgetBranchTagNames.setText(defaultBranchTagName);
-          Widgets.layout(widgetBranchTagNames,1,1,TableLayoutData.WE);
-          widgetBranchTagNames.setToolTipText("Branch name. For CVS this is a tag name, for SVN, HG and GIT this is a directory name, usually below 'branches' or 'tags'.\n\nNote: HG use the term 'branch' different. Nevertheless a 'branch' follow here the common understanding: a branch is a fork of the checked-in files.");
+          row++;
         }
         else
         {
           widgetRootName = null;
-
-          label = Widgets.newLabel(subComposite,"Branch name:");
-          Widgets.layout(label,0,0,TableLayoutData.W);
-
-          widgetBranchTagNames = Widgets.newCombo(subComposite);
-          widgetBranchTagNames.setText(defaultBranchTagName);
-          Widgets.layout(widgetBranchTagNames,0,1,TableLayoutData.WE);
         }
+
+        label = Widgets.newLabel(subComposite,"Branch/tag name:");
+        Widgets.layout(label,row,0,TableLayoutData.W);
+        widgetBranchTagNames = Widgets.newCombo(subComposite);
+        if (defaultBranchTagName != null) widgetBranchTagNames.setText(defaultBranchTagName);
+        Widgets.layout(widgetBranchTagNames,row,1,TableLayoutData.WE);
+        widgetBranchTagNames.setToolTipText("Branch or tag name. For CVS this is a tag name, for SVN, HG and GIT this is a directory name, usually below 'branches' or 'tags'.\n\nNote: HG use the term 'branch' different. Nevertheless a 'branch' follow here the common understanding: a branch is a fork of the checked-in files.");
+        row++;
       }
 
       label = Widgets.newLabel(composite,"History:");
@@ -176,7 +178,11 @@ class CommandCreateBranch
           if (!control.isDisposed()) control.setEnabled(data.immediateCommitFlag);
         }
       });
-      widgetMessage.setToolTipText("Commit message.\n\nUse Ctrl-Up/Down/Home/End to select message from history.\n\nUse Ctrl-Return to create a branch/tag.");
+      widgetMessage.setToolTipText("Commit message. Use:\n"+
+                                   Widgets.acceleratorToText(Settings.keyPrevCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyLastCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyFirstCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyLastCommitMessage)+"to select message from history,\n"+
+                                   Widgets.acceleratorToText(Settings.keyFormatCommitMessage)+" to format message,\n"+
+                                   Widgets.acceleratorToText(Settings.keyCommitMessageDone)+" to create branch/tag."
+                                  );
 
       widgetImmediateCommit = Widgets.newCheckbox(composite,"immediate commit");
       widgetImmediateCommit.setSelection(Settings.immediateCommit);
@@ -254,6 +260,22 @@ class CommandCreateBranch
       }
     });
     Widgets.setNextFocus(widgetBranchTagNames,widgetMessage);
+    widgetHistory.addSelectionListener(new SelectionListener()
+    {
+      public void widgetDefaultSelected(SelectionEvent selectionEvent)
+      {
+      }
+      public void widgetSelected(SelectionEvent selectionEvent)
+      {
+        List widget = (List)selectionEvent.widget;
+
+        int i = widget.getSelectionIndex();
+        if (i >= 0)
+        {
+          Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim());
+        }
+      }
+    });
     widgetHistory.addMouseListener(new MouseListener()
     {
       public void mouseDoubleClick(MouseEvent mouseEvent)
@@ -263,8 +285,7 @@ class CommandCreateBranch
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          widgetMessage.setText(StringUtils.join(history.get(i),widgetMessage.DELIMITER));
-          widgetMessage.setFocus();
+          Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim());
         }
       }
       public void mouseDown(MouseEvent mouseEvent)
@@ -278,70 +299,122 @@ class CommandCreateBranch
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        if ((keyEvent.stateMask & SWT.CTRL) != 0)
-        {
-          int i = widgetHistory.getSelectionIndex();
-          if (i < 0) i = history.size();
+        int i = widgetHistory.getSelectionIndex();
+        if (i < 0) i = history.size();
 
-          if (keyEvent.keyCode == SWT.ARROW_DOWN)
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyPrevCommitMessage))
+        {
+          // previous history entry
+          if (i > 0)
           {
-            // next history entry
-            if (i < history.size()-1)
-            {
-              widgetHistory.setSelection(i+1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.get(i+1),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(i-1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i-1),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.ARROW_UP)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyNextCommitMessage))
+        {
+          // next history entry
+          if (i < history.size()-1)
           {
-            // previous history entry
-            if (i > 0)
-            {
-              widgetHistory.setSelection(i-1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.get(i-1),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(i+1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i+1),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.HOME)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFirstCommitMessage))
+        {
+          // first history entry
+          if (history.size() > 0)
           {
-            // first history entry
-            if (history.size() > 0)
-            {
-              widgetHistory.setSelection(0);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.getFirst(),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(0);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.getFirst(),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.END)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyLastCommitMessage))
+        {
+          // last history entry
+          if (history.size() > 0)
           {
-            // last history entry
-            if (history.size() > 0)
-            {
-              widgetHistory.setSelection(history.size()-1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.getLast(),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(history.size()-1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.getLast(),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.character == SWT.CR)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFormatCommitMessage))
+        {
+          // format message
+          String oldMessage = widgetMessage.getText().trim();
+          String newMessage = CommitMessage.format(oldMessage,widgetMessage.DELIMITER);
+          if (!newMessage.equals(oldMessage))
           {
-            // invoke commit-button
-            Widgets.invoke(widgetCreateBranch);
+            widgetMessage.setText(newMessage);
+            Widgets.setFocus(widgetMessage);
           }
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommitMessageDone))
+        {
+          // invoke create branch-button
+          Widgets.invoke(widgetCreateBranch);
         }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
       }
     });
+    Listener listener = new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        String  currentMessage = widgetMessage.getText().trim();
+
+        String newMessage;
+        if (   (!currentMessage.isEmpty() && !currentMessage.equals(data.lastMessage))
+            || (!currentMessage.isEmpty() && (event.type == USER_EVENT_ADD_REPLACE_MESSAGE))
+            || data.messageEdited
+           )
+        {
+Dprintf.dprintf("lastMessage=#%s#",data.lastMessage);
+Dprintf.dprintf("currentMessage=#%s#",currentMessage);
+Dprintf.dprintf("event.text=#%s#",event.text);
+          switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+          {
+            case 0:
+              // replace
+              newMessage         = event.text;
+              data.lastMessage   = newMessage;
+              data.messageEdited = false;
+              break;
+            case 1:
+              // add
+              newMessage         = CommitMessage.format(currentMessage+widgetMessage.DELIMITER+event.text,widgetMessage.DELIMITER);
+              data.messageEdited = true;
+              break;
+            default:
+              return;
+          }
+        }
+        else
+        {
+          newMessage       = event.text;
+          data.lastMessage = newMessage;
+        }
+
+        widgetMessage.setText(newMessage);
+        Widgets.setFocus(widgetMessage);
+      }
+    };
+    dialog.addListener(USER_EVENT_NEW_MESSAGE,listener);
+    dialog.addListener(USER_EVENT_ADD_REPLACE_MESSAGE,listener);
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryCreateBranch,Settings.setWindowLocation);
@@ -359,14 +432,14 @@ class CommandCreateBranch
       widgetHistory.deselectAll();
     }
 
-    // add existing branch names
+    // add existing branch/tag names
     Background.run(new BackgroundRunnable()
     {
       public void run()
       {
         // get branch names
         Widgets.setCursor(dialog,Onzen.CURSOR_WAIT);
-        repositoryTab.setStatusText("Get branch names...");
+        repositoryTab.setStatusText("Get branch/tag names...");
         try
         {
           data.branchTagNames = repositoryTab.repository.getBranchTagNames();
