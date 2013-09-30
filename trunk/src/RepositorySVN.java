@@ -104,6 +104,24 @@ class RepositorySVN extends Repository
     return true;
   }
 
+  /** get special commands for repository
+   * @return array with special commands
+   */
+  public SpecialCommand[] getSpecialCommands()
+  {
+    return new SpecialCommand[]
+    {
+      new SpecialCommand("Cleanup")
+      {
+        public void run()
+          throws RepositoryException
+        {
+          cleanup(this,null);
+        }
+      }
+    };
+  }
+
   /** create new repository module
    * @param repositoryURL repository server URL
    * @param moduleName module name
@@ -314,7 +332,7 @@ class RepositorySVN extends Repository
             {
               Element wcStatusElement = (Element)nodeList.item(0);
 
-              state = parseState(wcStatusElement.getAttribute("item"));
+              state = parseState(wcStatusElement);
 //Dprintf.dprintf("state=%s %s",state,wcStatusElement.getAttribute("item"));
               workingRevision = wcStatusElement.getAttribute("revision");
 
@@ -1997,6 +2015,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     try
     {
       Command command = new Command();
+      int     exitCode;
 
       // delete local files
       for (FileData fileData : fileDataSet)
@@ -2008,7 +2027,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
-      command.append("update","-r",revision);
+      command.append("revert");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (recursive) command.append("-R");
       command.append("--");
@@ -2017,7 +2036,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       exec.closeStdin();
 
       // wait for termination
-      int exitCode = exec.waitFor();
+      exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
@@ -2025,6 +2044,31 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // done
       exec.done(); exec = null;
+
+      if (revision != null)
+      {
+        // update to specifc revision
+        command.clear();
+        command.append(Settings.svnCommand,"--non-interactive");
+        if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        command.append("update","-r",revision);
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
+        if (recursive) command.append("-R");
+        command.append("--");
+        command.append(getFileDataNames(fileDataSet));
+        exec = new Exec(rootPath,command);
+        exec.closeStdin();
+
+        // wait for termination
+        exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+
+        // done
+        exec.done(); exec = null;
+      }
     }
     catch (IOException exception)
     {
@@ -2159,17 +2203,23 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   }
 
   /** pull changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pullChanges(String masterRepository)
+  public void pullChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
   }
 
   /** push changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pushChanges(String masterRepository)
+  public void pushChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
   }
@@ -2496,24 +2546,28 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     else                                      return FileData.States.UNKNOWN;
   }
 
-  /** parse SVN state string
-   * @param string state string
+  /** parse SVN XML state string
+   * @param element status element
    * @return state
    */
-  private FileData.States parseState(String string)
+  private FileData.States parseState(Element element)
   {
-    if      (string.equalsIgnoreCase("normal"    )) return FileData.States.OK;
-    else if (string.equalsIgnoreCase("update"    )) return FileData.States.UPDATE;
-    else if (string.equalsIgnoreCase("modified"  )) return FileData.States.MODIFIED;
-    else if (string.equalsIgnoreCase("added"     )) return FileData.States.ADDED;
-    else if (string.equalsIgnoreCase("conflict"  )) return FileData.States.CONFLICT;
-    else if (string.equalsIgnoreCase("conflicted")) return FileData.States.CONFLICT;
-    else if (string.equalsIgnoreCase("removed"   )) return FileData.States.REMOVED;
-    else if (string.equalsIgnoreCase("deleted"   )) return FileData.States.REMOVED;
-    else if (string.equalsIgnoreCase("merge"     )) return FileData.States.MERGE;
-    else if (string.equalsIgnoreCase("checkout"  )) return FileData.States.CHECKOUT;
-    else if (string.equalsIgnoreCase("missing"   )) return FileData.States.CHECKOUT;
-    else                                            return FileData.States.UNKNOWN;
+    String item           = element.getAttribute("item");
+    String treeConflicted = element.getAttribute("tree-conflicted");
+
+    if      (item.equalsIgnoreCase("normal")           ) return FileData.States.OK;
+    else if (item.equalsIgnoreCase("update")           ) return FileData.States.UPDATE;
+    else if (item.equalsIgnoreCase("modified")         ) return FileData.States.MODIFIED;
+    else if (item.equalsIgnoreCase("added")            ) return FileData.States.ADDED;
+    else if (item.equalsIgnoreCase("conflict")         ) return FileData.States.CONFLICT;
+    else if (   item.equalsIgnoreCase("conflicted")
+             || treeConflicted.equalsIgnoreCase("true")) return FileData.States.CONFLICT;
+    else if (item.equalsIgnoreCase("removed")          ) return FileData.States.REMOVED;
+    else if (item.equalsIgnoreCase("deleted")          ) return FileData.States.REMOVED;
+    else if (item.equalsIgnoreCase("merge")            ) return FileData.States.MERGE;
+    else if (item.equalsIgnoreCase("checkout")         ) return FileData.States.CHECKOUT;
+    else if (item.equalsIgnoreCase("missing")          ) return FileData.States.CHECKOUT;
+    else                                                 return FileData.States.UNKNOWN;
   }
 
   /** parse SVN diff index
@@ -2645,6 +2699,71 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 //Dprintf.dprintf("revisionData=%s",revisionData);
 
     return revisionData;
+  }
+
+  private void cleanup(SpecialCommand specialCommand, BusyDialog busyDialog)
+    throws RepositoryException
+  {
+    final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // cleanup
+      command.append(Settings.svnCommand,"cleanup");
+      exec = new Exec(rootPath,command);
+      exec.closeStdin();
+
+      // read output
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && !exec.isTerminated()
+            )
+      {
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if (line != null)
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateList(line);
+        }
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        // abort
+        exec.destroy();
+      }
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
   }
 }
 
