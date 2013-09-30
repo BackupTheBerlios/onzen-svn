@@ -19,6 +19,7 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.HashMap;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -51,10 +52,11 @@ public class RepositoryList implements Iterable<Repository>
   // --------------------------- variables --------------------------------
   public String                  name;              // repository list name
 
+  @XmlAttribute(name = "inactive")
+  private boolean                inactive;
+
   @XmlElement(name = "repository")
   private LinkedList<Repository> repositoryList;    // list of repositories
-  @XmlAttribute(name = "inactive")
-  private boolean inactive;
 
   // ------------------------ native functions ----------------------------
 
@@ -181,6 +183,22 @@ public class RepositoryList implements Iterable<Repository>
     return names;
   }
 
+  /** name repository list
+   * @param oldName old name of repository list
+   * @param newName new name of repository list
+   */
+  public static void rename(String oldName, String newName)
+    throws IOException
+  {
+    File oldFile = new File(Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+oldName);
+    File newFile = new File(Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+newName);
+
+    if (!oldFile.renameTo(newFile))
+    {
+      throw new IOException("rename file fail");
+    }
+  }
+
   /** delete repository list
    * @param name name of repository list
    */
@@ -193,6 +211,60 @@ public class RepositoryList implements Iterable<Repository>
     if (!file.delete())
     {
       throw new IOException("delete file fail");
+    }
+  }
+
+  /** activate/deactivate repository list
+   * @param name name of repository list
+   * @param activated true iff repository list is active
+   */
+  public static void setEnabled(String name, boolean activated)
+    throws IOException
+  {
+
+    try
+    {
+      String fileName = Settings.ONZEN_DIRECTORY+File.separator+LISTS_SUB_DIRECOTRY+File.separator+name;
+
+      File file = new File(fileName);
+      if (file.exists())
+      {
+        // create JAXB context
+        JAXBContext jaxbContext = JAXBContext.newInstance(RepositoryList.class);
+
+        // instantiate unmarshaller
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+
+        // read xml file
+        RepositoryList repositoryList = (RepositoryList)unmarshaller.unmarshal(new FileReader(file));
+
+        // set enabled
+        repositoryList.inactive = !activated;
+
+        // instantiate marshaller
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT,true);
+
+        // write xml file
+        Writer writer = null;
+        try
+        {
+          writer = new FileWriter(fileName);
+          marshaller.marshal(repositoryList,writer);
+        }
+        finally
+        {
+          try { writer.close(); } catch (Exception exception) { /* ignored */ }
+        }
+      }
+    }
+    catch (PropertyException exception)
+    {
+      throw new IOException(exception);
+    }
+    catch (JAXBException exception)
+    {
+      throw new IOException(exception);
     }
   }
 
@@ -288,14 +360,7 @@ for (String s : repository.openDirectories) Dprintf.dprintf("open %s",s);
       }
       finally
       {
-        try
-        {
-          writer.close();
-        }
-        catch (Exception exception)
-        {
-          // ignored
-        }
+        try { writer.close(); } catch (Exception exception) { /* ignored */ }
       }
 
       // store name
