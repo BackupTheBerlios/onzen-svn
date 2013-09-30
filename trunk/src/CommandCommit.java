@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Listener;
@@ -62,16 +63,23 @@ class CommandCommit
     String[] patchLinesNoWhitespaces;   // changed lines (without whitespace changes)
     String[] patchLines;                // changed lines
     String[] message;                   // commit message
+    String   lastMessage;               // last set commit message
+    boolean  messageEdited;             // true iff commit message edited
 
     Data()
     {
       this.patchLinesNoWhitespaces = null;
       this.patchLines              = null;
       this.message                 = null;
+      this.lastMessage             = "";
+      this.messageEdited           = false;
     }
   };
 
   // --------------------------- constants --------------------------------
+  // user events
+  private final int USER_EVENT_NEW_MESSAGE         = 0xFFFF+0;
+  private final int USER_EVENT_ADD_REPLACE_MESSAGE = 0xFFFF+1;
 
   // --------------------------- variables --------------------------------
 
@@ -200,7 +208,11 @@ class CommandCommit
       widgetMessage = Widgets.newText(composite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.H_SCROLL|SWT.V_SCROLL);
       widgetMessage.setText(StringUtils.join(lastMessage,widgetMessage.DELIMITER));
       Widgets.layout(widgetMessage,4,0,TableLayoutData.NSWE);
-      widgetMessage.setToolTipText("Commit message.\nCtrl-Up/Down/Home/End to select message from history.\nCtrl-Return to commit changed files.");
+      widgetMessage.setToolTipText("Commit message.\n"+
+                                   Widgets.acceleratorToText(Settings.keyPrevCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyLastCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyFirstCommitMessage)+"/"+Widgets.acceleratorToText(Settings.keyLastCommitMessage)+"to select message from history,\n"+
+                                   Widgets.acceleratorToText(Settings.keyFormatCommitMessage)+" to format message,\n"+
+                                   Widgets.acceleratorToText(Settings.keyCommitMessageDone)+" to commit changed files."
+                                  );
     }
 
     // buttons
@@ -268,25 +280,7 @@ class CommandCommit
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          String oldMessage = widgetMessage.getText().trim();
-          String newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim();
-
-          if (!oldMessage.isEmpty() && !oldMessage.equals(newMessage))
-          {
-            switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
-            {
-              case 0:
-                break;
-              case 1:
-                newMessage = oldMessage+widgetMessage.DELIMITER+newMessage;
-                break;
-              default:
-                return;
-            }
-          }
-
-          widgetMessage.setText(newMessage+widgetMessage.DELIMITER);
-          Widgets.setFocus(widgetMessage);
+          Widgets.notify(dialog,USER_EVENT_ADD_REPLACE_MESSAGE,StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim());
         }
       }
     });
@@ -299,25 +293,7 @@ class CommandCommit
         int i = widget.getSelectionIndex();
         if (i >= 0)
         {
-          String oldMessage = widgetMessage.getText().trim();
-          String newMessage = StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim();
-
-          if (!oldMessage.isEmpty() && !oldMessage.equals(newMessage))
-          {
-            switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
-            {
-              case 0:
-                break;
-              case 1:
-                newMessage = oldMessage+widgetMessage.DELIMITER+newMessage;
-                break;
-              default:
-                return;
-            }
-          }
-
-          widgetMessage.setText(newMessage+widgetMessage.DELIMITER);
-          Widgets.setFocus(widgetMessage);
+          Widgets.notify(dialog,USER_EVENT_ADD_REPLACE_MESSAGE,StringUtils.join(history.get(i),widgetMessage.DELIMITER).trim());
         }
       }
       public void mouseDown(MouseEvent mouseEvent)
@@ -331,70 +307,122 @@ class CommandCommit
     {
       public void keyPressed(KeyEvent keyEvent)
       {
-        if ((keyEvent.stateMask & SWT.CTRL) != 0)
-        {
-          int i = widgetHistory.getSelectionIndex();
-          if (i < 0) i = history.size();
+        int i = widgetHistory.getSelectionIndex();
+        if (i < 0) i = history.size();
 
-          if (keyEvent.keyCode == SWT.ARROW_DOWN)
+        if      (Widgets.isAccelerator(keyEvent,Settings.keyPrevCommitMessage))
+        {
+          // previous history entry
+          if (i > 0)
           {
-            // next history entry
-            if (i < history.size()-1)
-            {
-              widgetHistory.setSelection(i+1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.get(i+1),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(i-1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i-1),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.ARROW_UP)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyNextCommitMessage))
+        {
+          // next history entry
+          if (i < history.size()-1)
           {
-            // previous history entry
-            if (i > 0)
-            {
-              widgetHistory.setSelection(i-1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.get(i-1),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(i+1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.get(i+1),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.HOME)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFirstCommitMessage))
+        {
+          // first history entry
+          if (history.size() > 0)
           {
-            // first history entry
-            if (history.size() > 0)
-            {
-              widgetHistory.setSelection(0);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.getFirst(),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(0);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.getFirst(),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.keyCode == SWT.END)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyLastCommitMessage))
+        {
+          // last history entry
+          if (history.size() > 0)
           {
-            // last history entry
-            if (history.size() > 0)
-            {
-              widgetHistory.setSelection(history.size()-1);
-              display.update();
-              widgetHistory.showSelection();
-              widgetMessage.setText(StringUtils.join(history.getLast(),widgetMessage.DELIMITER));
-              widgetMessage.setFocus();
-            }
+            widgetHistory.setSelection(history.size()-1);
+            display.update();
+            widgetHistory.showSelection();
+
+            Widgets.notify(dialog,USER_EVENT_NEW_MESSAGE,StringUtils.join(history.getLast(),widgetMessage.DELIMITER).trim());
           }
-          else if (keyEvent.character == SWT.CR)
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyFormatCommitMessage))
+        {
+          // format message
+          String oldMessage = widgetMessage.getText().trim();
+          String newMessage = CommitMessage.format(oldMessage,widgetMessage.DELIMITER);
+          if (!newMessage.equals(oldMessage))
           {
-            // invoke commit-button
-            Widgets.invoke(widgetCommit);
+            widgetMessage.setText(newMessage);
+            Widgets.setFocus(widgetMessage);
           }
+        }
+        else if (Widgets.isAccelerator(keyEvent,Settings.keyCommitMessageDone))
+        {
+          // invoke commit-button
+          Widgets.invoke(widgetCommit);
         }
       }
       public void keyReleased(KeyEvent keyEvent)
       {
       }
     });
+    Listener listener = new Listener()
+    {
+      public void handleEvent(Event event)
+      {
+        String  currentMessage = widgetMessage.getText().trim();
+
+        String newMessage;
+        if (   (!currentMessage.isEmpty() && !currentMessage.equals(data.lastMessage))
+            || (!currentMessage.isEmpty() && (event.type == USER_EVENT_ADD_REPLACE_MESSAGE))
+            || data.messageEdited
+           )
+        {
+Dprintf.dprintf("lastMessage=#%s#",data.lastMessage);
+Dprintf.dprintf("currentMessage=#%s#",currentMessage);
+Dprintf.dprintf("event.text=#%s#",event.text);
+          switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
+          {
+            case 0:
+              // replace
+              newMessage         = event.text;
+              data.lastMessage   = newMessage;
+              data.messageEdited = false;
+              break;
+            case 1:
+              // add
+              newMessage         = CommitMessage.format(currentMessage+widgetMessage.DELIMITER+event.text,widgetMessage.DELIMITER);
+              data.messageEdited = true;
+              break;
+            default:
+              return;
+          }
+        }
+        else
+        {
+          newMessage       = event.text;
+          data.lastMessage = newMessage;
+        }
+
+        widgetMessage.setText(newMessage);
+        Widgets.setFocus(widgetMessage);
+      }
+    };
+    dialog.addListener(USER_EVENT_NEW_MESSAGE,listener);
+    dialog.addListener(USER_EVENT_ADD_REPLACE_MESSAGE,listener);
 
     // show dialog
     Dialogs.show(dialog,Settings.geometryCommit,Settings.setWindowLocation);
@@ -633,6 +661,7 @@ class CommandCommit
       final String[] fileNames = FileData.toSortedFileNameArray(fileDataSet,repositoryTab.repository);
 
       // check for TABs/trailing whitespaces in files and convert/remove
+      boolean allFlag = false;
       for (final String fileName : fileNames)
       {
         if (!repositoryTab.repository.isSkipWhitespaceCheckFile(fileName))
@@ -644,8 +673,8 @@ class CommandCommit
           // convert TABs, remove trailing whitespaces
           if (containTABs || containTrailingWhitespaces)
           {
-            final boolean[] result = new boolean[1];
-            final String message;
+            final RepositoryTab.ConvertWhitespacesResult[] result = new RepositoryTab.ConvertWhitespacesResult[1];
+            final String                                   message;
             if      (containTABs && containTrailingWhitespaces) message = "The following file contain TABs and trailing whitespaces:\n\n"+fileName;
             else if (containTABs)                               message = "The following file contain TABs or:\n\n"+fileName;
             else /*if (containTrailingWhitespaces)*/            message = "The following file contain trailing whitespaces:\n\n"+fileName;
@@ -661,7 +690,18 @@ class CommandCommit
                                                             );
               }
             });
-            if (!result[0]) return;
+            switch (result[0])
+            {
+              case OK:
+                break;
+              case ALL:
+                allFlag = true;
+                break;
+              case FAIL:
+                break;
+              case ABORTED:
+                return;
+            }
           }
 
         }
