@@ -128,6 +128,8 @@ class Database
   public Statement createStatement()
     throws java.sql.SQLException
   {
+    if (!openFlag) throw new SQLException("database is closed");
+
     Statement statement = connection.createStatement();
     statement.setQueryTimeout(TIMEOUT);
 
@@ -141,6 +143,8 @@ class Database
   public PreparedStatement prepareStatement(String sqlCommand)
     throws java.sql.SQLException
   {
+    if (!openFlag) throw new SQLException("database is closed");
+
 //Dprintf.dprintf("sqlCommand=%s",sqlCommand);
     PreparedStatement preparedStatement = connection.prepareStatement(sqlCommand);
     preparedStatement.setQueryTimeout(TIMEOUT*1000);
@@ -169,6 +173,8 @@ class Database
 
     PreparedStatement preparedStatement;
     ResultSet         resultSet;
+
+    if (!openFlag) throw new SQLException("database is closed");
 
     // Note: Java sqlite does not support getGeneratedKeys, thus use last_insert_rowid() direct.
     preparedStatement = connection.prepareStatement("SELECT last_insert_rowid();");
