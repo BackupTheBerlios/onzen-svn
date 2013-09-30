@@ -220,6 +220,14 @@ class RepositoryTab
   public static Color COLOR_UPDATE_STATUS;
   public static Color COLOR_IGNORE;
 
+  public enum ConvertWhitespacesResult
+  {
+    OK,
+    ALL,
+    FAIL,
+    ABORTED
+  };
+
   // --------------------------- variables --------------------------------
   // repository
   public  final Repository    repository;           // repository instance of tab
@@ -487,18 +495,6 @@ class RepositoryTab
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Patches\u2026",Settings.keyPatches);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            patches();
-          }
-        });
-
         menuItem = Widgets.addMenuItem(menu,"Revert\u2026",Settings.keyRevert);
         menuItem.addSelectionListener(new SelectionListener()
         {
@@ -615,31 +611,7 @@ Dprintf.dprintf("NYI");
 
         menuItem = Widgets.addMenuSeparator(menu);
 
-        menuItem = Widgets.addMenuItem(menu,"New branch\u2026",Settings.keySetFileMode);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            newBranch();
-          }
-        });
-
         menuItem = Widgets.addMenuSeparator(menu);
-
-        menuItem = Widgets.addMenuItem(menu,"Changes log\u2026",Settings.keyChangesLog);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            changesLog();
-          }
-        });
 
         menuItem = Widgets.addMenuItem(menu,"Revisions\u2026",Settings.keyRevisions);
         menuItem.addSelectionListener(new SelectionListener()
@@ -674,18 +646,6 @@ Dprintf.dprintf("NYI");
           public void widgetSelected(SelectionEvent selectionEvent)
           {
             diff();
-          }
-        });
-
-        menuItem = Widgets.addMenuItem(menu,"Changed files\u2026",Settings.keyChangedFiles);
-        menuItem.addSelectionListener(new SelectionListener()
-        {
-          public void widgetDefaultSelected(SelectionEvent selectionEvent)
-          {
-          }
-          public void widgetSelected(SelectionEvent selectionEvent)
-          {
-            changedFiles();
           }
         });
 
@@ -1376,8 +1336,11 @@ Dprintf.dprintf("NYI");
 
   /** pull changes
    * @param masterRepository master repository or ""
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pullChanges(String masterRepository)
+  public void pullChanges(String masterRepository, String moduleName, String userName, String password)
   {
     setStatusText("Pull changes...");
     try
@@ -1386,9 +1349,9 @@ Dprintf.dprintf("NYI");
                                                       repository.getType(),
                                                       masterRepository
                                                      );
-      Settings.repositoryURLs = ArrayUtils.insertUnique(Settings.repositoryURLs,repositoryURL,0,20);
+      repositoryURL.addToHistory();
 
-      repository.pullChanges(masterRepository);
+      repository.pullChanges(masterRepository,moduleName,userName,password);
     }
     catch (RepositoryException exception)
     {
@@ -1411,25 +1374,25 @@ Dprintf.dprintf("NYI");
     {
       ArrayList<RepositoryURL> repositoryURLList;
       String                   path;
+      String                   moduleName;
+      String                   userName;
+      String                   password;
 
       Data()
       {
         this.repositoryURLList = new ArrayList<RepositoryURL>();
         this.path              = null;
+        this.moduleName        = "";
+        this.userName          = "";
+        this.password          = null;
 
         repositoryURLList.add(new RepositoryURL("file://"));
         repositoryURLList.add(new RepositoryURL("ssh://"));
         repositoryURLList.add(new RepositoryURL("http://"));
         repositoryURLList.add(new RepositoryURL("https://"));
         repositoryURLList.add(new RepositoryURL("rsync://"));
-        for (RepositoryURL repositoryURL : Settings.repositoryHistoryURLs)
+        for (RepositoryURL repositoryURL : RepositoryURL.getHistoryURLs())
         {
-    //TODO
-        repositoryURLList.add(repositoryURL);
-        }
-        for (RepositoryURL repositoryURL : Settings.additionalRepositoryURLs)
-        {
-     //TODO
           repositoryURLList.add(repositoryURL);
         }
         for (RepositoryURL repositoryURL : Settings.repositoryURLs)
@@ -1446,7 +1409,9 @@ Dprintf.dprintf("NYI");
     final Data  data   = new Data();
     final Shell dialog = Dialogs.openModal(shell,"Select repository for pull changes",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Combo  widgetRepositoryPath;
+    final Combo  widgetPath;
+    final Combo  widgetModuleName;
+    final Text   widgetUserName;
     final Button widgetPullChanges;
 
     composite = Widgets.newComposite(dialog);
@@ -1454,15 +1419,14 @@ Dprintf.dprintf("NYI");
     Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Repository:");
-      Widgets.layout(label,1,0,TableLayoutData.W);
-
+      Widgets.layout(label,0,0,TableLayoutData.W);
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
       {
-        widgetRepositoryPath = Widgets.newCombo(subComposite);
-        Widgets.layout(widgetRepositoryPath,0,0,TableLayoutData.WE);
-        widgetRepositoryPath.setToolTipText("Respository path URI.");
+        widgetPath = Widgets.newCombo(subComposite);
+        Widgets.layout(widgetPath,0,0,TableLayoutData.WE);
+        widgetPath.setToolTipText("Respository path URI.");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -1475,15 +1439,43 @@ Dprintf.dprintf("NYI");
           {
             String path = Dialogs.directory(shell,
                                             "Select repository path",
-                                            widgetRepositoryPath.getText()
+                                            widgetPath.getText()
                                            );
             if (path != null)
             {
-              widgetRepositoryPath.setText(path);
+              widgetPath.setText(path);
             }
           }
         });
       }
+
+      label = Widgets.newLabel(composite,"Module:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+      widgetModuleName = Widgets.newCombo(composite);
+      widgetModuleName.setText(data.moduleName);
+      Widgets.layout(widgetModuleName,1,1,TableLayoutData.WE);
+      widgetModuleName.setToolTipText("Module name in repository.");
+      Widgets.addModifyListener(new WidgetModifyListener(widgetModuleName,data)
+      {
+        public void modified(Combo combo)
+        {
+          combo.setText(data.moduleName);
+        }
+      });
+
+      label = Widgets.newLabel(composite,"User name:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+      widgetUserName = Widgets.newText(composite);
+      widgetUserName.setText(data.userName);
+      Widgets.layout(widgetUserName,2,1,TableLayoutData.WE);
+      widgetUserName.setToolTipText("Check-out user name.");
+      Widgets.addModifyListener(new WidgetModifyListener(widgetUserName,data)
+      {
+        public void modified(Text text)
+        {
+          text.setText(data.userName);
+        }
+      });
     }
 
     // buttons
@@ -1492,7 +1484,7 @@ Dprintf.dprintf("NYI");
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetPullChanges = Widgets.newButton(composite,"Pull changes");
-      widgetPullChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+      widgetPullChanges.setEnabled(!widgetPath.getText().trim().isEmpty());
       Widgets.layout(widgetPullChanges,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetPullChanges.addSelectionListener(new SelectionListener()
       {
@@ -1501,11 +1493,20 @@ Dprintf.dprintf("NYI");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.path = widgetRepositoryPath.getText().trim();
+          String path     = widgetPath.getText().trim();
+          String userName = widgetUserName.getText();
+          String password = onzen.getPassword(userName,path,true);
+          if (password != null)
+          {
+            data.path       = path;
+            data.moduleName = widgetModuleName.getText().trim();
+            data.userName   = userName;
+            data.password   = password;
 
-          lastRepositoryURL = new RepositoryURL(data.path);
+            lastRepositoryURL = new RepositoryURL(data.path,data.moduleName,data.userName);
 
-          Dialogs.close(dialog,true);
+            Dialogs.close(dialog,true);
+          }
         }
       });
 
@@ -1524,71 +1525,103 @@ Dprintf.dprintf("NYI");
     }
 
     // listeners
-    widgetRepositoryPath.addModifyListener(new ModifyListener()
+    widgetPath.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        widgetPullChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+        widgetPullChanges.setEnabled(!widgetPath.getText().trim().isEmpty());
       }
     });
-    widgetRepositoryPath.addSelectionListener(new SelectionListener()
+    widgetPath.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
         Combo widget = (Combo)selectionEvent.widget;
 
-        synchronized(data)
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
         {
-          data.path = widget.getText().trim();
-          data.notifyAll();
+          RepositoryURL repositoryURL = (RepositoryURL)Widgets.getComboEntry(widget,index);
+
+          synchronized(data)
+          {
+            widgetPath.setText(repositoryURL.path);
+            widgetModuleName.setText(repositoryURL.moduleName);
+            widgetUserName.setText(repositoryURL.userName);
+
+            data.path       = repositoryURL.path;
+            data.moduleName = repositoryURL.moduleName;
+            data.userName   = repositoryURL.userName;
+            Widgets.modified(data);
+          }
         }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
         Combo widget = (Combo)selectionEvent.widget;
 
-        synchronized(data)
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
         {
-          data.path = widget.getText().trim();
-          data.notifyAll();
+          RepositoryURL repositoryURL = (RepositoryURL)Widgets.getComboEntry(widget,index);
+
+          synchronized(data)
+          {
+            widgetPath.setText(repositoryURL.path);
+            widgetModuleName.setText(repositoryURL.moduleName);
+            widgetUserName.setText(repositoryURL.userName);
+
+            data.path       = repositoryURL.path;
+            data.moduleName = repositoryURL.moduleName;
+            data.userName   = repositoryURL.userName;
+            Widgets.modified(data);
+          }
         }
       }
     });
 
-    Widgets.setNextFocus(widgetRepositoryPath,widgetPullChanges);
+    // focus traversal
+    Widgets.setNextFocus(widgetPath,
+                         widgetModuleName,
+                         widgetUserName,
+                         widgetPullChanges
+                        );
 
     // add repository URLs
     for (RepositoryURL repositoryURL : data.repositoryURLList)
     {
-      widgetRepositoryPath.add(repositoryURL.path);
+      Widgets.addComboEntry(widgetPath,repositoryURL,repositoryURL.path);
     }
-    widgetRepositoryPath.setText(lastRepositoryURL.path);
+    widgetPath.setText(lastRepositoryURL.path);
+    widgetModuleName.setText(lastRepositoryURL.moduleName);
+    widgetUserName.setText(lastRepositoryURL.userName);
 
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      if (data.path != null)
-      {
-        pullChanges(data.path);
-      }
+      pullChanges(data.path,data.moduleName,data.userName,data.password);
     }
   }
 
   /** push changes
    * @param masterRepository master repository or ""
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pushChanges(String masterRepository)
+  public void pushChanges(String masterRepository, String moduleName, String userName, String password)
   {
     setStatusText("Push changes...");
     try
     {
-      RepositoryURL repositoryURL = new RepositoryURL(RepositoryURL.Types.MANUAL,
-                                                      repository.getType(),
-                                                      masterRepository
+      RepositoryURL repositoryURL = new RepositoryURL(repository.getType(),
+                                                      masterRepository,
+                                                      moduleName,
+                                                      userName
                                                      );
-      Settings.repositoryURLs = ArrayUtils.insertUnique(Settings.repositoryURLs,repositoryURL,0,20);
+      repositoryURL.addToHistory();
 
-      repository.pushChanges(masterRepository);
+      repository.pushChanges(masterRepository,moduleName,userName,password);
     }
     catch (RepositoryException exception)
     {
@@ -1611,25 +1644,25 @@ Dprintf.dprintf("NYI");
     {
       ArrayList<RepositoryURL> repositoryURLList;
       String                   path;
+      String                   moduleName;
+      String                   userName;
+      String                   password;
 
       Data()
       {
         this.repositoryURLList = new ArrayList<RepositoryURL>();
         this.path              = null;
+        this.moduleName        = "";
+        this.userName          = "";
+        this.password          = null;
 
         repositoryURLList.add(new RepositoryURL("file://"));
         repositoryURLList.add(new RepositoryURL("ssh://"));
         repositoryURLList.add(new RepositoryURL("http://"));
         repositoryURLList.add(new RepositoryURL("https://"));
         repositoryURLList.add(new RepositoryURL("rsync://"));
-        for (RepositoryURL repositoryURL : Settings.repositoryHistoryURLs)
+        for (RepositoryURL repositoryURL : RepositoryURL.getHistoryURLs())
         {
-    //TODO
-        repositoryURLList.add(repositoryURL);
-        }
-        for (RepositoryURL repositoryURL : Settings.additionalRepositoryURLs)
-        {
-     //TODO
           repositoryURLList.add(repositoryURL);
         }
         for (RepositoryURL repositoryURL : Settings.repositoryURLs)
@@ -1646,7 +1679,9 @@ Dprintf.dprintf("NYI");
     final Data  data   = new Data();
     final Shell dialog = Dialogs.openModal(shell,"Select repository for push changes",500,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
-    final Combo  widgetRepositoryPath;
+    final Combo  widgetPath;
+    final Combo  widgetModuleName;
+    final Text   widgetUserName;
     final Button widgetPushChanges;
 
     composite = Widgets.newComposite(dialog);
@@ -1654,15 +1689,14 @@ Dprintf.dprintf("NYI");
     Widgets.layout(composite,0,0,TableLayoutData.WE,0,0,4);
     {
       label = Widgets.newLabel(composite,"Repository:");
-      Widgets.layout(label,1,0,TableLayoutData.W);
-
+      Widgets.layout(label,0,0,TableLayoutData.W);
       subComposite = Widgets.newComposite(composite);
       subComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-      Widgets.layout(subComposite,1,1,TableLayoutData.NSWE);
+      Widgets.layout(subComposite,0,1,TableLayoutData.NSWE);
       {
-        widgetRepositoryPath = Widgets.newCombo(subComposite);
-        Widgets.layout(widgetRepositoryPath,0,0,TableLayoutData.WE);
-        widgetRepositoryPath.setToolTipText("Respository path URI.");
+        widgetPath = Widgets.newCombo(subComposite);
+        Widgets.layout(widgetPath,0,0,TableLayoutData.WE);
+        widgetPath.setToolTipText("Respository path URI.");
 
         button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
         Widgets.layout(button,0,1,TableLayoutData.DEFAULT);
@@ -1675,15 +1709,43 @@ Dprintf.dprintf("NYI");
           {
             String path = Dialogs.directory(shell,
                                             "Select repository path",
-                                            widgetRepositoryPath.getText()
+                                            widgetPath.getText()
                                            );
             if (path != null)
             {
-              widgetRepositoryPath.setText(path);
+              widgetPath.setText(path);
             }
           }
         });
       }
+
+      label = Widgets.newLabel(composite,"Module:");
+      Widgets.layout(label,1,0,TableLayoutData.W);
+      widgetModuleName = Widgets.newCombo(composite);
+      widgetModuleName.setText(data.moduleName);
+      Widgets.layout(widgetModuleName,1,1,TableLayoutData.WE);
+      widgetModuleName.setToolTipText("Module name in repository.");
+      Widgets.addModifyListener(new WidgetModifyListener(widgetModuleName,data)
+      {
+        public void modified(Combo combo)
+        {
+          combo.setText(data.moduleName);
+        }
+      });
+
+      label = Widgets.newLabel(composite,"User name:");
+      Widgets.layout(label,2,0,TableLayoutData.W);
+      widgetUserName = Widgets.newText(composite);
+      widgetUserName.setText(data.userName);
+      Widgets.layout(widgetUserName,2,1,TableLayoutData.WE);
+      widgetUserName.setToolTipText("Check-out user name.");
+      Widgets.addModifyListener(new WidgetModifyListener(widgetUserName,data)
+      {
+        public void modified(Text text)
+        {
+          text.setText(data.userName);
+        }
+      });
     }
 
     // buttons
@@ -1692,7 +1754,7 @@ Dprintf.dprintf("NYI");
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
       widgetPushChanges = Widgets.newButton(composite,"Push changes");
-      widgetPushChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+      widgetPushChanges.setEnabled(!widgetPath.getText().trim().isEmpty());
       Widgets.layout(widgetPushChanges,0,0,TableLayoutData.W,0,0,0,0,SWT.DEFAULT,SWT.DEFAULT,70,SWT.DEFAULT);
       widgetPushChanges.addSelectionListener(new SelectionListener()
       {
@@ -1701,11 +1763,20 @@ Dprintf.dprintf("NYI");
         }
         public void widgetSelected(SelectionEvent selectionEvent)
         {
-          data.path = widgetRepositoryPath.getText().trim();
+          String path     = widgetPath.getText().trim();
+          String userName = widgetUserName.getText();
+          String password = onzen.getPassword(userName,path,true);
+          if (password != null)
+          {
+            data.path       = path;
+            data.moduleName = widgetModuleName.getText().trim();
+            data.userName   = userName;
+            data.password   = password;
 
-          lastRepositoryURL = new RepositoryURL(data.path);
+            lastRepositoryURL = new RepositoryURL(data.path,data.moduleName,data.userName);
 
-          Dialogs.close(dialog,true);
+            Dialogs.close(dialog,true);
+          }
         }
       });
 
@@ -1724,53 +1795,81 @@ Dprintf.dprintf("NYI");
     }
 
     // listeners
-    widgetRepositoryPath.addModifyListener(new ModifyListener()
+    widgetPath.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
       {
-        widgetPushChanges.setEnabled(!widgetRepositoryPath.getText().trim().isEmpty());
+        widgetPushChanges.setEnabled(!widgetPath.getText().trim().isEmpty());
       }
     });
-    widgetRepositoryPath.addSelectionListener(new SelectionListener()
+    widgetPath.addSelectionListener(new SelectionListener()
     {
       public void widgetDefaultSelected(SelectionEvent selectionEvent)
       {
         Combo widget = (Combo)selectionEvent.widget;
 
-        synchronized(data)
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
         {
-          data.path = widget.getText().trim();
-          data.notifyAll();
+          RepositoryURL repositoryURL = (RepositoryURL)Widgets.getComboEntry(widget,index);
+
+          synchronized(data)
+          {
+            widgetPath.setText(repositoryURL.path);
+            widgetModuleName.setText(repositoryURL.moduleName);
+            widgetUserName.setText(repositoryURL.userName);
+
+            data.path       = repositoryURL.path;
+            data.moduleName = repositoryURL.moduleName;
+            data.userName   = repositoryURL.userName;
+            Widgets.modified(data);
+          }
         }
       }
       public void widgetSelected(SelectionEvent selectionEvent)
       {
         Combo widget = (Combo)selectionEvent.widget;
 
-        synchronized(data)
+        int index = widget.getSelectionIndex();
+        if (index >= 0)
         {
-          data.path = widget.getText().trim();
-          data.notifyAll();
+          RepositoryURL repositoryURL = (RepositoryURL)Widgets.getComboEntry(widget,index);
+
+          synchronized(data)
+          {
+            widgetPath.setText(repositoryURL.path);
+            widgetModuleName.setText(repositoryURL.moduleName);
+            widgetUserName.setText(repositoryURL.userName);
+
+            data.path       = repositoryURL.path;
+            data.moduleName = repositoryURL.moduleName;
+            data.userName   = repositoryURL.userName;
+            Widgets.modified(data);
+          }
         }
       }
     });
 
-    Widgets.setNextFocus(widgetRepositoryPath,widgetPushChanges);
+    // focus traversal
+    Widgets.setNextFocus(widgetPath,
+                         widgetModuleName,
+                         widgetUserName,
+                         widgetPushChanges
+                        );
 
     // add repository URLs
     for (RepositoryURL repositoryURL : data.repositoryURLList)
     {
-      widgetRepositoryPath.add(repositoryURL.path);
+      Widgets.addComboEntry(widgetPath,repositoryURL,repositoryURL.path);
     }
-    widgetRepositoryPath.setText(lastRepositoryURL.path);
+    widgetPath.setText(lastRepositoryURL.path);
+    widgetModuleName.setText(lastRepositoryURL.moduleName);
+    widgetUserName.setText(lastRepositoryURL.userName);
 
     // run dialog
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      if (data.path != null)
-      {
-        pushChanges(data.path);
-      }
+      pushChanges(data.path,data.moduleName,data.userName,data.password);
     }
   }
 
@@ -1840,9 +1939,9 @@ Dprintf.dprintf("NYI");
     }
   }
 
-  /** create new branch
+  /** create new branch/tag
    */
-  public void newBranch()
+  public void newBranchTag()
   {
     CommandCreateBranch commandCreateBranch = new CommandCreateBranch(shell,this);
     commandCreateBranch.run();
@@ -1925,11 +2024,11 @@ Dprintf.dprintf("NYI");
   }
 
   /** open file (with external command)
-   * @param fileName file name
+   * @param file file
    * @param mimeType mime type pattern
    * @param lineNumber line number
    */
-  public void openFile(String fileName, String mimeType, int lineNumber)
+  public void openFile(File file, String mimeType, int lineNumber)
   {
     // find editor command with file mime-type or file name pattern
     String commandLine = null;
@@ -1949,7 +2048,8 @@ Dprintf.dprintf("NYI");
     }
     if (commandLine == null)
     {
-      String baseName = new File(fileName).getName();
+      String fileName = file.getPath();
+      String baseName = file.getName();
       for (Settings.Editor editor : Settings.editors)
       {
         if (   editor.fileNamePattern.matcher(fileName).matches()
@@ -1965,7 +2065,7 @@ Dprintf.dprintf("NYI");
     // if no editor command found -> ask for command
     if (commandLine == null)
     {
-      commandLine  = getFileOpenCommand(fileName,mimeType);
+      commandLine  = getFileOpenCommand(file,mimeType);
     }
 
     // execute external command
@@ -1974,8 +2074,8 @@ Dprintf.dprintf("NYI");
       // expand command
       Macro macro = new Macro(StringUtils.split(commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
       if (!macro.contains("file")) macro.add("file");
-      macro.expand("file",      fileName);
-      macro.expand("f",         fileName);
+      macro.expand("file",      file.getPath());
+      macro.expand("f",         file.getPath());
       macro.expand("lineNumber",lineNumber);
       macro.expand("n",         lineNumber);
       macro.expand("%%",        "%");
@@ -2061,11 +2161,28 @@ Dprintf.dprintf("NYI");
   /** open file (with external command)
    * @param file file to open
    * @param mimeType mime type pattern
+   */
+  public void openFile(File file, String mimeType)
+  {
+    openFile(file,mimeType,0);
+  }
+
+  /** open file (with external command)
+   * @param file file to open
+   */
+  public void openFile(File file)
+  {
+    openFile(file,Onzen.getMimeType(file));
+  }
+
+  /** open file (with external command)
+   * @param fileName file to open
+   * @param mimeType mime type pattern
    * @param lineNumber line number
    */
-  public void openFile(File file, String mimeType, int lineNumber)
+  public void openFile(String fileName, String mimeType, int lineNumber)
   {
-    openFile(file.getPath(),mimeType,lineNumber);
+    openFile(new File(fileName),mimeType,lineNumber);
   }
 
   /** open file (with external command)
@@ -2078,31 +2195,12 @@ Dprintf.dprintf("NYI");
   }
 
   /** open file (with external command)
-   * @param file file to open
-   * @param mimeType mime type pattern
-   */
-  public void openFile(File file, String mimeType)
-  {
-    openFile(file.getPath(),mimeType);
-  }
-
-  /** open file (with external command)
    * @param fileData file to open
    */
   public void openFile(FileData fileData)
   {
     openFile(fileData.getFileName(repository.rootPath),
              fileData.getMimeType(repository.rootPath)
-            );
-  }
-
-  /** open file (with external command)
-   * @param file file to open
-   */
-  public void openFile(File file)
-  {
-    openFile(file,
-             Onzen.getMimeType(file)
             );
   }
 
@@ -3263,9 +3361,16 @@ Dprintf.dprintf("");
   /** convert whitespaces in file dialog
    * @param fileName file name
    * @param fileNames all file names
+   * @param convertTabs true to convert tabs
+   * @param removeTrailingWhitespaces true to remove trailing whitespaces
    * @return true iff OK, false for abort
    */
-  public boolean convertWhitespaces(String fileName, String[] fileNames, String message, boolean convertTabs, boolean removeTrailingWhitespaces)
+  public ConvertWhitespacesResult convertWhitespaces(String   fileName,
+                                    String[] fileNames,
+                                    String   message,
+                                    boolean  convertTabs,
+                                    boolean  removeTrailingWhitespaces
+                                   )
   {
     /** dialog data
      */
@@ -3469,7 +3574,24 @@ Dprintf.dprintf("");
           Dialogs.error(shell,
                         String.format("Cannot convert whitespaces in files\n(error: %s).",exception.getMessage())
                        );
-          return false;
+          return ConvertWhitespacesResult.FAIL;
+        }
+
+        if (data.convertTABs && data.removeTrailingWhitespaces)
+        {
+          return ConvertWhitespacesResult.ALL;
+        }
+        else if (data.convertTABs)
+        {
+          return ConvertWhitespacesResult.ALL;
+        }
+        else if (data.removeTrailingWhitespaces)
+        {
+          return ConvertWhitespacesResult.ALL;
+        }
+        else
+        {
+          return ConvertWhitespacesResult.OK;
         }
       }
       else
@@ -3490,16 +3612,15 @@ Dprintf.dprintf("");
                               )
              )
           {
-            return false;
+            return ConvertWhitespacesResult.FAIL;
           }
         }
+        return ConvertWhitespacesResult.OK;
       }
-
-      return true;
     }
     else
     {
-      return false;
+      return ConvertWhitespacesResult.ABORTED;
     }
   }
 
@@ -4367,11 +4488,11 @@ Dprintf.dprintf("");
   //-----------------------------------------------------------------------
 
   /** get file open command
-   * @param fileName
+   * @param fileName file name
    * @param mimeType mime type pattern
    * @return command or null
    */
-  private String getFileOpenCommand(String fileName, String mimeType)
+  private String getFileOpenCommand(File file, String mimeType)
   {
     /** dialog data
      */
@@ -4400,10 +4521,11 @@ Dprintf.dprintf("");
     Label     label;
     Button    button;
 
+    data.fileName = file.getName();
     data.mimeType = mimeType;
 
     // get file name pattern and command from file associations if possible
-    String suffix = (fileName.lastIndexOf('.') >= 0) ? fileName.substring(fileName.lastIndexOf('.')).toLowerCase() : null;
+    String suffix = (data.fileName.lastIndexOf('.') >= 0) ? data.fileName.substring(data.fileName.lastIndexOf('.')).toLowerCase() : null;
     if (suffix != null)
     {
       data.fileName    = "*"+suffix;
@@ -4411,7 +4533,7 @@ Dprintf.dprintf("");
     }
 
     // command selection dialog
-    final Shell dialog = Dialogs.openModal(shell,"Select command to open file '"+fileName+"'",300,200,new double[]{1.0,0.0},1.0);
+    final Shell dialog = Dialogs.openModal(shell,"Select command to open file '"+file.getPath()+"'",300,200,new double[]{1.0,0.0},1.0);
 
     // create widgets
     final Table  widgetEditors;
@@ -4562,7 +4684,6 @@ Dprintf.dprintf("");
           Settings.Editor editor    = (Settings.Editor)tableItem.getData();
 
           widgetName.setText(editor.name);
-          widgetFileName.setText(editor.fileName);
           widgetCommandLine.setText(editor.commandLine);
         }
       }
@@ -4590,8 +4711,7 @@ Dprintf.dprintf("");
         }
       }
     });
-    Widgets.setNextFocus(widgetMimeType,widgetFileName);
-    Widgets.setNextFocus(widgetFileName,widgetCommandLine);
+
     widgetCommandLine.addModifyListener(new ModifyListener()
     {
       public void modifyText(ModifyEvent modifyEvent)
@@ -4601,7 +4721,12 @@ Dprintf.dprintf("");
         widgetOpen.setEnabled(!widget.getText().trim().isEmpty());
       }
     });
-    Widgets.setNextFocus(widgetCommandLine,widgetOpen);
+
+    // focus traversal
+    Widgets.setNextFocus(widgetMimeType,
+                         widgetFileName,
+                         widgetOpen
+                        );
 
     // add editors
     for (Settings.Editor editor : Settings.editors)
@@ -4644,6 +4769,16 @@ Dprintf.dprintf("");
     }
 
     return commandLine;
+  }
+
+  /** get file open command
+   * @param file file
+   * @param mimeType mime type pattern
+   * @return command or null
+   */
+  private String getFileOpenCommand(String fileName, String mimeType)
+  {
+    return getFileOpenCommand(new File(fileName),mimeType);
   }
 
   /** check if file contain TABs/trailing whitespaces
