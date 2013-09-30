@@ -120,8 +120,6 @@ class CommitMessage
   protected final static String  USER_NAME = System.getProperty("user.name");
   protected final static String  ID        = String.format("%08x",System.currentTimeMillis());
 
-  private static final int       HISTORY_ID = 1;
-
   // --------------------------- variables --------------------------------
   protected static HistoryDatabase      historyDatabase = null;
   private   static LinkedList<String[]> history;
@@ -144,10 +142,43 @@ class CommitMessage
     startBroadcast();
 
     // init database
-    historyDatabase = new HistoryDatabase<String[]>(HISTORY_ID,Settings.maxMessageHistory)
+    historyDatabase = new HistoryDatabase<String[]>("messages",Settings.maxMessageHistory)
     {
-      public String dataToString(String[] s) { return Database.linesToData(s); }
-      public String[] stringToData(String s) { return Database.dataToLines(s); }
+      public PreparedStatement prepareInit(Database database)
+        throws SQLException
+      {
+        PreparedStatement preparedStatement = database.prepareStatement("CREATE TABLE IF NOT EXISTS messages ( "+
+                                                                        "  id        INTEGER PRIMARY KEY, "+
+                                                                        "  datetime  INTEGER DEFAULT (DATETIME('now')), "+
+                                                                        "  message   TEXT "+
+                                                                        ");"
+                                                                       );
+
+        return preparedStatement;
+      }
+      public PreparedStatement prepareInsert(Database database, String[] lines)
+        throws SQLException
+      {
+        PreparedStatement preparedStatement =  database.prepareStatement("INSERT INTO messages (datetime,message) VALUES (DATETIME('now'),?);");
+        preparedStatement.setString(1,Database.linesToData(lines));
+        return preparedStatement;
+      }
+      public PreparedStatement prepareDelete(Database database, int id)
+        throws SQLException
+      {
+        PreparedStatement preparedStatement =  database.prepareStatement("DELETE FROM messages WHERE id=?;");
+        preparedStatement.setInt(1,id);
+        return preparedStatement;
+      }
+      public String[] getResult(ResultSet resultSet)
+        throws SQLException
+      {
+        return Database.dataToLines(resultSet.getString("message"));
+      }
+      public int dataCompareTo(String[] lines0, String[] lines1)
+      {
+        return compareLines(lines0,lines1);
+      }
       @Override
       public boolean dataEquals(String s0[], String s1[]) { return equalLines(s0,s1); }
     };
@@ -172,6 +203,8 @@ class CommitMessage
       }
       catch (SQLException exception)
       {
+Dprintf.dprintf("");
+exception.printStackTrace();
         Onzen.printWarning("Cannot load commit message history from database (error: %s)",exception.getMessage());
         if (shell != null)
         {
@@ -192,6 +225,46 @@ class CommitMessage
   {
     return getHistory(null);
   }
+
+  /** format message with multiple lines
+   * @param message to format
+   * @param separator line separator
+   * @return format message
+   */
+  public static String format(String message, String separator)
+  {
+    StringBuilder buffer = new StringBuilder();
+
+    String[] lines = message.split(separator);
+    if      (lines.length > 1)
+    {
+      for (String line : lines)
+      {
+        line = line.trim();
+        if (!line.isEmpty())
+        {
+          if (Settings.autoCommitMessagePrefix != null)
+          {
+            if (!line.startsWith(Settings.autoCommitMessagePrefix)) line = Settings.autoCommitMessagePrefix+" "+line;
+          }
+          buffer.append(line);
+          buffer.append(separator);
+        }
+      }
+    }
+    else if (lines.length == 1)
+    {
+      String line = lines[0].trim();
+      if (!line.isEmpty())
+      {
+       buffer.append(line);
+       buffer.append(separator);
+      }
+    }
+
+    return buffer.toString();
+  }
+
 
   /** create commit message
    * @param summary summary line
@@ -231,7 +304,6 @@ class CommitMessage
   }
 
   /** add message to history
-   * @param message message text
    */
   public void addToHistory()
   {
@@ -374,19 +446,19 @@ class CommitMessage
     }
   }
 
-  /** compare lines if they are equal (ignore empty lines, space and case)
-   * @param otherLines lines to compare with
-   * @return true iff lines are equal  (ignore empty lines, space and case)
+  /** compare lines (ignore empty lines, space and case)
+   * @param lines0, lines1 lines to compare
+   * @return -1 if lines0 < lines1, 0 if lines0 == lines1, 1 if lines0 > lines1
    */
-  private static boolean equalLines(String[] lines0, String[] lines1)
+  private static int compareLines(String[] lines0, String[] lines1)
   {
-    boolean equalFlag = true;
+    int result = 0;
 
     if ((lines0 != null) && (lines1 != null))
     {
       int i0 = 0;
       int i1 = 0;
-      while ((i0 < lines0.length) && (i1 < lines1.length) && equalFlag)
+      while ((i0 < lines0.length) && (i1 < lines1.length) && (result == 0))
       {
         // skip empty lines
         while ((i0 < lines0.length) && lines0[i0].trim().isEmpty())
@@ -403,25 +475,39 @@ class CommitMessage
         {
           String line0 = lines0[i0].replace("\\s","");
           String line1 = lines1[i1].replace("\\s","");
-          if (!line0.equalsIgnoreCase(line1))
-          {
-            equalFlag = false;
-          }
+          result = line0.compareToIgnoreCase(line1);
         }
 
         // next line
         i0++;
         i1++;
       }
+      if (result == 0)
+      {
+        if      (i0 < i1) result = -1;
+        else if (i0 > i1) result =  1;
+      }
     }
     else
     {
-      equalFlag = false;
+      result = 0;
     }
 
-    return equalFlag;
+    return result;
   }
 
+  /** compare lines if they are equal (ignore empty lines, space and case)
+   * @param lines0, lines1 lines to compare
+   * @return true iff lines are equal
+   */
+  private static boolean equalLines(String[] lines0, String[] lines1)
+  {
+    return compareLines(lines0,lines1) == 0;
+  }
+
+  /** add message to history
+   * @param message message text
+   */
   protected static void addToHistory(String[] message)
   {
     // load history if needed
