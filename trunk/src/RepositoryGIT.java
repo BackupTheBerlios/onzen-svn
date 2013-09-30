@@ -274,6 +274,9 @@ Dprintf.dprintf("");
       fileData.state = FileData.States.OK;
     }
 
+    // get repository absolute path
+    String absolutePath = getAbsolutePath();
+
     // get status of files
     Command         command            = new Command();
     Exec            exec;
@@ -284,7 +287,7 @@ Dprintf.dprintf("");
     FileData.Modes  mode               = FileData.Modes.UNKNOWN;
     String          workingRevision    = "";
     String          repositoryRevision = "";
-    for (String directory : fileDirectorySet)
+    for (String fileDirectory : fileDirectorySet)
     {
       exec = null;
       try
@@ -293,10 +296,11 @@ Dprintf.dprintf("");
         command.clear();
         command.append(Settings.gitCommand,"status","-s","--porcelain","--untracked-files=all");
         command.append("--");
-        if (!directory.isEmpty()) command.append(directory);
+        command.append(!fileDirectory.isEmpty() ? fileDirectory : ".");
         exec = new Exec(rootPath,command);
 
         // parse status data
+        String directory = new File(rootPath,fileDirectory).getPath();
         while ((line = exec.getStdout()) != null)
         {
 //Dprintf.dprintf("line=%s",line);
@@ -305,6 +309,7 @@ Dprintf.dprintf("");
           {
             state = parseState(matcher.group(1));
             name  = StringUtils.unescape(matcher.group(2));
+//Dprintf.dprintf("name=%s",name);
 
             FileData fileData;
             fileData = findFileData(fileDataSet,name);
@@ -319,10 +324,11 @@ Dprintf.dprintf("");
                      && !isHiddenFile(name)
                     )
             {
-              // check if file not in sub-directory (hg list all files :-()
-              String parentDirectory = new File(name).getParent();
-              if (   ((parentDirectory == null) && directory.isEmpty())
-                  || ((parentDirectory != null) && parentDirectory.equals(directory))
+              // check if file is not in sub-directory (git list all files :-()
+              String subDirectory = new File(absolutePath,name).getParent();
+//Dprintf.dprintf("directory=%s new File(absolutePath,name)=%s subDirectory=%s",directory,new File(absolutePath,name),subDirectory);
+              if (   ((subDirectory == null) && fileDirectory.isEmpty())
+                  || ((subDirectory != null) && subDirectory.equals(directory))
                  )
               {
                 // get file type, size, date/time
@@ -332,6 +338,7 @@ Dprintf.dprintf("");
                 Date           datetime = new Date(file.lastModified());
 
                 // create file data
+Dprintf.dprintf("add new %s",name);
                 newFileDataSet.add(new FileData(name,
                                                 type,
                                                 state,
@@ -551,8 +558,8 @@ Dprintf.dprintf("");
       // get single log entry
       command.clear();
       command.append(Settings.gitCommand,"log","-1");
+      if (revision != null) command.append(revision);
       command.append("--");
-      if (fileData != null) command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
       exec = new Exec(rootPath,command);
 
       // parse data
@@ -931,6 +938,9 @@ Dprintf.dprintf("");
           // git is odd: the first line of the diff is appended to the diff-header line...
           exec.ungetStdout(matcher.group(3));
 
+          // git is odd: the first line of the diff is appended to the diff-header line...
+          exec.ungetStdout(matcher.group(3));
+
           // read until @@ is found
           while (   ((line = exec.peekStdout()) != null)
                  && !line.startsWith("@@")
@@ -960,7 +970,15 @@ Dprintf.dprintf("");
                    && (line.isEmpty() || line.startsWith(" "))
                   )
             {
-              keepLinesList.add(newFileLines[lineNb-1]);
+//Dprintf.dprintf("keep=#%s#",);
+              if (lineNb <= newFileLines.length)
+              {
+                keepLinesList.add(newFileLines[lineNb-1]);
+              }
+              else
+              {
+                keepLinesList.add("???");
+              }
               lineNb++;
             }
             exec.ungetStdout(line);
@@ -1763,21 +1781,86 @@ throw new RepositoryException("NYI");
   }
 
   /** pull changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pullChanges(String masterRepository)
+  public void pullChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
+    final Pattern PATTERN_URI1 = Pattern.compile("^([^:/]+)://([^:]*):([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI2 = Pattern.compile("^([^:/]+)://([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI3 = Pattern.compile("^([^:/]+)://(.*)",Pattern.CASE_INSENSITIVE);
+
     Exec exec = null;
     try
     {
       Command command = new Command();
+      Matcher matcher;
       int     exitCode;
 
       command.clear();
       command.append(Settings.gitCommand,"pull");
       command.append("--");
-      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+      if ((masterRepositoryPath != null) && !masterRepositoryPath.isEmpty())
+      {
+        if      ((matcher = PATTERN_URI1.matcher(masterRepositoryPath)).matches())
+        {
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               matcher.group(2),
+                               ":",
+                               command.hidden(matcher.group(3)),
+                               "@",
+                               matcher.group(4),
+                               "/",
+                               moduleName
+                              );
+        }
+        else if ((matcher = PATTERN_URI2.matcher(masterRepositoryPath)).matches())
+        {
+          if (password.isEmpty())
+          {
+            throw new RepositoryException("no password given");
+          }
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               matcher.group(2),
+                               ":",
+                               command.hidden(password),
+                               "@",
+                               matcher.group(3),
+                               "/",
+                               moduleName
+                              );
+        }
+        else if ((matcher = PATTERN_URI3.matcher(masterRepositoryPath)).matches())
+        {
+          if (userName.isEmpty())
+          {
+            userName = System.getProperty("user.name");
+          }
+          if (password.isEmpty())
+          {
+            throw new RepositoryException("no password given");
+          }
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               userName,
+                               ":",
+                               command.hidden(password),
+                               "@",
+                               matcher.group(2),
+                               "/",
+                               moduleName
+                              );
+        }
+        else
+        {
+          command.append("file://"+masterRepositoryPath+"/"+moduleName);
+        }
+      }
       exec = new Exec(rootPath,command);
 
       // wait for termination
@@ -1801,12 +1884,17 @@ throw new RepositoryException("NYI");
   }
 
   /** push changes
-   * @param masterRepository master repository or null
+   * @param masterRepositoryPath master repository path
+   * @param moduleName module name
+   * @param userName user name or ""
+   * @param password password or ""
    */
-  public void pushChanges(String masterRepository)
+  public void pushChanges(String masterRepositoryPath, String moduleName, String userName, String password)
     throws RepositoryException
   {
-    final Pattern PATTERN_ABORT = Pattern.compile("^\\s*abort:.*",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI1 = Pattern.compile("^([^:/]+)://([^:]*):([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI2 = Pattern.compile("^([^:/]+)://([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
+    final Pattern PATTERN_URI3 = Pattern.compile("^([^:/]+)://(.*)",Pattern.CASE_INSENSITIVE);
 
     Exec exec = null;
     try
@@ -1816,10 +1904,142 @@ throw new RepositoryException("NYI");
       String  line;
       Matcher matcher;
 
+      // push changes
       command.clear();
       command.append(Settings.gitCommand,"push");
       command.append("--");
-      if ((masterRepository != null) && !masterRepository.isEmpty()) command.append(masterRepository);
+      if ((masterRepositoryPath != null) && !masterRepositoryPath.isEmpty())
+      {
+        if      ((matcher = PATTERN_URI1.matcher(masterRepositoryPath)).matches())
+        {
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               matcher.group(2),
+                               ":",
+                               command.hidden(matcher.group(3)),
+                               "@",
+                               matcher.group(4),
+                               "/",
+                               moduleName
+                              );
+        }
+        else if ((matcher = PATTERN_URI2.matcher(masterRepositoryPath)).matches())
+        {
+          if (password.isEmpty())
+          {
+            throw new RepositoryException("no password given");
+          }
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               matcher.group(2),
+                               ":",
+                               command.hidden(password),
+                               "@",
+                               matcher.group(3),
+                               "/",
+                               moduleName
+                              );
+        }
+        else if ((matcher = PATTERN_URI3.matcher(masterRepositoryPath)).matches())
+        {
+          if (userName.isEmpty())
+          {
+            userName = System.getProperty("user.name");
+          }
+          if (password.isEmpty())
+          {
+            throw new RepositoryException("no password given");
+          }
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               userName,
+                               ":",
+                               command.hidden(password),
+                               "@",
+                               matcher.group(2),
+                               "/",
+                               moduleName
+                              );
+        }
+        else
+        {
+          command.append("file://"+masterRepositoryPath+"/"+moduleName);
+        }
+      }
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+
+      // push tags
+      command.clear();
+      command.append(Settings.gitCommand,"push","--tags");
+      command.append("--");
+      if ((masterRepositoryPath != null) && !masterRepositoryPath.isEmpty())
+      {
+        if      ((matcher = PATTERN_URI1.matcher(masterRepositoryPath)).matches())
+        {
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               matcher.group(2),
+                               ":",
+                               command.hidden(matcher.group(3)),
+                               "@",
+                               matcher.group(4),
+                               "/",
+                               moduleName
+                              );
+        }
+        else if ((matcher = PATTERN_URI2.matcher(masterRepositoryPath)).matches())
+        {
+          if (password.isEmpty())
+          {
+            throw new RepositoryException("no password given");
+          }
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               matcher.group(2),
+                               ":",
+                               command.hidden(password),
+                               "@",
+                               matcher.group(3),
+                               "/",
+                               moduleName
+                              );
+        }
+        else if ((matcher = PATTERN_URI3.matcher(masterRepositoryPath)).matches())
+        {
+          if (userName.isEmpty())
+          {
+            userName = System.getProperty("user.name");
+          }
+          if (password.isEmpty())
+          {
+            throw new RepositoryException("no password given");
+          }
+          command.appendConcat(matcher.group(1),
+                               "://",
+                               userName,
+                               ":",
+                               command.hidden(password),
+                               "@",
+                               matcher.group(2),
+                               "/",
+                               moduleName
+                              );
+        }
+        else
+        {
+          command.append("file://"+masterRepositoryPath+"/"+moduleName);
+        }
+      }
       exec = new Exec(rootPath,command);
 
       // wait for termination
@@ -1923,20 +2143,16 @@ throw new RepositoryException("NYI");
       Command command = new Command();
       String  line;
 
-      // add files
+      // list tags
       command.clear();
-      command.append(Settings.gitCommand,"branch","-a");
+      command.append(Settings.gitCommand,"tag","-l");
       command.append("--");
       exec = new Exec(rootPath,command);
-
-      // discard first line: HEAD -> ...
-      exec.getStdout();
 
       // read output
       while ((line = exec.getStdout()) != null)
       {
-        String[] words = StringUtils.split(line.substring(2));
-        if (words != null) branchTagNameSet.add(words[0]);
+        branchTagNameSet.add(line);
       }
 
       // done
@@ -1960,11 +2176,11 @@ throw new RepositoryException("NYI");
 
   /** create new branch
    * @param rootName root name (source)
-   * @param branchName branch name
+   * @param branchTagName branch/tag name
    * @param commitMessage commit message
    * @param buysDialog busy dialog or null
    */
-  public void newBranch(String rootName, String branchName, CommitMessage commitMessage, BusyDialog busyDialog)
+  public void newBranch(String rootName, String branchTagName, CommitMessage commitMessage, BusyDialog busyDialog)
     throws RepositoryException
   {
     Exec exec = null;
@@ -1974,9 +2190,9 @@ throw new RepositoryException("NYI");
       String  line;
       int     exitCode;
 
-      // add files
+      // create branch
       command.clear();
-      command.append(Settings.gitCommand,"branch",branchName);
+      command.append(Settings.gitCommand,"tag","-a",branchTagName,"-m",commitMessage.getMessage());
       command.append("--");
       exec = new Exec(rootPath,command);
 
@@ -2001,6 +2217,42 @@ throw new RepositoryException("NYI");
   }
 
   //-----------------------------------------------------------------------
+
+  /** get absolute local repository path
+   * @return absolute path
+   */
+  public String getAbsolutePath()
+  {
+    String absolutePath = "";
+
+    // get root
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+
+      command.clear();
+      command.append(Settings.gitCommand,"rev-parse","--show-toplevel");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      absolutePath = exec.getStdout();
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return absolutePath;
+  }
 
   /** parse git state string
    * @param string state string
