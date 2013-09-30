@@ -217,8 +217,8 @@ public class CommandFindFiles
 
   // --------------------------- constants --------------------------------
   // unique history database ids
-  private final int HISTORY_ID_FILENAME_FILTER = 10;
-  private final int HISTORY_ID_FILTER          = 11;
+  private final String HISTORY_NAME_FILENAME_FILTER = "fileNameFilters";
+  private final String HISTORY_NAME_FILTER          = "nameFilters";
 
   // --------------------------- variables --------------------------------
 
@@ -524,7 +524,7 @@ Dprintf.dprintf("");
           }
         });
         widgetFileNameFilter.setToolTipText("File name/text patterns. Use * and ? as wildcards. Use space as separator.");
-        for (String pattern : HistoryDatabase.getHistory(HISTORY_ID_FILENAME_FILTER,20,HistoryDatabase.Directions.SORTED))
+        for (String pattern : HistoryDatabase.getHistory(HISTORY_NAME_FILENAME_FILTER,20,HistoryDatabase.Directions.SORTED))
         {
           widgetFileNameFilter.add(pattern);
         }
@@ -547,7 +547,7 @@ Dprintf.dprintf("");
         });
         widgetFilter.setToolTipText("File name/text patterns. Use * and ? as wildcards. Use space as separator.");
         String[] history;
-        for (String pattern : HistoryDatabase.getHistory(HISTORY_ID_FILTER,20,HistoryDatabase.Directions.SORTED))
+        for (String pattern : HistoryDatabase.getHistory(HISTORY_NAME_FILTER,20,HistoryDatabase.Directions.SORTED))
         {
           widgetFilter.add(pattern);
         }
@@ -973,7 +973,7 @@ Dprintf.dprintf("event=%s",event);
       public void run()
       {
         HashSet<String> findDataKeySet = new HashSet<String>();
- 
+
         while (!data.quitFlag)
         {
           // clearfiles
@@ -1185,13 +1185,13 @@ Dprintf.dprintf("event=%s",event);
         public void done(Object result)
         {
           // store values
-          HistoryDatabase.putHistory(HISTORY_ID_FILENAME_FILTER,
+          HistoryDatabase.setHistory(HISTORY_NAME_FILENAME_FILTER,
                                      widgetFileNameFilter.getItems(),
                                      20,
                                      HistoryDatabase.Directions.SORTED,
                                      widgetFileNameFilter.getText().trim()
                                     );
-          HistoryDatabase.putHistory(HISTORY_ID_FILTER,
+          HistoryDatabase.setHistory(HISTORY_NAME_FILTER,
                                      widgetFilter.getItems(),
                                      20,
                                      HistoryDatabase.Directions.SORTED,
