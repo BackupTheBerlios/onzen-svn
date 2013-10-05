@@ -489,10 +489,7 @@ Dprintf.dprintf("d=%s",d);
 
       if (repositoryListName != null)
       {
-//CommitMessage commitMessage = new CommitMessage(new String[]{"xxxx"});
-//commitMessage.addToHistory();
-
-      // run
+        // run
         exitcode = run();
       }
       else
@@ -7013,7 +7010,7 @@ exception.printStackTrace();
    */
   public void selectRepositoryTab(RepositoryTab repositoryTab)
   {
-    // deselect previous repository
+    // deselect previous selected repository
     if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
 
     // select new repository
@@ -7096,6 +7093,12 @@ exception.printStackTrace();
       }
     }
     selectedRepositoryTab = repositoryTab;
+
+    // set focus
+    if (selectedRepositoryTab != null)
+    {
+      Widgets.setFocus(selectedRepositoryTab.widgetFileTree);
+    }
   }
 
   /** reselect selected repository tab
