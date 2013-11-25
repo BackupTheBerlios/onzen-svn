@@ -19,6 +19,29 @@ import java.util.LinkedList;
 
 /****************************** Classes ********************************/
 
+/** file copy confirmation class
+ */
+class FileCopyConfirmation
+{
+  /** confirm copy
+   * @param name file name
+   * @return true if file should be copied, false to skip file copy
+   */
+  public boolean confirm(String name)
+  {
+    return true;
+  }
+
+  /** confirm copy
+   * @param file file
+   * @return true if file should be copied, false to skip file copy
+   */
+  public boolean confirm(File file)
+  {
+    return confirm(file.getPath());
+  }
+}
+
 /** file utility functions
  */
 public class FileUtils
@@ -26,57 +49,106 @@ public class FileUtils
   /** copy file
    * @param fromFile from file
    * @param toFile to file
+   * @param fileCopyConfirmation confirm file copy
    */
-  public static void copyFile(File fromFile, File toFile)
+  public static void copyFile(final File fromFile, final File toFile, FileCopyConfirmation fileCopyConfirmation)
     throws IOException
   {
     File fromDirectory = fromFile.getParentFile();
 
-    LinkedList<File> fileList = new LinkedList<File>();
-    fileList.add(fromFile);
-
+    LinkedList<String> fileList = new LinkedList<String>();
+    fileList.add(fromFile.getName());
     while (!fileList.isEmpty())
     {
-      fromFile = fileList.removeFirst();
-      if (fromFile.isDirectory())
+      String fileName = fileList.removeFirst();
+
+      File sourceFile = new File(fromDirectory,fileName);
+      if ((fileCopyConfirmation == null) || fileCopyConfirmation.confirm(sourceFile))
       {
-        // add sub-files
-        File[] subFiles = fromFile.listFiles();
-        if (subFiles != null)
+//Dprintf.dprintf("fileName=%s sourceFile=%s",fileName,sourceFile);
+        if (sourceFile.isDirectory())
         {
-          for (File subFile : subFiles)
+          // add sub-files
+          String[] subFileNames = sourceFile.list();
+          if (subFileNames != null)
           {
-            fileList.add(subFile);
+            for (String subFileName : subFileNames)
+            {
+              fileList.add(fileName+File.separator+subFileName);
+            }
+          }
+
+          // create directory
+          if (toFile.isDirectory())
+          {
+            File newDirectory = new File(toFile,fileName);
+            if (!newDirectory.exists())
+            {
+              newDirectory.mkdirs();
+            }
           }
         }
-      }
-      else
-      {
-        // copy file data
-        File newDirectory = new File(toFile,fromFile.getName()).getParentFile();
-        if (!newDirectory.exists())
+        else
         {
-          newDirectory.mkdirs();
+          // get destination file
+          File destinationFile;
+          if (toFile.isDirectory())
+          {
+            destinationFile = new File(toFile,fileName);
+          }
+          else
+          {
+            destinationFile = toFile;
+          }
+
+          // create destination parent directory
+          File newDirectory = destinationFile.getParentFile();
+          if (!newDirectory.exists())
+          {
+            newDirectory.mkdirs();
+          }
+//Dprintf.dprintf("copy %s -> %s",sourceFile,destinationFile);
+
+          // copy file data
+          FileInputStream  input  = new FileInputStream(sourceFile);
+          FileOutputStream output = new FileOutputStream(destinationFile);
+          byte[]           buffer = new byte[64*1024];
+
+          int n;
+          while ((n = input.read(buffer)) > 0)
+          {
+            output.write(buffer,0,n);
+          }
+          output.close();
+          input.close();
+
+          // set file permissions
+          destinationFile.setExecutable(sourceFile.canExecute());
+          destinationFile.setWritable(sourceFile.canWrite());
         }
-
-        FileInputStream  input  = new FileInputStream(fromFile);
-        FileOutputStream output = new FileOutputStream(new File(toFile,fromFile.getName()));
-        byte[]           buffer = new byte[64*1024];
-
-        int n;
-        while ((n = input.read(buffer)) > 0)
-        {
-          output.write(buffer,0,n);
-        }
-
-        output.close();
-        input.close();
-
-        // set file permissions
-        toFile.setExecutable(fromFile.canExecute());
-        toFile.setWritable(fromFile.canWrite());
       }
     }
+  }
+
+  /** copy file
+   * @param fromFile from file
+   * @param toFile to file
+   */
+  public static void copyFile(File fromFile, File toFile)
+    throws IOException
+  {
+    copyFile(fromFile,toFile,(FileCopyConfirmation)null);
+  }
+
+  /** copy file
+   * @param fromFileName from file name
+   * @param toFileName to file name
+   * @param fileCopyConfirmation confirm file copy
+   */
+  public static void copyFile(String fromFileName, String toFileName, FileCopyConfirmation fileCopyConfirmation)
+    throws IOException
+  {
+    copyFile(new File(fromFileName),new File(toFileName),fileCopyConfirmation);
   }
 
   /** copy file
@@ -86,7 +158,7 @@ public class FileUtils
   public static void copyFile(String fromFileName, String toFileName)
     throws IOException
   {
-    copyFile(new File(fromFileName),new File(toFileName));
+    copyFile(fromFileName,toFileName,(FileCopyConfirmation)null);
   }
 
   /** copy directory tree
@@ -247,7 +319,6 @@ public class FileUtils
       createdFlag = tmpDirectory.mkdir();
       n++;
     }
-Dprintf.dprintf("createTempDirectory=%s",tmpDirectory);
 
     return tmpDirectory;
   }
