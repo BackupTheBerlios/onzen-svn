@@ -585,7 +585,19 @@ Dprintf.dprintf("NYI");
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Rename\u2026",Settings.keyRename);
+        menuItem = Widgets.addMenuItem(menu,"Copy\u2026",Settings.keyCopy);
+        menuItem.addSelectionListener(new SelectionListener()
+        {
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
+          {
+          }
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            copy();
+          }
+        });
+
+        menuItem = Widgets.addMenuItem(menu,"Rename/move\u2026",Settings.keyRename);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -688,7 +700,7 @@ menuItem.setEnabled(false);
           }
         });
 
-        menuItem = Widgets.addMenuItem(menu,"Rename local file/directory\u2026",Settings.keyRenameLocal);
+        menuItem = Widgets.addMenuItem(menu,"Rename/move local file/directory\u2026",Settings.keyRenameLocal);
         menuItem.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -1008,38 +1020,68 @@ menuItem.setEnabled(false);
   {
     HashSet<FileData> fileDataSet = getSelectedFileDataSet();
 
-    String directory = Dialogs.directory(shell,"Select destination directory","Copy "+fileDataSet.size()+" files to:",lastDirectory);
+    String directory = Dialogs.directory(shell,
+                                         "Select destination directory","Copy "+fileDataSet.size()+" file(s)/directory to:",
+                                         lastDirectory
+                                        );
     if (directory != null)
     {
-      for (FileData fileData : fileDataSet)
+      final BusyDialog busyDialog = new BusyDialog(shell,
+                                                   "Copy files to '"+directory+"'...",
+                                                   400,200,
+                                                   BusyDialog.LIST
+                                                  );
+      busyDialog.autoAnimate();
+      try
       {
-        setStatusText("Copy file '%s' -> '%s'...",fileData.getFileName(),directory);
-        try
+        for (FileData fileData : fileDataSet)
         {
-          File fromFile = new File(fileData.getFileName(repository));
-          File toFile   = new File(directory);
-
-          File newFile = new File(toFile,fromFile.getName());
-          if (newFile.exists())
+          setStatusText("Copy file '%s' -> '%s'...",fileData.getFileName(),directory);
+          try
           {
-            if (!Dialogs.confirm(shell,"Confirmation",String.format("File\n\n'%s'\n\nexists - overwrite?",newFile.getPath())))
-            {
-              return;
-            }
-          }
+            File fromFile = new File(fileData.getFileName(repository));
+            File toFile   = new File(directory);
 
-          FileUtils.copyFile(fromFile,toFile);
-        }
-        catch (IOException exception)
-        {
-          Dialogs.error(shell,"Copy file '"+fileData.getBaseName()+"' fail (error: %s)",exception.getMessage());
-          return;
-        }
-        finally
-        {
-          clearStatusText();
+            File newFile = new File(toFile,fromFile.getName());
+            if (newFile.exists())
+            {
+              if (!Dialogs.confirm(shell,"Confirmation",String.format("File\n\n'%s'\n\nexists - overwrite?",newFile.getPath())))
+              {
+                return;
+              }
+            }
+
+            FileUtils.copyFile(fromFile,
+                               toFile,
+                               new FileCopyConfirmation()
+                               {
+                                 public boolean confirm(File file)
+                                 {
+                                   busyDialog.updateList(file.getPath());
+                                   return true;
+                                 }
+                               }
+                              );
+            if (busyDialog.isAborted()) break;
+          }
+          catch (IOException exception)
+          {
+            Dialogs.error(shell,"Copy file '"+fileData.getBaseName()+"' fail (error: %s)",exception.getMessage());
+            return;
+          }
+          finally
+          {
+            clearStatusText();
+          }
         }
       }
+      finally
+      {
+        busyDialog.done();
+      }
+
+      // start update file data
+      asyncUpdateSelectedFileData();
 
       lastDirectory = directory;
     }
@@ -1182,6 +1224,30 @@ menuItem.setEnabled(false);
     }
   }
 
+  /** copy selected entries
+   */
+  public void copy()
+  {
+    HashSet<FileData> fileDataSet = getSelectedFileDataSet();
+    if (fileDataSet != null)
+    {
+      CommandCopy commandCopy = new CommandCopy(shell,this,fileDataSet);
+      commandCopy.run();
+    }
+  }
+
+  /** rename selected entry
+   */
+  public void rename()
+  {
+    FileData fileData = getSelectedFileData();
+    if (fileData != null)
+    {
+      CommandRename commandRename = new CommandRename(shell,this,fileData);
+      commandRename.run();
+    }
+  }
+
   /** resolve conflicts
    */
   public void revert()
@@ -1245,18 +1311,6 @@ Dprintf.dprintf("NYI");
 
       // start update file data
       asyncUpdateFileStates(updateFileDataSet);
-    }
-  }
-
-  /** rename selected entry
-   */
-  public void rename()
-  {
-    FileData fileData = getSelectedFileData();
-    if (fileData != null)
-    {
-      CommandRename commandRename = new CommandRename(shell,this,fileData);
-      commandRename.run();
     }
   }
 
@@ -1896,7 +1950,7 @@ Dprintf.dprintf("NYI");
       }
 
       // start update file data
-      asyncUpdateFileStates(fileDataSet);
+      asyncUpdateSelectedFileData();
     }
   }
 
@@ -1923,7 +1977,7 @@ Dprintf.dprintf("NYI");
       }
 
       // start update file data
-      asyncUpdateFileStates(fileDataSet);
+      asyncUpdateSelectedFileData();
     }
   }
 
@@ -2073,7 +2127,8 @@ Dprintf.dprintf("NYI");
     {
       // expand command
       Macro macro = new Macro(StringUtils.split(commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
-      if (!macro.contains("file")) macro.add("file");
+      if (!macro.contains("files") && !macro.contains("file")) macro.add("file");
+      macro.expand("files",     new String[]{file.getPath()});
       macro.expand("file",      file.getPath());
       macro.expand("f",         file.getPath());
       macro.expand("lineNumber",lineNumber);
@@ -2226,7 +2281,8 @@ Dprintf.dprintf("NYI");
     {
       // expand command
       Macro macro = new Macro(StringUtils.split(commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
-      if (!macro.contains("file")) macro.add("file");
+      if (!macro.contains("files") && !macro.contains("file")) macro.add("file");
+      macro.expand("files",     new String[]{fileName});
       macro.expand("file",      fileName);
       macro.expand("f",         fileName);
       macro.expand("lineNumber",lineNumber);
@@ -2538,7 +2594,7 @@ Dprintf.dprintf("");
 */
 
       // update file list
-Dprintf.dprintf("");
+      asyncUpdateSelectedFileData();
     }
   }
 
@@ -2568,7 +2624,7 @@ Dprintf.dprintf("");
 
     final Data  data = new Data();
     final Shell dialog;
-    Composite   composite;
+    Composite   composite,subComposite;
     Label       label;
     Button      button;
 
@@ -2588,47 +2644,54 @@ Dprintf.dprintf("");
     dialog = Dialogs.openModal(shell,"New directory in: "+repository.rootPath,300,SWT.DEFAULT,new double[]{1.0,0.0},1.0);
 
     final Text   widgetPath;
+    final List   widgetHistory;
+    final Text   widgetMessage;
     final Button widgetCreate;
     composite = Widgets.newComposite(dialog);
-    composite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0},4));
+    composite.setLayout(new TableLayout(null,1.0,4));
     Widgets.layout(composite,0,0,TableLayoutData.NSWE,0,0,4);
     {
-      label = Widgets.newLabel(composite,"Sub-directory:");
-      Widgets.layout(label,0,0,TableLayoutData.W);
-
-      widgetPath = Widgets.newText(composite);
-      if (data.path != null)
+      subComposite = Widgets.newComposite(composite);
+      subComposite.setLayout(new TableLayout(null,new double[]{0.0,1.0,0.0}));
+      Widgets.layout(subComposite,0,0,TableLayoutData.WE);
       {
-        widgetPath.setText(data.path+File.separator);
-        widgetPath.setSelection(data.path.length()+File.separator.length(),data.path.length()+File.separator.length());
-      }
-      Widgets.layout(widgetPath,0,1,TableLayoutData.WE);
+        label = Widgets.newLabel(subComposite,"Sub-directory:");
+        Widgets.layout(label,0,0,TableLayoutData.W);
 
-      button = Widgets.newButton(composite,Onzen.IMAGE_DIRECTORY);
-      Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
-      button.addSelectionListener(new SelectionListener()
-      {
-        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        widgetPath = Widgets.newText(subComposite);
+        if (data.path != null)
         {
+          widgetPath.setText(data.path+File.separator);
+          widgetPath.setSelection(data.path.length()+File.separator.length(),data.path.length()+File.separator.length());
         }
-        public void widgetSelected(SelectionEvent selectionEvent)
+        Widgets.layout(widgetPath,0,1,TableLayoutData.WE);
+
+        button = Widgets.newButton(subComposite,Onzen.IMAGE_DIRECTORY);
+        Widgets.layout(button,0,2,TableLayoutData.DEFAULT);
+        button.addSelectionListener(new SelectionListener()
         {
-          String path = Dialogs.directory(shell,
-                                         "Select path",
-                                          widgetPath.getText()
-                                         );
-          if (path != null)
+          public void widgetDefaultSelected(SelectionEvent selectionEvent)
           {
-            widgetPath.setText(path);
           }
-        }
-      });
+          public void widgetSelected(SelectionEvent selectionEvent)
+          {
+            String path = Dialogs.directory(shell,
+                                           "Select path",
+                                            widgetPath.getText()
+                                           );
+            if (path != null)
+            {
+              widgetPath.setText(path);
+            }
+          }
+        });
+      }
     }
 
     // buttons
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(0.0,1.0));
-    Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
+    Widgets.layout(composite,2,0,TableLayoutData.WE,0,0,4);
     {
       widgetCreate = Widgets.newButton(composite,"Create");
       Widgets.layout(widgetCreate,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
@@ -2692,8 +2755,6 @@ Dprintf.dprintf("");
     widgetPath.setFocus();
     if ((Boolean)Dialogs.run(dialog,false))
     {
-      HashSet<FileData> fileDataSet = repository.listFiles(new File(data.path).getParent());
-
       // create directory
       File file = new File(repository.rootPath,data.path);
       if (!file.mkdirs())
@@ -2703,6 +2764,8 @@ Dprintf.dprintf("");
       }
 
       // start update file data
+      HashSet<FileData> fileDataSet = new HashSet<FileData>();
+      fileDataSet.add(new FileData(new File(data.path).getParent(),FileData.Types.DIRECTORY));
       asyncUpdateFileStates(fileDataSet);
     }
   }
@@ -2715,6 +2778,7 @@ Dprintf.dprintf("");
     if (fileData != null)
     {
       newDirectory(fileData);
+      asyncUpdateSelectedFileData();
     }
   }
 
@@ -2743,7 +2807,7 @@ Dprintf.dprintf("");
     Button      button;
 
     // rename file/directory dialog
-    dialog = Dialogs.openModal(shell,"Rename file/directory",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Rename/move file/directory",new double[]{1.0,0.0},1.0);
 
     final Text   widgetNewFileName;
     final Button widgetRename;
@@ -2770,9 +2834,9 @@ Dprintf.dprintf("");
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetRename = Widgets.newButton(composite,"Rename");
+      widgetRename = Widgets.newButton(composite,"Rename/Move");
       widgetRename.setEnabled(false);
-      Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,80,SWT.DEFAULT);
       widgetRename.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2786,10 +2850,10 @@ Dprintf.dprintf("");
           Dialogs.close(dialog,true);
         }
       });
-      widgetRename.setToolTipText("Rename file.");
+      widgetRename.setToolTipText("Rename/move file.");
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,3,TableLayoutData.E,0,0,0,0,80,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2880,6 +2944,7 @@ Dprintf.dprintf("");
     if (fileData != null)
     {
       renameLocalFile(fileData);
+      asyncUpdateSelectedFileData();
     }
   }
 
@@ -3059,6 +3124,7 @@ Dprintf.dprintf("");
   public void deleteLocalFiles()
   {
     deleteLocalFiles(getSelectedFileDataSet());
+    asyncUpdateSelectedFileData();
   }
 
   /** add to ignore file list
@@ -3082,6 +3148,7 @@ Dprintf.dprintf("");
   public void addIgnoreFiles()
   {
     addIgnoreFiles(getSelectedFileDataSet());
+    asyncUpdateSelectedFileData();
   }
 
   /** add to hidden list
@@ -3119,6 +3186,7 @@ Dprintf.dprintf("");
     Settings.hiddenDirectoryPatterns = hiddenDirectoryPatternsMap.values().toArray(new Settings.FilePattern[hiddenDirectoryPatternsMap.size()]);
 
     // refresh
+//TODO refresh parent directories
     asyncUpdateFileStates(fileDataSet);
   }
 
@@ -3128,6 +3196,7 @@ Dprintf.dprintf("");
   public void addHiddenFiles()
   {
     addHiddenFiles(getSelectedFileDataSet());
+    asyncUpdateSelectedFileData();
   }
 
   /** find files by name
@@ -3366,11 +3435,11 @@ Dprintf.dprintf("");
    * @return true iff OK, false for abort
    */
   public ConvertWhitespacesResult convertWhitespaces(String   fileName,
-                                    String[] fileNames,
-                                    String   message,
-                                    boolean  convertTabs,
-                                    boolean  removeTrailingWhitespaces
-                                   )
+                                                     String[] fileNames,
+                                                     String   message,
+                                                     boolean  convertTabs,
+                                                     boolean  removeTrailingWhitespaces
+                                                    )
   {
     /** dialog data
      */
@@ -3639,101 +3708,134 @@ Dprintf.dprintf("");
   {
     if (fileDataSet != null)
     {
-      for (FileData fileData : fileDataSet)
+      FileData[] fileDataArray = fileDataSet.toArray(new FileData[fileDataSet.size()]);
+
+      // expand command
+      Macro macro = new Macro(StringUtils.split(shellCommand.commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
+      if (   !macro.contains("files")
+          && !macro.contains("file1") && !macro.contains("directory1")
+          && !macro.contains("file2") && !macro.contains("directory2")
+          && !macro.contains("file3") && !macro.contains("directory3")
+          && !macro.contains("file4") && !macro.contains("directory4")
+          && !macro.contains("file5") && !macro.contains("directory5")
+          && !macro.contains("file6") && !macro.contains("directory6")
+          && !macro.contains("file7") && !macro.contains("directory7")
+          && !macro.contains("file8") && !macro.contains("directory8")
+          && !macro.contains("file9") && !macro.contains("directory9")
+          && !macro.contains("file") && !macro.contains("directory")
+         )
       {
-        // expand command
-        Macro macro = new Macro(StringUtils.split(shellCommand.commandLine,StringUtils.WHITE_SPACES,StringUtils.QUOTE_CHARS),Macro.PATTERN_PERCENTAGE);
-        if (!macro.contains("file") && !macro.contains("directory")) macro.add("file");
-        macro.expand("file",      fileData.getFileName(repository.rootPath));
-        macro.expand("f",         fileData.getFileName(repository.rootPath));
-        macro.expand("directory", fileData.getDirectoryName(repository.rootPath));
-        macro.expand("d",         fileData.getDirectoryName(repository.rootPath));
-        macro.expand("rootPath",  repository.rootPath);
-        macro.expand("r",         repository.rootPath);
-        macro.expand("",         "%");
-        Command command = new Command(macro);
+        macro.add("file");
+      }
+      macro.expand("files",fileDataSet,'"'," ");
+      macro.expand("file1",     (fileDataArray.length >= 1) ? fileDataArray[0].getFileName(repository.rootPath)      : "");
+      macro.expand("directory1",(fileDataArray.length >= 1) ? fileDataArray[0].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file2",     (fileDataArray.length >= 2) ? fileDataArray[1].getFileName(repository.rootPath)      : "");
+      macro.expand("directory2",(fileDataArray.length >= 2) ? fileDataArray[1].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file3",     (fileDataArray.length >= 3) ? fileDataArray[2].getFileName(repository.rootPath)      : "");
+      macro.expand("directory3",(fileDataArray.length >= 3) ? fileDataArray[2].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file4",     (fileDataArray.length >= 4) ? fileDataArray[3].getFileName(repository.rootPath)      : "");
+      macro.expand("directory4",(fileDataArray.length >= 4) ? fileDataArray[3].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file5",     (fileDataArray.length >= 5) ? fileDataArray[4].getFileName(repository.rootPath)      : "");
+      macro.expand("directory5",(fileDataArray.length >= 5) ? fileDataArray[4].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file6",     (fileDataArray.length >= 6) ? fileDataArray[5].getFileName(repository.rootPath)      : "");
+      macro.expand("directory6",(fileDataArray.length >= 6) ? fileDataArray[5].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file7",     (fileDataArray.length >= 7) ? fileDataArray[6].getFileName(repository.rootPath)      : "");
+      macro.expand("directory7",(fileDataArray.length >= 7) ? fileDataArray[6].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file8",     (fileDataArray.length >= 8) ? fileDataArray[7].getFileName(repository.rootPath)      : "");
+      macro.expand("directory8",(fileDataArray.length >= 8) ? fileDataArray[7].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file9",     (fileDataArray.length >= 9) ? fileDataArray[8].getFileName(repository.rootPath)      : "");
+      macro.expand("directory9",(fileDataArray.length >= 9) ? fileDataArray[8].getDirectoryName(repository.rootPath) : "");
+      macro.expand("file",      (fileDataArray.length >= 1) ? fileDataArray[0].getFileName(repository.rootPath)      : "");
+      macro.expand("f",         (fileDataArray.length >= 1) ? fileDataArray[0].getFileName(repository.rootPath)      : "");
+      macro.expand("directory", (fileDataArray.length >= 1) ? fileDataArray[0].getDirectoryName(repository.rootPath) : "");
+      macro.expand("d",         (fileDataArray.length >= 1) ? fileDataArray[0].getDirectoryName(repository.rootPath) : "");
+      macro.expand("rootPath",  repository.rootPath);
+      macro.expand("r",         repository.rootPath);
+      macro.expand("",          "%");
+      Command command = new Command(macro);
 
-        // run command
-        Background.run(new BackgroundRunnable(command)
+      // run command
+      Background.run(new BackgroundRunnable(command)
+      {
+        public void run(final Command command)
         {
-          public void run(final Command command)
+          try
           {
-            try
+            // start process (Note: use Runtime.exec() because it is a background process without i/o here)
+            Process process = Runtime.getRuntime().exec(command.getCommandArray());
+
+            // collect stderr output
+            BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+            final ArrayList<String> stderrList = new ArrayList<String>();
+            String line;
+            while ((line = stderr.readLine()) != null)
             {
-              // start process (Note: use Runtime.exec() because it is a background process without i/o here)
-              Process process = Runtime.getRuntime().exec(command.getCommandArray());
-
-              // collect stderr output
-              BufferedReader stderr = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-              final ArrayList<String> stderrList = new ArrayList<String>();
-              String line;
-              while ((line = stderr.readLine()) != null)
-              {
-                stderrList.add(line);
-              }
-
-              // wait for exit
-              final int exitCode = process.waitFor();
-              if (exitCode != 0)
-              {
-                display.syncExec(new Runnable()
-                {
-                  public void run()
-                  {
-                    Dialogs.error(shell,
-                                  stderrList,
-                                  "Execute external shell command fail: \n\n'%s'\n\n (exitcode: %d)",
-                                  command,
-                                  exitCode
-                                 );
-                  }
-                });
-                return;
-              }
+              stderrList.add(line);
             }
-            catch (InterruptedException exception)
+
+            // wait for exit
+            final int exitCode = process.waitFor();
+            if (exitCode > shellCommand.validExitcode)
             {
-              final String message = exception.getMessage();
               display.syncExec(new Runnable()
               {
                 public void run()
                 {
                   Dialogs.error(shell,
-                                "Execute external shell command fail: \n\n'%s'\n\n (error: %s)",
+                                stderrList,
+                                "Execute external shell command fail: \n\n'%s'\n\n (exitcode: %d)",
                                 command,
-                                message
-                               );
-                }
-              });
-              return;
-            }
-            catch (IOException exception)
-            {
-              final String message = exception.getMessage();
-              display.syncExec(new Runnable()
-              {
-                public void run()
-                {
-                  Dialogs.error(shell,
-                                "Execute external shell command fail: \n\n'%s'\n\n (error: %s)",
-                                command,
-                                message
+                                exitCode
                                );
                 }
               });
               return;
             }
           }
-        });
-      }
+          catch (InterruptedException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,
+                              "Execute external shell command fail: \n\n'%s'\n\n (error: %s)",
+                              command,
+                              message
+                             );
+              }
+            });
+            return;
+          }
+          catch (IOException exception)
+          {
+            final String message = exception.getMessage();
+            display.syncExec(new Runnable()
+            {
+              public void run()
+              {
+                Dialogs.error(shell,
+                              "Execute external shell command fail: \n\n'%s'\n\n (error: %s)",
+                              command,
+                              message
+                             );
+              }
+            });
+            return;
+          }
+        }
+      });
     }
   }
 
-  /** rename local file/directory
+  /** run shell command
    */
   public void executeShellCommand(Settings.ShellCommand shellCommand)
   {
     executeShellCommand(shellCommand,getSelectedFileDataSet());
+    asyncUpdateSelectedFileData();
   }
 
   //-----------------------------------------------------------------------
@@ -4095,8 +4197,6 @@ Dprintf.dprintf("");
       switch (fileData.type)
       {
         case DIRECTORY:
-          color = COLOR_OK;
-          break;
         case FILE:
         case LINK:
           switch (fileData.state)
@@ -4155,6 +4255,20 @@ Dprintf.dprintf("");
     return fileDataSet;
   }
 
+  /** asynchronous update of selected file data set
+   */
+  private void asyncUpdateSelectedFileData()
+  {
+    ArrayList<TreeItem> updateTreeItemList = new ArrayList<TreeItem>();
+
+    LinkedList<TreeItem> treeItemList = new LinkedList<TreeItem>();
+    for (TreeItem selectedTreeItem : widgetFileTree.getSelection())
+    {
+      updateTreeItemList.add(selectedTreeItem);
+    }
+    asyncUpdateFileStates(updateTreeItemList.toArray(new TreeItem[updateTreeItemList.size()]));
+  }
+
   /** get all file data set
    * @return all file data hash set
    */
@@ -4195,6 +4309,7 @@ Dprintf.dprintf("");
   {
     if (!treeItem.isDisposed())
     {
+      // set text, colors
       treeItem.setText(0,fileData.getBaseName());
 //treeItem.setImage(1,(fileData.state == FileData.States.OK) ? Onzen.IMAGE_LOCK : Onzen.IMAGE_EMPTY);
       treeItem.setText(1,getFileDataStateString(fileData));
@@ -4203,6 +4318,15 @@ Dprintf.dprintf("");
       treeItem.setForeground(getFileDataForeground(fileData));
       treeItem.setBackground(getFileDataBackground(fileData));
 
+      // refresh widgegt state
+//Dprintf.dprintf("updateTreeItem filedata=%s treeitem=%s %s %s",fileData,treeItem,treeItem.getExpanded(),treeItem.getItemCount());
+      if (fileData.type == FileData.Types.DIRECTORY)
+      {
+        if (!treeItem.getExpanded() || (treeItem.getItemCount() <= 0))
+        {
+          closeFileTreeItem(treeItem);
+        }
+      }
 //Dprintf.dprintf("treeItem=%s %d %s %s",treeItem,treeItem.getItemCount(),fileData.type,treeItem.getExpanded());
 /*
       if ((fileData.type == FileData.Types.DIRECTORY) && !treeItem.getExpanded() && (treeItem.getItemCount() != 1))
@@ -4219,7 +4343,10 @@ Dprintf.dprintf("");
    */
   private void updateTreeItem(TreeItem treeItem)
   {
-    updateTreeItem(treeItem,(FileData)treeItem.getData());
+    if (!treeItem.isDisposed())
+    {
+      updateTreeItem(treeItem,(FileData)treeItem.getData());
+    }
   }
 
   /** update file tree items
@@ -4229,7 +4356,10 @@ Dprintf.dprintf("");
   {
     for (TreeItem treeItem : treeItems)
     {
-      updateTreeItem(treeItem,(FileData)treeItem.getData());
+      if (!treeItem.isDisposed())
+      {
+        updateTreeItem(treeItem,(FileData)treeItem.getData());
+      }
     }
   }
 
@@ -4286,7 +4416,7 @@ Dprintf.dprintf("");
       try
       {
         repository.updateStates(fileDataSet,newFileDataSet);
-//Dprintf.dprintf("newFileDataSet=%s",newFileDataSet);
+//Dprintf.dprintf("--------------------"); for (FileData f : newFileDataSet) Dprintf.dprintf("newFileDataSet=%s",f.getFileName());
       }
       catch (final RepositoryException exception)
       {
@@ -4341,10 +4471,10 @@ Dprintf.dprintf("");
             {
               public void run()
               {
-                TreeItem parentTreeItem = treeItem.getParentItem();
-
                 if (!treeItem.isDisposed())
                 {
+                  TreeItem parentTreeItem = treeItem.getParentItem();
+
                   if ((parentTreeItem != null) && (parentTreeItem.getItemCount() <= 1))
                   {
                     parentTreeItem.setExpanded(false);
@@ -4441,7 +4571,37 @@ Dprintf.dprintf("");
    */
   protected void updateFileStates(final FileData fileData)
   {
-    updateFileStates(fileData.toSet());
+    updateFileStates(fileData,null);
+  }
+
+  /** update file state
+   * @param treeItems tree items
+   * @param title title to show in status line or null
+   */
+  protected void updateFileStates(final TreeItem[] treeItems, String title)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (TreeItem treeItem : treeItems)
+    {
+      fileDataSet.add((FileData)treeItem.getData());
+    }
+    updateFileStates(fileDataSet,title);
+  }
+
+  /** update file state
+   * @param treeItems tree items
+   */
+  protected void updateFileStates(final TreeItem[] treeItems)
+  {
+    updateFileStates(treeItems,null);
+  }
+
+  /** update file state
+   * @param treeItem tree item
+   */
+  protected void updateFileStates(final TreeItem treeItem)
+  {
+    updateFileStates((FileData)treeItem.getData());
   }
 
   /** asyncronous update file states
@@ -4483,6 +4643,36 @@ Dprintf.dprintf("");
         updateFileStates(fileData,fileData.getFileName(repository.rootPath));
       }
     });
+  }
+
+    /** update file state
+   * @param treeItems tree items
+   * @param title title to show in status line or null
+   */
+  protected void asyncUpdateFileStates(final TreeItem[] treeItems, String title)
+  {
+    HashSet<FileData> fileDataSet = new HashSet<FileData>();
+    for (TreeItem treeItem : treeItems)
+    {
+      fileDataSet.add((FileData)treeItem.getData());
+    }
+    asyncUpdateFileStates(fileDataSet,title);
+  }
+
+  /** update file state
+   * @param treeItems tree items
+   */
+  protected void asyncUpdateFileStates(final TreeItem[] treeItems)
+  {
+    asyncUpdateFileStates(treeItems,null);
+  }
+
+  /** update file state
+   * @param treeItem tree item
+   */
+  protected void asyncUpdateFileStates(final TreeItem treeItem)
+  {
+    asyncUpdateFileStates((FileData)treeItem.getData());
   }
 
   //-----------------------------------------------------------------------
