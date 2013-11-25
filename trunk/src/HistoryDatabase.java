@@ -349,7 +349,7 @@ public abstract class HistoryDatabase<T>
   abstract public PreparedStatement prepareInit(Database database)
     throws SQLException;
 
-    /** prepare table insert statement
+  /** prepare table insert statement
    * @param database database
    * @return prepared statment
    */
