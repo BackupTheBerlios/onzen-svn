@@ -805,6 +805,8 @@ public class Settings
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryAdd                            = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
+  public static Point                    geometryCopy                           = new Point(500,400);
+  @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRename                         = new Point(500,400);
   @SettingValue(type=SettingValueAdapterSize.class)
   public static Point                    geometryRemove                         = new Point(500,400);
@@ -977,7 +979,9 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRemove                              = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyRename                              = SWT.NONE;
+  public static int                      keyCopy                                = SWT.NONE;
+  @SettingValue(type=SettingValueAdapterKey.class)
+  public static int                      keyRename                              = SWT.F2;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keySetFileMode                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
@@ -1036,7 +1040,7 @@ public class Settings
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyRenameLocal                         = SWT.NONE;
   @SettingValue(type=SettingValueAdapterKey.class)
-  public static int                      keyDeleteLocal                         = SWT.NONE;
+  public static int                      keyDeleteLocal                         = SWT.DEL;
   @SettingValue(type=SettingValueAdapterKey.class)
   public static int                      keyFileNameFilter                      = SWT.CTRL+'P';
   @SettingValue(type=SettingValueAdapterKey.class)
@@ -1288,6 +1292,8 @@ public class Settings
 
   // show flags
   @SettingComment(text={"","show dialog flags"})
+  @SettingValue
+  public static Boolean                  showQuitConfirmation                   = new Boolean(true);
   @SettingValue
   public static Boolean                  showUpdateStatusErrors                 = new Boolean(true);
   @SettingValue
