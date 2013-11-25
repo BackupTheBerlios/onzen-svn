@@ -60,9 +60,10 @@ class BusyDialog
   private Label       widgetText0,widgetText1;
   private ProgressBar widgetProgressBar0,widgetProgressBar1;
   private List        widgetList;
-  private Button      widgetAbortButton;
+  private Button      widgetAbortCloseButton;
   private int         maxListLength;
 
+  private boolean     doneFlag;
   private boolean     abortedFlag;
   private boolean     resizedFlag;
 
@@ -219,10 +220,10 @@ class BusyDialog
     composite.setLayout(new TableLayout(0.0,1.0));
     composite.setLayoutData(new TableLayoutData(1,0,TableLayoutData.WE,0,0,4,4));
     {
-      widgetAbortButton = new Button(composite,SWT.CENTER|SWT.BORDER);
-      widgetAbortButton.setText("Abort");
-      widgetAbortButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,60,SWT.DEFAULT));
-      widgetAbortButton.addSelectionListener(new SelectionListener()
+      widgetAbortCloseButton = new Button(composite,SWT.CENTER|SWT.BORDER);
+      widgetAbortCloseButton.setText("Abort");
+      widgetAbortCloseButton.setLayoutData(new TableLayoutData(0,0,TableLayoutData.NONE,0,0,0,0,60,SWT.DEFAULT));
+      widgetAbortCloseButton.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
         {
@@ -230,7 +231,14 @@ class BusyDialog
         public void widgetSelected(SelectionEvent selectionEvent)
         {
           Button widget = (Button)selectionEvent.widget;
-          abort();
+          if (isDone())
+          {
+            close();
+          }
+          else
+          {
+            abort();
+          }
         }
       });
     }
@@ -253,7 +261,14 @@ class BusyDialog
 
         if (traverseEvent.detail == SWT.TRAVERSE_ESCAPE)
         {
-          abort();
+          if (isDone())
+          {
+            close();
+          }
+          else
+          {
+            abort();
+          }
           traverseEvent.doit = false;
         }
       }
@@ -283,8 +298,9 @@ class BusyDialog
     dialog.setLocation(x,y);
 
     // run dialog
-    resizedFlag = false;
+    doneFlag    = false;
     abortedFlag = false;
+    resizedFlag = false;
     dialog.open();
   }
 
@@ -405,15 +421,31 @@ class BusyDialog
     return dialog.isDisposed();
   }
 
-  /** close busy dialog
+  /** done busy dialog
+   */
+  public void done()
+  {
+    doneFlag = true;
+    widgetAbortCloseButton.setText("Close");
+  }
+
+  /** check if "done"
+   * @return true iff "done"
+   */
+  public boolean isDone()
+  {
+    return doneFlag;
+  }
+
+  /** abort and close busy dialog
    */
   public void abort()
   {
     abortedFlag = true;
-    widgetAbortButton.setEnabled(false);
+    widgetAbortCloseButton.setEnabled(false);
   }
 
-  /** check if "cancel" button clicked
+  /** check if "abort" button clicked
    * @return true iff "cancel" button clicked, false otherwise
    */
   public boolean isAborted()
@@ -642,10 +674,9 @@ class BusyDialog
   }
 
   /** update busy dialog list
-   * @param i index 0|1
    * @param format format string
    * @param args optional arguments
-   * @return true if closed, false otherwise
+   * @return true if update done, false otherwise
    */
   public boolean updateList(final String format, final Object... args)
   {
