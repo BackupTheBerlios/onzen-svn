@@ -10,10 +10,6 @@
 
 /****************************** Imports ********************************/
 // base
-import java.io.File;
-import java.io.FileReader;
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.LinkedList;
 
@@ -349,7 +345,7 @@ class CommandAdd
     {
       public void handleEvent(Event event)
       {
-        String  currentMessage = widgetMessage.getText().trim();
+        String currentMessage = widgetMessage.getText().trim();
 
         String newMessage;
         if (   (!currentMessage.isEmpty() && !currentMessage.equals(data.lastMessage))
