@@ -314,14 +314,15 @@ class RepositoryNone extends Repository
   {
   }
 
-  /** revert files
-   * @param fileDataSet file data set or null for all files
-   * @param revision revision to revert to
-   * @param recursive true for recursive revert, false otherwise
+  /** copy files
+   * @param fileDataSet files to copy
+   * @param destination destination
+   * @param commitMessage commit message
    */
-  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
+  public void copy(HashSet<FileData> fileDataSet, String destination, CommitMessage commitMessage)
     throws RepositoryException
   {
+Dprintf.dprintf("TODO");
   }
 
   /** rename file
@@ -346,6 +347,16 @@ class RepositoryNone extends Repository
     {
       throw new RepositoryException("File '%s' already exists",newFile.getName());
     }
+  }
+
+  /** revert files
+   * @param fileDataSet file data set or null for all files
+   * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
+   */
+  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
+    throws RepositoryException
+  {
   }
 
   /** set conflicts resolved

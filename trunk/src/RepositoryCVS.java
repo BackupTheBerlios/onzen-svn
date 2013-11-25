@@ -1754,58 +1754,15 @@ Dprintf.dprintf("unknown %s",line);
     }
   }
 
-  /** revert files
-   * @param fileDataSet file data set or null for all files
-   * @param revision revision to revert to
-   * @param recursive true for recursive revert, false otherwise
+  /** copy files
+   * @param fileDataSet files to copy
+   * @param destination destination
+   * @param commitMessage commit message
    */
-  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
+  public void copy(HashSet<FileData> fileDataSet, String destination, CommitMessage commitMessage)
     throws RepositoryException
   {
-    Exec exec = null;
-    try
-    {
-      Command command = new Command();
-
-      // delete local files
-      for (FileData fileData : fileDataSet)
-      {
-        new File(fileData.getFileName(rootPath)).delete();
-      }
-
-      // revert files
-      command.clear();
-      command.append(Settings.cvsCommand,"update");
-      if (revision.equals(LAST_REVISION_NAME))
-      {
-        command.append("-A");
-      }
-      else
-      {
-        command.append("-r",revision);
-      }
-      command.append("--");
-      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
-
-      // wait for termination
-      int exitCode = exec.waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-      }
-
-      // done
-      exec.done(); exec = null;
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(Onzen.reniceIOException(exception));
-    }
-    finally
-    {
-      if (exec != null) exec.done();
-    }
+Dprintf.dprintf("TODO");
   }
 
   /** rename file
@@ -1891,6 +1848,60 @@ Dprintf.dprintf("unknown %s",line);
                                                       );
         commit(fileDataSet,commitMessage);
       }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+  }
+
+  /** revert files
+   * @param fileDataSet file data set or null for all files
+   * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
+   */
+  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
+    throws RepositoryException
+  {
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
+      // revert files
+      command.clear();
+      command.append(Settings.cvsCommand,"update");
+      if (revision.equals(LAST_REVISION_NAME))
+      {
+        command.append("-A");
+      }
+      else
+      {
+        command.append("-r",revision);
+      }
+      command.append("--");
+      if (fileDataSet != null) command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
     }
     catch (IOException exception)
     {

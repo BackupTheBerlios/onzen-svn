@@ -113,10 +113,10 @@ class RepositorySVN extends Repository
     {
       new SpecialCommand("Cleanup")
       {
-        public void run()
+        public void run(BusyDialog busyDialog)
           throws RepositoryException
         {
-          cleanup(this,null);
+          cleanup(this,busyDialog);
         }
       }
     };
@@ -276,18 +276,7 @@ class RepositorySVN extends Repository
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
-    Command         command            = new Command();
-    String          line;
-    Matcher         matcher;
-    FileData        fileData;
-    String          name;
-    String          path;
-    String          fileName;
-    FileData.States state              = FileData.States.UNKNOWN;
-    boolean         locked             = false;
-    String          workingRevision    = "";
-    String          repositoryRevision = "";
-    String          author             = "";
+    Command command = new Command();
     for (String directory : fileDirectorySet)
     {
       Exec exec = null;
@@ -316,14 +305,18 @@ class RepositorySVN extends Repository
           {
             Element entryElement = (Element)entryList.item(z);
 
-            state              = FileData.States.UNKNOWN;
-            locked             = false;
-            workingRevision    = "";
-            repositoryRevision = "";
-            author             = "";
-            fileName           = "";
+            String          line;
+            Matcher         matcher;
+            String          name;
+            String          path;
+            String          fileName;
+            FileData.States state              = FileData.States.UNKNOWN;
+            boolean         locked             = false;
+            String          workingRevision    = "";
+            String          repositoryRevision = "";
+            String          author             = "";
 
-            name = entryElement.getAttribute("path");
+            name     = entryElement.getAttribute("path");
             fileName = (!directory.isEmpty() ? directory+File.separator : "")+name;
 //Dprintf.dprintf("fileName=%s",fileName);
 
@@ -352,7 +345,7 @@ class RepositorySVN extends Repository
               }
             }
 
-            fileData = findFileData(fileDataSet,fileName);
+            FileData fileData = findFileData(fileDataSet,fileName);
             if      (fileData != null)
             {
               fileData.state              = state;
@@ -403,106 +396,6 @@ class RepositorySVN extends Repository
           // ignored
         }
 
-/*
-        // parse status data
-        while ((line = exec.getStdout()) != null)
-        {
-//Dprintf.dprintf("line=%s",line);
-          // match name, state
-          if      ((matcher = PATTERN_UNKNOWN.matcher(line)).matches())
-          {
-            name     = matcher.group(1);
-            fileName = (!directory.isEmpty() ? directory+File.separator : "")+name;
-
-            fileData = findFileData(fileDataSet,fileName);
-            if      (fileData != null)
-            {
-              fileData.state = FileData.States.UNKNOWN;
-              fileData.mode  = FileData.Modes.BINARY;
-            }
-            else if (   (newFileDataSet != null)
-                     && !name.equals(".")
-                     && !isHiddenFile(fileName)
-                     && !isIgnoreFile(fileName)
-                    )
-            {
-              // get file type, size, date/time
-              File file               = new File(rootPath,fileName);
-              FileData.Types type     = getFileType(file);
-              long           size     = file.length();
-              Date           datetime = new Date(file.lastModified());
-
-              // create file data
-              newFileDataSet.add(new FileData(fileName,
-                                              type,
-                                              FileData.States.UNKNOWN,
-                                              FileData.Modes.BINARY,
-                                              false,
-                                              size,
-                                              datetime
-                                             )
-                                );
-            }
-          }
-          else if ((matcher = PATTERN_STATUS.matcher(line)).matches())
-          {
-            state              = parseState(matcher.group(1),matcher.group(4));
-// NYI correct?
-            locked             = matcher.group(2).equals("L") || matcher.group(3).equals("K");
-//            locked             = matcher.group(3).equals("K");
-            workingRevision    = matcher.group(5);
-            repositoryRevision = matcher.group(6);
-            author             = matcher.group(7);
-            name               = matcher.group(8);
-            fileName           = (!directory.isEmpty() ? directory+File.separator : "")+name;
-
-            fileData = findFileData(fileDataSet,fileName);
-            if      (fileData != null)
-            {
-              fileData.state              = state;
-              fileData.mode               = FileData.Modes.BINARY;
-              fileData.mode               = FileData.Modes.BINARY;
-              fileData.locked             = locked;
-              fileData.repositoryRevision = repositoryRevision;
-            }
-            else if (   (newFileDataSet != null)
-                     && !name.equals(".")
-                     && !isHiddenFile(fileName)
-                     && !isIgnoreFile(fileName)
-                    )
-            {
-              // get file type, size, date/time
-              File file = new File(rootPath,fileName);
-              FileData.Types type     = getFileType(file);
-              long           size     = file.length();
-              Date           datetime = new Date(file.lastModified());
-
-              // create file data
-              newFileDataSet.add(new FileData(fileName,
-                                              type,
-                                              state,
-                                              FileData.Modes.BINARY,
-                                              locked,
-                                              size,
-                                              datetime,
-                                              workingRevision,
-                                              repositoryRevision
-                                             )
-                                );
-            }
-          }
-          else if (PATTERN_STATUS_AGAINST.matcher(line).matches())
-          {
-          // ignore "Pattern status agaist:..."
-          }
-          else
-          {
-            // unknown line
-            Onzen.printWarning("No match for line '%s'",line);
-          }
-        }
-*/
-
         // wait for termination
         int exitCode = exec.waitFor();
         if (exitCode != 0)
@@ -520,6 +413,23 @@ class RepositorySVN extends Repository
       finally
       {
         if (exec != null) exec.done();
+      }
+
+      // add unknown files
+      if (newFileDataSet != null)
+      {
+        for (FileData fileData : listFiles(directory))
+        {
+          String fileName = fileData.getFileName();
+          if (   !containFileData(fileDataSet,fileData)
+              && !fileName.equals(".")
+              && !isHiddenFile(fileName)
+              && !isIgnoreFile(fileName)
+             )
+          {
+            newFileDataSet.add(fileData);
+          }
+        }
       }
     }
   }
@@ -2003,40 +1913,33 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
-  /** revert files
-   * @param fileDataSet file data set
-   * @param revision revision to revert to
-   * @param recursive true for recursive revert, false otherwise
+  /** copy files
+   * @param fileDataSet files to copy
+   * @param destination destination
+   * @param commitMessage commit message
    */
-  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
+  public void copy(HashSet<FileData> fileDataSet, String destination, CommitMessage commitMessage)
     throws RepositoryException
   {
     Exec exec = null;
     try
     {
       Command command = new Command();
-      int     exitCode;
 
-      // delete local files
-      for (FileData fileData : fileDataSet)
-      {
-        new File(fileData.getFileName(rootPath)).delete();
-      }
-
-      // revert files
+      // copy file
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
-      command.append("revert");
+      command.append("copy");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
-      if (recursive) command.append("-R");
       command.append("--");
       command.append(getFileDataNames(fileDataSet));
+      command.append(destination);
       exec = new Exec(rootPath,command);
       exec.closeStdin();
 
       // wait for termination
-      exitCode = exec.waitFor();
+      int exitCode = exec.waitFor();
       if (exitCode != 0)
       {
         throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
@@ -2045,29 +1948,11 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       // done
       exec.done(); exec = null;
 
-      if (revision != null)
+      // commit
+      if (commitMessage != null)
       {
-        // update to specifc revision
-        command.clear();
-        command.append(Settings.svnCommand,"--non-interactive");
-        if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
-        command.append("update","-r",revision);
-        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
-        if (recursive) command.append("-R");
-        command.append("--");
-        command.append(getFileDataNames(fileDataSet));
-        exec = new Exec(rootPath,command);
-        exec.closeStdin();
-
-        // wait for termination
-        exitCode = exec.waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
-        }
-
-        // done
-        exec.done(); exec = null;
+        fileDataSet.add(new FileData(destination));
+        commit(fileDataSet,commitMessage);
       }
     }
     catch (IOException exception)
@@ -2122,6 +2007,82 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
                                                        (!rootPath.isEmpty()) ? rootPath+File.separator+newName : newName
                                                       );
         commit(fileDataSet,commitMessage);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+  }
+
+  /** revert files
+   * @param fileDataSet file data set
+   * @param revision revision to revert to
+   * @param recursive true for recursive revert, false otherwise
+   */
+  public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
+    throws RepositoryException
+  {
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // delete local files
+      for (FileData fileData : fileDataSet)
+      {
+        new File(fileData.getFileName(rootPath)).delete();
+      }
+
+      // revert files
+      command.clear();
+      command.append(Settings.svnCommand,"--non-interactive");
+      if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      command.append("revert");
+      if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
+      if (recursive) command.append("-R");
+      command.append("--");
+      command.append(getFileDataNames(fileDataSet));
+      exec = new Exec(rootPath,command);
+      exec.closeStdin();
+
+      // wait for termination
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+
+      if (revision != null)
+      {
+        // update to specifc revision
+        command.clear();
+        command.append(Settings.svnCommand,"--non-interactive");
+        if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        command.append("update","-r",revision);
+        if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
+        command.append("--");
+        command.append(getFileDataNames(fileDataSet));
+        exec = new Exec(rootPath,command);
+        exec.closeStdin();
+
+        // wait for termination
+        exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+
+        // done
+        exec.done(); exec = null;
       }
     }
     catch (IOException exception)
@@ -2567,6 +2528,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     else if (item.equalsIgnoreCase("merge")            ) return FileData.States.MERGE;
     else if (item.equalsIgnoreCase("checkout")         ) return FileData.States.CHECKOUT;
     else if (item.equalsIgnoreCase("missing")          ) return FileData.States.CHECKOUT;
+    else if (item.equalsIgnoreCase("unversioned")      ) return FileData.States.UNKNOWN;
     else                                                 return FileData.States.UNKNOWN;
   }
 
@@ -2701,6 +2663,10 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     return revisionData;
   }
 
+  /** cleanup command
+   * @param specialCommand special command
+   * @param busyDialog busy dialog or null
+   */
   private void cleanup(SpecialCommand specialCommand, BusyDialog busyDialog)
     throws RepositoryException
   {

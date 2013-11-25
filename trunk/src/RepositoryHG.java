@@ -2095,6 +2095,65 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     }
   }
 
+  /** copy files
+   * @param fileDataSet files to copy
+   * @param destination destination
+   * @param commitMessage commit message
+   */
+  public void copy(HashSet<FileData> fileDataSet, String destination, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+Dprintf.dprintf("TODO");
+  }
+
+  /** rename file
+   * @param fileData file data to rename
+   * @param newName new name
+   * @param commitMessage commit message
+   */
+  public void rename(FileData fileData, String newName, CommitMessage commitMessage)
+    throws RepositoryException
+  {
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      int     exitCode;
+
+      // rename file
+      command.clear();
+      command.append(Settings.hgCommand,"rename");
+      command.append("--");
+      command.append(fileData.getFileName());
+      command.append(newName);
+      exec = new Exec(rootPath,command);
+
+      // wait for termination
+      exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+
+      // immediate commit when message is given
+      if (commitMessage != null)
+      {
+        commit(fileData,commitMessage);
+      }
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+  }
+
   /** revert files
    * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
@@ -2135,54 +2194,6 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
       // done
       exec.done(); exec = null;
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(Onzen.reniceIOException(exception));
-    }
-    finally
-    {
-      if (exec != null) exec.done();
-    }
-  }
-
-  /** rename file
-   * @param fileData file data to rename
-   * @param newName new name
-   * @param commitMessage commit message
-   */
-  public void rename(FileData fileData, String newName, CommitMessage commitMessage)
-    throws RepositoryException
-  {
-    Exec exec = null;
-    try
-    {
-      Command command = new Command();
-      int     exitCode;
-
-      // rename file
-      command.clear();
-      command.append(Settings.hgCommand,"rename");
-      command.append("--");
-      command.append(fileData.getFileName());
-      command.append(newName);
-      exec = new Exec(rootPath,command);
-
-      // wait for termination
-      exitCode = exec.waitFor();
-      if (exitCode != 0)
-      {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
-      }
-
-      // done
-      exec.done(); exec = null;
-
-      // immediate commit when message is given
-      if (commitMessage != null)
-      {
-        commit(fileData,commitMessage);
-      }
     }
     catch (IOException exception)
     {
