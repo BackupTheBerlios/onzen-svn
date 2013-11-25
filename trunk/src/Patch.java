@@ -65,8 +65,6 @@ class Patch
      */
     static States toEnum(int value)
     {
-      States state;
-
       switch (value)
       {
         case 0:  return NONE;
@@ -75,6 +73,22 @@ class Patch
         case 3:  return APPLIED;
         case 4:  return DISCARDED;
         default: return NONE;
+      }
+    }
+
+    /** convert to ordinal value
+     * @return ordinal value
+     */
+    public int toOrdinal()
+    {
+      switch (this)
+      {
+        case NONE:      return 0;
+        case REVIEW:    return 1;
+        case COMMITED:  return 2;
+        case APPLIED:   return 3;
+        case DISCARDED: return 4;
+        default:        return 0;
       }
     }
 
@@ -136,7 +150,7 @@ class Patch
       ResultSet         resultSet1,resultSet2;
 
       // open database
-      database = openPatchesDatabase();
+      database = openDatabase();
 
       // get patches (Note: there is no way to use prepared statements with variable "IN"-operator)
       statement = database.createStatement();
@@ -265,7 +279,7 @@ class Patch
       }
 
       // close database
-      closePatchesDatabase(database);
+      closeDatabase(database); database = null;
     }
     catch (SQLException exception)
     {
@@ -274,7 +288,7 @@ class Patch
     }
     finally
     {
-      try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+      try { if (database != null) closeDatabase(database); } catch (SQLException exception) { /* ignored */ }
     }
 
     return patchList.toArray(new Patch[patchList.size()]);
@@ -606,7 +620,7 @@ class Patch
         PreparedStatement preparedStatement;
 
         // open database
-        database = openPatchesDatabase();
+        database = openDatabase();
 
         // remove not use patch number
         preparedStatement = database.prepareStatement("DELETE FROM numbers WHERE id=?;");
@@ -614,7 +628,7 @@ class Patch
         preparedStatement.executeUpdate();
 
         // close database
-        closePatchesDatabase(database);
+        closeDatabase(database); database = null;
 
         number = Database.ID_NONE;
       }
@@ -625,7 +639,7 @@ class Patch
       }
       finally
       {
-        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closeDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
 
@@ -698,7 +712,7 @@ class Patch
         PreparedStatement preparedStatement;
 
         // open database
-        database = openPatchesDatabase();
+        database = openDatabase();
 
         // create number
         SQLException sqlException = null;
@@ -727,7 +741,7 @@ class Patch
         while ((number == Database.ID_NONE) && (retryCount < 5));
 
         // close database
-        closePatchesDatabase(database);
+        closeDatabase(database); database = null;
       }
       catch (SQLException exception)
       {
@@ -735,7 +749,7 @@ class Patch
       }
       finally
       {
-        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closeDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
 
@@ -843,7 +857,7 @@ Dprintf.dprintf("");
       PreparedStatement preparedStatement;
 
       // open database
-      database = openPatchesDatabase();
+      database = openDatabase();
 
       // store patch data
       if (databaseId >= 0)
@@ -915,11 +929,11 @@ Dprintf.dprintf("");
       }
 
       // close database
-      closePatchesDatabase(database);
+      closeDatabase(database); database = null;
     }
     finally
     {
-      try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+      try { if (database != null) closeDatabase(database); } catch (SQLException exception) { /* ignored */ }
     }
 
     return databaseId;
@@ -940,7 +954,7 @@ Dprintf.dprintf("");
         ResultSet         resultSet;
 
         // open database
-        database = openPatchesDatabase();
+        database = openDatabase();
 
         // load patch data
         preparedStatement = database.prepareStatement("SELECT "+
@@ -1032,11 +1046,11 @@ Dprintf.dprintf("");
         }
 
         // close database
-        closePatchesDatabase(database);
+        closeDatabase(database); database = null;
       }
       finally
       {
-        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closeDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
   }
@@ -1056,7 +1070,7 @@ Dprintf.dprintf("");
         ResultSet         resultSet;
 
         // open database
-        database = openPatchesDatabase();
+        database = openDatabase();
 
         // delete patch number
         preparedStatement = database.prepareStatement("DELETE FROM numbers WHERE patchId=?;");
@@ -1079,13 +1093,13 @@ Dprintf.dprintf("");
         preparedStatement.executeUpdate();
 
         // close database
-        closePatchesDatabase(database);
+        closeDatabase(database); database = null;
 
         databaseId = Database.ID_NONE;
       }
       finally
       {
-        try { if (database != null) closePatchesDatabase(database); } catch (SQLException exception) { /* ignored */ }
+        try { if (database != null) closeDatabase(database); } catch (SQLException exception) { /* ignored */ }
       }
     }
   }
@@ -1989,7 +2003,7 @@ Dprintf.dprintf("exception=%s",exception);
   /** open patches database
    * @return database
    */
-  private static Database openPatchesDatabase()
+  private static Database openDatabase()
     throws SQLException
   {
     Database database = null;
@@ -2079,7 +2093,7 @@ exception.printStackTrace();
   /** close patches database
    * @param database database
    */
-  private static void closePatchesDatabase(Database database)
+  private static void closeDatabase(Database database)
     throws SQLException
   {
     database.close();
