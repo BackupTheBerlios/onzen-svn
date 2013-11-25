@@ -179,7 +179,6 @@ Dprintf.dprintf("x=%s",x);
 //widgetFiles.pack(true);
 //x = new Settings.ColumnSizes(Widgets.getTableColumnWidth(widgetFiles));;
 Dprintf.dprintf("x2=%s",x);
-      widgetFiles.setToolTipText("Changed files.");
 
       menu = Widgets.newPopupMenu(dialog);
       {
