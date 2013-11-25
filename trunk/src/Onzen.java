@@ -489,7 +489,10 @@ Dprintf.dprintf("d=%s",d);
 
       if (repositoryListName != null)
       {
-        // run
+//CommitMessage commitMessage = new CommitMessage(new String[]{"xxxx"});
+//commitMessage.addToHistory();
+
+      // run
         exitcode = run();
       }
       else
@@ -2257,7 +2260,22 @@ menuItem.setEnabled(false);
         }
       });
 
-      menuItem = Widgets.addMenuItem(menu,"Rename\u2026",Settings.keyRename);
+      menuItem = Widgets.addMenuItem(menu,"Copy\u2026",Settings.keyCopy);
+      menuItem.addSelectionListener(new SelectionListener()
+      {
+        public void widgetDefaultSelected(SelectionEvent selectionEvent)
+        {
+        }
+        public void widgetSelected(SelectionEvent selectionEvent)
+        {
+          if (selectedRepositoryTab != null)
+          {
+            selectedRepositoryTab.copy();
+          }
+        }
+      });
+
+      menuItem = Widgets.addMenuItem(menu,"Rename/move\u2026",Settings.keyRename);
       menuItem.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -2747,38 +2765,52 @@ exception.printStackTrace();
     {
       public void handleEvent(Event event)
       {
-        // store geometry
-        Settings.geometryMain = shell.getSize();
-
-        // save repository list
-        saveRepositoryList();
-
-        // save settings
-        boolean saveSettings = true;
-        if (Settings.isFileModified())
+        if (Dialogs.confirm(shell,
+                            "Quit program",
+                            Dialogs.booleanFieldUpdater(Settings.class,"showQuitConfirmation"),
+                            "Really quit program?",
+                            "Quit",
+                            "Cancel"
+                           )
+           )
         {
-          switch (Dialogs.select(shell,"Confirmation","Settings were modified externally.",new String[]{"Overwrite","Just quit","Cancel"},0))
+          // store geometry
+          Settings.geometryMain = shell.getSize();
+
+          // save repository list
+          saveRepositoryList();
+
+          // save settings
+          boolean saveSettings = true;
+          if (Settings.isFileModified())
           {
-            case 0:
-              break;
-            case 1:
-              saveSettings = false;
-              break;
-            case 2:
-              event.doit = false;
-              return;
+            switch (Dialogs.select(shell,"Confirmation","Settings were modified externally.",new String[]{"Overwrite","Just quit","Cancel"},0))
+            {
+              case 0:
+                break;
+              case 1:
+                saveSettings = false;
+                break;
+              case 2:
+                event.doit = false;
+                return;
+            }
           }
+          if (saveSettings)
+          {
+            Settings.save();
+          }
+
+          // store exitcode
+          result[0] = event.index;
+
+          // close
+          shell.dispose();
         }
-        if (saveSettings)
+        else
         {
-          Settings.save();
+          event.doit = false;
         }
-
-        // store exitcode
-        result[0] = event.index;
-
-        // close
-        shell.dispose();
       }
     });
 
@@ -6012,6 +6044,22 @@ Dprintf.dprintf("exception=%s",exception);
             widgetIgnoreFilePatterns.add(pattern);
           }
           Widgets.layout(widgetIgnoreFilePatterns,0,0,TableLayoutData.NSWE);
+          widgetIgnoreFilePatterns.addKeyListener(new KeyListener()
+          {
+            public void keyPressed(KeyEvent keyEvent)
+            {
+              if      (keyEvent.keyCode == SWT.DEL)
+              {
+                for (int index : widgetIgnoreFilePatterns.getSelectionIndices())
+                {
+                  widgetIgnoreFilePatterns.remove(index);
+                }
+              }
+            }
+            public void keyReleased(KeyEvent keyEvent)
+            {
+            }
+          });
           widgetIgnoreFilePatterns.setToolTipText("List of file patterns to ignore by revision control.");
 
           subSubSubComposite = Widgets.newComposite(subSubComposite);
@@ -6044,8 +6092,7 @@ Dprintf.dprintf("exception=%s",exception);
               }
               public void widgetSelected(SelectionEvent selectionEvent)
               {
-                int index = widgetIgnoreFilePatterns.getSelectionIndex();
-                if (index >= 0)
+                for (int index : widgetIgnoreFilePatterns.getSelectionIndices())
                 {
                   widgetIgnoreFilePatterns.remove(index);
                 }
@@ -7010,7 +7057,7 @@ exception.printStackTrace();
    */
   public void selectRepositoryTab(RepositoryTab repositoryTab)
   {
-    // deselect previous selected repository
+    // deselect previous repository
     if (selectedRepositoryTab != null) selectedRepositoryTab.repository.selected = false;
 
     // select new repository
@@ -7053,17 +7100,45 @@ exception.printStackTrace();
           }
           public void widgetSelected(SelectionEvent selectionEvent)
           {
-            try
+            BusyDialog busyDialog = new BusyDialog(shell,
+                                                   "Execute special command",
+                                                   "Execute special command '" + specialCommand.title + "'...",
+                                                   BusyDialog.TEXT0
+                                                  );
+            busyDialog.autoAnimate();
+
+            Background.run(new BackgroundRunnable(busyDialog)
             {
-              specialCommand.run();
-            }
-            catch (RepositoryException exception)
-            {
-              Dialogs.error(shell,"Cannot execute special command '%s' (error: %s).",specialCommand.title,exception.getMessage());
-            }
-            finally
-            {
-            }
+              public void run(final BusyDialog busyDialog)
+              {
+                setStatusText("Execute special command '" + specialCommand.title + "'...");
+
+                try
+                {
+                  specialCommand.run(busyDialog);
+                }
+                catch (final RepositoryException exception)
+                {
+                  Dialogs.error(shell,
+                                exception.getExtendedMessage(),
+                                "Cannot execute special command '%s' (error: %s).",
+                                specialCommand.title,
+                                exception.getMessage()
+                               );
+                }
+                finally
+                {
+                  display.syncExec(new Runnable()
+                  {
+                    public void run()
+                    {
+                      busyDialog.close();
+                    }
+                  });
+                  clearStatusText();
+                }
+              }
+            });
           }
         });
       }
@@ -7093,12 +7168,6 @@ exception.printStackTrace();
       }
     }
     selectedRepositoryTab = repositoryTab;
-
-    // set focus
-    if (selectedRepositoryTab != null)
-    {
-      Widgets.setFocus(selectedRepositoryTab.widgetFileTree);
-    }
   }
 
   /** reselect selected repository tab
