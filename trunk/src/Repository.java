@@ -2143,9 +2143,18 @@ abstract class Repository implements Serializable
     }
 
     /** execute special command
+     * @param busyDialog busy dialog
      */
-    public abstract void run()
+    public abstract void run(BusyDialog busyDialog)
       throws RepositoryException;
+
+    /** execute special command
+     */
+    public void run()
+      throws RepositoryException
+    {
+      run((BusyDialog)null);
+    }
   }
 
   /** store local changes into into a temporary patch file
@@ -2923,8 +2932,15 @@ abstract class Repository implements Serializable
     HashSet<String> fileDirectoryHashSet = new HashSet<String>();
     for (FileData fileData : fileDataSet)
     {
-      String directory = fileData.getDirectoryName();
-      fileDirectoryHashSet.add(directory);
+      switch (fileData.type)
+      {
+        case FILE:
+          fileDirectoryHashSet.add(fileData.getDirectoryName());
+          break;
+        case DIRECTORY:
+          fileDirectoryHashSet.add(fileData.getFileName());
+          break;
+      }
     }
 
     // udpate states
@@ -3461,7 +3477,7 @@ abstract class Repository implements Serializable
   public void update(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
-    update(fileDataSet,null);
+    update(fileDataSet,(BusyDialog)null);
   }
 
   /** update all files from respository
@@ -3470,7 +3486,7 @@ abstract class Repository implements Serializable
   public void updateAll(BusyDialog busyDialog)
     throws RepositoryException
   {
-    update(null,busyDialog);
+    update((HashSet<FileData>)null,busyDialog);
   }
 
   /** update all files from respository
@@ -3578,6 +3594,22 @@ Dprintf.dprintf("fileName=%s",fileName);
     remove(fileDataSet,commitMessage);
   }
 
+  /** copy files
+   * @param fileDataSet files to copy
+   * @param destination destination
+   * @param commitMessage commit message
+   */
+  abstract public void copy(HashSet<FileData> fileDataSet, String destination, CommitMessage commitMessage)
+    throws RepositoryException;
+
+    /** rename file
+   * @param fileData file data to rename
+   * @param newName new name
+   * @param commitMessage commit message
+   */
+  abstract public void rename(FileData fileData, String newName, CommitMessage commitMessage)
+    throws RepositoryException;
+
   /** revert files
    * @param fileDataSet file data set or null for all files
    * @param revision revision to revert to
@@ -3618,14 +3650,6 @@ Dprintf.dprintf("fileName=%s",fileName);
   {
    revert(fileDataSet,getLastRevision(),false);
   }
-
-  /** rename file
-   * @param fileData file data to rename
-   * @param newName new name
-   * @param commitMessage commit message
-   */
-  abstract public void rename(FileData fileData, String newName, CommitMessage commitMessage)
-    throws RepositoryException;
 
   /** set conflicts resolved
    * @param fileDataSet file data set or null for all files
