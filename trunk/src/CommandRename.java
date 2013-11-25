@@ -3,7 +3,7 @@
 * $Revision$
 * $Date$
 * $Author$
-* Contents: command rename file/directory
+* Contents: command rename/move file/directory
 * Systems: all
 *
 \***********************************************************************/
@@ -119,7 +119,7 @@ class CommandRename
     history = CommitMessage.getHistory();
 
     // rename file dialog
-    dialog = Dialogs.openModal(shell,"Rename file",new double[]{1.0,0.0},1.0);
+    dialog = Dialogs.openModal(shell,"Rename/move file",new double[]{1.0,0.0},1.0);
 
     composite = Widgets.newComposite(dialog);
     composite.setLayout(new TableLayout(new double[]{0.0,0.0,1.0,0.0,1.0},1.0,4));
@@ -221,8 +221,8 @@ class CommandRename
     composite.setLayout(new TableLayout(0.0,1.0));
     Widgets.layout(composite,1,0,TableLayoutData.WE,0,0,4);
     {
-      widgetRename = Widgets.newButton(composite,"Rename");
-      Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,70,SWT.DEFAULT);
+      widgetRename = Widgets.newButton(composite,"Rename/Move");
+      Widgets.layout(widgetRename,0,0,TableLayoutData.W,0,0,0,0,80,SWT.DEFAULT);
       widgetRename.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -240,10 +240,10 @@ class CommandRename
           Dialogs.close(dialog,true);
         }
       });
-      widgetRename.setToolTipText("Rename file.");
+      widgetRename.setToolTipText("Rename/move file.");
 
       button = Widgets.newButton(composite,"Cancel");
-      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,70,SWT.DEFAULT);
+      Widgets.layout(button,0,1,TableLayoutData.E,0,0,0,0,80,SWT.DEFAULT);
       button.addSelectionListener(new SelectionListener()
       {
         public void widgetDefaultSelected(SelectionEvent selectionEvent)
@@ -398,9 +398,6 @@ class CommandRename
             || data.messageEdited
            )
         {
-Dprintf.dprintf("lastMessage=#%s#",data.lastMessage);
-Dprintf.dprintf("currentMessage=#%s#",currentMessage);
-Dprintf.dprintf("event.text=#%s#",event.text);
           switch (Dialogs.select(dialog,"Confirmation","Replace or add message to existing commit message?",new String[]{"Replace","Add","Cancel"},1))
           {
             case 0:
@@ -503,7 +500,7 @@ Dprintf.dprintf("event.text=#%s#",event.text);
    */
   private void rename()
   {
-    repositoryTab.setStatusText("Rename file '%s' -> '%s'...",fileData.getFileName(),data.newFileName);
+    repositoryTab.setStatusText("Rename/move file '%s' -> '%s'...",fileData.getFileName(),data.newFileName);
     CommitMessage commitMessage = null;
     try
     {
@@ -533,18 +530,18 @@ Dprintf.dprintf("event.text=#%s#",event.text);
       // free resources
       commitMessage.done(); commitMessage = null;
     }
-    catch (RepositoryException exception)
+    catch (final RepositoryException exception)
     {
-      final String exceptionMessage = exception.getMessage();
       display.syncExec(new Runnable()
       {
         public void run()
         {
           Dialogs.error(shell,
+                        exception.getExtendedMessage(),
                         "Cannot rename file\n\n'%s'\n\ninto\n\n'%s'\n\n(error: %s)",
                         fileData.getFileName(),
                         data.newFileName,
-                        exceptionMessage
+                        exception.getMessage()
                        );
         }
       });
