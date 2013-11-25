@@ -1704,7 +1704,8 @@ class Widgets
       else if (control instanceof Combo)
       {
         Combo widget = (Combo)control;
-        widget.setSelection(new Point(0,65536));
+        String text  = widget.getText();
+        widget.setSelection(new Point(0,text.length()));
       }
       else if (control instanceof List)
       {
