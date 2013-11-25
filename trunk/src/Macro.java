@@ -10,6 +10,7 @@
 
 /****************************** Imports ********************************/
 // base
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,6 +19,8 @@ import java.util.regex.Pattern;
 
 /****************************** Classes ********************************/
 
+/** external command
+ */
 public class Macro
 {
   /** hidden string class
@@ -55,7 +58,7 @@ public class Macro
   // --------------------------- variables --------------------------------
   private String[]                 parameters;
   private String                   start,end;
-  private Pattern                  patterVariable;
+  private Pattern                  patternVariable;
   private HashMap<String,Object[]> variableSet;
 
   // ------------------------ native functions ----------------------------
@@ -71,7 +74,7 @@ public class Macro
     this.parameters = parameters;
     this.start      = start;
     this.end        = end;
-    patterVariable  = Pattern.compile("(.*?)"+start+"\\s*(\\w*)\\s*(.*?)"+end+"(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
+    patternVariable = Pattern.compile("(.*?)"+start+"\\s*(\\w*)\\s*(.*?)"+end+"(.*)",Pattern.CASE_INSENSITIVE|Pattern.MULTILINE|Pattern.DOTALL);
     variableSet     = new HashMap<String,Object[]>();
   }
 
@@ -126,7 +129,7 @@ public class Macro
   {
     for (String parameter : parameters)
     {
-      Matcher matcher = patterVariable.matcher(parameter);
+      Matcher matcher = patternVariable.matcher(parameter);
       if (matcher.matches() && matcher.group(2).equals(name))
       {
         return true;
@@ -149,11 +152,22 @@ public class Macro
   /** add expand variable
    * @param name variable name
    * @param value variable value
+   * @param quoteChar quote char
+   * @param separator string or null
+   */
+  public void expand(String name, Object value, Character quoteChar, String separator)
+  {
+    variableSet.put(name,new Object[]{value,quoteChar,separator});
+  }
+
+  /** add expand variable
+   * @param name variable name
+   * @param value variable value
    * @param separator string or null
    */
   public void expand(String name, Object value, String separator)
   {
-    variableSet.put(name,new Object[]{value,separator});
+    expand(name,value,null,separator);
   }
 
   /** add expand variable
@@ -179,92 +193,106 @@ public class Macro
    */
   public String[] getValueArray()
   {
-    String[] values = new String[parameters.length];
+    ArrayList<String> valueList = new ArrayList<String>();
 
     for (int z = 0; z < parameters.length; z++)
     {
-      StringBuilder value    = new StringBuilder();
-      String        template = parameters[z];
+      String template = parameters[z];
       while (!template.isEmpty())
       {
-//Dprintf.dprintf("value=%s",value);
-        Matcher matcher = patterVariable.matcher(template);
+        Matcher matcher = patternVariable.matcher(template);
         if (matcher.matches())
         {
-          value.append(matcher.group(1));
-          template = matcher.group(4);
-
+          // get prefix, name, format
+          String prefix  = matcher.group(1);
           String name    = matcher.group(2);
           String format  = matcher.group(3);
+
+          // get rest of template
+          template = matcher.group(4);
+
 //Dprintf.dprintf("name=%s -- format=#%s#",name,format);
 
           Object[] variable = variableSet.get(name);
           if (variable != null)
           {
-            Object object    = (Object)variable[0];
-            String separator = (String)variable[1];
+            Object    object    = (Object)variable[0];
+            Character quoteChar = (Character)variable[1];
+            String    separator = (String)variable[2];
 //Dprintf.dprintf("object=%s -- %s",object,separator);
 
             if      (object instanceof Object[])
             {
               // expand array
-              StringBuilder buffer = new StringBuilder();
               Object[] array = (Object[])object;
               for (int i = 0; i < array.length; i++)
               {
-                if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
                 object = array[i];
+
+                //                if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
+                StringBuilder value = new StringBuilder(prefix);
+
                 String s = (object != null) ? object.toString() : "";
+                if (quoteChar != null) s = StringUtils.escape(s,quoteChar);
+
                 if (!format.isEmpty())
                 {
                   try
                   {
-                    buffer.append(String.format(format,s));
+                    value.append(String.format(format,s));
                   }
                   catch (Exception exception)
                   {
-                    buffer.append(s);
+                    value.append(s);
                   }
                 }
                 else
                 {
-                  buffer.append(s);
+                  value.append(s);
                 }
+                valueList.add(value.toString());
               }
-              value.append(buffer);
             }
             else if (object instanceof Collection)
             {
               // expand collection
-              StringBuilder buffer = new StringBuilder();
               Iterator iterator = ((Collection)object).iterator();
               while (iterator.hasNext())
               {
-                if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
                 object = iterator.next();
+
+//                if ((separator != null) && (buffer.length() > 0)) buffer.append(separator);
+                StringBuilder value = new StringBuilder(prefix);
+
                 String s = (object != null) ? object.toString() : "";
+                if (quoteChar != null) s = StringUtils.escape(s,quoteChar);
+
                 if (!format.isEmpty())
                 {
                   try
                   {
-                    buffer.append(String.format(format,s));
+                    value.append(String.format(format,s));
                   }
                   catch (Exception exception)
                   {
-                    buffer.append(s);
+                    value.append(s);
                   }
                 }
                 else
                 {
-                  buffer.append(s);
+                  value.append(s);
                 }
+                valueList.add(value.toString());
               }
-              value.append(buffer);
             }
             else if (object instanceof Hidden)
             {
-              // expand object
+              StringBuilder value = new StringBuilder(prefix);
+
+              // expand hidden object
               String s = (object != null) ? object.toString() : "";
+              if (quoteChar != null) s = StringUtils.escape(s,quoteChar);
+
               if (!format.isEmpty())
               {
                 try
@@ -280,11 +308,16 @@ public class Macro
               {
                 value.append(s);
               }
+              valueList.add(value.toString());
             }
             else
             {
+              StringBuilder value = new StringBuilder(prefix);
+
               // expand object
               String s = (object != null) ? object.toString() : "";
+              if (quoteChar != null) s = StringUtils.escape(s,quoteChar);
+
               if (!format.isEmpty())
               {
                 try
@@ -300,24 +333,26 @@ public class Macro
               {
                 value.append(s);
               }
+              valueList.add(value.toString());
             }
           }
           else
           {
             // unknown variable
-            value.append("???");
+//            value.append("???");
+            valueList.add("???");
           }
         }
         else
         {
-          value.append(template);
+          valueList.add(template);
           template = "";
         }
       }
-      values[z] = value.toString();
     }
+for (String s : valueList) Dprintf.dprintf("s=%s",s);
 
-    return values;
+    return valueList.toArray(new String[valueList.size()]);
   }
 
   /** expand macro value
