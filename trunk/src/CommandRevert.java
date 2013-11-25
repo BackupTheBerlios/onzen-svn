@@ -125,7 +125,7 @@ class CommandRevert
         widgetRevision.setToolTipText("Revision to revert to.");
 
         button = Widgets.newCheckbox(subComposite,"recursive");
-        Widgets.layout(button,0,1,TableLayoutData.WE);
+        Widgets.layout(button,0,2,TableLayoutData.WE);
         button.addSelectionListener(new SelectionListener()
         {
           public void widgetDefaultSelected(SelectionEvent selectionEvent)
