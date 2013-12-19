@@ -590,7 +590,7 @@ class BusyDialog
    */
   public boolean updateText(int i, Long n)
   {
-    return updateText(i,Long.toString(n));
+    return updateText(i,"%d",n);
   }
 
   /** update busy dialog text
@@ -606,9 +606,18 @@ class BusyDialog
    * @param text text to show (can be null)
    * @return true if closed, false otherwise
    */
+  public boolean updateText(String format, final Object... args)
+  {
+    return updateText(0,format,args);
+  }
+
+  /** update busy dialog text
+   * @param text text to show (can be null)
+   * @return true if closed, false otherwise
+   */
   public boolean updateText(String text)
   {
-    return updateText(0,text);
+    return updateText(0,"%s",text);
   }
 
   /** update busy dialog progress bar
@@ -662,7 +671,7 @@ class BusyDialog
    */
   public boolean updateText(Long n)
   {
-    return updateText(0,Long.toString(n));
+    return updateText(0,"%d",n);
   }
 
   /** update busy dialog
@@ -674,9 +683,10 @@ class BusyDialog
   }
 
   /** update busy dialog list
+   * @param i index 0|1
    * @param format format string
    * @param args optional arguments
-   * @return true if update done, false otherwise
+   * @return true if closed, false otherwise
    */
   public boolean updateList(final String format, final Object... args)
   {
