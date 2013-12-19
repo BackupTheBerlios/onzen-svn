@@ -49,6 +49,7 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
@@ -322,7 +323,7 @@ class WidgetModifyListener
   private WidgetVariable[] variables;
 
   // cached text for widget
-  private String cachedText = null;
+  private String cachedText = "";
 
   /** create widget listener
    */
@@ -442,9 +443,12 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
+        // Fix layout: save current bounds and restore after pack()
+        Rectangle bounds = widgetLabel.getBounds();
         widgetLabel.setText(text);
-// label layout does not work as expected: width of first label is expanded, rest reduced?
-//        widgetLabel.getParent().layout();
+        widgetLabel.pack();
+        widgetLabel.setBounds(bounds);
+
         cachedText = text;
       }
     }
@@ -466,8 +470,12 @@ class WidgetModifyListener
         }
         if ((text != null) && !text.equals(cachedText))
         {
+          // Fix layout: save current bounds and restore after pack()
+          Rectangle bounds = widgetButton.getBounds();
           widgetButton.setText(text);
-          widgetButton.getParent().layout();
+          widgetButton.pack();
+          widgetButton.setBounds(bounds);
+
           cachedText = text;
         }
       }
@@ -512,8 +520,12 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
+        // Fix layout: save current bounds and restore after pack()
+        Rectangle bounds = widgetCombo.getBounds();
         widgetCombo.setText(text);
-        widgetCombo.getParent().layout();
+        widgetCombo.pack();
+        widgetCombo.setBounds(bounds);
+
         cachedText = text;
       }
     }
@@ -533,9 +545,12 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
+        // Fix layout: save current bounds and restore after pack()
+        Rectangle bounds = widgetText.getBounds();
         widgetText.setText(text);
-// text layout does not work as expected: width of first label is expanded, rest reduced?
-//        widgetText.getParent().layout();
+        widgetText.pack();
+        widgetText.setBounds(bounds);
+
         cachedText = text;
       }
     }
@@ -555,8 +570,12 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
+        // Fix layout: save current bounds and restore after pack()
+        Rectangle bounds = widgetStyledText.getBounds();
         widgetStyledText.setText(text);
-        widgetStyledText.getParent().layout();
+        widgetStyledText.pack();
+        widgetStyledText.setBounds(bounds);
+
         cachedText = text;
       }
     }
@@ -1704,11 +1723,7 @@ class Widgets
       else if (control instanceof Combo)
       {
         Combo widget = (Combo)control;
-        String text  = widget.getText();
-        widget.setSelection(new Point(0,text.length()));
-      }
-      else if (control instanceof List)
-      {
+        widget.setSelection(new Point(0,65536));
       }
       else if (control instanceof Spinner)
       {
@@ -3831,13 +3846,22 @@ e composite widget
    * @param composite composite widget
    * @return new combo widget
    */
-  public static Combo newOptionMenu(Composite composite)
+  public static Combo newOptionMenu(Composite composite, int style)
   {
     Combo combo;
 
-    combo = new Combo(composite,SWT.RIGHT|SWT.READ_ONLY);
+    combo = new Combo(composite,style|SWT.READ_ONLY);
 
     return combo;
+  }
+
+  /** create new option menu
+   * @param composite composite widget
+   * @return new combo widget
+   */
+  public static Combo newOptionMenu(Composite composite)
+  {
+    return newOptionMenu(composite,SWT.NONE);
   }
 
   //-----------------------------------------------------------------------
