@@ -73,16 +73,17 @@ class RepositoryGIT extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositoryGIT(String rootPath)
+  RepositoryGIT(String rootPath, String userName, PasswordHandler passwordHandler, String comment)
   {
-    super(rootPath);
+    super(rootPath,passwordHandler,comment);
+    this.userName = userName;
   }
 
   /** create repository
    */
   RepositoryGIT()
   {
-    this(null);
+    super();
   }
 
   /** check if repository support pull/push commands
@@ -91,6 +92,24 @@ class RepositoryGIT extends Repository
   public boolean supportPullPush()
   {
     return true;
+  }
+
+  /** get special commands for repository
+   * @return array with special commands
+   */
+  public SpecialCommand[] getSpecialCommands()
+  {
+    return new SpecialCommand[]
+    {
+      new SpecialCommand("Select branch...")
+      {
+        public void run(BusyDialog busyDialog)
+          throws RepositoryException
+        {
+          selectBranch(this,busyDialog);
+        }
+      }
+    };
   }
 
   /** create new repository module
@@ -106,36 +125,41 @@ throw new RepositoryException("NYI");
   }
 
   /** checkout repository
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
     final Pattern PATTERN_URI1 = Pattern.compile("^([^:/]+)://([^:]*):([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_URI2 = Pattern.compile("^([^:/]+)://([^@]*)@(.*)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_URI3 = Pattern.compile("^([^:/]+)://(.*)",Pattern.CASE_INSENSITIVE);
 
-    File tmpDirectory = null;
-    Exec exec         = null;
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,repositoryURL) : null;
+
+    File destinationDirectory = new File(destinationPath);
+    File tmpDirectory         = null;
+    Exec exec                 = null;
     try
     {
       Command command = new Command();
 
-      // create temporary directory
-      tmpDirectory = FileUtils.createTempDirectory("git",".tmp",new File(destinationPath).getParentFile());
+      // create destination directory
+      destinationDirectory.mkdir();
 
-      // checkout
+      // create temporary directory
+      tmpDirectory = FileUtils.createTempDirectory("git",".tmp",destinationDirectory.getParentFile());
+
+      // checkout into temporary directory
       command.clear();
       command.append(Settings.gitCommand,"clone","--verbose","--progress");
       if ((revision != null) && !revision.isEmpty()) command.append("--branch",revision);
       Matcher matcher;
-      if      ((matcher = PATTERN_URI1.matcher(repositoryPath)).matches())
+      if      ((matcher = PATTERN_URI1.matcher(repositoryURL)).matches())
       {
         command.appendConcat(matcher.group(1),
                              "://",
@@ -148,7 +172,7 @@ throw new RepositoryException("NYI");
                              moduleName
                             );
       }
-      else if ((matcher = PATTERN_URI2.matcher(repositoryPath)).matches())
+      else if ((matcher = PATTERN_URI2.matcher(repositoryURL)).matches())
       {
         if (password.isEmpty())
         {
@@ -165,7 +189,7 @@ throw new RepositoryException("NYI");
                              moduleName
                             );
       }
-      else if ((matcher = PATTERN_URI3.matcher(repositoryPath)).matches())
+      else if ((matcher = PATTERN_URI3.matcher(repositoryURL)).matches())
       {
         if (userName.isEmpty())
         {
@@ -188,10 +212,10 @@ throw new RepositoryException("NYI");
       }
       else
       {
-        command.append("file://"+repositoryPath+"/"+moduleName);
+        command.append("file://"+repositoryURL+"/"+moduleName);
       }
       command.append(tmpDirectory);
-      exec = new Exec(destinationPath,command,10*1000);
+      exec = new Exec(tmpDirectory.getAbsolutePath(),command,10*1000);
 
       // read output
       while (   ((busyDialog == null) || !busyDialog.isAborted())
@@ -214,23 +238,7 @@ throw new RepositoryException("NYI");
 Dprintf.dprintf("");
         int exitCode = exec.waitFor();
 Dprintf.dprintf("");
-        if (exitCode == 0)
-        {
-          try
-          {
-Dprintf.dprintf("");
-            if (busyDialog != null) busyDialog.updateList("Move files into '"+destinationPath+"'...");
-Dprintf.dprintf("");
-            FileUtils.moveDirectoryTree(tmpDirectory,new File(destinationPath));
-Dprintf.dprintf("");
-          }
-          catch (IOException exception)
-          {
-Dprintf.dprintf("");
-            throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
-          }
-        }
-        else
+        if (exitCode != 0)
         {
 Dprintf.dprintf("");
           throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
@@ -244,6 +252,23 @@ Dprintf.dprintf("");
 
       // done
       exec.done(); exec = null;
+
+      // move to destination directory
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        try
+        {
+Dprintf.dprintf("");
+          if (busyDialog != null) busyDialog.updateList("Move files into '"+destinationPath+"'...");
+Dprintf.dprintf("");
+          FileUtils.moveDirectoryTree(tmpDirectory,destinationDirectory);
+Dprintf.dprintf("");
+        }
+        catch (IOException exception)
+        {
+          throw new RepositoryException(Onzen.reniceIOException(exception));
+        }
+      }
     }
     catch (IOException exception)
     {
@@ -292,12 +317,14 @@ Dprintf.dprintf("");
       exec = null;
       try
       {
+        File file = new File(rootPath,fileDirectory);
+
         // get status
         command.clear();
         command.append(Settings.gitCommand,"status","-s","--porcelain","--untracked-files=all");
         command.append("--");
-        command.append(!fileDirectory.isEmpty() ? fileDirectory : ".");
-        exec = new Exec(rootPath,command);
+        command.append(!fileDirectory.isEmpty() ? file.getName() : ".");
+        exec = new Exec(file.getParent(),command);
 
         // parse status data
         String directory = new File(rootPath,fileDirectory).getPath();
@@ -332,10 +359,10 @@ Dprintf.dprintf("");
                  )
               {
                 // get file type, size, date/time
-                File file               = new File(rootPath,name);
-                FileData.Types type     = getFileType(file);
-                long           size     = file.length();
-                Date           datetime = new Date(file.lastModified());
+                File           newFile  = new File(rootPath,name);
+                FileData.Types type     = getFileType(newFile);
+                long           size     = newFile.length();
+                Date           datetime = new Date(newFile.lastModified());
 
                 // create file data
 Dprintf.dprintf("add new %s",name);
@@ -379,45 +406,11 @@ Dprintf.dprintf("add new %s",name);
         if (exec != null) exec.done();
       }
 
-      // get branch
-      exec = null;
-      try
+      // set branch name
+      String branchName = getBranchName();
+      for (FileData fileData : fileDataSet)
       {
-        command.clear();
-        command.append(Settings.gitCommand,"branch");
-        command.append("--");
-        exec = new Exec(rootPath,command);
-        // parse branch
-        while ((line = exec.getStdout()) != null)
-        {
-          if ((matcher = PATTERN_CURRENT_BRANCH.matcher(line)).matches())
-          {
-            name = matcher.group(1);
-
-            for (FileData fileData : fileDataSet)
-            {
-              fileData.branch = name;
-            }
-          }
-        }
-
-        // wait for termination
-        int exitCode = exec.waitFor();
-        if (exitCode != 0)
-        {
-          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
-        }
-
-        // done
-        exec.done(); exec = null;
-      }
-      catch (IOException exception)
-      {
-        // ignored
-      }
-      finally
-      {
-        if (exec != null) exec.done();
+        fileData.branch = branchName;
       }
     }
   }
@@ -449,7 +442,8 @@ Dprintf.dprintf("add new %s",name);
       command.append("--");
       exec = new Exec(rootPath,command);
 
-      repositoryPath = exec.getStdout();
+      line = exec.getStdout();
+      if (line != null) repositoryPath = line;
 
       // done
       exec.done(); exec = null;
@@ -464,6 +458,88 @@ Dprintf.dprintf("add new %s",name);
     }
 
     return repositoryPath;
+  }
+
+  /** get repository URL
+   * @return repository URL
+   */
+  public String getRepositoryURL()
+  {
+    String repositoryPath = "";
+
+    // get root
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+
+      command.clear();
+      command.append(Settings.gitCommand,"config","--local","remote.origin.url");
+      exec = new Exec(rootPath,command);
+
+      line = exec.getStdout();
+      if (line != null) repositoryPath = line;
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return repositoryPath;
+  }
+
+  /** get current branch name
+   * @return branch name
+   */
+  public String getBranchName()
+  {
+    final Pattern PATTERN_CURRENT_BRANCH = Pattern.compile("^\\*\\s+(.*?)\\s*",Pattern.CASE_INSENSITIVE);
+
+    String branchName = "";
+
+    // get root
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+      String  line;
+      Matcher matcher;
+
+      command.clear();
+      command.append(Settings.gitCommand,"branch");
+      command.append("--");
+      exec = new Exec(rootPath,command);
+
+      // parse branch
+      while ((line = exec.getStdout()) != null)
+      {
+        if ((matcher = PATTERN_CURRENT_BRANCH.matcher(line)).matches())
+        {
+          branchName = matcher.group(1);
+        }
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      // ignored
+    }
+    finally
+    {
+      if (exec != null) exec.done();
+    }
+
+    return branchName;
   }
 
   /** get first revision name
@@ -501,12 +577,14 @@ Dprintf.dprintf("add new %s",name);
       String  line;
       Matcher matcher;
 
-      // get log
+      File file = new File(rootPath,name);
+
+      // get log (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"log");
       command.append("--");
-      if (name != null) command.append(name);
-      exec = new Exec(rootPath,command);
+      if (name != null) command.append(file.getName());
+      exec = new Exec(file.getParent(),command);
 
       // parse revisions in log output
       while ((line = exec.getStdout()) != null)
@@ -540,7 +618,7 @@ Dprintf.dprintf("add new %s",name);
   }
 
   /** get revision data
-   * @param fileData file data
+   * @param fileData file data (not used)
    * @param revision revision
    * @return revision data
    */
@@ -555,12 +633,14 @@ Dprintf.dprintf("add new %s",name);
     {
       Command command = new Command();
 
-      // get single log entry
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // get single log entry (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"log","-1");
       if (revision != null) command.append(revision);
       command.append("--");
-      exec = new Exec(rootPath,command);
+      exec = new Exec(file.getParent(),command);
 
       // parse data
       revisionData = parseLogData(exec);
@@ -595,12 +675,14 @@ Dprintf.dprintf("add new %s",name);
     {
       Command command = new Command();
 
-      // get log
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // get log (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"log");
       command.append("--");
-      command.append(getFileDataName(fileData));
-      exec = new Exec(rootPath,command);
+      command.append(file.getName());
+      exec = new Exec(file.getParent(),command);
 
       // parse data
       RevisionData revisionData;
@@ -643,12 +725,14 @@ Dprintf.dprintf("add new %s",name);
       Command command = new Command();
       String  line;
 
-      // get file
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // get file (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"show");
       command.append("--");
-      command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
-      exec = new Exec(rootPath,command);
+      command.append(((revision != null) ? revision+":" : "")+file.getName());
+      exec = new Exec(file.getParent(),command);
 
       // read file data
       while ((line = exec.getStdout()) != null)
@@ -688,12 +772,14 @@ Dprintf.dprintf("add new %s",name);
       int     n;
       byte[]  buffer  = new byte[64*1024];
 
-      // get file data
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // get file data (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"show");
       command.append("--");
-      command.append(((revision != null) ? revision+":" : "")+getFileDataName(fileData));
-      exec = new Exec(rootPath,command,true);
+      command.append(((revision != null) ? revision+":" : "")+file.getName());
+      exec = new Exec(file.getParent(),command,true);
 
       // read file bytes into byte array stream
       while ((n = exec.readStdout(buffer)) > 0)
@@ -820,11 +906,13 @@ Dprintf.dprintf("add new %s",name);
         Matcher matcher;
         String  line;
 
-        // check out new revision
+        File file = new File(rootPath,getFileDataName(fileData));
+
+        // check out new revision (Note: execute in correct directory to support GIT submodules, too)
         command.clear();
         command.append(Settings.gitCommand,"show");
-        command.append(newRevision+":"+getFileDataName(fileData));
-        exec = new Exec(rootPath,command);
+        command.append(newRevision+":"+file.getName());
+        exec = new Exec(file.getParent(),command);
 
         // read content
         ArrayList<String> newFileLineList = new ArrayList<String>();
@@ -882,14 +970,16 @@ Dprintf.dprintf("add new %s",name);
       Matcher matcher;
       String  line;
 
-      // diff file
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // diff file (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"diff");
       if (oldRevision != null) command.append("-r",oldRevision);
       if (newRevision != null) command.append("-r",newRevision);
       command.append("--");
-      command.append(getFileDataName(fileData));
-      exec = new Exec(rootPath,command);
+      command.append(file.getName());
+      exec = new Exec(file.getParent(),command);
 
       /* skip diff header (1 line)
            diff ...
@@ -1335,13 +1425,16 @@ Dprintf.dprintf("");
     Exec exec = null;
     try
     {
-      // get log
       Command command = new Command();
+
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // get log (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"log");
       command.append("--");
-      if (fileData != null) command.append(getFileDataName(fileData));
-      exec = new Exec(rootPath,command);
+      if (fileData != null) command.append(file.getName());
+      exec = new Exec(file.getParent(),command);
 
       // parse data
       RevisionData revisionData;
@@ -1396,13 +1489,15 @@ Dprintf.dprintf("");
       Matcher matcher;
       String  line;
 
-      // get annotations
+      File file = new File(rootPath,getFileDataName(fileData));
+
+      // get annotations (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"blame","--date","iso");
       if (revision != null) command.append(revision);
       command.append("--");
-      command.append(getFileDataName(fileData));
-      exec = new Exec(rootPath,command);
+      command.append(file.getName());
+      exec = new Exec(file.getParent(),command);
 
       /* parse annotation output
            Format:
@@ -1513,7 +1608,10 @@ Dprintf.dprintf("");
       Command command = new Command();
       int     exitCode;
 
-      // commit files
+//      File file = new File(rootPath,getFileDataName(fileData));
+//TODO
+
+      // commit files (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"commit","-F",commitMessage.getFileName());
       command.append("--");
@@ -1548,40 +1646,45 @@ Dprintf.dprintf("");
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
-    Exec exec = null;
-    try
+    for (FileData fileData : fileDataSet)
     {
-      Command command = new Command();
-      int     exitCode;
-
-      // add files
-      command.clear();
-      command.append(Settings.gitCommand,"add");
-      command.append("--");
-      command.append(getFileDataNames(fileDataSet));
-      exec = new Exec(rootPath,command);
-      exitCode = exec.waitFor();
-      if (exitCode != 0)
+      Exec exec = null;
+      try
       {
-        throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        Command command = new Command();
+        int     exitCode;
+
+        File file = new File(rootPath,getFileDataName(fileData));
+
+        // add files (Note: execute in correct directory to support GIT submodules, too)
+        command.clear();
+        command.append(Settings.gitCommand,"add");
+        command.append("--");
+        command.append(file.getName());
+        exec = new Exec(file.getParent(),command);
+        exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",command.toString(),exitCode);
+        }
+
+        // done
+        exec.done(); exec = null;
+
+        // immediate commit when message is given
+        if (commitMessage != null)
+        {
+          commit(fileData,commitMessage);
+        }
       }
-
-      // done
-      exec.done(); exec = null;
-
-      // immediate commit when message is given
-      if (commitMessage != null)
+      catch (IOException exception)
       {
-        commit(fileDataSet,commitMessage);
+        throw new RepositoryException(Onzen.reniceIOException(exception));
       }
-    }
-    catch (IOException exception)
-    {
-      throw new RepositoryException(Onzen.reniceIOException(exception));
-    }
-    finally
-    {
-      if (exec != null) exec.done();
+      finally
+      {
+        if (exec != null) exec.done();
+      }
     }
   }
 
@@ -1604,7 +1707,10 @@ Dprintf.dprintf("");
       // remove from repository
       Command command = new Command();
 
-      // remove files
+//      File file = new File(rootPath,getFileDataName(fileData));
+//TODO
+
+      // remove files (Note: execute in correct directory to support GIT submodules, too)
       command.clear();
       command.append(Settings.gitCommand,"rm");
       command.append("--");
@@ -2394,6 +2500,75 @@ throw new RepositoryException("NYI");
     else
     {
       return null;
+    }
+  }
+
+  /** cleanup command
+   * @param specialCommand special command
+   * @param busyDialog busy dialog or null
+   */
+  private void selectBranch(SpecialCommand specialCommand, BusyDialog busyDialog)
+    throws RepositoryException
+  {
+    final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+
+    Exec exec = null;
+    try
+    {
+      Command command = new Command();
+
+      // cleanup
+      command.append(Settings.gitCommand,"checkout");
+      exec = new Exec(rootPath,command);
+      exec.closeStdin();
+
+      // read output
+      while (   ((busyDialog == null) || !busyDialog.isAborted())
+             && !exec.isTerminated()
+            )
+      {
+        String line;
+
+        // read stdout
+        line = exec.pollStdout();
+        if (line != null)
+        {
+//Dprintf.dprintf("out: %s",line);
+          if (busyDialog != null) busyDialog.updateList(line);
+        }
+      }
+      if ((busyDialog == null) || !busyDialog.isAborted())
+      {
+        // wait for termination
+        int exitCode = exec.waitFor();
+        if (exitCode != 0)
+        {
+          throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+        }
+      }
+      else
+      {
+        // abort
+        exec.destroy();
+      }
+
+      // wait for termination
+      int exitCode = exec.waitFor();
+      if (exitCode != 0)
+      {
+        throw new RepositoryException("'%s', exit code: %d",exec.getExtendedErrorMessage(),command.toString(),exitCode);
+      }
+
+      // done
+      exec.done(); exec = null;
+    }
+    catch (IOException exception)
+    {
+      throw new RepositoryException(Onzen.reniceIOException(exception));
+    }
+    finally
+    {
+      if (exec != null) exec.done();
     }
   }
 }
