@@ -164,6 +164,7 @@ class CommandAdd
       Widgets.layout(subComposite,6,0,TableLayoutData.WE);
       {
         widgetBinary = Widgets.newCheckbox(subComposite,"binary");
+        widgetBinary.setVisible(repositoryTab.repository.supportSetFileMode());
         Widgets.layout(widgetBinary,0,0,TableLayoutData.W);
         widgetBinary.setToolTipText("Select this checkbox to add binary files.");
 
