@@ -115,11 +115,8 @@ public class RepositoryList implements Iterable<Repository>
           }
           catch (JAXBException exception)
           {
-            if (Settings.debugFlag)
-            {
-              throw new Error(exception);
-            }
-            // ignored
+            Onzen.printWarning("Get repository list fail (error: "+exception.getMessage()+")");
+            Onzen.printStacktrace(exception);
           }
         }
       }
@@ -166,11 +163,8 @@ public class RepositoryList implements Iterable<Repository>
           }
           catch (JAXBException exception)
           {
-            if (Settings.debugFlag)
-            {
-              throw new Error(exception);
-            }
-            // ignored
+            Onzen.printWarning("Get repository list fail (error: "+exception.getMessage()+")");
+            Onzen.printStacktrace(exception);
           }
         }
       }
