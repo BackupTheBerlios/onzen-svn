@@ -42,6 +42,8 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
@@ -49,7 +51,6 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
@@ -323,7 +324,7 @@ class WidgetModifyListener
   private WidgetVariable[] variables;
 
   // cached text for widget
-  private String cachedText = "";
+  private String cachedText = null;
 
   /** create widget listener
    */
@@ -443,12 +444,9 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
-        // Fix layout: save current bounds and restore after pack()
-        Rectangle bounds = widgetLabel.getBounds();
         widgetLabel.setText(text);
-        widgetLabel.pack();
-        widgetLabel.setBounds(bounds);
-
+// label layout does not work as expected: width of first label is expanded, rest reduced?
+//        widgetLabel.getParent().layout();
         cachedText = text;
       }
     }
@@ -470,12 +468,8 @@ class WidgetModifyListener
         }
         if ((text != null) && !text.equals(cachedText))
         {
-          // Fix layout: save current bounds and restore after pack()
-          Rectangle bounds = widgetButton.getBounds();
           widgetButton.setText(text);
-          widgetButton.pack();
-          widgetButton.setBounds(bounds);
-
+          widgetButton.getParent().layout();
           cachedText = text;
         }
       }
@@ -520,12 +514,8 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
-        // Fix layout: save current bounds and restore after pack()
-        Rectangle bounds = widgetCombo.getBounds();
         widgetCombo.setText(text);
-        widgetCombo.pack();
-        widgetCombo.setBounds(bounds);
-
+        widgetCombo.getParent().layout();
         cachedText = text;
       }
     }
@@ -545,12 +535,9 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
-        // Fix layout: save current bounds and restore after pack()
-        Rectangle bounds = widgetText.getBounds();
         widgetText.setText(text);
-        widgetText.pack();
-        widgetText.setBounds(bounds);
-
+// text layout does not work as expected: width of first label is expanded, rest reduced?
+//        widgetText.getParent().layout();
         cachedText = text;
       }
     }
@@ -570,12 +557,8 @@ class WidgetModifyListener
       }
       if ((text != null) && !text.equals(cachedText))
       {
-        // Fix layout: save current bounds and restore after pack()
-        Rectangle bounds = widgetStyledText.getBounds();
         widgetStyledText.setText(text);
-        widgetStyledText.pack();
-        widgetStyledText.setBounds(bounds);
-
+        widgetStyledText.getParent().layout();
         cachedText = text;
       }
     }
@@ -1723,7 +1706,11 @@ class Widgets
       else if (control instanceof Combo)
       {
         Combo widget = (Combo)control;
-        widget.setSelection(new Point(0,65536));
+        String text  = widget.getText();
+        widget.setSelection(new Point(0,text.length()));
+      }
+      else if (control instanceof List)
+      {
       }
       else if (control instanceof Spinner)
       {
@@ -1813,6 +1800,18 @@ class Widgets
         {
           throw new Error("Internal error: unknown control in setNextFocus(): "+controls[i]);
         }
+
+        /*
+does not work on Windows? Even cursor keys trigger traversal event?
+        controls[i].addTraverseListener(new TraverseListener()
+        {
+          public void keyTraversed(TraverseEvent traverseEvent)
+          {
+            Widgets.setFocus(nextControl);
+            traverseEvent.doit = false;
+          }
+        });
+        */
       }
     }
 
@@ -3846,22 +3845,13 @@ e composite widget
    * @param composite composite widget
    * @return new combo widget
    */
-  public static Combo newOptionMenu(Composite composite, int style)
+  public static Combo newOptionMenu(Composite composite)
   {
     Combo combo;
 
-    combo = new Combo(composite,style|SWT.READ_ONLY);
+    combo = new Combo(composite,SWT.RIGHT|SWT.READ_ONLY);
 
     return combo;
-  }
-
-  /** create new option menu
-   * @param composite composite widget
-   * @return new combo widget
-   */
-  public static Combo newOptionMenu(Composite composite)
-  {
-    return newOptionMenu(composite,SWT.NONE);
   }
 
   //-----------------------------------------------------------------------
