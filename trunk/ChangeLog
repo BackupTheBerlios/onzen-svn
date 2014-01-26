@@ -1,4 +1,4 @@
-2013-07-xx 0.04
+2014-01-26 0.04
   * added default root and branch name in new branch dialog
   * improved find files dialog
   * support file lock/unlock (SVN, HG with extension)
@@ -17,6 +17,8 @@
   * added repository history list
   * improved support for GIT
   * improved checkout-dialog
+  * added global password handler
+  * improved git support
   * many, many other small improvements!
 
 2012-04-14 0.03
