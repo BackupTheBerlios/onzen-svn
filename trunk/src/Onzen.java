@@ -358,7 +358,10 @@ public class Onzen
 
   private Label                             widgetStatus;
 
-  // stored settingn of last checkout
+  // handler for password input
+  private PasswordHandler                   passwordHandler;
+
+  // stored setting of last checkout
   private static Repository.Types           lastCheckoutType            = Repository.Types.NONE;
   private static String                     lastCheckoutPath            = "";
   private static String                     lastCheckoutModuleName      = "";
@@ -611,7 +614,7 @@ exception.printStackTrace();
    * @param inputFlag true to input missing password
    * @return password or null
    */
-  public String getPassword(String name, boolean inputFlag)
+  public String getPassword(final String name, boolean inputFlag)
   {
     String password = null;
 
@@ -665,7 +668,16 @@ exception.printStackTrace();
         else if (inputFlag)
         {
           // input password
-          password = Dialogs.password(shell,"Password for: "+name);
+          final String result[] = new String[1];
+          display.syncExec(new Runnable()
+          {
+            public void run()
+            {
+              // input password
+              result[0] = Dialogs.password(shell,"Password for: "+name);
+            }
+          });
+          password = result[0];
           if (password == null) return null;
 
           // encode and store password
@@ -704,24 +716,33 @@ exception.printStackTrace();
   }
 
   /** get and decode password with master password
-   * @param login login name
-   * @param host host name
-   * @param inputFlag true to input missing password
+   * @param name name in database
    * @return password or null
    */
-  public String getPassword(String login, String host, boolean inputFlag)
+  public String getPassword(String name)
   {
-    return getPassword(login+"@"+host,inputFlag);
+    return getPassword(name,true);
   }
 
   /** get and decode password with master password
-   * @param login login name
-   * @param host host name
+   * @param loginName login name
+   * @param hostName host name
+   * @param inputFlag true to input missing password
    * @return password or null
    */
-  public String getPassword(String login, String host)
+  public String getPassword(String loginName, String hostName, boolean inputFlag)
   {
-    return getPassword(login,host,true);
+    return getPassword(loginName+"@"+hostName,inputFlag);
+  }
+
+  /** get and decode password with master password
+   * @param loginName login name
+   * @param hostName host name
+   * @return password or null
+   */
+  public String getPassword(String loginName, String hostName)
+  {
+    return getPassword(loginName,hostName,true);
   }
 
   /** store password encode password with master password
@@ -770,13 +791,13 @@ exception.printStackTrace();
   }
 
   /** store password encode password with master password
-   * @param login login name
-   * @param host host name
+   * @param loginName login name
+   * @param hostName host name
    * @param password to set
    */
-  public void setPassword(String login, String host, String password)
+  public void setPassword(String loginName, String hostName, String password)
   {
-    setPassword(login+"@"+host,password);
+    setPassword(loginName+"@"+hostName,password);
   }
 
   /** get all password names
@@ -2727,6 +2748,15 @@ menuItem.addSelectionListener(new SelectionListener()
     // add empty repository tab
     addRepositoryTabEmpty();
 
+    // init password handler
+    this.passwordHandler = new PasswordHandler()
+    {
+      public String getPassword(String loginName, String hostName)
+      {
+        return Onzen.this.getPassword(loginName,hostName);
+      }
+    };
+
     // init commit messages
     try
     {
@@ -3214,6 +3244,8 @@ exception.printStackTrace();
     // reset repository list
     for (Repository repository : repositoryList)
     {
+      repository.setPasswordHandler(passwordHandler);
+
       // add repository tab
       RepositoryTab repositoryTab = new RepositoryTab(this,widgetTabFolder,repository);
       repositoryTabMap.put(repository,repositoryTab);
@@ -4982,10 +5014,16 @@ Dprintf.dprintf("");
               return;
             }
 
-            final Repository repository = Repository.newInstance(data.type,data.destinationPath);;
+            final Repository repository = Repository.newInstance(data.type,
+                                                                 data.destinationPath,
+                                                                 passwordHandler
+                                                                );
 // ???
 Dprintf.dprintf("NYI");
-            repository.create(data.path,data.moduleName,data.importPath);
+            repository.create(data.path,
+                              data.moduleName,
+                              data.importPath
+                             );
 
             display.syncExec(new Runnable()
             {
@@ -5228,7 +5266,7 @@ Dprintf.dprintf("NYI");
         {
           public void modified(Combo combo)
           {
-            combo.setText(data.path);
+            if (combo.getText().isEmpty()) combo.setText(data.path);
           }
         });
 
@@ -5263,7 +5301,7 @@ Dprintf.dprintf("NYI");
       {
         public void modified(Combo combo)
         {
-          combo.setText(data.moduleName);
+          if (combo.getText().isEmpty()) combo.setText(data.moduleName);
         }
       });
 
@@ -5284,7 +5322,7 @@ Dprintf.dprintf("NYI");
       {
         public void modified(Text text)
         {
-          text.setText(data.userName);
+          if (text.getText().isEmpty()) text.setText(data.userName);
         }
       });
 
@@ -5422,8 +5460,26 @@ Dprintf.dprintf("NYI");
                   }
                 }
 
-                final Repository repository = Repository.newInstance(data.type,data.destinationPath,data.comment);
-                repository.checkout(data.path,data.moduleName,data.revision,data.userName,data.password,data.destinationPath,busyDialog);
+                // add password
+                if (!data.password.isEmpty())
+                {
+                  setPassword(data.userName,data.path,data.password);
+                }
+
+                // checkout
+                final Repository repository = Repository.newInstance(data.type,
+                                                                     data.destinationPath,
+                                                                     data.userName,
+                                                                     passwordHandler,
+                                                                     data.comment
+                                                                    );
+                repository.checkout(data.path,
+                                    data.moduleName,
+                                    data.revision,
+                                    data.userName,
+                                    data.destinationPath,
+                                    busyDialog
+                                   );
 
                 if (!busyDialog.isAborted())
                 {
@@ -5599,11 +5655,11 @@ Dprintf.dprintf("NYI");
     // focus traversal
     Widgets.setNextFocus(widgetPath,
                          widgetModuleName,
+                         widgetRevision,
                          widgetUserName,
                          widgetPassword,
-                         widgetRevision,
                          widgetDestinationPath,
-                         widgetComment
+                         widgetCheckout
                         );
 
     // set type, add checkout history paths
@@ -5684,7 +5740,7 @@ Dprintf.dprintf("NYI");
             // update module/branch names
             try
             {
-              final Repository repository = Repository.newInstance(type);
+              final Repository repository = Repository.newInstance(type,passwordHandler);
 
               final String[] branchTagNames = repository.getBranchTagNames(path);
               if (branchTagNames != null)
@@ -5721,7 +5777,7 @@ Dprintf.dprintf("exception=%s",exception);
             // update revisions
             try
             {
-              final Repository repository = Repository.newInstance(type);
+              final Repository repository = Repository.newInstance(type,passwordHandler);
 
               final String[] revisionNames = repository.getRevisionNames(path);
               if (revisionNames != null)
@@ -5824,7 +5880,7 @@ Dprintf.dprintf("exception=%s",exception);
     try
     {
       // open repository
-      repository = Repository.newInstance(rootPath);
+      repository = Repository.newInstance(rootPath,passwordHandler);
 
       // add and select new repository
       selectRepositoryTab(addRepositoryTab(repository));
@@ -5949,7 +6005,7 @@ Dprintf.dprintf("exception=%s",exception);
       Widgets.layout(tabFolder,0,0,TableLayoutData.NSWE);
 
       subComposite = Widgets.addTab(tabFolder,"Repository");
-      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,1.0,1.0,0.0},new double[]{0.0,1.0},2));
+      subComposite.setLayout(new TableLayout(new double[]{0.0,0.0,0.0,0.0,0.0,1.0,1.0,0.0},new double[]{0.0,1.0},2));
       Widgets.layout(subComposite,0,0,TableLayoutData.NSWE);
       {
         // common values
@@ -5982,20 +6038,42 @@ Dprintf.dprintf("exception=%s",exception);
           }
         });
 
-        label = Widgets.newLabel(subComposite,"Title:");
+        label = Widgets.newLabel(subComposite,"Branch:");
         Widgets.layout(label,2,0,TableLayoutData.W);
+
+        text = Widgets.newStringView(subComposite,SWT.LEFT);
+        text.setText(repositoryTab.repository.getBranchName());
+        Widgets.layout(text,2,1,TableLayoutData.W);
+        text.addMouseListener(new MouseListener()
+        {
+          public void mouseDoubleClick(MouseEvent mouseEvent)
+          {
+            Text widget = (Text)mouseEvent.widget;
+
+            widget.setSelection(0,widget.getText().length());
+          }
+          public void mouseDown(MouseEvent mouseEvent)
+          {
+          }
+          public void mouseUp(MouseEvent mouseEvent)
+          {
+          }
+        });
+
+        label = Widgets.newLabel(subComposite,"Title:");
+        Widgets.layout(label,3,0,TableLayoutData.W);
 
         widgetTitle = Widgets.newText(subComposite);
         widgetTitle.setText(repositoryTab.repository.title);
-        Widgets.layout(widgetTitle,2,1,TableLayoutData.WE);
+        Widgets.layout(widgetTitle,3,1,TableLayoutData.WE);
         widgetTitle.setToolTipText("Repository title.");
 
         label = Widgets.newLabel(subComposite,"Local path:");
-        Widgets.layout(label,3,0,TableLayoutData.W);
+        Widgets.layout(label,4,0,TableLayoutData.W);
 
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(null,new double[]{1.0,0.0}));
-        Widgets.layout(subSubComposite,3,1,TableLayoutData.WE);
+        Widgets.layout(subSubComposite,4,1,TableLayoutData.WE);
         {
           widgetRootPath = Widgets.newText(subSubComposite);
           widgetRootPath.setText(repositoryTab.repository.rootPath);
@@ -6024,19 +6102,19 @@ Dprintf.dprintf("exception=%s",exception);
         }
 
         label = Widgets.newLabel(subComposite,"Comment:");
-        Widgets.layout(label,4,0,TableLayoutData.NW);
+        Widgets.layout(label,5,0,TableLayoutData.NW);
 
         widgetComment = Widgets.newText(subComposite,SWT.LEFT|SWT.BORDER|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
         if (repositoryTab.repository.comment != null) widgetComment.setText(repositoryTab.repository.comment);
-        Widgets.layout(widgetComment,4,1,TableLayoutData.NSWE);
+        Widgets.layout(widgetComment,5,1,TableLayoutData.NSWE);
         widgetComment.setToolTipText("Comment text.");
 
         label = Widgets.newLabel(subComposite,"Ignore files:");
-        Widgets.layout(label,5,0,TableLayoutData.NW);
+        Widgets.layout(label,6,0,TableLayoutData.NW);
 
         subSubComposite = Widgets.newComposite(subComposite);
         subSubComposite.setLayout(new TableLayout(new double[]{1.0,0.0},1.0));
-        Widgets.layout(subSubComposite,5,1,TableLayoutData.NSWE);
+        Widgets.layout(subSubComposite,6,1,TableLayoutData.NSWE);
         {
           widgetIgnoreFilePatterns = Widgets.newList(subSubComposite);
           for (String pattern : repositoryTab.repository.getIgnoreFilePatterns())
@@ -6102,7 +6180,7 @@ Dprintf.dprintf("exception=%s",exception);
         }
 
         // additional repository values
-        int row = 6;
+        int row = 7;
         for (final Field field : repositoryTab.repository.getClass().getDeclaredFields())
         {
           for (Annotation annotation : field.getDeclaredAnnotations())
