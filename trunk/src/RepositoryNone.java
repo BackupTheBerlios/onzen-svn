@@ -73,16 +73,16 @@ class RepositoryNone extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositoryNone(String rootPath)
+  RepositoryNone(String rootPath, String comment)
   {
-    super(rootPath);
+    super(rootPath,comment);
   }
 
   /** create repository
    */
   RepositoryNone()
   {
-    this(null);
+    super();
   }
 
   /** check if repository support setting file mode
@@ -104,15 +104,14 @@ class RepositoryNone extends Repository
   }
 
   /** checkout repository from server
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
   }
