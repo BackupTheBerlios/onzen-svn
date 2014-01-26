@@ -162,26 +162,54 @@ public class FileUtils
   }
 
   /** copy directory tree
+   * copy file located in fromDirectory to toDirectory including all sub-directories and files
    * @param fromDirectory from directory
    * @param toDirectory to directory
    */
   public static void copyDirectoryTree(File fromDirectory, File toDirectory)
     throws IOException
   {
-    File[] files = fromDirectory.listFiles();
-    if (files != null)
+    LinkedList<String> fileNameList = new LinkedList<String>();
+
+    // get root-files
+    String[] fileNames = fromDirectory.list();
+    if (fileNames != null)
     {
-      for (File file : files)
+      for (String fileName : fileNames)
       {
-        if (file.isDirectory())
+        fileNameList.add(fileName);
+      }
+    }
+
+    // copy files
+    while (!fileNameList.isEmpty())
+    {
+      String fileName = fileNameList.removeFirst();
+Dprintf.dprintf("fileName=%s",fileName);
+
+      File fromFile = new File(fromDirectory,fileName);
+      File toFile   = new File(toDirectory,fileName);
+
+      if (fromFile.isDirectory())
+      {
+        toFile.mkdir();
+        String[] subFileNames = fromFile.list();
+        if (subFileNames != null)
         {
-          copyDirectoryTree(new File(fromDirectory,file.getName()),toDirectory);
-        }
-        else
-        {
-          copyFile(file,new File(toDirectory,file.getName()));
+          for (String subFileName : subFileNames)
+          {
+            fileNameList.add(fileName+File.separator+subFileName);
+          }
         }
       }
+      else
+      {
+        copyFile(fromFile,toFile);
+      }
+
+      toFile.setReadable(fromFile.canRead());
+      toFile.setWritable(fromFile.canWrite());
+      toFile.setExecutable(fromFile.canExecute());
     }
   }
 
