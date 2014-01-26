@@ -2088,6 +2088,18 @@ class RepositoryURL implements Cloneable
   }
 }
 
+/** password handler
+ */
+abstract class PasswordHandler
+{
+  /** get password
+   * @param loginName login name
+   * @param hostName host name
+   * @return password or null
+   */
+  public abstract String getPassword(String loginName, String hostName);
+}
+
 /** repository
  */
 @XmlType(propOrder={"title",
@@ -2127,6 +2139,7 @@ class RepositoryURL implements Cloneable
 @XmlAccessorType(XmlAccessType.NONE)
 abstract class Repository implements Serializable
 {
+
   /** special commands
    */
   abstract class SpecialCommand
@@ -2371,6 +2384,9 @@ abstract class Repository implements Serializable
   @XmlElement(name = "autoSummary")
   public boolean autoSummaryFlag;
 
+
+  protected PasswordHandler passwordHandler;
+
   // ------------------------ native functions ----------------------------
 
   // ---------------------------- methods ---------------------------------
@@ -2382,7 +2398,7 @@ abstract class Repository implements Serializable
   public static Types getType(String rootPath)
   {
     File directory = new File(rootPath);
-    while (directory != null)
+    if (directory != null)
     {
       File file;
 
@@ -2406,11 +2422,63 @@ abstract class Repository implements Serializable
       {
         return Types.GIT;
       }
-
-      directory = directory.getParentFile();
     }
 
     return Types.UNKNOWN;
+  }
+
+  /** create new repository instance
+   * @param type repository type; see Repository.Types
+   * @param rootPath root path
+   * @param userName user name
+   * @param passwordHandler password handler to get password
+   * @param comment comment text
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(Types type, String rootPath, String userName, PasswordHandler passwordHandler, String comment)
+    throws RepositoryException
+  {
+    Repository repository;
+
+    switch (type)
+    {
+      case DIRECTORY: repository = new RepositoryDirectory(rootPath,comment);                    break;
+      case CVS:       repository = new RepositoryCVS(rootPath,userName,passwordHandler,comment); break;
+      case SVN:       repository = new RepositorySVN(rootPath,userName,passwordHandler,comment); break;
+      case HG:        repository = new RepositoryHG(rootPath,userName,passwordHandler,comment);  break;
+      case GIT:       repository = new RepositoryGIT(rootPath,userName,passwordHandler,comment); break;
+      default:
+        repository = new RepositoryNone(rootPath,comment); break;
+    }
+//    repository.comment         = comment;
+//    repository.passwordHandler = passwordHandler;
+
+    return repository;
+  }
+
+  /** create new repository instance
+   * @param type repository type; see Repository.Types
+   * @param rootPath root path
+   * @param userName user name
+   * @param passwordHandler password handler to get password
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(Types type, String rootPath, String userName, PasswordHandler passwordHandler)
+    throws RepositoryException
+  {
+    return newInstance(type,rootPath,userName,passwordHandler,"");
+  }
+
+  /** create new repository instance
+   * @param type repository type; see Repository.Types
+   * @param rootPath root path
+   * @param passwordHandler password handler to get password
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(Types type, String rootPath, PasswordHandler passwordHandler)
+    throws RepositoryException
+  {
+    return newInstance(type,rootPath,(String)null,passwordHandler);
   }
 
   /** create new repository instance
@@ -2422,24 +2490,7 @@ abstract class Repository implements Serializable
   public static Repository newInstance(Types type, String rootPath, String comment)
     throws RepositoryException
   {
-    Repository repository;
-
-    switch (type)
-    {
-      case DIRECTORY: repository = new RepositoryDirectory(rootPath); break;
-      case CVS:       repository = new RepositoryCVS(rootPath);       break;
-      case SVN:       repository = new RepositorySVN(rootPath);       break;
-      case HG:        repository = new RepositoryHG(rootPath);        break;
-      case GIT:       repository = new RepositoryGIT(rootPath);       break;
-      default:
-// ???
-//        throw new RepositoryException("no repository CVS/SVN/HG/Git found");
-//        Dialogs.warning(dialog,"No repository CVS/SVN/HG/Git found");
-        repository = new RepositoryNone(rootPath); break;
-    }
-    repository.comment = comment;
-
-    return repository;
+    return newInstance(type,rootPath,(String)null,(PasswordHandler)null,comment);
   }
 
   /** create new repository instance
@@ -2455,6 +2506,17 @@ abstract class Repository implements Serializable
 
   /** create new repository instance
    * @param type repository type; see Repository.Types
+   * @param passwordHandler password handler to get password
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(Types type, PasswordHandler passwordHandler)
+    throws RepositoryException
+  {
+    return newInstance(type,"",passwordHandler);
+  }
+
+  /** create new repository instance
+   * @param type repository type; see Repository.Types
    * @return repository or null if no repository found
    */
   public static Repository newInstance(Types type)
@@ -2465,32 +2527,68 @@ abstract class Repository implements Serializable
 
   /** create new repository instance
    * @param rootPath root path
+   * @param passwordHandler password handler to get password
+   * @return repository or null if no repository found
+   */
+  public static Repository newInstance(String rootPath, PasswordHandler passwordHandler)
+    throws RepositoryException
+  {
+    return newInstance(Repository.getType(rootPath),rootPath,passwordHandler);
+  }
+
+  /** create new repository instance
+   * @param rootPath root path
    * @return repository or null if no repository found
    */
   public static Repository newInstance(String rootPath)
     throws RepositoryException
   {
-    return newInstance(Repository.getType(rootPath),rootPath);
+    return newInstance(rootPath,(PasswordHandler)null);
   }
 
   /** create repository
    * @param rootPath root path
    */
-  Repository(String rootPath)
+  Repository(String rootPath, PasswordHandler passwordHandler, String comment)
   {
     int z;
 
     this.title              = rootPath;
     this.rootPath           = rootPath;
+    this.passwordHandler    = passwordHandler;
+    this.comment            = comment;
     this.openDirectories    = new HashSet<String>();
     this.ignoreFilePatterns = new HashSet<String>();
+  }
+
+  /** create repository
+   * @param rootPath root path
+   */
+  Repository(String rootPath, String comment)
+  {
+    this(rootPath,(PasswordHandler)null,comment);
   }
 
   /** create repository
    */
   Repository()
   {
-    this(null);
+    this((String)null,(String)null);
+  }
+
+  /** set user name
+   * @param userName user name
+   */
+  public void setUserName(String userName)
+  {
+  }
+
+  /** set password handler
+   * @param passwordHandle password handler
+   */
+  public void setPasswordHandler(PasswordHandler passwordHandler)
+  {
+    this.passwordHandler = passwordHandler;
   }
 
   /** check if repository support setting file mode
@@ -2888,16 +2986,28 @@ abstract class Repository implements Serializable
     throws RepositoryException;
 
   /** checkout repository
+   * @param repositoryURL repository server URL
+   * @param moduleName module name
+   * @param revision revision to checkout
+   * @param userName user name or ""
+   * @param destinationPath destination path
+   * @param busyDialog busy dialog or null
+   */
+  abstract public void checkout(String repositoryURL, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
+    throws RepositoryException;
+
+  /** checkout repository
    * @param repositoryPath repository server
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
-   * @param busyDialog busy dialog or null
    */
-  abstract public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
-    throws RepositoryException;
+  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String destinationPath)
+    throws RepositoryException
+  {
+    checkout(repositoryPath,moduleName,revision,userName,destinationPath,(BusyDialog)null);
+  }
 
   /** checkout repository
    * @param repositoryPath repository server
@@ -2907,10 +3017,10 @@ abstract class Repository implements Serializable
    * @param password password or ""
    * @param destinationPath destination path
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath)
+  public void checkout(String repositoryPath, String moduleName, String revision, String destinationPath)
     throws RepositoryException
   {
-    checkout(repositoryPath,moduleName,revision,userName,password,destinationPath,null);
+    checkout(repositoryPath,moduleName,revision,"",destinationPath);
   }
 
   /** update file states
@@ -3013,6 +3123,14 @@ abstract class Repository implements Serializable
   public RepositoryURL getMasterRepositoryURL()
   {
     return null;
+  }
+
+  /** get current branch name
+   * @return branch name
+   */
+  public String getBranchName()
+  {
+    return "";
   }
 
   /** get first revision name
@@ -4098,7 +4216,7 @@ Dprintf.dprintf("stderr %s",line);
     return fileNameList.toArray(new String[fileNameList.size()]);
   }
 
-  /** get file name from file data
+  /** get file base name from file data
    * @param fileData file data
    * @return file name
    */
