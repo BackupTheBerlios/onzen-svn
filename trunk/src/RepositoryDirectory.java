@@ -73,16 +73,16 @@ class RepositoryDirectory extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositoryDirectory(String rootPath)
+  RepositoryDirectory(String rootPath, String comment)
   {
-    super(rootPath);
+    super(rootPath,comment);
   }
 
   /** create repository
    */
   RepositoryDirectory()
   {
-    this(null);
+    super();
   }
 
   /** check if repository support setting file mode
@@ -108,11 +108,10 @@ class RepositoryDirectory extends Repository
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
   }
