@@ -48,6 +48,8 @@ import org.w3c.dom.NodeList;
 
 /** Apache Subversion (SVN) repository
  */
+@XmlType(propOrder={"userName","logPrefix"})
+@XmlAccessorType(XmlAccessType.NONE)
 class RepositorySVN extends Repository
 {
   // --------------------------- constants --------------------------------
@@ -63,7 +65,7 @@ class RepositorySVN extends Repository
 
   @XmlElement(name = "userName")
   @RepositoryValue(title = "User name:", tooltip="SVN server user login name.")
-  public String userName;
+  public String userName = "";
 
   @XmlElement(name = "logPrefix")
   @RepositoryValue(title = "Log prefix:", defaultValue="/trunk", tooltip="Prefix of repository log path.")
@@ -84,16 +86,17 @@ class RepositorySVN extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositorySVN(String rootPath)
+  RepositorySVN(String rootPath, String userName, PasswordHandler passwordHandler, String comment)
   {
-    super(rootPath);
+    super(rootPath,passwordHandler,comment);
+    this.userName = userName;
   }
 
   /** create repository
    */
   RepositorySVN()
   {
-    this(null);
+    super();
   }
 
   /** check if repository support lock/unlock
@@ -132,6 +135,8 @@ class RepositorySVN extends Repository
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -147,6 +152,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("import",importPath,path,"-m","initial");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -178,14 +184,15 @@ class RepositorySVN extends Repository
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
     final Pattern PATTERN_URI = Pattern.compile("^[^:/]+://.*",Pattern.CASE_INSENSITIVE);
+
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,repositoryURL) : null;
 
     Exec exec = null;
     try
@@ -202,7 +209,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
-      if ((password != null) && !password.isEmpty()) command.append("--password",password);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("checkout");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if ((revision != null) && !revision.isEmpty()) command.append("--revision",revision);
@@ -276,6 +283,8 @@ class RepositorySVN extends Repository
     final Pattern PATTERN_UNKNOWN        = Pattern.compile("^\\?.......\\s+(.*?)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_STATUS_AGAINST = Pattern.compile("^Status against revision:.*",Pattern.CASE_INSENSITIVE);
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Command command = new Command();
     for (String directory : fileDirectorySet)
     {
@@ -286,6 +295,7 @@ class RepositorySVN extends Repository
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
         command.append("status","-uvN","--xml");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
@@ -573,6 +583,8 @@ class RepositorySVN extends Repository
 
     ArrayList<String> revisionList = new ArrayList<String>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -585,6 +597,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -659,6 +672,8 @@ class RepositorySVN extends Repository
   {
     RevisionData revisionData = null;
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -669,6 +684,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("log","-r",revision+":PREV","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -714,6 +730,8 @@ class RepositorySVN extends Repository
   {
     LinkedList<RevisionData> revisionDataList = new LinkedList<RevisionData>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -724,6 +742,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -777,6 +796,8 @@ class RepositorySVN extends Repository
   {
     ArrayList<String> lineList = new ArrayList<String>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -787,6 +808,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("cat");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("--revision",revision);
@@ -832,6 +854,9 @@ class RepositorySVN extends Repository
     throws RepositoryException
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
+
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -843,6 +868,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("cat");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("--revision",revision);
@@ -893,6 +919,8 @@ class RepositorySVN extends Repository
 
     HashSet<FileData> fileDataSet = new HashSet<FileData>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -910,6 +938,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("status","-uv");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1003,6 +1032,8 @@ class RepositorySVN extends Repository
 
     ArrayList<DiffData> diffDataList = new ArrayList<DiffData>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1017,6 +1048,7 @@ class RepositorySVN extends Repository
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
         command.append("cat","--revision",newRevision);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
@@ -1074,6 +1106,7 @@ class RepositorySVN extends Repository
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("diff","--revision",((oldRevision != null) ? oldRevision : getLastRevision())+((newRevision != null) ? ":"+newRevision : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1303,6 +1336,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     final Pattern PATTERN_OLD_FILE = Pattern.compile("^\\-\\-\\-\\s+(.*)",Pattern.CASE_INSENSITIVE);
     final Pattern PATTERN_NEW_FILE = Pattern.compile("^\\+\\+\\+\\s+(.*)",Pattern.CASE_INSENSITIVE);
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     // get existing/new files
     HashSet<FileData> existFileDataSet = new HashSet<FileData>();
     HashSet<FileData> newFileDataSet   = new HashSet<FileData>();
@@ -1334,6 +1369,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
         command.append("diff");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         if (!Settings.svnDiffCommand.isEmpty())
@@ -1496,6 +1532,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     ByteArrayOutputStream output = new ByteArrayOutputStream(64*1024);
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1507,6 +1545,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("diff","--revision",((revision1 != null) ? revision1 : getLastRevision())+((revision2 != null) ? ":"+revision2 : ""));
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1552,6 +1591,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     ArrayList<LogData> logDataList = new ArrayList<LogData>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1563,6 +1604,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("log","-r","HEAD:0","--verbose");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1624,6 +1666,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
 
     ArrayList<AnnotationData> annotationDataList = new ArrayList<AnnotationData>();
 
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1635,6 +1679,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("blame","-v");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (revision != null) command.append("-r",revision);
@@ -1697,6 +1742,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void update(HashSet<FileData> fileDataSet, BusyDialog busyDialog)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1706,6 +1753,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("update","--accept","postpone");
       if (fileDataSet != null) command.append("--depth","immediates");
 //      command.append(Settings.svnCommand,"--non-interactive","merge","--dry-run","-r","BASE:HEAD");
@@ -1771,6 +1819,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void commit(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1780,6 +1830,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("commit","-F",commitMessage.getFileName());
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1815,6 +1866,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void add(HashSet<FileData> fileDataSet, CommitMessage commitMessage, boolean binaryFlag)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1824,6 +1877,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("add");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1864,6 +1918,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void remove(HashSet<FileData> fileDataSet, CommitMessage commitMessage)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1880,6 +1936,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("remove");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1921,6 +1978,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void copy(HashSet<FileData> fileDataSet, String destination, CommitMessage commitMessage)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1930,6 +1989,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("copy");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -1973,6 +2033,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void rename(FileData fileData, String newName, CommitMessage commitMessage)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -1982,6 +2044,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("rename");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -2027,6 +2090,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void revert(HashSet<FileData> fileDataSet, String revision, boolean recursive)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -2043,6 +2108,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("revert");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       if (recursive) command.append("-R");
@@ -2067,6 +2133,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
         command.append("update","-r",revision);
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
@@ -2101,6 +2168,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void resolve(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -2110,6 +2179,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("resolve","--accept","working");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -2205,6 +2275,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void lock(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -2214,6 +2286,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("lock");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -2247,6 +2320,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   public void unlock(HashSet<FileData> fileDataSet)
     throws RepositoryException
   {
+    String password = ((passwordHandler != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -2256,6 +2331,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("unlock");
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("--");
@@ -2318,6 +2394,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
   {
     HashSet<String> branchTagNameSet = new HashSet<String>();
 
+    String password = ((passwordHandler != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     for (String branchName : DEFAULT_BRANCH_NAMES)
     {
       branchTagNameSet.add(branchName);
@@ -2335,6 +2413,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
         command.append("list",pathName+"/branches");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
@@ -2361,6 +2440,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
         command.clear();
         command.append(Settings.svnCommand,"--non-interactive");
         if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+        if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
         command.append("list",pathName+"/tags");
         if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
         command.append("--");
@@ -2412,6 +2492,8 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
     String repositoryURL     = getRepositoryURL();
     String repositoryRootURL = getRepositoryRootURL();
 
+    String password = ((passwordHandler != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,getRepositoryRootURL()) : null;
+
     Exec exec = null;
     try
     {
@@ -2421,6 +2503,7 @@ if (d.blockType==DiffData.Types.ADDED) lineNb += d.addedLines.length;
       command.clear();
       command.append(Settings.svnCommand,"--non-interactive");
       if ((userName != null) && !userName.isEmpty()) command.append("--username",userName);
+      if ((password != null) && !password.isEmpty()) command.append("--password",command.hidden(password));
       command.append("copy",repositoryURL+"/"+rootName,repositoryRootURL+"/"+branchName);
       if (Settings.svnAlwaysTrustServerCertificate) command.append("--trust-server-cert");
       command.append("-F",commitMessage.getFileName());
