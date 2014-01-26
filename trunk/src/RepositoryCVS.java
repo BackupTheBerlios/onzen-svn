@@ -51,6 +51,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /** Concurrent Versions System (CVS) repository
  */
+@XmlType(propOrder={"userName"})
+@XmlAccessorType(XmlAccessType.NONE)
 class RepositoryCVS extends Repository
 {
   /** CVS revision data
@@ -107,6 +109,10 @@ class RepositoryCVS extends Repository
   public final static String   LAST_REVISION_NAME     = "HEAD";
 
   // --------------------------- variables --------------------------------
+  @XmlElement(name = "userName")
+  @RepositoryValue(title = "User name:", tooltip="SVN server user login name.")
+  public String userName = "";
+
   private final static RepositoryCVS staticInstance = new RepositoryCVS();
 
   // ------------------------ native functions ----------------------------
@@ -124,16 +130,17 @@ class RepositoryCVS extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositoryCVS(String rootPath)
+  RepositoryCVS(String rootPath, String userName, PasswordHandler passwordHandler, String comment)
   {
-    super(rootPath);
+    super(rootPath,passwordHandler,comment);
+    this.userName = userName;
   }
 
   /** create repository
    */
   RepositoryCVS()
   {
-    this(null);
+    super();
   }
 
   /** check if repository support setting file mode
@@ -157,18 +164,18 @@ throw new RepositoryException("NYI");
   }
 
   /** checkout repository
-   * @param repositoryPath repository server
+   * @param repositoryURL repository server URL
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryPath, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
-Dprintf.dprintf("checkout username, password???");
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,repositoryURL) : null;
+
     Exec exec = null;
     try
     {
@@ -178,7 +185,7 @@ Dprintf.dprintf("checkout username, password???");
       // checkout
       Command command = new Command();
       command.clear();
-      command.append(Settings.cvsCommand,"-d",repositoryPath,"co","-d",tmpDirectory.getName());
+      command.append(Settings.cvsCommand,"-d",repositoryURL,"co","-d",tmpDirectory.getName());
       if (!revision.isEmpty()) command.append("-r",revision);
       command.append(moduleName);
       exec = new Exec(rootPath,command);
