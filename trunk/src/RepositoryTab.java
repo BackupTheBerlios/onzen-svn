@@ -4431,7 +4431,8 @@ Dprintf.dprintf("");
                 Dialogs.error(shell,
                               Dialogs.booleanFieldUpdater(Settings.class,"showUpdateStatusErrors"),
                               exception.getExtendedMessage(),
-                              "Getting file states fail."
+                              "Getting file states fail:\n\n%s",
+                              exception.getMessage()
                              );
               }
             });
