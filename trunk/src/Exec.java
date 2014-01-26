@@ -180,6 +180,14 @@ class Command
     }
   }
 
+  /** append hidden string to command array
+   * @param string string to append
+   */
+  public void appendHidden(String string)
+  {
+    append(hidden(string));
+  }
+
   /** concat arguments to last entry in command array
    * @param strings strings to concat
    */
