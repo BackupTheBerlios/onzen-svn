@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
 
 /** Mercurial (hg) repository
  */
-@XmlType(propOrder={"masterRepository","outgoingRepository"})
+@XmlType(propOrder={"userName","masterRepository","outgoingRepository"})
 @XmlAccessorType(XmlAccessType.NONE)
 class RepositoryHG extends Repository
 {
@@ -152,6 +152,10 @@ class RepositoryHG extends Repository
   // --------------------------- variables --------------------------------
   private final static RepositoryHG staticInstance = new RepositoryHG();
 
+  @XmlElement(name = "userName")
+  @RepositoryValue(title = "User name:", tooltip="HG server user login name.")
+  public String userName = "";
+
   @XmlElement(name = "masterRepository")
   @RepositoryValue(title = "Master repository:", pathSelector=true, tooltip="Path to master repository.")
   public String masterRepository;
@@ -177,9 +181,10 @@ class RepositoryHG extends Repository
   /** create repository
    * @param rootPath root path
    */
-  RepositoryHG(String rootPath)
+  RepositoryHG(String rootPath, String userName, PasswordHandler passwordHandler, String comment)
   {
-    super(rootPath);
+    super(rootPath,passwordHandler,comment);
+    this.userName = userName;
 
     // start getting parent map
     Background.run(new BackgroundRunnable()
@@ -197,7 +202,7 @@ class RepositoryHG extends Repository
    */
   RepositoryHG()
   {
-    this(null);
+    super();
   }
 
   /** check if repository support incoming/outgoing commands
@@ -268,14 +273,14 @@ throw new RepositoryException("NYI");
    * @param moduleName module name
    * @param revision revision to checkout
    * @param userName user name or ""
-   * @param password password or ""
    * @param destinationPath destination path
    * @param busyDialog busy dialog or null
    */
-  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String password, String destinationPath, BusyDialog busyDialog)
+  public void checkout(String repositoryURL, String moduleName, String revision, String userName, String destinationPath, BusyDialog busyDialog)
     throws RepositoryException
   {
-Dprintf.dprintf("checkout username, password???");
+    String password = ((passwordHandler != null) && (userName != null) && !userName.isEmpty()) ? passwordHandler.getPassword(userName,repositoryURL) : null;
+
     Exec exec = null;
     try
     {
